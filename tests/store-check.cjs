@@ -35,6 +35,7 @@ module.exports = async function storeCheck({ command, evaluate, until, contexts,
     state.active = 'unity_cover'; const S = state.layouts.unity_cover.shot; S.panels = 3; buildControls(); render();
     return 1; })()`);
   assert.equal(await ev('document.querySelectorAll("#imgs .card").length'), 3, 'three images in the strip');
+  assert.equal(await ev('typeof LOOKS + SECTIONS.map(s => s.t).join()').then(x => /Looks|^object/.test(x)), false, 'the Looks panel is gone');
   assert(await ev('getComputedStyle(document.getElementById("imgs")).position === "sticky"'), 'the strip stays at the top');
 
   /* each panel moves alone */

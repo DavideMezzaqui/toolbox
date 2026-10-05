@@ -511,7 +511,6 @@ const ICONS = {
   zout:   'M7 2.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9z M10.4 10.4l3.1 3.1 M5 7h4',
   z100:   'M2.5 5.5V3.5h11v2 M8 3.5v9 M5.5 12.5h5',
   /* una per sezione del pannello, stessa griglia 16x16 e stessi spessori */
-  looks:  'M8 2.5l1.5 3.9 3.9 1.5-3.9 1.5L8 13.4l-1.5-4L2.6 7.9l3.9-1.5z',
   layers: 'M8 2.5L2.5 5.5 8 8.5l5.5-3z M2.5 9L8 12l5.5-3',
   branch: 'M2.5 4.5h4.5v7h-4.5z M9 4.5h4.5v7h-4.5z',
   drop:   'M8 2.6c0 0 4 4.3 4 6.6a4 4 0 0 1-8 0c0-2.3 4-6.6 4-6.6z',
@@ -532,7 +531,7 @@ const ICONS = {
    solo leggendolo: con un segno davanti la sezione giusta si trova a colpo
    d'occhio, che e' quello che serve in un pannello lungo. */
 const SEC_ICONS = {
-  'Pack data':'file',        'Looks':'looks',        'Layers':'layers',
+  'Pack data':'file',        'Layers':'layers',
   'Variants':'branch',       'Colours':'drop',       'Screenshot':'image',
   'Image adjustments':'sliders', 'Blur effects':'blur', 'Tint / blend':'tint',
   'Dark gradient':'fade',    'Bottom band':'band',   'Accent line':'rule',
@@ -1532,7 +1531,7 @@ const PARTS = [
     {p:'band.x1',          l:'End X',     type:'range', min:0, max:1, step:0.002},
     {p:'band.sideFeather', l:'Left fade', type:'range', min:0, max:0.4, step:0.005},
     {p:'band.slant',       l:'Slant',     type:'range', min:-0.3, max:0.3, step:0.002},
-    {type:'group', l:'Look'},
+    {type:'group', l:'Fill'},
     {p:'band.color',       l:'Colour',     type:'color'},
     {p:'band.opacity',     l:'Opacity',   type:'range', min:0, max:1, step:0.02},
   ]},
@@ -2195,7 +2194,7 @@ PARTS.push(
 { key:'frame', section:'Frame', order:90,
   /* La cornice deve restare un filo, non un bordo: appena si ispessisce
      mangia la grafica e si vede solo lei. Di serie e' sottile su tutti i
-     formati e i Look non la ingrossano. */
+     formati. */
   defaults:P=>({on:P.mini, thick: P.mini?0.006:0.0025, color:C.band, inset:0,
                 cut:0, cuts:'none'}),
   draw:(c,W,H,L)=>{
@@ -2998,7 +2997,7 @@ const state = {
             con "Follow theme" acceso li legge da qui, cosi' cambiarli
             ridipinge barra, badge e bordo del logo insieme */
          gradA:C.accentA2, gradB:C.accentB2,
-         scope:'all formats', lookScope:'this format'},
+         scope:'all formats'},
   variants:[], currentVariant:null,
   snap:{on:true},
   naming:{pattern:'{format}', case:'as is', sep:'_',
@@ -3992,11 +3991,6 @@ const SESSION_SECTION = {t:'Session', rows:[
   {type:'button', text:'Clear saved work',  act:'autoClear'},
 ], note:'The work is kept in this browser and comes back by itself when you reopen the page, screenshots and logo included: the images live in their own store, so the library is still there next time. A font you loaded yourself is the one thing that does not come back, here or in a project file: load the font again and the text is exactly as you left it. Save writes a project file with the images inside, that opens the same on any computer.'};
 
-const LOOKS_SECTION = {t:'Looks', open:true, rows:[
-  {type:'looks'},
-  {p:'theme.lookScope', l:'Apply look to', type:'select', opts:['this format','all formats']},
-], note:'Ready made treatments of your base design. They change the layout only, never your texts. Undo works on all of them.'};
-
 const VARIANTS_SECTION = {t:'Variants', rows:[
   {type:'variants'},
   {type:'button', text:'Save current as new variant', act:'variantAdd'},
@@ -4005,7 +3999,7 @@ const VARIANTS_SECTION = {t:'Variants', rows:[
   {type:'button', text:'Export comparison sheet',     act:'compareExport'},
 ], note:'A variant is a full snapshot of the design. Save a few, click to switch, compare them side by side. They travel inside the project file.'};
 
-const SECTIONS = [PACK_SECTION, LOOKS_SECTION, LAYERS_SECTION, VARIANTS_SECTION,
+const SECTIONS = [PACK_SECTION, LAYERS_SECTION, VARIANTS_SECTION,
                   THEME_SECTION].concat(
   PARTS.filter(p=>p.section && p.rows).map(p=>({t:p.section, rows:p.rows, note:p.note}))
 ).concat([NAMING_SECTION, EXPORT_SECTION, SESSION_SECTION]);
@@ -4511,7 +4505,7 @@ function selectEl(k){
    vedono solo le sei o sette che servono in quel momento */
 const TABS = [
   {id:'design',  label:'Design',
-   has:['Looks','Layers','Colours','Bottom band','Accent line','Logo','Text row',
+   has:['Layers','Colours','Bottom band','Accent line','Logo','Text row',
         'Version','Badges','Frame']},
   {id:'image',   label:'Image',
    has:['Screenshot','Image adjustments','Blur effects','Tint / blend','Dark gradient']},
@@ -5179,7 +5173,6 @@ const TIP_PATH = {
 
   'snap.on':'Snap to margins, centre and other elements. Key: G',
   'auto.on':'Keep the work in this browser between sessions',
-  'theme.lookScope':'This format only, or all of them',
 
   'shot.edgeColor':'Colour of the line along each cut',
   'shot.edgeThick':'How thick that line is',
@@ -5294,22 +5287,6 @@ const TIP_KEY = {
   cellOpacity:'How solid the boxes are',
   padX:'Space left and right inside each box',
   padY:'Space above and below inside each box'
-};
-
-/* i bottoni dicono cosa fanno, ma non sempre cosa succede dopo */
-const LOOK_TIP = {
-  'PSD base':'Exactly the layout from your Photoshop file',
-  'Minimal':'No band, thin bar, dark fade from the bottom',
-  'Full bar':'Band and bar running edge to edge',
-  'Corner tag':'Coloured tag with cut corners, top left',
-  'Split panel':'Dark column on the left, text stacked in it',
-  'Editorial':'Wide letter spacing, light weight, thin rule',
-  'Techno':'Segmented bar, tick marks, badges with cut corners',
-  'Brutalist':'Heavy title, solid band, hard frame',
-  'Floating card':'Outlined card sitting over the screenshot',
-  'Diagonal':'Tilted band, angled bar, slanted stripes',
-  'Stealth':'Same layout in grey, no colour at all',
-  'Wide bracket':'Large bracket around the bottom of the image',
 };
 
 const ACT_TIP = {
@@ -5655,19 +5632,6 @@ function makeRow(r){
       wrap.appendChild(blk);
     }
     return wrap;
-  }
-  if(r.type==='looks'){
-    /* i Look sono punti di partenza, non ritocchi: conviene dirlo */
-    const g = document.createElement('div');
-    g.className = 'pgrid';
-    LOOKS.forEach((lk,i)=>{
-      const b = document.createElement('button');
-      b.textContent = lk.n;
-      b.title = (LOOK_TIP[lk.n] || lk.n) + '. Starts from a clean layout';
-      b.onclick = ()=> applyLook(i, state.theme.lookScope==='all formats');
-      g.appendChild(b);
-    });
-    return g;
   }
   if(r.type==='swatches'){
     const wrap = document.createElement('div');
@@ -7349,491 +7313,6 @@ document.getElementById('bZip').onclick = async ()=>{
       ' found: ' + guai[0].testo + (guai.length>1 ? ' (full list under Export)' : '') : ''));
 };
 
-/* ============================================================================
-   LOOKS
-   Stili pronti da provare sopra la grafica base. Ognuno tocca solo il layout
-   del formato corrente, mai i testi ne' i colori del pack.
-   Per aggiungerne uno: una voce qui dentro. Compare da solo nel pannello.
-   ============================================================================ */
-/* Sui formati grandi il testo comincia a destra del logo, quindi far
-   partire la barra accento dalla x del testo va bene. Su Card e Icon invece
-   logo e testo hanno lo stesso margine sinistro, e la barra finiva per
-   attraversare il quadrato del logo. Qui la si fa cominciare dopo il logo,
-   quando serve. */
-/* Ultimo controllo dopo che il Look ha finito e il riordino ha spostato le
-   cose: una barra che non parte dal bordo della tela non deve tagliare il
-   quadrato del logo. Sui formati grandi non succede mai, su Card e Icon
-   logo e testo hanno lo stesso margine e senza questo la barra passava
-   attraverso il logo. */
-function accentoFuoriDalLogo(L, fm){
-  const a = L.accent, lg = L.logo;
-  if(!a || !a.on || !lg || !lg.on || !fm) return;
-  if(a.x0 <= 0.03) return;                 /* barra da bordo a bordo: passa dietro apposta */
-  const lw = lg.size * fm.h / fm.w;
-  const alto = lg.y, basso = lg.y + lg.size;
-  if(a.y < alto || a.y > basso) return;    /* passa sopra o sotto, non la tocca */
-  const destra = lg.x + lw;
-  if(a.x0 < destra){
-    /* la barra taglia il logo: la faccio partire subito dopo */
-    const nuovo = destra + lw*0.10;
-    if(a.x1 - nuovo > 0.12) a.x0 = nuovo;
-  } else if(a.x0 - destra > lw*0.12){
-    /* Il caso opposto, e piu' brutto da vedere: la barra parte molto
-       dopo il logo e resta a mezz'aria, con un buco in mezzo. Nel PSD la
-       barra nasce sul bordo del quadrato del logo, e alcuni Look la
-       facevano partire dalla x del testo dimenticandosi del logo che sta
-       piu' a sinistra. Qui torna attaccata. */
-    a.x0 = destra;
-  }
-  /* L'alone sfuma di circa tre volte lo spessore della barra. Se la barra
-     parte attaccata al logo, come nel disegno del PSD sulla Card, allontanarla
-     aprirebbe un buco: meglio tenere la barra dov'e' e smorzare l'alone,
-     cosi' resta un velo e non una macchia sopra il logo. */
-  if(a.glow > 0){
-    const spazio = (a.x0 - destra) * fm.w;
-    const alone = a.thick * fm.h * 3.2;
-    if(alone > spazio) a.glow = Math.min(a.glow, 0.15);
-  }
-}
-
-const LOOKS = [
-{n:'PSD base', f:(L,fm)=>{
-  const d = defLayout(fm);
-  /* Come gli altri Look, questo rifa' l'impaginazione e basta. Lo
-     screenshot, i suoi pannelli e le regolazioni immagine sono lavoro
-     dell'utente: prima tornare al PSD cancellava la composizione dei
-     pannelli senza dire niente, e in mezzo a un giro di prove non si
-     capiva dove fosse finita. */
-  Object.keys(d).forEach(k=>{
-    if(k==='on' || k==='layers' || k==='shot' || k==='fx') return;
-    L[k] = d[k];
-  });
-}, psd:true},
-
-{n:'Minimal', f:(L, fm)=>{
-  const mini = fm && (fm.profile==='small' || fm.profile==='tiny');
-  L.band.on=false; L.grad.on=true; L.grad.side='bottom'; L.grad.size=0.42; L.grad.strength=0.8;
-  /* Su Card e Icon la barra non e' una linea ma il fondo del brand:
-     accorciarla lasciava meta' scritta fuori. Li' si toglie e basta, che
-     e' proprio l'idea di questo Look. */
-  if(mini){
-    L.accent.on=false;
-    L.grad.size=0.55; L.grad.strength=0.9;
-  } else {
-    L.accent.thick*=0.5; L.accent.glow=0; L.accent.x0=L.row.x; L.accent.x1=0.5;
-    L.accent.y = L.row.y - L.row.titleSize*1.6;
-  }
-  L.frame.on=false; L.logo.outThick=0.02; L.logo.glow=0;
-  L.row.track=0.06; L.row.titleOp=1; L.version.on=false;
-}},
-
-{n:'Full bar', f:(L, fm)=>{
-  const mini = fm && (fm.profile==='small' || fm.profile==='tiny');
-  L.band.on=true;
-  /* La fascia sale, e il testo sale con lei perche' il riordino lo
-     ricentra dentro. Il logo invece restava dov'era e finiva a
-     galleggiare sopra la barra, staccato dal titolo: qui si sposta
-     dello stesso tratto, cosi' il gruppo resta quello del PSD. */
-  L.band.top=Math.min(0.88, L.band.top-0.05);
-  /* La fascia sale e il riordino ricentra il titolo dentro di lei. Il logo
-     restava dov'era e finiva a galleggiare sopra la barra, staccato dal
-     titolo: si centra anche lui nella fascia. Il quadrato del logo e' pero'
-     alto quasi quanto la fascia, quindi centrato finirebbe appiccicato al
-     bordo di sotto: il margine minimo vince sul centraggio, e il logo
-     sporge un po' sopra la fascia come fa nel PSD. */
-  if(!mini) L.logo.y = Math.min((L.band.top + 1)/2 - L.logo.size/2,
-                                1 - L.logo.size - 0.035);
-  L.band.opacity=0.94; L.band.feather=0;
-  L.band.x0=0; L.band.x1=1;
-  L.accent.x0=0; L.accent.x1=1; L.accent.glow=0;
-  /* la barra di Card e Icon e' gia' spessa di suo: ingrossarla ancora
-     copriva un terzo della grafica */
-  if(!mini){ L.accent.y=L.band.top; L.accent.thick*=1.6; }
-  L.frame.on=false;
-}},
-
-{n:'Corner tag', f:(L, fm)=>{
-  const mini = fm && (fm.profile==='small' || fm.profile==='tiny');
-  L.band.on=false; L.accent.on=false; L.grad.on=true; L.grad.strength=0.55;
-  /* la targa non ha misure sue: cresce attorno al testo, quindi va bene
-     con qualsiasi titolo e su qualsiasi formato */
-  lookShape(L, {name:'Corner tag', kind:'panel', cuts:'top-right + bottom-left',
-    cut:0.28, x:0.04, y:0.05, w:0.42, h:0.16, hostRow:'box',
-    color:L.accent.color, color2:L.accent.color2, gradOn:true, mode:'fill', front:false});
-  L.row.mode = mini ? 'stack' : 'inline';
-  L.row.titleOp=1; L.row.itemOp=0.8; L.row.sepOn=true;
-  L.row.color='#0b0b0b'; L.row.brandColor='#0b0b0b';
-  if(mini){
-    /* in alto ci stanno gia' i badge: su Card e Icon la targa va in basso */
-    L.row.x=0.07; L.row.y=0.93; L.row.x2=0.07; L.row.y2=0.86;
-    L.logo.x=0.06; L.logo.y=0.08; L.logo.anchor='free';
-  } else {
-    L.row.x=0.07; L.row.y=0.145; L.row.x2=0.07; L.row.y2=0.09;
-    /* La targa sta in alto a sinistra. Prima il logo andava in basso a
-       sinistra: stessa colonna, due cose scollegate, e in basso a destra
-       c'era gia' il numero di versione da solo. Ora il logo sta in alto a
-       destra, sulla stessa riga della targa, e le due si bilanciano. */
-    L.logo.x = 1 - L.logo.size*(fm ? fm.h/fm.w : 1) - 0.04;
-    L.logo.y = 0.05; L.logo.anchor='free';
-  }
-  L.version.on=!mini;
-}},
-
-{n:'Split panel', f:(L, fm)=>{
-  /* Su un'Icon da 160 px una colonna laterale lascia al titolo un terzo
-     della larghezza: illeggibile. Li' il Look si limita al velo scuro e
-     tiene l'impaginazione del formato. */
-  if(fm && fm.profile === 'tiny'){
-    L.grad.on=true; L.grad.side='bottom'; L.grad.strength=0.85; L.grad.size=0.6;
-    L.frame.on=false;
-    return;
-  }
-  L.band.on=false; L.accent.on=false;
-  lookShape(L, {name:'Side panel', kind:'panel', cuts:'top-right + bottom-left',
-    cut:0.12, x:0, y:0, w:0.36, h:1, hostRow:'colonna',
-    color:'#0b0b0b', opacity:0.9, mode:'fill', front:false});
-  L.row.mode='stack'; L.row.x=0.05; L.row.x2=0.05; L.row.y=0.56; L.row.y2=0.5;
-  L.row.fitW=0.3; L.row.brandColor=L.accent.color;
-  /* logo in cima alla colonna, allineato al testo che sta sotto */
-  L.logo.x=0.05; L.logo.y=0.08; L.logo.anchor='free';
-  L.version.x=0.28; L.version.y=0.94; L.version.align='right';
-}},
-
-{n:'Editorial', f:(L)=>{
-  L.band.on=false; L.grad.on=true; L.grad.strength=0.75; L.grad.size=0.55;
-  L.accent.thick*=0.35; L.accent.glow=0; L.accent.x0=L.row.x; L.accent.x1=0.95;
-  L.accent.y=L.row.y-L.row.titleSize*2.2;
-  L.row.titleSize*=1.25; L.row.track=0.12; L.row.upper=true; L.row.sepShape='double';
-  L.row.titleWeight='300'; L.frame.on=false;
-}},
-
-{n:'Techno', f:(L, fm)=>{
-  const mini = fm && (fm.profile==='small' || fm.profile==='tiny');
-  /* barra spezzata in segmenti, senza tagli obliqui esagerati: sui formati
-     piccoli un taglio lungo diventa un cuneo che copre mezza grafica */
-  /* su Card e Icon la barra non e' una linea ma il fondo su cui poggia il
-     brand: spezzarla la trasformava in tre blocchi arancioni a caso */
-  L.accent.segments = mini ? 1 : 6;
-  L.accent.segGap = 0.16;
-  L.accent.endCut = mini ? 0 : 0.8;
-  /* l'alone su Card e Icon e' spesso quanto la barra e arriva a coprire il
-     titolo: li' resta spento, come nel PSD */
-  L.accent.glow = mini ? 0 : 0.3;
-  L.badges.on=true; L.badges.cuts='all'; L.badges.cut=0.22;
-  L.row.sepShape='chevron';
-  L.frame.on=true; L.frame.thick=0.002; L.frame.color=L.accent.color;
-  L.frame.cuts='top-right + bottom-left'; L.frame.cut=0.05;
-}},
-
-{n:'Brutalist', f:(L)=>{
-  L.band.on=true; L.band.opacity=1; L.band.feather=0;
-  L.band.top=Math.min(0.9,L.band.top);
-  /* come in Full bar: il titolo viene ricentrato nella fascia, il logo
-     deve stargli a fianco e non sopra, senza incollarsi al bordo di sotto */
-  L.logo.y = Math.min((L.band.top + 1)/2 - L.logo.size/2,
-                      1 - L.logo.size - 0.035);
-  L.frame.on=true; L.frame.thick=0.004; L.frame.color=L.accent.color; L.frame.cuts='none';
-  L.accent.on=false;
-  L.row.upper=true; L.row.titleWeight='800'; L.row.titleSize*=1.15; L.row.track=0;
-  L.row.titleOp=1; L.row.itemOp=1; L.row.sepShape='bar'; L.row.sepW=0.22;
-  L.logo.outThick=0.09; L.logo.outMode='scale'; L.logo.glow=0;
-}},
-
-{n:'Floating card', f:(L)=>{
-  L.band.on=false; L.accent.on=false; L.grad.on=true; L.grad.strength=0.5;
-  lookShape(L, {name:'Card', kind:'panel', cuts:'top-left + bottom-right',
-    cut:0.18, x:0.04, y:0.72, w:0.62, h:0.2, hostRow:'box',
-    color:'#0b0b0b', opacity:0.88, mode:'both',
-    strokeColor:L.accent.color, thick:0.008, front:false,
-    shadowOn:true, shadowBlur:0.03, shadowY:0.008, shadowOpacity:0.5});
-  L.row.x=0.08; L.row.y=0.845; L.row.x2=0.08; L.row.y2=0.79;
-  /* La scheda cresce attorno al testo, quindi il suo bordo sinistro non
-     e' lo 0.04 scritto sopra ma il testo meno il suo margine: allineare
-     il logo a 0.05 lo lasciava a sbalzo fuori dalla scheda. Qui parte
-     dalla stessa x del testo e le poggia sopra, quasi a contatto. */
-  L.logo.size*=0.75;
-  L.logo.x=0.08; L.logo.y=L.row.y2-L.logo.size-0.005; L.logo.anchor='free';
-  L.version.on=false;
-}},
-
-{n:'Diagonal', f:(L, fm)=>{
-  const mini = fm && (fm.profile==='small' || fm.profile==='tiny');
-  L.band.slant=0.05; L.band.feather=Math.max(L.band.feather,0.02);
-  /* il taglio in punta e' in multipli dello spessore: sulla Card la barra
-     e' spessa e un taglio lungo diventava un triangolo enorme */
-  L.accent.endCut = mini ? 0.6 : 3;
-  if(!mini) L.accent.thick*=1.3;
-  /* la trama obliqua ha senso dove c'e' spazio: su Card e Icon sarebbe
-     solo sporco */
-  if(!mini) lookShape(L, {name:'Stripes', kind:'stripes', count:7, ratio:0.3,
-    skew:0.5, x:0.66, y:0.06, w:0.28, h:0.18,
-    color:L.accent.color, opacity:0.3, mode:'fill', front:false});
-  L.row.sepShape='slash'; L.row.sepSkew=0.6;
-}},
-
-{n:'Stealth', f:(L)=>{
-  const grey='#8a8a90', grigioScuro='#5e5e66';
-  /* la barra ha un gradiente fra due colori: cambiarne uno solo lasciava
-     l'arancione dall'altro capo, che e' proprio quello che questo Look
-     vuole togliere */
-  L.accent.color=grey; L.accent.color2=grigioScuro; L.accent.gradOn=false;
-  L.accent.glow=0; L.accent.thick*=0.6;
-  L.logo.outColor=grey; L.logo.glow=0; L.badges.color=grey;
-  L.band.opacity=0.9; L.row.itemOp=0.55; L.frame.on=false;
-}},
-
-{n:'Wide bracket', f:(L, fm)=>{
-  /* Su un'Icon da 160 px il logo occupa un quinto della tela: fra logo,
-     riquadro e squadra al titolo non resta niente, e finivano uno sopra
-     l'altro. Li' il Look si ferma al velo scuro, come fa Split panel. */
-  if(fm && fm.profile === 'tiny'){
-    L.grad.on=true; L.grad.side='bottom'; L.grad.strength=0.85; L.grad.size=0.6;
-    L.frame.on=false;
-    return;
-  }
-  L.band.on=false; L.accent.on=false; L.grad.on=true; L.grad.strength=0.6;
-  /* un velo scuro sotto il testo perche' si legga sopra qualsiasi
-     screenshot, e le due squadre un filo piu' larghe che lo incorniciano.
-     Tutti e due crescono attorno al testo, quindi non lo tagliano mai. */
-  lookShape(L, {name:'Backdrop', kind:'panel', cuts:'none',
-    x:0.04, y:0.68, w:0.92, h:0.26, hostRow:'box', hostPad:1.15,
-    color:'#0b0b0b', opacity:0.62, mode:'fill', front:false});
-  lookShape(L, {name:'Bracket', kind:'bracket-L', x:0.04, y:0.68,
-    w:0.92, h:0.26, thick:0.02, armX:0.22, armY:0.6, hostRow:'box', hostPad:1.6,
-    color:L.accent.color, mode:'fill', front:false});
-  /* il testo parte piu' a destra del solito: la squadra gli cresce attorno,
-     e serve la striscia a sinistra per il logo, se no finisce sul tratto.
-     La striscia e' larga quanto il logo di quel formato: 0.17 fisso
-     bastava sulla Cover ma non sulla Card, dove il logo e' quasi il doppio
-     in proporzione e finiva sopra al titolo. */
-  const lw = L.logo.size * (fm ? fm.h/fm.w : 1);
-  const sinistra = Math.max(0.17, 0.075 + lw + 0.03);
-  L.row.x=sinistra; L.row.y=0.845; L.row.x2=sinistra; L.row.y2=0.79;
-  /* la striscia era pero' rimasta vuota: il logo restava in basso a
-     sinistra, fuori dal riquadro scuro, mentre il testo stava dentro.
-     L'altezza si prende dal testo vero, non da un numero fisso: su Card
-     e Icon il titolo va a capo e sta molto piu' in basso che sulla
-     Cover. */
-  L.logo.x=0.075; L.logo.anchor='free';
-  if(fm){
-    const f = formatoRidotto(fm, 600);
-    const bx = rowInkBox(f, L, L.row.mode==='stack');
-    if(bx) L.logo.y = (bx.top + bx.bot)/2/f.h - L.logo.size/2;
-  }
-}}
-];
-
-/* i Look creano i loro livelli con questa funzione: sono marcati, cosi'
-   quando si passa a un altro Look spariscono da soli e non restano forme
-   orfane in giro per la tela */
-function lookShape(L, props){
-  const l = layerDefaults('shape', props.name || 'Look shape');
-  Object.assign(l, props);
-  l.fromLook = true;
-  delete l.name;
-  l.name = props.name || 'Look shape';
-  layersOf(L).push(l);
-  return l;
-}
-function applyLook(idx, allFormats){
-  pushUndo();
-  const ids = allFormats ? FORMATS.map(f=>f.id) : [state.active];
-  ids.forEach(id=>{
-    const fm = FORMATS.find(f=>f.id===id);
-    const old = state.layouts[id];
-    /* Riparto sempre dal layout pulito del formato: prima i Look si
-       accavallavano e lasciavano badge e scritte in posizioni strane,
-       ereditate dal Look precedente. Tengo i colori scelti dall'utente
-       e i livelli che ha creato lui a mano. */
-    const fresh = defLayout(fm);
-    fresh.on = old.on;
-    fresh.layers = layersOf(old).filter(l=> !l.fromLook);
-    /* Screenshot e regolazioni immagine sono lavoro dell'utente, non del
-       Look: quelli passano di peso. I colori NO: prima li riportavo dal
-       layout precedente e cosi' un Look ereditava le tinte di quello
-       applicato prima. "Corner tag" mette il titolo nero, perche' li' sta
-       su una targa arancione, e da quel momento ogni Look successivo si
-       ritrovava il titolo nero sopra la fascia scura: invisibile. Adesso
-       ogni Look parte dai colori di serie e la tinta scelta dall'utente
-       viene riapplicata dopo, tutta insieme. */
-    fresh.shot = JSON.parse(JSON.stringify(old.shot));
-    fresh.fx   = JSON.parse(JSON.stringify(old.fx));
-    state.layouts[id] = fresh;
-    LOOKS[idx].f(fresh, fm);
-    if(LOOKS[idx].psd){
-      /* "PSD base" e' esattamente lo stato di partenza dell'app: niente
-         riordino, che lo scosterebbe, ma la centratura del titolo nella
-         fascia si', perche' e' quella che riproduce il PSD e all'avvio
-         viene fatta comunque */
-      centerRowInBandOn(fm, fresh);
-    } else {
-      tidyLayout(fresh, fm);
-      sistemaLook(fresh, fm);
-    }
-    accentoFuoriDalLogo(fresh, fm);
-  });
-  /* la tinta scelta dall'utente si rimette sopra il Look appena applicato:
-     il calcolo parte dalla tavolozza di serie, quindi si puo' ripetere
-     quante volte si vuole senza che i colori scivolino via */
-  const scelto = state.theme.accent;
-  if(scelto && scelto.toLowerCase() !== C.accentA2.toLowerCase()){
-    applyAccent(scelto, !allFormats);
-  }
-  buildControls(); render();
-  toast('Look: '+LOOKS[idx].n+(allFormats?' (all formats)':''));
-}
-
-/* ==========================================================================
-   RIORDINO AUTOMATICO
-   I Look cambiano fascia, barra e sfumature, ma il logo, il titolo, la
-   versione e i badge restavano dove li aveva messi il layout di partenza:
-   di qui le scritte in posti strani. Qui li rimetto in ordine misurando
-   l'inchiostro vero del testo, non i numeri teorici, cosi' il risultato
-   e' giusto anche quando il Look ha ingrandito il titolo o spostato la
-   fascia. Si lavora in questo ordine: prima il testo, poi il logo che gli
-   si appoggia a sinistra, poi versione e badge negli angoli liberi.
-   ========================================================================== */
-function tidyLayout(L, fPieno, salta){
-  if(!fPieno || salta) return;
-  /* Il riordino lavora tutto in frazioni della tela: misurarlo a piena
-     risoluzione non cambia il risultato, costa solo tempo. */
-  const f = formatoRidotto(fPieno, 1500);
-  const M = 0.03;                       /* margine comune, in frazione */
-  const mx = M, my = M*f.w/f.h;         /* stesso margine in pixel sui due assi */
-
-  /* --- 1. la riga di testo ------------------------------------------- */
-  if(L.row && L.row.on){
-    L.row.x = clamp(L.row.x, mx, 0.9);
-    if(L.band && L.band.on){
-      /* dentro la fascia, centrata: e' il caso del PSD */
-      centerRowInBandOn(f, L);
-    } else {
-      /* senza fascia il titolo non deve uscire dal bordo di sotto */
-      const box = rowInkBox(f, L, L.row.mode==='stack');
-      if(box){
-        const fuoriSotto = box.bot/f.h - (1 - my);
-        if(fuoriSotto > 0) L.row.y -= fuoriSotto + 0.005;
-        const fuoriSopra = my - box.top/f.h;
-        if(fuoriSopra > 0) L.row.y += fuoriSopra + 0.005;
-      }
-    }
-  }
-
-  /* --- 2. il logo ------------------------------------------------------
-     Il riordino e' un pronto soccorso, non un rifacimento: tocca il logo
-     solo se e' fuori dalla tela o se finisce sopra al testo. Se sta bene
-     dov'e' non lo muove, se no i Look che partono dal PSD lo sposterebbero
-     ogni volta allontanandosi proprio da quello che devono riprodurre. */
-  if(L.logo && L.logo.on){
-    const box = L.row && L.row.on ? rowInkBox(f, L, false) : null;
-    const lw = L.logo.size*f.h/f.w;     /* il riquadro e' quadrato in pixel */
-    const lh = L.logo.size;
-    const gap = Math.max(0.012, lw*0.16);
-
-    const fuori = L.logo.x < -mx*0.5 || L.logo.y < -my*0.5 ||
-                  L.logo.x + lw > 1 + mx*0.5 || L.logo.y + lh > 1 + my*0.5;
-    const sopraIlTesto = box && boxOverlap(L.logo.x, L.logo.y, lw, lh,
-      {x:box.left/f.w, y:box.top/f.h,
-       w:(box.right-box.left)/f.w, h:(box.bot-box.top)/f.h}) > 0;
-
-    if(fuori){
-      L.logo.x = clamp(L.logo.x, mx*0.4, 1-lw-mx*0.4);
-      L.logo.y = clamp(L.logo.y, my*0.4, 1-lh-my*0.4);
-    }
-    if(sopraIlTesto){
-      if(L.logo.anchor === 'free'){
-        pushApart(L, f, box, lw, lh, my);
-      } else {
-        /* di regola sta a sinistra del testo, com'e' nel PSD */
-        let lx = box.left/f.w - gap - lw;
-        if(lx < mx*0.4){
-          lx = clamp(box.left/f.w, mx, 1-lw-mx);
-          const sopra = box.top/f.h - lh - my*0.6;
-          const sotto = box.bot/f.h + my*0.6;
-          L.logo.y = (sopra >= my) ? sopra
-                   : (sotto + lh <= 1-my ? sotto : clamp(sopra, my, 1-lh-my));
-        } else {
-          L.logo.y = clamp((box.top+box.bot)/2/f.h - lh/2, my*0.4, 1-lh-my*0.4);
-        }
-        L.logo.x = clamp(lx, mx*0.4, 1-lw-mx);
-      }
-    }
-  }
-
-  /* --- 3. la versione nell'angolo in basso a destra ------------------- */
-  if(L.version && L.version.on){
-    L.version.x = clamp(L.version.x, 0.5, 1-mx*0.4);
-    L.version.y = clamp(L.version.y, my, 1-my*0.4);
-  }
-
-  /* --- 4. i badge, nell'angolo libero in alto ------------------------- */
-  if(L.badges && L.badges.on){
-    const n = String(state.pack.badges||'').split(',').filter(x=>x.trim()).length || 1;
-    const tot = n*L.badges.h + (n-1)*L.badges.gap;
-    const bw = badgeWidth(f, L);
-    L.badges.y = clamp(L.badges.y, my, Math.max(my, 1-tot-my));
-    L.badges.x = clamp(L.badges.x, mx, Math.max(mx, 1-bw-mx));
-
-    /* Provo una serie di posti in ordine e prendo il primo davvero libero.
-       Con un solo tentativo (in alto a sinistra) i Look che mettono il
-       titolo in cima finivano per sovrapporsi ai badge. */
-    const box = (L.row && L.row.on) ? rowInkBox(f, L, false) : null;
-    const dx = 1 - bw - mx;
-    const sottoTesto = box ? box.bot/f.h + my*0.7 : my;
-    const fondo = (L.band && L.band.on ? L.band.top - L.band.feather*0.5 : 1) - tot - my*0.7;
-    /* se dove stanno adesso non danno fastidio a nessuno, non li tocco */
-    const qui = boxOverlap(L.badges.x, L.badges.y, bw, tot,
-        box ? {x:box.left/f.w, y:box.top/f.h,
-               w:(box.right-box.left)/f.w, h:(box.bot-box.top)/f.h} : null)
-      + ((L.logo && L.logo.on) ? boxOverlap(L.badges.x, L.badges.y, bw, tot,
-          {x:L.logo.x, y:L.logo.y, w:L.logo.size*f.h/f.w, h:L.logo.size}) : 0);
-    const dentro = L.badges.x >= -mx*0.5 && L.badges.y >= -my*0.5 &&
-                   L.badges.x + bw <= 1 + mx*0.5 && L.badges.y + tot <= 1 + my*0.5;
-    if(qui === 0 && dentro) return;
-
-    const posti = [
-      [L.badges.x, L.badges.y],   /* dove sta adesso */
-      [mx, my],                   /* alto a sinistra */
-      [dx, my],                   /* alto a destra */
-      [mx, sottoTesto],           /* subito sotto il testo, a sinistra */
-      [dx, sottoTesto],           /* subito sotto il testo, a destra */
-      [mx, fondo],                /* in basso, sopra la fascia */
-      [dx, fondo]
-    ];
-    let scelto = null, minSovrap = Infinity;
-    for(const [bx, by] of posti){
-      if(by < my*0.5 || by + tot > 1 - my*0.5) continue;
-      const s1 = boxOverlap(bx, by, bw, tot, box ? {x:box.left/f.w, y:box.top/f.h,
-                   w:(box.right-box.left)/f.w, h:(box.bot-box.top)/f.h} : null);
-      const s2 = (L.logo && L.logo.on)
-        ? boxOverlap(bx, by, bw, tot, {x:L.logo.x, y:L.logo.y,
-                     w:L.logo.size*f.h/f.w, h:L.logo.size}) : 0;
-      const tot2 = s1 + s2;
-      if(tot2 === 0){ scelto = [bx, by]; break; }
-      if(tot2 < minSovrap){ minSovrap = tot2; scelto = [bx, by]; }
-    }
-    if(scelto){ L.badges.x = scelto[0]; L.badges.y = scelto[1]; }
-  }
-}
-
-
-/* ==========================================================================
-   CONTROLLO FINALE DEL LOOK
-   Il Look dice l'idea, questo passaggio la fa stare in piedi su tutti e
-   dieci i formati. Senza, ogni Look andrebbe tarato dieci volte e
-   basterebbe un titolo piu' lungo per rimetterlo fuori squadra: la targa
-   tagliava il testo, la barra ci passava sopra, il logo finiva addosso a
-   qualcosa. Qui la targa cresce attorno al testo, la barra si scosta, il
-   logo si sposta e la cornice resta un filo.
-   ========================================================================== */
-const FRAME_MAX = 0.005;
-/* sposta la riga di testo tenendo insieme le due linee */
-function spostaTesto(L, dx, dy){
-  if(!L.row) return;
-  L.row.x += dx; L.row.y += dy;
-  if(L.row.x2 !== undefined) L.row.x2 += dx;
-  if(L.row.y2 !== undefined) L.row.y2 += dy;
-}
 /* riquadro dell'inchiostro della riga, in frazioni di tela */
 /* riquadro del solo brand, quello che nella modalita' impilata sta sopra
    il titolo. Si misura togliendo dal testo tutto il resto. */
@@ -7872,10 +7351,10 @@ function siToccano(a, b){
 /* La barra accento non deve passare sopra le scritte.
    Eccezione voluta: su Card e Icon il PSD appoggia il brand sulla barra, ed
    e' il disegno giusto. Vale pero' solo finche' la barra e' una fascia alta
-   quanto la scritta: se un Look la assottiglia diventa una riga, e una riga
+   quanto la scritta: se la si assottiglia diventa una riga, e una riga
    in mezzo alla parola e' solo un errore.
-   Serve sia ai Look sia al titolo scritto su piu' righe: aggiungendo una
-   riga il testo cresce verso l'alto e va a finire sotto la barra. */
+   Serve al titolo scritto su piu' righe: aggiungendo una riga il testo
+   cresce verso l'alto e va a finire sotto la barra. */
 function accentoFuoriDalTesto(L, f, testoGia){
   if(!L || !L.accent || !L.accent.on || !L.row || !L.row.on) return false;
   const my = 0.025*f.w/f.h;
@@ -7964,28 +7443,9 @@ function sistemaRigheTitolo(){
   });
   return mosse;
 }
-/* Quanto di un rettangolo e' davvero coperto di colore. Serve a distinguere
-   un pannello pieno, su cui il logo ci sta benissimo, da una cornice o una
-   squadra, che sono due tratti sottili: sopra un tratto il logo si vede
-   attraversato da una riga e sembra un errore. */
-function pienoDentro(f, fn, box){
-  const x0 = Math.max(0, Math.floor(box.x*f.w)), y0 = Math.max(0, Math.floor(box.y*f.h));
-  const x1 = Math.min(f.w, Math.ceil((box.x+box.w)*f.w));
-  const y1 = Math.min(f.h, Math.ceil((box.y+box.h)*f.h));
-  if(x1<=x0 || y1<=y0) return 0;
-  const c = scratch(74, f.w, f.h);
-  c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,f.w,f.h);
-  fn(c);
-  const d = c.getImageData(x0, y0, x1-x0, y1-y0).data;
-  let n = 0;
-  for(let i=3;i<d.length;i+=4) if(d[i] > 40) n++;
-  return n / ((x1-x0)*(y1-y0));
-}
-
-
-/* Il colore del testo lo decide quello che ha sotto, non il Look.
+/* Il colore del testo lo decide quello che ha sotto.
    Su Card e Icon il brand e' scuro perche' poggia sulla barra arancione:
-   se pero' un Look lo sposta su un pannello nero resta nero su nero e
+   se pero' finisce su un pannello nero resta nero su nero e
    sparisce. Qui si guarda davvero cosa c'e' dietro e si sceglie chiaro o
    scuro di conseguenza. */
 function fondoSotto(f, L){
@@ -8052,206 +7512,8 @@ function sistemaContrasto(L, f){
   }
 }
 
-function sistemaLook(L, fPieno){
-  if(!fPieno) return;
-  /* Qui si misura solo per decidere dove mettere le cose, non per
-     disegnarle: mezzo pixel in piu' o in meno non cambia niente, mentre
-     leggere otto milioni di pixel per ogni formato si sente. */
-  const f = formatoRidotto(fPieno, 700);
-  const mx = 0.025, my = 0.025*f.w/f.h;
-
-  /* 1. la cornice resta un filo */
-  if(L.frame && L.frame.on) L.frame.thick = Math.min(L.frame.thick, FRAME_MAX);
-
-  /* 1b. Sulle storie 9:16 l'app si prende una striscia in alto e una in
-     basso: quello che ci finisce dentro c'e' ma non si vede. Il layout di
-     partenza ne tiene gia' conto, i Look pero' mettono testo e logo dove
-     vogliono loro: qui chi ci casca rientra. Si fa prima che i pannelli
-     crescano attorno al testo, cosi' seguono la posizione buona. */
-  if(f.h > f.w*1.6){
-    const alto = 250/1920, basso = 340/1920;
-    const t0 = rowBoxFrac(f, L, false);
-    if(t0){
-      if(t0.y < alto) spostaTesto(L, 0, alto - t0.y);
-      else if(t0.y + t0.h > 1 - basso)
-        spostaTesto(L, 0, Math.max(alto - t0.y, (1 - basso) - (t0.y + t0.h)));
-    }
-    if(L.logo && L.logo.on){
-      const lh = L.logo.size;
-      if(L.logo.y < alto) L.logo.y = alto;
-      else if(L.logo.y + lh > 1 - basso) L.logo.y = Math.max(alto, 1 - basso - lh);
-    }
-    if(L.version && L.version.on && typeof L.version.y === 'number'){
-      if(L.version.y < alto + 0.02) L.version.y = alto + 0.02;
-      else if(L.version.y > 1 - basso) L.version.y = 1 - basso;
-    }
-    if(L.badges && L.badges.on && typeof L.badges.y === 'number')
-      L.badges.y = Math.max(L.badges.y, alto + 0.01);
-  }
-
-  /* 2. la forma che ospita il testo gli cresce attorno, non lo taglia */
-  let testo = rowBoxFrac(f, L, false);
-  /* La targa puo' crescere solo fino ai margini della tela: con un titolo
-     lungo il testo diventerebbe piu' largo di quanto la targa puo' essere,
-     e uscirebbe dai bordi. Allora e' il testo a farsi piu' stretto: il
-     limite di larghezza del titolo scende a quello che ci sta dentro. */
-  if(testo && L.row){
-    const ospiti = layersOf(L).filter(l=> l.on && l.fromLook && l.hostRow === 'box');
-    if(ospiti.length){
-      const k = ospiti.reduce((a,l)=> Math.max(a, l.hostPad||1), 1);
-      /* si guarda anche l'altezza che il titolo avrebbe senza rimpicciolire:
-         se no il bordo risulta stretto e il conto torna solo per un pelo */
-      const alto = Math.max(testo.h, L.row.titleSize || 0);
-      const padX = Math.max(0.016, alto*0.55*f.h/f.w) * k;
-      const tetto = Math.max(0.2, 1 - mx*2 - padX*2);
-      /* Il limite si mette sempre, non solo quando il testo lo supera: se lo
-         si mettesse dopo, spostare il testo verso sinistra gli farebbe
-         guadagnare spazio, il testo ricrescerebbe e uscirebbe di nuovo. */
-      L.row.fitW = Math.min(L.row.fitW===undefined ? 1 : L.row.fitW, tetto);
-      testo = rowBoxFrac(f, L, false) || testo;
-    }
-  }
-  if(testo){
-    const ospiti = layersOf(L).filter(l=> l.on && l.fromLook && l.hostRow);
-    const targhe = ospiti.filter(l=> l.hostRow !== 'colonna');
-    const bordoX = (t, k)=> Math.max(0.016, t.h*0.55*f.h/f.w) * k;
-    const bordoY = (t, k)=> Math.max(0.016*f.w/f.h, t.h*0.55) * k;
-    if(targhe.length){
-      /* Il pannello col bordo piu' largo decide dove finisce il testo: cosi'
-         ci stanno dentro tutti e il testo si sposta una volta sola. Prima
-         ogni pannello lo spostava per conto suo, e con due pannelli il
-         secondo lo mandava fuori dal primo. */
-      const k = targhe.reduce((a,l)=> Math.max(a, l.hostPad||1), 1);
-      /* Si ripete finche' non si ferma: spostando il testo verso sinistra
-         gli resta piu' spazio a destra, quindi si rimpicciolisce di meno e
-         torna a essere piu' largo. Due o tre giri e la cosa si assesta. */
-      for(let giro=0; giro<4; giro++){
-        const padX = bordoX(testo, k), padY = bordoY(testo, k);
-        const w = Math.min(1-mx*2, testo.w + padX*2);
-        const h = Math.min(1-my*2, testo.h + padY*2);
-        const x = clamp(testo.x - padX, mx, Math.max(mx, 1-mx-w));
-        const y = clamp(testo.y - padY, my, Math.max(my, 1-my-h));
-        const dx = (x + padX) - testo.x, dy = (y + padY) - testo.y;
-        if(Math.abs(dx) < 0.0005 && Math.abs(dy) < 0.0005) break;
-        spostaTesto(L, dx, dy);
-        testo = rowBoxFrac(f, L, false) || testo;
-      }
-    }
-    /* ora ogni pannello cresce attorno al testo dov'e' davvero finito */
-    ospiti.forEach(l=>{
-      const k = l.hostPad || 1;
-      const padX = bordoX(testo, k), padY = bordoY(testo, k);
-      if(l.hostRow === 'colonna'){
-        /* pannello laterale: cambia solo la larghezza, il resto e' voluto */
-        const serve = testo.x + testo.w + padX - l.x;
-        l.w = Math.min(0.6, Math.max(l.w, serve));
-      } else {
-        l.w = Math.min(1-mx*2, testo.w + padX*2);
-        l.h = Math.min(1-my*2, testo.h + padY*2);
-        l.x = clamp(testo.x - padX, mx, Math.max(mx, 1-mx-l.w));
-        l.y = clamp(testo.y - padY, my, Math.max(my, 1-my-l.h));
-      }
-    });
-    testo = rowBoxFrac(f, L, false);
-  }
-
-  /* 3. la barra accento non passa sopra le scritte.
-     Eccezione voluta: su Card e Icon il PSD ci appoggia sopra il brand, ed
-     e' il disegno giusto. Li' si controlla solo il titolo. */
-  /* nella modalita' impilata brand e barra salgono insieme sopra il titolo */
-  sistemaRigheStack(L, f);
-  accentoFuoriDalTesto(L, f);
-
-  /* 4. il logo non sta a cavallo della barra accento.
-     Su Card e Icon no: li' il PSD appoggia proprio il logo sulla barra
-     spessa, ed e' il disegno giusto. */
-  if(L.logo && L.logo.on && L.accent && L.accent.on && L.row && L.row.mode !== 'stack'){
-    const lw = L.logo.size*f.h/f.w, lh = L.logo.size;
-    const t = Math.max(L.accent.thick, 0.004);
-    const ay0 = L.accent.y - t/2, ay1 = L.accent.y + t/2;
-    const ax0 = L.accent.x0, ax1 = L.accent.x1;
-    const incrocia = L.logo.x < ax1 && ax0 < L.logo.x + lw &&
-                     L.logo.y < ay1 && ay0 < L.logo.y + lh &&
-                     !(L.logo.y > ay0 - lh*0.25 && L.logo.y + lh < ay1 + lh*0.25);
-    if(incrocia){
-      const sopra = ay0 - lh - my*0.4;
-      const sotto = ay1 + my*0.4;
-      if(sopra > my*0.3) L.logo.y = sopra;
-      else if(sotto + lh < 1 - my*0.3) L.logo.y = sotto;
-    }
-  }
-
-  /* 4b. Il logo non sta a cavallo di una cornice o di una squadra. Un
-     pannello pieno va benissimo, un tratto sottile no: si vede il logo
-     tagliato da una riga e sembra un errore. Si guardano solo le forme
-     nate dal Look, e solo quelle che disegnano un contorno. */
-  if(L.logo && L.logo.on){
-    const lw = L.logo.size*f.h/f.w, lh = L.logo.size;
-    const logoBox = {x:L.logo.x, y:L.logo.y, w:lw, h:lh};
-    const contorni = layersOf(L).filter(l=>
-      l.on && l.fromLook && l.type !== 'text' && l.w > 0 && l.h > 0 &&
-      pienoDentro(f, c=> drawShape(c, f.w, f.h, l), {x:l.x, y:l.y, w:l.w, h:l.h}) < 0.35);
-    const addosso = contorni.filter(l=>
-      pienoDentro(f, c=> drawShape(c, f.w, f.h, l), logoBox) > 0.004);
-    if(addosso.length){
-      /* il posto piu' naturale e' di fianco, appena fuori dal contorno */
-      const sx = Math.min.apply(null, addosso.map(l=> l.x));
-      const su = Math.min.apply(null, addosso.map(l=> l.y));
-      const giu = Math.max.apply(null, addosso.map(l=> l.y + l.h));
-      const aSinistra = sx - lw - mx*0.4;
-      const sopra = su - lh - my*0.4;
-      if(aSinistra >= mx*0.5) L.logo.x = aSinistra;
-      else if(sopra >= my*0.5) L.logo.y = sopra;
-      else if(giu + my*0.4 + lh <= 1 - my*0.5) L.logo.y = giu + my*0.4;
-    }
-  }
-
-  /* 5. il testo prende il colore che si legge sopra quello che ha sotto */
-  sistemaContrasto(L, f);
-
-  /* 6. niente forme davanti al testo: chi ci finisce sopra passa dietro */
-  if(testo){
-    layersOf(L).filter(l=> l.on && l.fromLook && l.front && l.type !== 'text').forEach(l=>{
-      if(siToccano({x:l.x, y:l.y, w:l.w, h:l.h}, testo)) l.front = false;
-    });
-  }
-}
-
-/* larghezza vera di un badge, misurata col font corrente */
-function badgeWidth(f, L){
-  const c = scratch(87, 8, 8);
-  const h = L.badges.h*f.h, px = L.badges.size*h;
-  setFont(c, L.badges.font, L.badges.weight, px, L.badges.track);
-  let w = 0;
-  String(state.pack.badges||'').split(',').map(x=>x.trim()).filter(Boolean)
-    .forEach(t=>{ w = Math.max(w, c.measureText(t).width); });
-  return (w + px*L.badges.pad*2) / f.w;
-}
-
-/* quanto si sovrappongono due rettangoli, in area */
-function boxOverlap(x, y, w, h, o){
-  if(!o) return 0;
-  const ox = Math.max(0, Math.min(x+w, o.x+o.w) - Math.max(x, o.x));
-  const oy = Math.max(0, Math.min(y+h, o.y+o.h) - Math.max(y, o.y));
-  return ox*oy;
-}
-
-/* allontana il logo dal testo, verso il lato dove c'e' piu' spazio */
-function pushApart(L, f, box, lw, lh, my){
-  const lx = L.logo.x, ly = L.logo.y;
-  const rx0 = box.left/f.w, rx1 = box.right/f.w;
-  const ry0 = box.top/f.h,  ry1 = box.bot/f.h;
-  const tocca = lx < rx1 && rx0 < lx+lw && ly < ry1 && ry0 < ly+lh;
-  if(!tocca) return;
-  const sopra = ry0 - lh - my*0.6;
-  const sotto = ry1 + my*0.6;
-  if(sopra >= my*0.4) L.logo.y = sopra;
-  else if(sotto + lh <= 1 - my*0.4) L.logo.y = sotto;
-  else L.logo.x = clamp(rx1 + my*0.6, my*0.4, 1-lw-my*0.4);
-}
-
 /* centratura nella fascia su un formato solo, senza toccare lo stato
-   globale: serve al riordino, che gira anche su formati non attivi */
+   globale: serve anche ai formati non attivi */
 function centerRowInBandOn(f, L){
   if(!L.row.on || !L.band.on) return;
   const stack = L.row.mode==='stack';
