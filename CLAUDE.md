@@ -1,4 +1,4 @@
-# Toolbox — working notes (last updated 2026-10-05, version 1.6.1)
+# Toolbox — working notes (last updated 2026-10-05, version 1.6.2)
 
 Davide asked to integrate **the complete Scene Sync interface inside Toolbox**, not an external launcher.
 
@@ -44,7 +44,7 @@ npm run test:workflow
 
 **Since 1.6.0 Toolbox runs from an unpacked folder, `Tools/_app/Toolbox`, not from a portable .exe.** Davide asked for a much faster start. Measured: the portable .exe took 3.3 to 5.0 s to show its window, because it unpacks the whole app to a temporary folder at every start; the unpacked copy shows it in 0.5 to 0.6 s (1.4 s on a cold first start). The folder is about 360 MB. User data stays in `%APPDATA%\Toolbox` either way, so nothing was lost in the switch. There is no portable target any more.
 
-Electron remains **33.4.11**, locked by `package-lock.json`; electron-builder remains 25.1.8. Do not upgrade them as part of routine feature work. Build caches remain in `Tools/_cache`. Current version: **1.6.1**.
+Electron remains **33.4.11**, locked by `package-lock.json`; electron-builder remains 25.1.8. Do not upgrade them as part of routine feature work. Build caches remain in `Tools/_cache`. Current version: **1.6.2**.
 
 **A running Toolbox cannot be replaced.** `build.ps1` checks for it and stops with "Toolbox is open" instead of letting electron-builder hang.
 
@@ -112,6 +112,13 @@ Davide's three revision documents are tracked in `REVISION-NOTES.md`. What chang
 - Colour rows show their HEX (click copies) and pairs get a swap button.
 - Text-row spacing, separators and the rest of the overlays: done in the overlay pass, see "Store Graphics overlays are measured".
 - **The Looks panel was removed** (1.6.1, Davide does not use it), with the automatic tidy-up passes only it used. Do not bring it back.
+
+## Review before manual testing (1.6.2)
+
+Fixed after an adversarial review on 5 October 2026 - keep these behaviours:
+- Shell: per-file controls (offset, speed, zoom, rotation, pan of video A/B and grid cells, Frame Strip trim, Annotate text box) are NOT restored (`NOT_KEPT`), or a new video opened shifted like the last one.
+- `desktop:rename-many` refuses two files with the same source or target name, and rolls back a half-done first pass of a swap.
+- Store Graphics: undo across Open also restores which file Save writes to; the autosave records whether the work differs from the project file (`sporco`), so the * survives a restart; a project file moved away makes Save ask where; exports are queued (`codaExport`) so a double click cannot reuse a number; a vanished export folder is forgotten; a failed write removes its empty file; a click that moves nothing is dropped from undo; adding images is its own undo step; same-named images from different folders are both kept; images are rewritten in IndexedDB only when the list changes; `aggiornaMisure` runs once per layout (`misure: 2`).
 
 ## User requirements / limits to preserve
 

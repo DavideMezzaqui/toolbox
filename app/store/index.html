@@ -2845,6 +2845,8 @@ function defLayout(f){
     L[p.key] = SHADOW_PARTS.indexOf(p.key)>=0 ? Object.assign(shadowDefaults(), d) : d;
   });
   L.layers = [];
+  /* versione delle misure di serie: vedi aggiornaMisure */
+  L.misure = 2;
   migraPannelli(L);
 
   /* Il logo e' un quadrato: la sua misura viene dall'altezza, mentre la
@@ -4060,12 +4062,22 @@ function applySnap(s){
    sempre insieme a quelle dello stato: cosi' anche togliere o riordinare
    una foto si annulla come tutto il resto. */
 let undoShots = [], redoShots = [];
-function shotsSnap(){ return {list: SHOTS.slice(), main: imgShot, logo: imgLogo}; }
+/* Anche il file di progetto viaggia con l'annulla: aperto un progetto per
+   sbaglio e tornati indietro con Ctrl+Z, Save deve scrivere nel file di
+   prima, non sopra quello appena aperto con il lavoro vecchio. */
+function shotsSnap(){ return {list: SHOTS.slice(), main: imgShot, logo: imgLogo, logoBlob: logoBlob,
+  progetto: {h: fileProgetto, n: nomeProgetto, f: firmaSalvata}}; }
 function shotsBack(s){
   if(!s) return;
   SHOTS = s.list.slice();
   imgShot = s.main;
   imgLogo = s.logo;
+  if(s.logoBlob !== undefined) logoBlob = s.logoBlob;
+  if(s.progetto && s.progetto.h !== fileProgetto){
+    fileProgetto = s.progetto.h; nomeProgetto = s.progetto.n; firmaSalvata = s.progetto.f;
+    if(fileProgetto) ricordaFileProgetto(fileProgetto);
+    else dbApri().then(d=>{ if(!d) return; try{ d.transaction('meta','readwrite').objectStore('meta').delete('progetto'); }catch(e){} });
+  }
   if(imgShot && !SHOTS.some(x=> x.img===imgShot)) imgShot = SHOTS.length ? SHOTS[0].img : null;
   if(!imgShot && SHOTS.length) imgShot = SHOTS[0].img;
 }
@@ -4132,18 +4144,21 @@ function autoSaveNow(){
           'you close wins. Use Save for a file that stays yours');
   }
   const ora = Date.now();
-  const pacco = (snap)=> JSON.stringify({
-    v:APP.version, at:ora, active:state.active, snap:snap, colori:COLORI_USATI
-  });
   const stato = snapState();
+  /* se il lavoro e' diverso dal file di progetto lo si scrive qui: alla
+     riapertura il nome deve tornare con l'asterisco, non sembrare salvato */
+  const sporco = !!nomeProgetto && firmaProgetto(stato) !== firmaSalvata;
+  const pacco = (snap)=> JSON.stringify({
+    v:APP.version, at:ora, active:state.active, snap:snap, colori:COLORI_USATI, sporco:sporco
+  });
   /* niente da scrivere se non e' cambiato niente: il disegno chiama qui a
      ogni movimento, e l'avviso deve dire "salvato" solo quando lo e' */
-  if(stato + state.active === ultimoAuto) return;
+  if(stato + state.active + sporco === ultimoAuto) return;
   try{
     localStorage.setItem(AUTOKEY, pacco(stato));
     autoAvvisato = false;
     oraNostra = ora;
-    ultimoAuto = stato + state.active;
+    ultimoAuto = stato + state.active + sporco;
     segnaAutosave();
     return;
   }catch(err){ /* spazio finito o memoria negata: provo a stringere */ }
@@ -6189,6 +6204,11 @@ function endDrag(){
   if(!dragging) return;
   dragging=false; cv.classList.remove('drag');
   GUIDES = {x:null, y:null};
+  /* un clic senza spostare niente non e' una mossa: se restasse nella pila,
+     Ctrl+Z dopo un clic sembrerebbe non fare nulla */
+  if(undoStack.length && undoStack[undoStack.length-1] === snapState()){
+    undoStack.pop(); undoShots.pop(); updateHistBtns();
+  }
   syncControls(); render();
 }
 
@@ -6571,10 +6591,16 @@ function addShots(files, done){
                           blob:file, buchi: haTrasparenza(im)};
       else { rotte++; if(!primoMotivo && motivo) primoMotivo = motivo; }
       if(--left===0){
-        const fresh = loaded.filter(Boolean);
-        fresh.forEach(sh=>{
-          if(!SHOTS.some(x=> x.name===sh.name && x.path===sh.path)) SHOTS.push(sh);
-        });
+        /* Lo stesso file aggiunto due volte entra una volta sola. Prima
+           bastava lo stesso nome: due "Screenshot 1.png" di cartelle diverse,
+           trascinati sulla finestra, erano lo stesso file e il secondo
+           spariva in silenzio, pur contato fra quelli caricati. */
+        const stesso = (a, b)=> a.name === b.name && a.path === b.path &&
+          !!a.blob && !!b.blob && a.blob.size === b.blob.size && a.blob.lastModified === b.blob.lastModified;
+        const fresh = loaded.filter(Boolean).filter(sh=> !SHOTS.some(x=> stesso(x, sh)));
+        /* aggiungere immagini si annulla da solo, non insieme alla mossa prima */
+        if(fresh.length) pushUndo();
+        fresh.forEach(sh=> SHOTS.push(sh));
         if(!imgShot && SHOTS.length) imgShot = SHOTS[0].img;
         autoAssignPanels();
         dbSalva();
@@ -6623,7 +6649,7 @@ function dbApri(){
 }
 /* riscrivo l'elenco intero: le mosse sono poche (aggiunta, cancellazione,
    spostamento) e cosi' l'ordine sul disco e' sempre quello vero */
-let dbTimer = null, dbAvvisato = false;
+let dbTimer = null, dbAvvisato = false, _dbUltimaLista = null;
 function dbSalva(){
   if(dbTimer) clearTimeout(dbTimer);
   dbTimer = setTimeout(dbSalvaOra, 400);
@@ -6638,12 +6664,19 @@ function dbSalvaOra(){
         if(!dbAvvisato){ dbAvvisato = true;
           toast('Could not keep the images for next time: not enough room in the browser'); }
       };
-      const st = t.objectStore('shots');
-      st.clear();
-      SHOTS.forEach((sh, i)=>{
-        if(!sh.blob) return;                 /* senza il file originale non salvo */
-        st.put({i:i, nome:sh.name, path:sh.path || sh.name, blob:sh.blob});
-      });
+      /* Le immagini si riscrivono solo se l'elenco e' cambiato. Prima ogni
+         clic che metteva una foto in un pannello riscriveva tutti i file:
+         con cento screenshot 4K, centinaia di megabyte su disco per niente. */
+      const lista = SHOTS.map(x=> (x.img && x.img.__uid) + ':' + x.name).join('|');
+      if(lista !== _dbUltimaLista){
+        const st = t.objectStore('shots');
+        st.clear();
+        SHOTS.forEach((sh, i)=>{
+          if(!sh.blob) return;                 /* senza il file originale non salvo */
+          st.put({i:i, nome:sh.name, path:sh.path || sh.name, blob:sh.blob});
+        });
+        t.addEventListener('complete', ()=>{ _dbUltimaLista = lista; });
+      }
       const mt = t.objectStore('meta');
       const attiva = SHOTS.findIndex(x=> x.img === imgShot);
       mt.put(attiva, 'principale');
@@ -6652,6 +6685,7 @@ function dbSalvaOra(){
   });
 }
 function dbSvuota(){
+  _dbUltimaLista = null;
   dbApri().then(d=>{
     if(!d) return;
     try{
@@ -7087,9 +7121,12 @@ async function riprendiFileProgetto(){
   });
   if(!h || !h.name) return;
   fileProgetto = h; nomeProgetto = h.name;
-  /* lo stato appena ripreso e' quello di quando si e' chiuso: per quanto ne
-     sappiamo coincide con il file, finche' non si cambia qualcosa */
-  firmaSalvata = firmaProgetto();
+  /* Lo stato appena ripreso e' quello di quando si e' chiuso. Coincide con
+     il file solo se l'ultimo salvataggio automatico lo diceva: altrimenti
+     c'erano modifiche non salvate nel file, e il nome torna con l'asterisco. */
+  let sporco = false;
+  try{ sporco = !!JSON.parse(localStorage.getItem(AUTOKEY) || '{}').sporco; }catch(e){}
+  firmaSalvata = sporco ? '' : firmaProgetto();
   aggiornaInfoProgetto(firmaSalvata);
 }
 async function salvaProgetto(nuovo){
@@ -7120,9 +7157,18 @@ async function salvaProgetto(nuovo){
     firmaSalvata = firmaProgetto(stato);
     ricordaFileProgetto(h);
     aggiornaInfoProgetto(firmaProgetto());
+    ultimoAuto = ''; autoSaveNow();        /* il salvataggio automatico sa che ora coincide */
     toast('Saved to ' + h.name + (SHOTS.length ? ', ' + SHOTS.length + ' image' + (SHOTS.length===1?'':'s') + ' inside' : ''));
   }catch(e){
-    toast('Could not save: ' + (e && e.message || e));
+    /* il file del progetto e' stato spostato o cancellato fuori di qui: si
+       chiede dove salvarlo, invece di fallire a ogni Ctrl+S */
+    if(e && e.name === 'NotFoundError' && !nuovo){
+      dimenticaFileProgetto();
+      salvando = false;
+      toast('The project file is no longer where it was. Choose where to save it');
+      return await salvaProgetto(true);
+    }
+    toast('Could not save: ' + (e && e.message || e) + '. Nothing was written: try Save as');
   }finally{ salvando = false; }
 }
 document.getElementById('bSave').onclick = ()=> salvaProgetto(false);
@@ -7157,7 +7203,11 @@ function mergeLayout(f, got){
   });
   out.layers = Array.isArray(got.layers) ? got.layers.map(fixLayer) : [];
   migraPannelli(out);
-  aggiornaMisure(f, out, def);
+  /* Una volta sola per layout: senza il segno, un valore rimesso a mano
+     uguale a quello vecchio di serie (la fascia all'80%, per dire) tornava
+     al nuovo a ogni riapertura. */
+  if(!(got.misure >= 2)) aggiornaMisure(f, out, def);
+  out.misure = 2;
   /* i preset salvati prima dei livelli avevano Shape 1/2/3 */
   ['shape1','shape2','shape3'].forEach(k=>{ if(got[k]) out[k] = got[k]; });
   migrateShapes(out);
@@ -7284,6 +7334,10 @@ function scaricaFile(blob, nome){
   setTimeout(()=> URL.revokeObjectURL(a.href), 60000);
 }
 const _numeriSenzaCartella = {};
+/* Due export lanciati di fila (doppio clic, Export e poi Export all) leggevano
+   la cartella insieme, trovavano lo stesso numero libero e il secondo file
+   sovrascriveva il primo. Il conteggio e la scrittura vanno in fila. */
+let codaExport = Promise.resolve();
 async function cartellaPronta(){
   if(typeof window.showDirectoryPicker !== 'function') return null;
   let dir = cartellaExport;
@@ -7291,7 +7345,8 @@ async function cartellaPronta(){
   return dir || await scegliCartellaExport();
 }
 async function esportaNumerato(blobOPromessa, nome, dirGia){
-  const p = nome.lastIndexOf('.'), base = nome.slice(0, p), est = nome.slice(p);
+  const p = nome.lastIndexOf('.');
+  const base = p > 0 ? nome.slice(0, p) : nome, est = p > 0 ? nome.slice(p) : '';
   if(typeof window.showDirectoryPicker !== 'function'){
     const k = (_numeriSenzaCartella[base] || 0) + 1; _numeriSenzaCartella[base] = k;
     scaricaFile(await blobOPromessa, base + '_' + k + est);
@@ -7301,13 +7356,34 @@ async function esportaNumerato(blobOPromessa, nome, dirGia){
      e' ancora fresco */
   const dir = dirGia || await cartellaPronta();
   const blob = await blobOPromessa;
+  /* toBlob da' null quando la tela e' troppo grande per la memoria */
+  if(!blob) throw new Error('the image could not be rendered, probably out of memory. Try a smaller Scale');
   const re = new RegExp('^' + base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '_(\\d+)\\.[a-z0-9]+$', 'i');
-  let max = 0;
-  for await (const [voce] of dir.entries()){ const m = re.exec(voce); if(m) max = Math.max(max, +m[1]); }
-  const finale = base + '_' + (max + 1) + est;
-  const fh = await dir.getFileHandle(finale, {create:true});
-  const w = await fh.createWritable(); await w.write(blob); await w.close();
-  return finale;
+  const lavoro = codaExport.then(async ()=>{
+    let max = 0;
+    try{
+      for await (const [voce] of dir.entries()){ const m = re.exec(voce); if(m) max = Math.max(max, +m[1]); }
+    }catch(e){
+      /* la cartella e' stata spostata o cancellata: la si dimentica, cosi' il
+         prossimo export la chiede di nuovo invece di fallire ogni volta */
+      if(e && e.name === 'NotFoundError'){
+        cartellaExport = null;
+        dbApri().then(d=>{ if(!d) return; try{ d.transaction('meta','readwrite').objectStore('meta').delete('cartellaExport'); }catch(x){} });
+        buildControls();
+        throw new Error('the export folder ' + dir.name + ' is no longer there. Export again to choose a folder');
+      }
+      throw e;
+    }
+    const finale = base + '_' + (max + 1) + est;
+    const fh = await dir.getFileHandle(finale, {create:true});
+    const w = await fh.createWritable();
+    /* una scrittura fallita non deve lasciare un file vuoto con il numero */
+    try{ await w.write(blob); await w.close(); }
+    catch(e){ try{ await w.abort(); }catch(x){} try{ await dir.removeEntry(finale); }catch(x){} throw e; }
+    return finale;
+  });
+  codaExport = lavoro.catch(()=>{});
+  return lavoro;
 }
 document.getElementById('bExp').onclick = async ()=>{
   avvisaToken();

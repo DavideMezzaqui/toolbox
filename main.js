@@ -384,6 +384,13 @@ if (!app.requestSingleInstanceLock()) {
 
       const full = (n) => path.join(dir, n);
       const sources = new Set(ops.map((o) => o.from.toLowerCase()));
+      // Two renames onto one name would let the second silently replace the
+      // first (Windows rename overwrites). The page already refuses that; the
+      // check is repeated here because losing a file is not recoverable.
+      const targets = new Set(ops.map((o) => o.to.toLowerCase()));
+      if (sources.size !== ops.length || targets.size !== ops.length) {
+        return { error: 'two files in the request share a name', done: [] };
+      }
 
       // Refuse to clobber a file that is not part of this batch.
       for (const op of ops) {
@@ -404,7 +411,18 @@ if (!app.requestSingleInstanceLock()) {
       try {
         if (needsTwoPass) {
           const temps = ops.map((o, i) => '__tp_tmp_' + process.pid + '_' + i + '__');
-          ops.forEach((o, i) => fs.renameSync(full(o.from), full(temps[i])));
+          // If the first pass fails half way (a file moved or locked since the
+          // scan), put back what was already moved: otherwise those files stay
+          // under temporary names and Undo knows nothing about them.
+          let moved = 0;
+          try {
+            ops.forEach((o, i) => { fs.renameSync(full(o.from), full(temps[i])); moved++; });
+          } catch (err) {
+            for (let i = moved - 1; i >= 0; i--) {
+              try { fs.renameSync(full(temps[i]), full(ops[i].from)); } catch { /* reported below */ }
+            }
+            return { error: err.message + ' (nothing was renamed)', done: [] };
+          }
           ops.forEach((o, i) => {
             fs.renameSync(full(temps[i]), full(o.to));
             done.push({ from: o.from, to: o.to });

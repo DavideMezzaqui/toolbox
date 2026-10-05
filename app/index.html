@@ -169,10 +169,16 @@ try { setBar(localStorage.getItem(BAR_KEY) === '1'); } catch (err) { setBar(fals
    would, so the tool reacts exactly as if it had been set again. Files and
    loaded media cannot come back this way. */
 var KEEP = { video: 1, frames: 1, annotate: 1 };
+/* Controls that describe one loaded file, not a preference: the offset,
+   speed, zoom, rotation and pan of video A, B or a grid cell, the trim of a
+   Frame Strip video, the text box Annotate types into. Brought back, a new
+   video would open already shifted and zoomed like the last one. */
+var NOT_KEPT = /^(offset|speed|zoom|rot|panX|panY)[AB]$|^gv(Offset|Speed|Zoom|Rot|PanX|PanY)$|^(start|end|textEdit)$/;
 function keepKey(id) { return 'toolbox.controls.' + id; }
 function controlsOf(doc) {
   return [].slice.call(doc.querySelectorAll('input[id], select[id], textarea[id]')).filter(function (el) {
-    return el.type !== 'file' && el.type !== 'button' && el.type !== 'submit' && el.type !== 'password';
+    return el.type !== 'file' && el.type !== 'button' && el.type !== 'submit' && el.type !== 'password' &&
+           !NOT_KEPT.test(el.id);
   });
 }
 function restoreControls(id, frame) {

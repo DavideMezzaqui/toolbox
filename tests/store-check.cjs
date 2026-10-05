@@ -37,6 +37,13 @@ module.exports = async function storeCheck({ command, evaluate, until, contexts,
   assert.equal(await ev('document.querySelectorAll("#imgs .card").length'), 3, 'three images in the strip');
   assert.equal(await ev('typeof LOOKS + SECTIONS.map(s => s.t).join()').then(x => /Looks|^object/.test(x)), false, 'the Looks panel is gone');
   assert(await ev('getComputedStyle(document.getElementById("imgs")).position === "sticky"'), 'the strip stays at the top');
+  /* the images are kept for next time, and still there after a click that
+     only changes which panel shows what */
+  const kept = await ev(`(async()=>{ const count = ()=> new Promise(r=>{ dbApri().then(d=>{ const q = d.transaction('shots').objectStore('shots').count(); q.onsuccess = ()=> r(q.result); }); });
+    await new Promise(r=> setTimeout(r, 900)); const a = await count();
+    usaImmagine(1, false); await new Promise(r=> setTimeout(r, 900)); const b = await count(); undo();
+    return [a, b]; })()`);
+  assert.deepEqual(kept, [3, 3], 'images stored for the next session');
 
   /* each panel moves alone */
   const moved = await ev(`(()=>{ const S = state.layouts.unity_cover.shot; S.active = 2; state.sel = 'shot';
@@ -91,10 +98,12 @@ module.exports = async function storeCheck({ command, evaluate, until, contexts,
   /* a layout saved before the overlay pass picks up the new measures, but
      keeps what was moved by hand */
   const mig = await ev(`(()=>{ const f = FORMATS.find(x => x.id === 'unity_cover'), d = defLayout(f);
-    const old = JSON.parse(JSON.stringify(d));
+    const old = JSON.parse(JSON.stringify(d)); delete old.misure;
     old.accent.thick = MISURE_PRIMA.unity_cover['accent.thick']; old.accent.x1 = 0.997; old.band.opacity = 0.8; old.row.x = 0.5;
     const m = mergeLayout(f, old);
-    return [m.accent.thick === d.accent.thick, m.accent.x1 === 1, m.band.opacity === 1, m.row.x === 0.5]; })()`);
+    /* once migrated, an 80% band set back by hand must survive the next load */
+    m.band.opacity = 0.8; const again = mergeLayout(f, JSON.parse(JSON.stringify(m)));
+    return [m.accent.thick === d.accent.thick, m.accent.x1 === 1, m.row.x === 0.5, again.band.opacity === 0.8]; })()`);
   assert.deepEqual(mig, [true, true, true, true]);
   checks.push('Store Graphics: saved layouts take the new overlay measures, hand-made changes stay');
   assert.deepEqual(await ev('qaErrors'), []);
