@@ -1,4 +1,4 @@
-# Toolbox — working notes (last updated 2026-10-05, version 1.6.0)
+# Toolbox — working notes (last updated 2026-10-05, version 1.6.1)
 
 Davide asked to integrate **the complete Scene Sync interface inside Toolbox**, not an external launcher.
 
@@ -44,7 +44,7 @@ npm run test:workflow
 
 **Since 1.6.0 Toolbox runs from an unpacked folder, `Tools/_app/Toolbox`, not from a portable .exe.** Davide asked for a much faster start. Measured: the portable .exe took 3.3 to 5.0 s to show its window, because it unpacks the whole app to a temporary folder at every start; the unpacked copy shows it in 0.5 to 0.6 s (1.4 s on a cold first start). The folder is about 360 MB. User data stays in `%APPDATA%\Toolbox` either way, so nothing was lost in the switch. There is no portable target any more.
 
-Electron remains **33.4.11**, locked by `package-lock.json`; electron-builder remains 25.1.8. Do not upgrade them as part of routine feature work. Build caches remain in `Tools/_cache`. Current version: **1.6.0**.
+Electron remains **33.4.11**, locked by `package-lock.json`; electron-builder remains 25.1.8. Do not upgrade them as part of routine feature work. Build caches remain in `Tools/_cache`. Current version: **1.6.1**.
 
 **A running Toolbox cannot be replaced.** `build.ps1` checks for it and stops with "Toolbox is open" instead of letting electron-builder hang.
 
@@ -65,6 +65,8 @@ The overlay geometry in `app/store/index.html` comes from Davide's own Photoshop
 Two traps. The tool remembers `state.layouts` in IndexedDB (`davfx-store-graphics`), so **changed defaults do nothing until that store is wiped** - and the live page writes its old layouts back on unload, so park the frame on `about:blank` first, then wipe, then load. And a measurement from a hard colour threshold is only good to about half a pixel; read the raw channel values before trusting a 1 px difference.
 
 As of 1.4.2 the Icon, Card, Asset page and YouTube overlays match his files exactly on badge boxes, logo frames, accent thickness and accent extent. What remains is 1 px on some 45-degree cut corners, which is where Photoshop and canvas simply round differently.
+
+**Since 1.6.1 the reference is his Photoshop screenshots of 5 October 2026** (`Tools/_archive/overlay-references-20261005`), not the PSD of 21 September: they are newer and win where the two disagree. Master for the Asset page is the 1080p 6D Aerial one. Cover 1950, Asset 1920, Card and Icon now match them to about 1 px with the same title. Davide's standing rules: **the accent line always runs to the right edge**, the accent line is the same on Asset page and Cover (7 px at about 2K width), and consistency between packs matters more than any single file. Layouts saved before that pass are updated by `aggiornaMisure` (only values still equal to the old defaults, listed in `MISURE_PRIMA`). If a default changes again, add the old value there or saved work will keep it.
 
 ## Clip Joiner (1.5.0, export rewritten in 1.5.1)
 
@@ -106,7 +108,8 @@ Davide's three revision documents are tracked in `REVISION-NOTES.md`. What chang
 - **Exports** go into a folder chosen once (handle remembered), short names (`{format}` by default) and the next free number from what is really in the folder.
 - Removed: the multi-pack batch (pack list, batch export and preview, PageUp/PageDown, CSV), the dotted empty background. Scan Folder now takes every image in the folder and subfolders, dropping `Edit` copies when a `No Edit` folder exists.
 - Colour rows show their HEX (click copies) and pairs get a swap button.
-- Text-row spacing after the title is narrower than the PSD (measured: 64 vs 89-96 px on YouTube at 3840, 25 vs 30 on the Cover): **not changed yet, waits for the overlay pass Davide asked to approve first.**
+- Text-row spacing, separators and the rest of the overlays: done in the overlay pass, see "Store Graphics overlays are measured".
+- **The Looks panel was removed** (1.6.1, Davide does not use it), with the automatic tidy-up passes only it used. Do not bring it back.
 
 ## User requirements / limits to preserve
 

@@ -87,6 +87,16 @@ module.exports = async function storeCheck({ command, evaluate, until, contexts,
     return {ok: L.accent.color === b && L.accent.color2 === a, hex: document.querySelectorAll('.row button.hex').length, empty: [px[0], px[1], px[2]]}; })()`);
   assert(sw.ok, 'swap exchanges the two colours'); assert(sw.hex > 0, 'colour codes shown'); assert.deepEqual(sw.empty, [0, 0, 0], 'empty canvas is plain black');
   checks.push('Store Graphics: colour swap and HEX codes; the empty canvas has no dotted background');
+
+  /* a layout saved before the overlay pass picks up the new measures, but
+     keeps what was moved by hand */
+  const mig = await ev(`(()=>{ const f = FORMATS.find(x => x.id === 'unity_cover'), d = defLayout(f);
+    const old = JSON.parse(JSON.stringify(d));
+    old.accent.thick = MISURE_PRIMA.unity_cover['accent.thick']; old.accent.x1 = 0.997; old.band.opacity = 0.8; old.row.x = 0.5;
+    const m = mergeLayout(f, old);
+    return [m.accent.thick === d.accent.thick, m.accent.x1 === 1, m.band.opacity === 1, m.row.x === 0.5]; })()`);
+  assert.deepEqual(mig, [true, true, true, true]);
+  checks.push('Store Graphics: saved layouts take the new overlay measures, hand-made changes stay');
   assert.deepEqual(await ev('qaErrors'), []);
   await evaluate('show("scene-sync")');
 };

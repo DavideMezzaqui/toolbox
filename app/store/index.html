@@ -413,13 +413,14 @@ const FROM_PSD = ['unity_cover','unity_shot','unity_card','unity_icon','yt_thumb
    I formati che il PSD non ha seguono la Cover, che e' il riferimento
    generale. Card e Icon non entrano qui: li' la barra non e' una linea ma
    il fondo colorato del brand, e ha i suoi valori. */
-/* L'Asset page nel PSD ha la barra a 30 px su 3840, cioe' meta' piu' spessa
-   della Cover a parita' di larghezza. Guardate una accanto all'altra la
-   Asset page sembrava un'altra grafica, quindi qui segue la Cover: 20 px
-   su 3840 invece di 30. E' l'unico punto in cui si stacca dal PSD di
-   proposito. */
-const ACCENT_W = {unity_cover:0.005128, unity_shot:0.003333, yt_thumb:0.005400};
-const ACCENT_W_ALTRI = 0.005128;
+/* Spessore della barra in frazione della LARGHEZZA. Dagli screenshot di
+   Photoshop del 5 ottobre 2026: 7 px sulla Cover a 1950, 7 px sull'Asset
+   page a 1920 (14 a 3840). Davide vuole la stessa barra su Asset page e
+   Cover, e cosi' e': 7 px a parita' di larghezza, a meno di un decimo di
+   pixel. Lo screenshot 4K aveva la barra storta per un suo errore e non
+   conta. */
+const ACCENT_W = {unity_cover:0.00359, unity_shot:0.003646, yt_thumb:0.005400};
+const ACCENT_W_ALTRI = 0.00359;
 /* Sotto questo raggio l'alone della barra si sfoca direttamente sulla tela.
    Sopra si passa da una tela ridotta, che costa un decimo: a 4K, con la
    barra spessa del PSD, sfocare a piena risoluzione voleva mezzo secondo
@@ -461,7 +462,7 @@ const GRADIENTI = [
 ];
 
 /* colori presi dal PSD */
-const C = {band:'#0d0d0d', accent:'#ffb600', accentAlt:'#f8a718',
+const C = {band:'#181818', accent:'#ffb600', accentAlt:'#f8a718',
            text:'#efefef', dark:'#060606', badgeBg:'#181818',
            /* i due capi del gradiente della barra, letti dal GradientOverlay
               del PSD. La versione "mini" e' quella di Card e Icon, dove il
@@ -1461,21 +1462,24 @@ const PARTS = [
 /* --------------------------------------------------------------- fascia scura */
 { key:'band', label:'Bottom band', section:'Bottom band', order:20, select:true,
   pos:{x:null, y:'top'}, size:null,
-  note:'Measured from your PSD: black 80%, soft top edge, a long fade on the left, and on the Card it starts at about a tenth of the width instead of the left edge.',
+  note:'Measured from your Photoshop screenshots: near black and solid, soft top edge, a long fade on the left, and on the Card it starts at about a tenth of the width instead of the left edge.',
   defaults:P=>({on:true,
     top:     P.B(P.big?0.864 : (P.asset?0.914 : (P.tiny?0.906 : (P.small?0.864:0.915)))),
     /* quanto in alto arriva il velo, misurato dove l'alpha del PSD tocca
        l'1%: 131 px sull'Asset page, 80 sulla Cover, 110 sulla miniatura */
-    feather: P.S(P.big?0.1019 : (P.asset?0.0606 : (P.mini?0 : 0.0615))),
+    feather: P.S(P.big?0.1019 : (P.asset?0.0788 : (P.mini?0 : 0.0615))),
     /* Misure rifatte componendo maschera e alpha del livello in coordinate
        assolute: la volta prima la maschera era disallineata e mi risultava
        una sfumatura anche dove non c'e'. Sull'Icon la maschera del PSD e'
        proprio DISABILITATA: quella fascia ha il bordo netto, niente sfumata. */
     /* dove comincia la sfumatura e quanto e' lunga: presi dal PSD misurando
        dove l'alpha si stacca da zero e dove tocca il pieno */
-    x0:      P.small?0.0976 : (P.asset?0.0099 : (P.tiny?0 : (P.big?0 : 0.0123))), x1:1,
-    color:C.band, opacity:0.8,
-    sideFeather: P.big?0.2339 : (P.asset?0.1406 : (P.tiny?0 : (P.small?0.1:0.1697))),
+    x0:      P.small?0.0857 : (P.asset?0.0099 : (P.tiny?0 : (P.big?0 : 0.0123))), x1:1,
+    /* Negli screenshot del 5 ottobre la fascia e' piena e quasi nera: sul
+       bianco legge 24, mentre all'80% del vecchio PSD non poteva scendere
+       sotto 51. */
+    color:C.band, opacity:1,
+    sideFeather: P.big?0.2339 : (P.asset?0.112 : (P.tiny?0 : (P.small?0.1:0.1697))),
     slant:0}),
   draw:(c,W,H,L)=>{
     const b = L.band;
@@ -1540,9 +1544,11 @@ const PARTS = [
 { key:'accent', label:'Accent line', section:'Accent line', order:30, select:true,
   pos:{x:null, y:'y'}, size:'thick', sizeMax:0.14,
   defaults:P=>({on:true,
-    y:     P.B(P.big?0.862 : (P.asset?0.9095 : (P.tiny?0.844 : (P.small?0.832:0.915)))),
-    x0:    P.tiny?0 : (P.small?0.169 : (P.asset?0.0924 : (P.big?0.135:0.111))),
-    x1:    (P.mini||P.big)?1 : (P.asset?0.998 : 0.997),
+    y:     P.B(P.big?0.862 : (P.asset?0.90903 : (P.tiny?0.844 : (P.small?0.832:0.915)))),
+    x0:    P.tiny?0 : (P.small?0.169 : (P.asset?0.095 : (P.big?0.135:0.112))),
+    /* sempre fino al bordo destro: lo ha chiesto Davide, anche dove nei suoi
+       screenshot la barra si fermava qualche pixel prima */
+    x1:    1,
     /* spessore: vedi ACCENT_W, sono le misure prese dal PSD */
     thick: P.mini ? P.S(P.tiny?0.125:0.107)
                   : (ACCENT_W[P.f.id] || ACCENT_W_ALTRI) * P.f.w / P.f.h,
@@ -1649,9 +1655,9 @@ const PARTS = [
   pos:{x:'x', y:'y'}, size:'size', sizeMax:0.6,
   note:'Load your logo PNG with the Logo button. The outline follows the shape of the logo. "scale" is the enlarged duplicate you used in the PSD and is the default everywhere, "sharp" keeps the corners crisp even when thick, "round" softens them.',
   defaults:P=>({on:true, anchor:'row',
-    x:    P.big?0.031 : (P.asset?0.0302 : (P.tiny?0.031 : (P.small?0.045:0.036))),
-    y:    P.B(P.big?0.756 : (P.asset?0.850 : (P.tiny?0.706 : (P.small?0.732:0.850)))),
-    size: P.S(P.big?0.1885 : (P.asset?0.113 : (P.tiny?0.187 : (P.small?0.196:0.115)))),
+    x:    P.big?0.031 : (P.asset?0.0333 : (P.tiny?0.031 : (P.small?0.045:0.03549))),
+    y:    P.B(P.big?0.756 : (P.asset?0.84722 : (P.tiny?0.706 : (P.small?0.732:0.84923)))),
+    size: P.S(P.big?0.1885 : (P.asset?0.11207 : (P.tiny?0.187 : (P.small?0.196:0.11655)))),
     /* Quanto il bordo sporge oltre il logo, in frazione del quadrato.
        Misurato sul PSD, formato per formato: 0.035 Cover, 0.0381 Asset page,
        0.0545 Card, 0.0667 Icon, 0.0369 YouTube. Sulle tele piccole serve
@@ -1894,9 +1900,11 @@ PARTS.push(
        PSD, non dal riquadro dei pixel: sono il punto esatto dove Photoshop
        appoggia le lettere, senza l'incertezza di un paio di pixel che da'
        la misura dell'inchiostro. */
-    x:    P.big?0.16189 : (P.asset?0.1346 : (P.tiny?0.175 : (P.small?0.19520:0.14682))),
+    /* Negli screenshot il testo comincia 55 px dopo il bordo del logo, sia
+       sulla Cover a 1950 sia sull'Asset page a 1920 */
+    x:    P.big?0.16189 : (P.asset?0.1242 : (P.tiny?0.05 : (P.small?0.19520:0.13964))),
     x2:   P.tiny?0.2375 : (P.small?0.198:0.1477),
-    y:    P.B(P.big?0.94725 : (P.asset?0.96560 : (P.tiny?0.97200 : (P.small?0.95543:0.96928)))),
+    y:    P.B(P.big?0.94725 : (P.asset?0.96143 : (P.tiny?0.97200 : (P.small?0.96257:0.96928)))),
     y2:   P.B(P.tiny?0.87800 : (P.small?0.85886:0.90)),
     /* Il corpo del carattere nel PSD e' 0.04028 / 0.02946 / 0.0625 / 0.05714
        / 0.03024 dell'altezza. Messo tale e quale il testo esce circa il 2%
@@ -1907,9 +1915,9 @@ PARTS.push(
        ci sono in tutti e due, quello non c'entra). Questi valori sono
        quindi tarati sul disegno vero, non sul numero del PSD: l'ingombro
        delle scritte coincide con quello del PSD, che e' quello che conta. */
-    titleSize: P.S(P.big?0.0398 : (P.asset?0.0291 : (P.tiny?0.061 : (P.small?0.056:0.0298)))),
+    titleSize: P.S(P.big?0.0398 : (P.asset?0.02895 : (P.tiny?0.0623 : (P.small?0.0632:0.0298)))),
     itemSize:  P.S(P.big?0.0342 : (P.asset?0.0226 : (P.tiny?0.086 : (P.small?0.069:0.0232)))),
-    fitW:0.86,
+    fitW: P.tiny?0.9 : 0.86,
     titleWeight:'700', itemWeight:'300', font:'Turret Road',
     titleFont:'Turret Road', itemFont:'Turret Road',
     titleTrack:0.02, itemTrack:0.02,
@@ -1921,7 +1929,11 @@ PARTS.push(
     track:0.02, color:C.text, itemColor:C.text,
     titleOp: P.mini?1:0.85, itemOp: P.mini?1:0.75,
     brandColor: P.mini?C.dark:C.text,
-    gap:0.8, sepOn:!P.mini, sepOp:0.4, sepH:0.66, sepW:0.1,
+    /* Spazio fra le scritte e spessore del separatore dagli screenshot: il
+       separatore e' un filo di 1 px a 1920 e 1950 (2 px a 3840) */
+    gap: P.asset?0.9 : (P.big||P.mini ? 0.8 : 1.2),
+    sepOn:!P.mini, sepOp:0.4, sepH:0.66,
+    sepW: P.asset?0.045 : (P.big||P.mini ? 0.1 : 0.033),
     sepShape:'bar', sepSkew:0.4, sepCount:1, sepSpace:0.9, upper:false, lineGap:1.14,
     /* sul formato quadrato piccolo il titolo va centrato in orizzontale,
        come nel PSD. Sugli altri resta allineato a sinistra */
@@ -1981,8 +1993,8 @@ PARTS.push(
 { key:'version', label:'Version', section:'Version', order:60, select:true,
   pos:{x:'x', y:'y'}, size:'size', sizeMax:0.2,
   defaults:P=>({on:!P.mini, align:'right',
-    x: P.big?0.976 : (P.asset?0.9742 : 0.973),
-    y: P.B(P.big?0.947 : (P.asset?0.9667 : 0.971)),
+    x: P.big?0.976 : (P.asset?0.9763 : 0.973),
+    y: P.B(P.big?0.947 : (P.asset?0.9639 : 0.971)),
     /* corpo preso dal PSD: 21.96 px su 1300 (Cover), 35.56 su 2160 (Asset
        page), 59.60 su 2160 (Thumbnail) */
     size: P.S(P.big?0.02759 : (P.asset?0.0164 : 0.0169)), op:0.25, track:0.05,
@@ -2195,7 +2207,8 @@ PARTS.push(
   /* La cornice deve restare un filo, non un bordo: appena si ispessisce
      mangia la grafica e si vede solo lei. Di serie e' sottile su tutti i
      formati. */
-  defaults:P=>({on:P.mini, thick: P.mini?0.006:0.0025, color:C.band, inset:0,
+  /* spenta di serie: lo screenshot dell'Icon non ce l'ha */
+  defaults:P=>({on:false, thick: P.mini?0.006:0.0025, color:C.band, inset:0,
                 cut:0, cuts:'none'}),
   draw:(c,W,H,L)=>{
     const f = L.frame;
@@ -7116,6 +7129,24 @@ document.getElementById('bSave').onclick = ()=> salvaProgetto(false);
 document.getElementById('bSaveAs').onclick = ()=> salvaProgetto(true);
 
 /* i preset vecchi restano validi: i campi mancanti vengono presi dai default */
+/* Le misure di serie sono cambiate il 5 ottobre 2026 (screenshot di
+   Photoshop). Un layout salvato prima si porta dietro i valori vecchi, e
+   senza questo passaggio le correzioni non si vedrebbero mai. Si
+   aggiornano solo i valori rimasti identici a quelli di serie di prima:
+   quello che Davide ha spostato a mano resta dov'e'. */
+const MISURE_PRIMA = {"unity_cover":{"band.color":"#0d0d0d","band.opacity":0.8,"accent.x0":0.111,"accent.x1":0.997,"accent.y":0.915,"accent.thick":0.007692,"logo.x":0.036,"logo.y":0.85,"logo.size":0.115,"row.x":0.14682,"row.y":0.96928,"row.gap":0.8,"row.sepW":0.1,"row.titleSize":0.0298,"row.fitW":0.86,"frame.on":false,"version.x":0.973,"version.y":0.971,"version.size":0.0169},"unity_shot":{"band.feather":0.0606,"band.sideFeather":0.1406,"band.color":"#0d0d0d","band.opacity":0.8,"accent.x0":0.0924,"accent.x1":0.998,"accent.y":0.9095,"accent.thick":0.005925333,"logo.x":0.0302,"logo.y":0.85,"logo.size":0.113,"row.x":0.1346,"row.y":0.9656,"row.gap":0.8,"row.sepW":0.1,"row.titleSize":0.0291,"row.fitW":0.86,"frame.on":false,"version.x":0.9742,"version.y":0.9667,"version.size":0.0164},"unity_card":{"band.x0":0.0976,"band.color":"#0d0d0d","band.opacity":0.8,"accent.x0":0.169,"accent.x1":1,"accent.y":0.832,"accent.thick":0.107,"logo.x":0.045,"logo.y":0.732,"logo.size":0.196,"row.x":0.1952,"row.y":0.95543,"row.gap":0.8,"row.sepW":0.1,"row.titleSize":0.056,"row.fitW":0.86,"frame.on":true,"version.x":0.973,"version.y":0.971,"version.size":0.0169},"unity_icon":{"band.color":"#0d0d0d","band.opacity":0.8,"accent.x0":0,"accent.x1":1,"accent.y":0.844,"accent.thick":0.125,"logo.x":0.031,"logo.y":0.706,"logo.size":0.187,"row.x":0.175,"row.y":0.972,"row.gap":0.8,"row.sepW":0.1,"row.titleSize":0.061,"row.fitW":0.86,"frame.on":true,"version.x":0.973,"version.y":0.971,"version.size":0.0169},"unity_social":{"band.color":"#0d0d0d","band.opacity":0.8,"accent.x0":0.09504675,"accent.x1":0.997,"accent.y":0.915,"accent.thick":0.009767619,"logo.x":0.036,"logo.y":0.85,"logo.size":0.115,"row.x":0.1241475,"row.y":0.96928,"row.gap":0.8,"row.sepW":0.1,"row.titleSize":0.0298,"row.fitW":0.86,"frame.on":false,"version.x":0.973,"version.y":0.971,"version.size":0.0169},"yt_thumb":{"band.color":"#0d0d0d","band.opacity":0.8,"accent.x0":0.135,"accent.x1":1,"accent.y":0.862,"accent.thick":0.0096,"logo.x":0.031,"logo.y":0.756,"logo.size":0.1885,"row.x":0.16189,"row.y":0.94725,"row.gap":0.8,"row.sepW":0.1,"row.titleSize":0.0398,"row.fitW":0.86,"frame.on":false,"version.x":0.976,"version.y":0.947,"version.size":0.02759},"fab_thumb":{"band.color":"#0d0d0d","band.opacity":0.8,"accent.x0":0.09926437,"accent.x1":0.997,"accent.y":0.915,"accent.thick":0.009116444,"logo.x":0.036,"logo.y":0.85,"logo.size":0.115,"row.x":0.1304437,"row.y":0.96928,"row.gap":0.8,"row.sepW":0.1,"row.titleSize":0.0298,"row.fitW":0.86,"frame.on":false,"version.x":0.973,"version.y":0.971,"version.size":0.0169},"fab_gallery":{"band.color":"#0d0d0d","band.opacity":0.8,"accent.x0":0.09926437,"accent.x1":0.997,"accent.y":0.915,"accent.thick":0.009116444,"logo.x":0.036,"logo.y":0.85,"logo.size":0.115,"row.x":0.1304437,"row.y":0.96928,"row.gap":0.8,"row.sepW":0.1,"row.titleSize":0.0298,"row.fitW":0.86,"frame.on":false,"version.x":0.973,"version.y":0.971,"version.size":0.0169}};
+function aggiornaMisure(f, L, def){
+  const prima = MISURE_PRIMA[f.id];
+  if(!prima) return;
+  Object.keys(prima).forEach(p=>{
+    const [k, q] = p.split('.');
+    if(!L[k] || !def[k]) return;
+    const v = L[k][q], vecchio = prima[p];
+    const uguale = (typeof vecchio === 'number' && typeof v === 'number')
+      ? Math.abs(v - vecchio) < 1e-5 : v === vecchio;
+    if(uguale) L[k][q] = def[k][q];
+  });
+}
 function mergeLayout(f, got){
   const def = defLayout(f), out = {};
   Object.keys(def).forEach(k=>{
@@ -7126,6 +7157,7 @@ function mergeLayout(f, got){
   });
   out.layers = Array.isArray(got.layers) ? got.layers.map(fixLayer) : [];
   migraPannelli(out);
+  aggiornaMisure(f, out, def);
   /* i preset salvati prima dei livelli avevano Shape 1/2/3 */
   ['shape1','shape2','shape3'].forEach(k=>{ if(got[k]) out[k] = got[k]; });
   migrateShapes(out);

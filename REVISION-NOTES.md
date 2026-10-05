@@ -1,6 +1,6 @@
 # Revision in progress (started 2026-10-04)
 
-Three documents from Davide, all approved ("Applica tutto"): Store Graphics revision (13 points), Store Graphics images panel (second prompt), Toolbox changes (tab bar, startup, last tool, Git). Status 2026-10-05: Store Graphics points 2-11 and the second prompt are done (see CLAUDE.md, "Store Graphics revision"); the Toolbox shell, start-up and Git points are done. Still open: the text-row spacing from point 1 and the overlay pass below, both waiting for Davide, and putting the repository online (needs his OK).
+Three documents from Davide, all approved ("Applica tutto"): Store Graphics revision (13 points), Store Graphics images panel (second prompt), Toolbox changes (tab bar, startup, last tool, Git). Status 2026-10-05: Store Graphics points 2-11 and the second prompt are done (see CLAUDE.md, "Store Graphics revision"); the Toolbox shell, start-up and Git points are done. All three documents and the overlay pass are done (overlay pass and Looks removal on 2026-10-05, see the end of this file); the repository is on GitHub (github.com/DavideMezzaqui/toolbox, private).
 
 ## Findings so far (Store Graphics, `app/store/index.html`)
 
@@ -30,10 +30,17 @@ Fix planned: one per-panel transform list for all panels (migrate old saves), ev
 
 **Toolbox document.** Remove tab colour dots, collapsible tab bar, faster startup, reopen last tool with its state, local Git repository. Creating an online repository or pushing needs Davide's explicit OK first.
 
-## Overlay references sent 2026-10-05 (do this LAST, ask before changing anything)
+## Overlay references sent 2026-10-05 - DONE the same day
 
 Copied to `Tools/_archive/overlay-references-20261005/`: bottom bars at 1920 and 2000 wide, the 1950 Cover, the 160 Icon, the 420 Card, from several packs (6D Aerial Explosions, Muzzle Flashes).
 - The 4K overlay's accent line is slightly crooked (his mistake); the 1080p one should be right. Everything else should be right.
 - He wants the accent line the **same size on the Asset page screenshots and the Cover** (his PSDs differed slightly).
 - Goal: identical to his Photoshop overlays, plus fixing his small mistakes and missing finesse. Consistency across assets and packs is essential.
-- **Ask him before making these changes**, and ask for the PSD again if needed.
+- He approved ("fai tutto, l'importante e' che siano piu' uguali possibili agli screenshot") and added: **the accent line always reaches the right edge**, even where his screenshots stopped short.
+- **The screenshots supersede the PSD of 21 September.** Where they disagree, the screenshots win: the PSD text-row gaps listed above are history.
+- **Master for the Asset page: the 1080p 6D Aerial screenshot.** The 4K Muzzle Flashes one has a slightly bigger logo placed further left and a grey 80% band: an older variant, not used.
+- Result, rendered with the same titles on a white image and compared pixel by pixel: Cover 1950 and Asset 1920 match on logo frame (identical box), accent line (7 px, same rows), title, separator, DAVFX and version to 1 px; Card and Icon match on logo, badges, brand and title.
+- What changed: band solid #181818 everywhere (was #0d0d0d at 80%: on white that can never go below 51, the screenshots read 24); accent 7 px at ~2K width on both Cover and Asset page (14 px at 3840); text starts 55 px after the logo; separators a 1 px hairline (2 px at 3840); wider gaps on the Cover; bigger titles on Card and Icon; no frame on Card and Icon; shorter left fade and taller top fade on the Asset page.
+- Not touched: YouTube (no screenshot; it only follows the shared band colour), the accent colours (they are per pack, set in Colours).
+- Saved layouts: `aggiornaMisure` moves every value still equal to the old default to the new one; anything moved by hand stays.
+- Comparison images: the session scratchpad only; references stay in `_archive`.
