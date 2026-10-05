@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'">
+<title>Scene Sync</title><link rel="stylesheet" href="scene-sync.css">
+</head>
+<body>
+<header><div><strong>SCENE SYNC</strong><span>Sync scene layouts between projects</span></div><nav aria-label="Workspace"><button id="help" title="Read the workflow, supported formats and limitations">Help</button></nav></header>
+<div id="workspace">
+<aside>
+<div id="sceneSettings">
+<h2>Sync settings</h2><label for="profiles">PROFILE</label><select id="profiles" title="Load a saved scene configuration"><option value="">Current configuration</option></select><button id="saveProfile" title="Save project paths, scenes and sync options">Save profile</button>
+<h3>Include in sync</h3>
+<label class="check"><input type="checkbox" data-scope="scene" data-bind="options.transforms">Transforms &amp; layout</label>
+<label class="check"><input type="checkbox" data-scope="scene" data-bind="options.ui">Text &amp; Canvas</label>
+<label class="check"><input type="checkbox" data-scope="scene" data-bind="options.addMissing">Missing objects</label>
+<label class="check"><input type="checkbox" data-scope="scene" data-bind="options.active">Active state</label>
+<label class="check"><input type="checkbox" data-scope="scene" data-bind="options.hierarchy">Hierarchy order</label>
+<label class="check"><input type="checkbox" data-scope="scene" data-bind="options.cameras">Camera placement</label>
+<label class="check"><input type="checkbox" data-scope="scene" data-bind="options.commonReferences" title="Update references in prefab instances shared by both projects">Shared prefab references</label>
+<h3>Asset matching</h3><p class="hint">Replace in asset paths</p><div class="mapping"><input data-scope="scene" data-bind="mapFrom" aria-label="Source asset name"><span>→</span><input data-scope="scene" data-bind="mapTo" aria-label="Target asset name"></div>
+<h3>Exclusions</h3><label for="sceneExclusions">Hierarchy paths, separated by ;</label><textarea id="sceneExclusions" rows="2" title="Skip these hierarchy paths and their descendants"></textarea>
+<h3>Backups</h3><button id="sceneBackup" title="Open the folder containing the last scene backup">Open latest backup</button><button id="sceneRestore" title="Restore a scene backup; newer edits are protected">Restore backup…</button>
+</div>
+</aside>
+<main>
+<section id="scenePage" class="page">
+<div class="section-heading"><h2>Choose your scenes</h2><button id="swapScenes" title="Swap source and target projects, scenes and asset-name rules">⇄ Swap</button></div>
+<div class="cards" id="sceneCards"></div>
+<div class="section-heading"><h2>Review changes</h2><span class="hint">Compare before applying</span></div>
+<div class="toolbar"><input id="sceneSearch" type="search" placeholder="Filter changes…" aria-label="Filter scene changes"><button id="selectVisible" title="Select only the currently visible changes">Select visible</button><button id="clearVisible" title="Clear selection only for visible changes">Clear visible</button><span id="sceneCount" class="hint"></span></div>
+<div class="review" id="sceneReview"><div class="table-wrap"><table><thead><tr><th class="selection"></th><th>Action</th><th>Type</th><th>Object in hierarchy</th><th>Changes</th></tr></thead><tbody id="sceneRows"></tbody></table><div id="sceneEmpty" class="empty"><strong>Ready to compare</strong><p>Choose a source and target scene above.</p></div></div><div class="divider" role="separator" aria-label="Resize scene changes and details" tabindex="0" data-resize="sceneReview"></div><div class="table-wrap detail-table"><table><thead><tr><th>Property</th><th>Current · target</th><th>Incoming · source</th></tr></thead><tbody id="sceneDetails"></tbody></table></div></div>
+<footer><span id="sceneStatus" role="status">Choose scenes, then compare.</span><button id="compare" title="Compare saved scene files without modifying them">Compare scenes</button><button id="applyScene" class="primary" disabled title="Apply selected changes with a verified backup">Apply selected</button></footer>
+</section>
+</main>
+</div>
+<dialog id="dialog"><div class="dialog-heading"><h2 id="dialogTitle"></h2><button id="dialogClose" title="Close this dialog">Close</button></div><div id="dialogBody"></div></dialog>
+<script src="scene-sync.js"></script>
+</body></html>

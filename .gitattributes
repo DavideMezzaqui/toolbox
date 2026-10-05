@@ -1,0 +1,8 @@
+# Text files keep LF in the working copy too, so nothing on disk changes
+# when Git checks them out. PowerShell scripts stay CRLF, as Windows wants.
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.exe binary
+*.png binary
+*.ico binary
+*.woff2 binary

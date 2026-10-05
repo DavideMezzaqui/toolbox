@@ -1,0 +1,22 @@
+# Dependencies and builds: rebuilt by build.ps1
+node_modules/
+dist/
+
+# Generated before every build
+scene-sync/manifest.json
+
+# Copied from the Node that runs the build (see prepare-scene-sync.cjs)
+scene-sync/runtime/node.exe
+
+# Test output: fixtures, reports and screenshots, rewritten on every run
+scene-sync/tests/*/
+scene-sync/tests/*.json
+tests/*.json
+tests/screenshots/
+
+# Editors and the OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+*.log

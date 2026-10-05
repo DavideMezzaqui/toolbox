@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Texture Prep</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+/* color-scheme tells Chromium to render native widgets dark; the explicit
+   rules then tone the scrollbar down to the panel colours, because the default
+   is a bright light bar that pulls the eye away from the table. */
+html{scrollbar-gutter:stable;color-scheme:dark}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#2b2b31;border-radius:6px;border:2px solid #141416}
+::-webkit-scrollbar-thumb:hover{background:#3b3b43}
+::-webkit-scrollbar-corner{background:transparent}
+body{background:#141416;color:#c8c8cc;font:13px/1.45 'Segoe UI',system-ui,sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+header{display:flex;align-items:baseline;gap:12px;padding:10px 14px;border-bottom:1px solid #232326;flex:none}
+header h1{font-size:12px;font-weight:600;color:#fff;letter-spacing:.08em;text-transform:uppercase}
+header span{font-size:11px;color:#55555c}
+
+.bar{display:flex;align-items:center;gap:7px;padding:9px 14px;border-bottom:1px solid #232326;flex:none;flex-wrap:wrap}
+.grow{flex:1}
+.sep{width:1px;height:18px;background:#2a2a2e;flex:none}
+
+button{background:#1e1e21;border:1px solid #313136;color:#bbb;border-radius:4px;padding:5px 12px;font-size:12px;cursor:pointer;white-space:nowrap;transition:background .1s,border-color .1s,color .1s}
+button:hover:not(:disabled){background:#27272b;border-color:#5a5a63;color:#fff}
+button:disabled{opacity:.3;cursor:not-allowed}
+button.primary{background:#1b3a52;border-color:#5aa9e6;color:#8fd0ff;font-weight:600}
+button.primary:hover:not(:disabled){background:#224a68;border-color:#7bc0f5}
+button.danger:hover:not(:disabled){background:#3a1b1b;border-color:#a55;color:#f88}
+
+label{font-size:11px;color:#5f5f68;white-space:nowrap}
+input[type=text],select{background:#1a1a1d;border:1px solid #2b2b30;color:#c8c8cc;border-radius:3px;padding:4px 7px;font-size:12px}
+input[type=text]:focus,select:focus{outline:none;border-color:#5aa9e6}
+input[type=number]{background:#1a1a1d;border:1px solid #2b2b30;color:#c8c8cc;border-radius:3px;padding:4px 6px;font-size:12px;width:56px;text-align:center}
+select{cursor:pointer}
+code{font:11px ui-monospace,Consolas,monospace;background:#1a1a1d;border:1px solid #26262a;border-radius:3px;padding:1px 5px;color:#9fd0f0}
+
+.cols{flex:1;display:grid;grid-template-columns:330px 1fr;min-height:0}
+.rules{border-right:1px solid #232326;overflow-y:auto;padding:12px}
+.rules h2{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#4d4d55;margin:14px 0 7px}
+.rules h2:first-child{margin-top:0}
+.row{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.row>label{min-width:78px;flex:none}
+.row>input[type=text],.row>select{flex:1;min-width:0}
+.hint{font-size:11px;color:#45454c;margin:4px 0 2px;line-height:1.5}
+.check{display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:12px;color:#9a9aa2;cursor:pointer}
+.check input{cursor:pointer}
+
+.maps{display:flex;flex-direction:column;gap:4px}
+.map-row{display:grid;grid-template-columns:1fr 1fr;gap:5px;align-items:center}
+.map-row span{font:11px ui-monospace,Consolas,monospace;color:#5f5f68;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.map-row input{width:100%}
+
+.table-wrap{overflow:auto;min-height:0}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th{position:sticky;top:0;background:#1a1a1d;border-bottom:1px solid #2a2a2e;color:#5f5f68;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;text-align:left;padding:7px 10px;z-index:1}
+td{border-bottom:1px solid #1e1e21;padding:5px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:1px}
+tr.skip td{color:#45454c}
+tr.same td{color:#5f5f68}
+td.new{color:#8fd0ff}
+tr.conflict td.new{color:#ff7b7b}
+tr.conflict{background:#2a1616}
+td.pick{width:28px;max-width:28px;text-align:center}
+td.badge{width:130px;max-width:130px}
+.tag{display:inline-block;font:10px ui-monospace,Consolas,monospace;background:#1e1e21;border:1px solid #2b2b30;border-radius:3px;padding:1px 5px;color:#7a7a84}
+.tag.unknown{border-color:#5a4a1e;color:#c9a84a}
+
+.status{flex:none;padding:7px 14px;border-top:1px solid #232326;font-size:11px;color:#55555c;min-height:28px}
+.status.warn{color:#c9a84a}
+.status.err{color:#e06c6c}
+.status.ok{color:#6fc48a}
+
+.empty{padding:48px 20px;text-align:center;color:#3a3a42;font-size:12px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Texture Prep</h1>
+  <span>rename a texture set from one naming convention to another &middot; nothing is touched until you press Rename</span>
+</header>
+
+<div class="bar">
+  <button id="pick">Choose folder…</button>
+  <span id="folderName" style="font-size:11px;color:#5f5f68">no folder</span>
+  <button id="rescan" disabled>Rescan</button>
+  <button id="openFolder" disabled title="Open this folder in Explorer">Open folder</button>
+  <input type="text" id="filter" placeholder="filter…" style="width:130px">
+  <div class="sep"></div>
+  <label>Preset</label>
+  <select id="preset" style="min-width:150px"></select>
+  <button id="presetSave">Save as…</button>
+  <button id="presetDel">Delete</button>
+  <div class="grow"></div>
+  <button id="undo" disabled>Undo last rename</button>
+  <button id="apply" class="primary" disabled>Rename</button>
+</div>
+
+<div class="cols">
+  <aside class="rules">
+
+    <h2>Output name</h2>
+    <div class="row">
+      <label>Pattern</label>
+      <input type="text" id="pattern" value="T_{name}_{map}_{grid}">
+    </div>
+    <div class="hint">
+      <code>{name}</code> <code>{map}</code> <code>{grid}</code> <code>{index}</code><br>
+      Empty parts collapse, so a file with no grid will not end up with a double separator.
+    </div>
+    <div class="row">
+      <label>Separator</label>
+      <select id="sep">
+        <option value=" ">space</option>
+        <option value="_">underscore</option>
+        <option value="-">hyphen</option>
+        <option value="">none (joined)</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>Name case</label>
+      <select id="caseName">
+        <option value="keep">leave as is</option>
+        <option value="lower">lower case</option>
+        <option value="upper">UPPER CASE</option>
+        <option value="title">Title Case</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>Map case</label>
+      <select id="caseMap">
+        <option value="keep">leave as is</option>
+        <option value="lower">lower case</option>
+        <option value="upper">UPPER CASE</option>
+        <option value="title">Title Case</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>Index digits</label>
+      <input type="number" id="pad" min="1" max="6" value="2">
+      <label style="min-width:0">for frame sequences</label>
+    </div>
+
+    <h2>Rename the asset</h2>
+    <div class="row">
+      <label>Find</label>
+      <input type="text" id="find" placeholder="Air Burst 1">
+    </div>
+    <div class="row">
+      <label>Replace</label>
+      <input type="text" id="repl" placeholder="air_expl_2">
+    </div>
+    <div class="hint">Applied to the asset part only, before the case rules. Leave empty to keep the names.</div>
+
+    <h2>Clean up</h2>
+    <label class="check"><input type="checkbox" id="clCopy" checked> strip “ - Copy”, “(1)” and similar</label>
+    <label class="check"><input type="checkbox" id="clDup" checked> strip a trailing duplicate number (_1)</label>
+    <label class="check"><input type="checkbox" id="clUntitled" checked> replace “Untitled” with the folder name</label>
+    <label class="check"><input type="checkbox" id="onlyImages" checked> only image files</label>
+    <label class="check"><input type="checkbox" id="skipUnknown"> skip files whose map type is unrecognised</label>
+    <label class="check"><input type="checkbox" id="lowerExt" checked> lower-case the extension (.PNG → .png)</label>
+
+    <h2>Map names</h2>
+    <div class="hint">Left: what is detected. Right: what gets written. Detection also accepts the usual synonyms.</div>
+    <div class="maps" id="maps"></div>
+
+  </aside>
+
+  <div class="table-wrap">
+    <table id="tbl">
+      <thead><tr>
+        <th class="pick"><input type="checkbox" id="pickAll" checked title="select all / none"></th>
+        <th style="width:34%">Current name</th>
+        <th class="badge">Detected</th>
+        <th>New name</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="empty" id="empty">Choose a folder to begin.</div>
+  </div>
+</div>
+
+<div class="status" id="status">Ready.</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   Texture Prep - batch rename texture sets between naming conventions.
+
+   Two stages, deliberately separate:
+     parse()  pulls a filename apart into prefix / asset name / map type /
+              grid / frame index, tolerating the debris real exports leave
+              behind (" - Copy", a trailing "_1", a missing grid suffix).
+     build()  writes those parts back out under the chosen convention.
+
+   Nothing on disk changes until Rename is pressed, and the last run is
+   recorded so it can be undone.
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---- map types ---------------------------------------------------------
+     `key` is what the tool works in; `aliases` is what it recognises on disk;
+     the preset supplies the label to write back out. */
+  // "emissive" on its own is NOT listed under emissive_scattering: a file called
+  // T_Ground_Mark_Decal_3_Emissive.png would otherwise be rewritten as
+  // "Emissive + Scattering", which is a different map entirely.
+  var MAP_TYPES = [
+    // EmberGen / flipbook renders
+    { key: 'emissive_scattering', label: 'Emissive + Scattering',
+      aliases: ['emissive scattering', 'emissive and scattering', 'emissivescattering', 'es'] },
+    { key: 'flames_mask',   label: 'Flames Mask',   aliases: ['flames mask', 'flame mask', 'flames', 'fire mask'] },
+    { key: 'motion_vector', label: 'Motion Vector', aliases: ['motion vector', 'motionvector', 'motion', 'mv', 'flow map', 'flowmap', 'flow'] },
+    { key: 'render_all',    label: 'Render All',    aliases: ['render all', 'renderall', 'render', 'beauty'] },
+    { key: 'smoke',         label: 'Smoke',         aliases: ['smoke', 'density'] },
+    { key: 'temperature',   label: 'Temperature',   aliases: ['temperature', 'temp', 'heat'] },
+
+    // surface maps
+    { key: 'base_color',    label: 'BaseColor',     aliases: ['base color', 'basecolor', 'albedo', 'diffuse', 'color', 'col', 'bc', 'alb', 'diff', 'd'] },
+    { key: 'normal',        label: 'Normal',        aliases: ['normal', 'normalmap', 'norm', 'nrm', 'n'] },
+    { key: 'roughness',     label: 'Roughness',     aliases: ['roughness', 'rough', 'rgh', 'r'] },
+    { key: 'smoothness',    label: 'Smoothness',    aliases: ['smoothness', 'smooth', 'gloss', 'glossiness'] },
+    { key: 'metallic',      label: 'Metallic',      aliases: ['metallic', 'metalness', 'metal', 'mtl', 'm'] },
+    { key: 'specular',      label: 'Specular',      aliases: ['specular', 'spec'] },
+    { key: 'ao',            label: 'AO',            aliases: ['ambient occlusion', 'ambientocclusion', 'occlusion', 'ao'] },
+    { key: 'height',        label: 'Height',        aliases: ['height', 'displacement', 'displace', 'disp', 'bump', 'h'] },
+    { key: 'emissive',      label: 'Emissive',      aliases: ['emissive', 'emission', 'emissivemap', 'glow', 'e'] },
+    { key: 'opacity',       label: 'Opacity',       aliases: ['opacity', 'alpha', 'transparency', 'transparent', 'a'] },
+    { key: 'curvature',     label: 'Curvature',     aliases: ['curvature', 'curv'] },
+    { key: 'thickness',     label: 'Thickness',     aliases: ['thickness', 'thick'] },
+    { key: 'subsurface',    label: 'Subsurface',    aliases: ['subsurface', 'sss', 'scattering'] },
+
+    // packed and VFX helpers
+    { key: 'orm',           label: 'ORM',           aliases: ['orm', 'rma', 'mra', 'arm', 'packed', 'channel packed'] },
+    { key: 'mask',          label: 'Mask',          aliases: ['mask', 'masks'] },
+    { key: 'noise',         label: 'Noise',         aliases: ['noise', 'noisemap'] },
+    { key: 'gradient',      label: 'Gradient',      aliases: ['gradient', 'ramp', 'grad'] },
+    { key: 'distortion',    label: 'Distortion',    aliases: ['distortion', 'distort', 'warp'] },
+    { key: 'dissolve',      label: 'Dissolve',      aliases: ['dissolve', 'erosion', 'erode'] },
+    { key: 'sdf',           label: 'SDF',           aliases: ['sdf', 'signed distance', 'distance field'] },
+    { key: 'depth',         label: 'Depth',         aliases: ['depth', 'zdepth', 'z depth'] }
+  ];
+
+  var IMAGE_EXT = ['png', 'tga', 'jpg', 'jpeg', 'tif', 'tiff', 'exr', 'bmp', 'psd', 'webp'];
+
+  /* ---- state ------------------------------------------------------------ */
+  var entries = [];          // { name, ext, parsed, target, checked, skip, conflict }
+  var folderName = '';
+  var folderPath = '';   // real path, resolved via the preload; '' when unavailable
+  var PRESET_KEY = 'tp-presets';
+  var LAST_KEY = 'tp-last-rename';
+
+  var DEFAULT_PRESETS = {
+    'EmberGen (spaces)': {
+      pattern: 'T_{name}_{map}_{grid}', sep: ' ', caseName: 'keep', caseMap: 'keep', pad: 2,
+      labels: {}
+    },
+    'lower_underscore': {
+      pattern: 't_{name}_{map}_{grid}', sep: '_', caseName: 'lower', caseMap: 'lower', pad: 2,
+      labels: { base_color: 'basecolor', ao: 'ao' }
+    },
+    'T_Name_Map (underscores)': {
+      pattern: 'T_{name}_{map}', sep: '_', caseName: 'keep', caseMap: 'keep', pad: 2, labels: {}
+    },
+    'Frame sequence': {
+      pattern: '{name}_{index}', sep: '_', caseName: 'lower', caseMap: 'lower', pad: 2, labels: {}
+    }
+  };
+
+  function loadPresets() {
+    try {
+      var raw = localStorage.getItem(PRESET_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) { /* fall through to the defaults */ }
+    return JSON.parse(JSON.stringify(DEFAULT_PRESETS));
+  }
+  function savePresets(p) {
+    try { localStorage.setItem(PRESET_KEY, JSON.stringify(p)); } catch (e) {}
+  }
+  var presets = loadPresets();
+
+  /* ---- helpers ---------------------------------------------------------- */
+  function norm(s) {
+    return s.toLowerCase().replace(/[+_\-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  function words(s) {
+    return s.split(/[\s_\-]+/).filter(function (w) { return w.length; });
+  }
+  function applyCase(s, mode) {
+    if (mode === 'lower') return s.toLowerCase();
+    if (mode === 'upper') return s.toUpperCase();
+    if (mode === 'title') {
+      return s.replace(/\w\S*/g, function (t) { return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase(); });
+    }
+    return s;
+  }
+  function joinWords(s, sep, mode) {
+    var w = words(s);
+    // "Emissive + Scattering" is fine when words are joined by spaces, but with
+    // an underscore it would come out as "emissive_+_scattering". Punctuation
+    // only survives in conventions that keep spaces.
+    if (sep !== ' ') w = w.filter(function (x) { return /[A-Za-z0-9]/.test(x); });
+    return w.map(function (x) { return applyCase(x, mode); }).join(sep);
+  }
+  function mapByKey(key) {
+    for (var i = 0; i < MAP_TYPES.length; i++) if (MAP_TYPES[i].key === key) return MAP_TYPES[i];
+    return null;
+  }
+
+  /* ---- parse ------------------------------------------------------------ */
+  function parse(filename, opts) {
+    var dot = filename.lastIndexOf('.');
+    var ext = dot > 0 ? filename.slice(dot + 1) : '';
+    var base = dot > 0 ? filename.slice(0, dot) : filename;
+    var out = { ext: ext, prefix: '', name: '', map: null, grid: '', index: null, indexDigits: 0, unknown: false };
+
+    // debris from Windows copies and repeated exports
+    if (opts.clCopy) {
+      base = base.replace(/\s*-\s*cop(y|ia)(\s*\(\d+\))?$/i, '')
+                 .replace(/\s*\(\d+\)$/, '')
+                 .replace(/\s*-\s*copy\s*\(\d+\)$/i, '');
+    }
+
+    // Leading texture prefix. Deliberately a short whitelist: matching any
+    // 1-3 letters before an underscore swallowed the first word of names like
+    // "air_expl_2", which then lost "air" on rename.
+    var pm = base.match(/^(t|tex|tx)_(?=.)/i);
+    if (pm) { out.prefix = pm[1]; base = base.slice(pm[0].length); }
+
+    var tokens = base.split('_').filter(function (t) { return t.length; });
+
+    // grid, e.g. 7x7 or 8x8 - anywhere, usually near the end
+    for (var i = tokens.length - 1; i >= 0; i--) {
+      if (/^\d{1,3}\s*x\s*\d{1,3}$/i.test(tokens[i])) {
+        out.grid = tokens[i].replace(/\s+/g, '').toLowerCase();
+        tokens.splice(i, 1);
+        break;
+      }
+    }
+
+    // a lone trailing 1-2 digit token after the grid is an export duplicate
+    if (opts.clDup && tokens.length > 1 && /^\d{1,2}$/.test(tokens[tokens.length - 1]) && out.grid) {
+      tokens.pop();
+    }
+
+    // Frame index, taken BEFORE the map type: in a sequence the number is the
+    // last token ("T_Fire_BaseColor_001"), so looking for the map type first
+    // left "Fire_BaseColor" glued together as the asset name.
+    // A single digit only counts when the chosen pattern asks for {index} -
+    // otherwise "Ground_Mark_Decal_9" would lose its variant number.
+    if (tokens.length > 1) {
+      var lastTok = tokens[tokens.length - 1];
+      if (/^\d+$/.test(lastTok) && (lastTok.length >= 2 || opts.wantsIndex)) {
+        out.index = parseInt(lastTok, 10);
+        out.indexDigits = lastTok.length;
+        tokens.pop();
+      }
+    }
+
+    // map type: try the longest suffix window first, so "render all" beats "all"
+    var found = -1, foundLen = 0;
+    for (var w = Math.min(3, tokens.length); w >= 1 && found < 0; w--) {
+      var cand = norm(tokens.slice(tokens.length - w).join(' '));
+      for (var m = 0; m < MAP_TYPES.length && found < 0; m++) {
+        if (MAP_TYPES[m].aliases.indexOf(cand) >= 0) { found = m; foundLen = w; }
+      }
+    }
+    if (found >= 0 && tokens.length - foundLen > 0) {
+      out.map = MAP_TYPES[found].key;
+      tokens = tokens.slice(0, tokens.length - foundLen);
+    } else {
+      out.unknown = true;
+    }
+
+    out.name = tokens.join('_');
+    if (opts.clUntitled && /^untitled$/i.test(out.name) && folderName) out.name = folderName;
+    return out;
+  }
+
+  /* ---- build ------------------------------------------------------------ */
+  function build(p, opts) {
+    var name = p.name;
+    if (opts.find) {
+      // plain text replace, not a regular expression: these are file names
+      name = name.split(opts.find).join(opts.repl);
+    }
+
+    var mapLabel = '';
+    if (p.map) {
+      var def = mapByKey(p.map);
+      mapLabel = (opts.labels && opts.labels[p.map]) || (def ? def.label : p.map);
+    }
+
+    var parts = {
+      name: joinWords(name, opts.sep, opts.caseName),
+      map: mapLabel ? joinWords(mapLabel, opts.sep, opts.caseMap) : '',
+      grid: p.grid || '',
+      index: p.index === null ? '' : String(p.index).padStart(opts.pad, '0')
+    };
+
+    // Substitute, then collapse the separators an empty token would leave behind.
+    var s = opts.pattern.replace(/\{(name|map|grid|index)\}/g, function (_, k) { return parts[k]; });
+    s = s.replace(/[_\-\s]{2,}/g, function (m) { return m[0]; })
+         .replace(/^[_\-\s]+|[_\-\s]+$/g, '');
+    var ext = p.ext;
+    if (ext && opts.lowerExt) ext = ext.toLowerCase();
+    return s + (ext ? '.' + ext : '');
+  }
+
+  /* ---- options ---------------------------------------------------------- */
+  function currentOpts() {
+    var presetName = $('preset').value;
+    var labels = (presets[presetName] && presets[presetName].labels) || {};
+    var liveLabels = {};
+    MAP_TYPES.forEach(function (m) {
+      var el = document.getElementById('lbl_' + m.key);
+      if (el && el.value.trim()) liveLabels[m.key] = el.value.trim();
+    });
+    return {
+      pattern: $('pattern').value || '{name}',
+      wantsIndex: ($('pattern').value || '').indexOf('{index}') >= 0,
+      sep: $('sep').value,
+      caseName: $('caseName').value,
+      caseMap: $('caseMap').value,
+      pad: Math.max(1, Math.min(6, parseInt($('pad').value, 10) || 2)),
+      find: $('find').value,
+      repl: $('repl').value,
+      clCopy: $('clCopy').checked,
+      clDup: $('clDup').checked,
+      clUntitled: $('clUntitled').checked,
+      onlyImages: $('onlyImages').checked,
+      skipUnknown: $('skipUnknown').checked,
+      lowerExt: $('lowerExt').checked,
+      labels: Object.assign({}, labels, liveLabels)
+    };
+  }
+
+  /* ---- preview ---------------------------------------------------------- */
+  function refresh() {
+    var o = currentOpts();
+    var seen = {};
+
+    var q = ($('filter').value || '').trim().toLowerCase();
+    entries.forEach(function (e) {
+      e.visible = !q || e.name.toLowerCase().indexOf(q) >= 0;
+      e.parsed = parse(e.name, o);
+      var skipExt = o.onlyImages && IMAGE_EXT.indexOf(e.ext.toLowerCase()) < 0;
+      var skipUnk = o.skipUnknown && e.parsed.unknown;
+      e.skip = skipExt || skipUnk || !e.checked;
+      e.target = e.skip ? e.name : build(e.parsed, o);
+      e.conflict = false;
+    });
+
+    // A skipped file keeps its name on disk, so a target landing on it would
+    // overwrite a file the user never asked to touch.
+    entries.forEach(function (e) {
+      var k = (e.skip ? e.name : e.target).toLowerCase();
+      if (seen[k]) { e.conflict = true; seen[k].conflict = true; }
+      else seen[k] = e;
+    });
+
+    render(o);
+  }
+
+  function render(o) {
+    var tb = $('rows');
+    tb.innerHTML = '';
+    $('empty').style.display = entries.length ? 'none' : '';
+
+    var changing = 0, conflicts = 0, unknown = 0, droppedIndex = 0;
+
+    var hidden = 0;
+    entries.forEach(function (e, i) {
+      if (e.visible === false) { hidden++; if (!e.skip && e.target !== e.name) changing++; return; }
+      var tr = document.createElement('tr');
+      var same = e.skip || e.target === e.name;
+      if (e.skip) tr.className = 'skip';
+      else if (same) tr.className = 'same';
+      if (e.conflict) tr.className = 'conflict';
+      if (!e.skip && !same && !e.conflict) changing++;
+      if (e.conflict) conflicts++;
+      if (e.parsed.unknown && !e.skip) unknown++;
+      if (!e.skip && e.parsed.index !== null && o.pattern.indexOf('{index}') < 0) droppedIndex++;
+
+      var tdPick = document.createElement('td');
+      tdPick.className = 'pick';
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = e.checked;
+      cb.addEventListener('change', function () { e.checked = cb.checked; refresh(); });
+      tdPick.appendChild(cb);
+
+      var tdOld = document.createElement('td');
+      tdOld.textContent = e.name;
+      tdOld.title = e.name;
+
+      var tdTag = document.createElement('td');
+      tdTag.className = 'badge';
+      var tag = document.createElement('span');
+      tag.className = 'tag' + (e.parsed.unknown ? ' unknown' : '');
+      var bits = [];
+      if (e.parsed.map) bits.push(mapByKey(e.parsed.map).label);
+      else bits.push('no map type');
+      if (e.parsed.grid) bits.push(e.parsed.grid);
+      if (e.parsed.index !== null) bits.push('#' + e.parsed.index);
+      tag.textContent = bits.join(' · ');
+      tag.title = 'asset: ' + e.parsed.name;
+      tdTag.appendChild(tag);
+
+      var tdNew = document.createElement('td');
+      tdNew.className = 'new';
+      tdNew.textContent = same ? '—' : e.target;
+      tdNew.title = e.target;
+
+      tr.appendChild(tdPick); tr.appendChild(tdOld); tr.appendChild(tdTag); tr.appendChild(tdNew);
+      tb.appendChild(tr);
+    });
+
+    $('apply').disabled = !changing || conflicts > 0;
+    $('apply').textContent = changing ? 'Rename ' + changing + ' file' + (changing > 1 ? 's' : '') : 'Rename';
+
+    var msg, cls = '';
+    if (!entries.length) msg = 'Ready.';
+    else if (conflicts) { msg = conflicts + ' name collision' + (conflicts > 1 ? 's' : '') + ' - two files would end up with the same name. Fix the pattern before renaming.'; cls = 'err'; }
+    else if (!changing) msg = entries.length + ' files scanned, nothing to change.';
+    else {
+      msg = changing + ' of ' + entries.length + ' files will be renamed.';
+      if (hidden) msg += '  ' + hidden + ' hidden by the filter (still included).';
+      if (unknown) { msg += '  ' + unknown + ' had no recognisable map type.'; cls = 'warn'; }
+      if (droppedIndex) {
+        msg += '  ' + droppedIndex + ' have a frame number the pattern does not include - add {index}.';
+        cls = 'warn';
+      }
+    }
+    setStatus(msg, cls);
+  }
+
+  function setStatus(msg, cls) {
+    var s = $('status');
+    s.textContent = msg;
+    s.className = 'status' + (cls ? ' ' + cls : '');
+  }
+
+  /* ---- folder ----------------------------------------------------------- */
+  async function scan() {
+    if (!folderPath) return;
+    var res = await window.desktop.listFiles(folderPath);
+    if (res.error) { setStatus('Could not read the folder: ' + res.error, 'err'); return; }
+
+    // Keep the ticks the user set, so a rescan is not a reset.
+    var wasUnchecked = {};
+    entries.forEach(function (e) { if (!e.checked) wasUnchecked[e.name] = true; });
+
+    entries = res.files.map(function (n) {
+      var dot = n.lastIndexOf('.');
+      return {
+        name: n,
+        ext: dot > 0 ? n.slice(dot + 1) : '',
+        checked: !wasUnchecked[n]
+      };
+    });
+    entries.sort(function (a, b) { return a.name.localeCompare(b.name, undefined, { numeric: true }); });
+    refresh();
+  }
+
+  $('pickAll').addEventListener('change', function () {
+    var on = $('pickAll').checked;
+    entries.forEach(function (e) { if (e.visible !== false) e.checked = on; });
+    refresh();
+  });
+
+  $('openFolder').addEventListener('click', function () {
+    if (!folderPath) return;
+    window.desktop.openFolder(folderPath).then(function (err) {
+      if (err) setStatus('Could not open the folder: ' + err, 'err');
+    });
+  });
+
+  $('pick').addEventListener('click', async function () {
+    if (!window.desktop) { setStatus('Folder picking is not available here.', 'err'); return; }
+    var chosen = await window.desktop.pickFolder();
+    if (!chosen) return;   // cancelled
+
+    folderPath = chosen;
+    folderName = chosen.split(/[\\/]/).filter(Boolean).pop() || chosen;
+    $('folderName').textContent = folderName;
+    $('folderName').title = folderPath;
+    $('rescan').disabled = false;
+    $('openFolder').disabled = false;
+    $('openFolder').title = 'Open ' + folderPath + ' in Explorer';
+    await scan();
+  });
+  $('rescan').addEventListener('click', scan);
+
+  /* ---- rename ----------------------------------------------------------- */
+  function rememberUndo(dir, done) {
+    try { localStorage.setItem(LAST_KEY, JSON.stringify({ dir: dir, ops: done })); } catch (e) {}
+    $('undo').disabled = !done.length;
+  }
+
+  $('apply').addEventListener('click', async function () {
+    var jobs = entries.filter(function (e) { return !e.skip && e.target !== e.name && !e.conflict; });
+    if (!jobs.length) return;
+
+    $('apply').disabled = true;
+    setStatus('Renaming ' + jobs.length + ' files…');
+
+    // The main process does the work: it validates every name, refuses to
+    // overwrite anything outside the batch, and handles a two-step swap.
+    var res = await window.desktop.renameMany(folderPath, jobs.map(function (j) {
+      return { from: j.name, to: j.target };
+    }));
+
+    rememberUndo(folderPath, res.done || []);
+    if (res.error) {
+      setStatus('Stopped after ' + (res.done || []).length + ' files: ' + res.error +
+                ((res.done || []).length ? '  Undo is available.' : ''), 'err');
+    } else {
+      setStatus('Renamed ' + res.done.length + ' files.', 'ok');
+    }
+    await scan();
+  });
+
+  $('undo').addEventListener('click', async function () {
+    var last;
+    try { last = JSON.parse(localStorage.getItem(LAST_KEY) || 'null'); } catch (e) { last = null; }
+    if (!last || !last.ops || !last.ops.length) { setStatus('Nothing to undo.', 'warn'); return; }
+
+    setStatus('Undoing ' + last.ops.length + ' renames…');
+    var res = await window.desktop.renameMany(last.dir, last.ops.map(function (o) {
+      return { from: o.to, to: o.from };
+    }));
+
+    if (res.error) {
+      setStatus('Undo stopped: ' + res.error, 'err');
+    } else {
+      try { localStorage.removeItem(LAST_KEY); } catch (e) {}
+      $('undo').disabled = true;
+      setStatus('Restored ' + res.done.length + ' names.', 'ok');
+    }
+    if (last.dir === folderPath) await scan();
+  });
+
+  /* ---- presets ---------------------------------------------------------- */
+  function fillPresetList(select) {
+    var sel = $('preset');
+    sel.innerHTML = '';
+    Object.keys(presets).forEach(function (n) {
+      var o = document.createElement('option');
+      o.value = n; o.textContent = n;
+      sel.appendChild(o);
+    });
+    if (select && presets[select]) sel.value = select;
+  }
+
+  function applyPreset(name) {
+    var p = presets[name];
+    if (!p) return;
+    $('pattern').value = p.pattern;
+    $('sep').value = p.sep;
+    $('caseName').value = p.caseName;
+    $('caseMap').value = p.caseMap;
+    $('pad').value = p.pad;
+    MAP_TYPES.forEach(function (m) {
+      var el = document.getElementById('lbl_' + m.key);
+      if (el) el.value = (p.labels && p.labels[m.key]) || '';
+    });
+    refresh();
+  }
+
+  $('preset').addEventListener('change', function () { applyPreset($('preset').value); });
+
+  $('presetSave').addEventListener('click', function () {
+    var suggested = $('preset').value;
+    var name = window.prompt('Save these rules as:', suggested);
+    if (!name) return;
+    var o = currentOpts();
+    presets[name] = {
+      pattern: o.pattern, sep: o.sep, caseName: o.caseName, caseMap: o.caseMap,
+      pad: o.pad, labels: o.labels
+    };
+    savePresets(presets);
+    fillPresetList(name);
+    setStatus('Preset “' + name + '” saved.', 'ok');
+  });
+
+  $('presetDel').addEventListener('click', function () {
+    var name = $('preset').value;
+    if (!presets[name]) return;
+    if (!window.confirm('Delete the preset “' + name + '”?')) return;
+    delete presets[name];
+    savePresets(presets);
+    fillPresetList();
+    applyPreset($('preset').value);
+  });
+
+  /* ---- map label editors ------------------------------------------------ */
+  (function buildMapRows() {
+    var box = $('maps');
+    MAP_TYPES.forEach(function (m) {
+      var row = document.createElement('div');
+      row.className = 'map-row';
+      var s = document.createElement('span');
+      s.textContent = m.key;
+      s.title = 'also detected as: ' + m.aliases.join(', ');
+      var inp = document.createElement('input');
+      inp.type = 'text';
+      inp.id = 'lbl_' + m.key;
+      inp.placeholder = m.label;
+      inp.addEventListener('input', refresh);
+      row.appendChild(s); row.appendChild(inp);
+      box.appendChild(row);
+    });
+  })();
+
+  ['pattern', 'sep', 'caseName', 'caseMap', 'pad', 'find', 'repl', 'filter',
+   'clCopy', 'clDup', 'clUntitled', 'onlyImages', 'skipUnknown', 'lowerExt'].forEach(function (id) {
+    var el = $(id);
+    el.addEventListener('input', refresh);
+    el.addEventListener('change', refresh);
+  });
+
+  fillPresetList();
+  applyPreset($('preset').value);
+  try {
+    var saved = JSON.parse(localStorage.getItem(LAST_KEY) || 'null');
+    $('undo').disabled = !(saved && saved.ops && saved.ops.length);
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

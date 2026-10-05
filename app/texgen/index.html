@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TexGen</title>
+<style>
+  html, body { height: 100%; margin: 0; background: #0b0b0b; }
+  #root { height: 100%; }
+  /* Shown only if the module never mounts - otherwise React replaces it. */
+  #boot { color: #bbb; font: 13px monospace; padding: 24px; }
+  #boot .err { color: #ff6b6b; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+
+<div id="root"><div id="boot">Loading TexGen<span id="bootErr" class="err"></span></div></div>
+
+<script>
+// ---------------------------------------------------------------------------
+// window.storage shim
+//
+// TexGen was authored as a Claude artifact, where the host page provides
+// window.storage. Nothing provides it in a plain Electron window, so Save and
+// Load both reported "No storage" and the project was never restored on start.
+//
+// IndexedDB rather than localStorage: a project embeds decoded image layers and
+// routinely exceeds localStorage's ~5 MB string quota, which would fail the save
+// only once the user had done enough work to matter.
+//
+// Contract expected by the tool:
+//   storage.get(key) -> Promise<{ value: string } | null>
+//   storage.set(key, value) -> Promise<void>
+// ---------------------------------------------------------------------------
+(function () {
+  var DB_NAME = 'texgen', STORE = 'kv', DB_VERSION = 1;
+  var dbPromise = null;
+
+  function openDb() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise(function (resolve, reject) {
+      var req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = function () {
+        var db = req.result;
+        if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+      };
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error || new Error('indexedDB open failed')); };
+      req.onblocked = function () { reject(new Error('indexedDB blocked')); };
+    });
+    // A failed open must not poison every later call.
+    dbPromise.catch(function () { dbPromise = null; });
+    return dbPromise;
+  }
+
+  function tx(mode, fn) {
+    return openDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var t = db.transaction(STORE, mode);
+        var store = t.objectStore(STORE);
+        var req = fn(store);
+        t.onabort = function () { reject(t.error || new Error('transaction aborted')); };
+        t.onerror = function () { reject(t.error || new Error('transaction failed')); };
+        req.onsuccess = function () { resolve(req.result); };
+        req.onerror = function () { reject(req.error || new Error('request failed')); };
+      });
+    });
+  }
+
+  window.storage = {
+    get: function (key) {
+      return tx('readonly', function (s) { return s.get(key); })
+        .then(function (value) {
+          // The tool checks `res && res.value`, so absent must not throw.
+          return (typeof value === 'string') ? { value: value } : null;
+        });
+    },
+    set: function (key, value) {
+      return tx('readwrite', function (s) { return s.put(String(value), key); })
+        .then(function () { return undefined; });
+    },
+    remove: function (key) {
+      return tx('readwrite', function (s) { return s.delete(key); })
+        .then(function () { return undefined; });
+    }
+  };
+})();
+</script>
+
+<!-- React as classic scripts: these define the globals the shim re-exports.
+     React 18 is deliberate - 19 no longer ships UMD builds. -->
+<script src="./lib/react.production.min.js"></script>
+<script src="./lib/react-dom.production.min.js"></script>
+
+<!-- Maps the bare "react" specifier onto the local shim, so texgen.js stays
+     unmodified apart from the fixes noted in the README. Must appear before any
+     module script. -->
+<script type="importmap">
+{
+  "imports": {
+    "react": "./lib/react-shim.js"
+  }
+}
+</script>
+
+<script type="module">
+  import TexGen from './texgen.js';
+
+  const root = document.getElementById('root');
+  root.textContent = '';
+  ReactDOM.createRoot(root).render(React.createElement(TexGen));
+</script>
+
+<script>
+  // Surface a failed module load on the page instead of leaving a blank window.
+  window.addEventListener('error', (e) => {
+    const el = document.getElementById('bootErr');
+    if (el) el.textContent = '\n\n' + (e.message || e.error || 'failed to load');
+  });
+</script>
+
+</body>
+</html>

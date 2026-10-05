@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Toolbox</title>
+<style>
+  :root{
+    --bar:#141416; --bar-line:#26262b; --ink:#d7d7dd; --ink-dim:#83838f;
+    --hover:#1e1e22;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:#101013; color:var(--ink);
+    font:13px/1.4 "Segoe UI", Arial, sans-serif;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+
+  /* ------------------------------------------------------------- tab bar */
+  #bar{
+    flex:0 0 auto; display:flex; align-items:stretch; gap:2px;
+    background:var(--bar); border-bottom:1px solid var(--bar-line);
+    padding:0 6px; user-select:none; -webkit-user-select:none;
+    /* With the full names the seven tabs need about 1000 px. That is well
+       inside the usual window, but the window can be dragged down to 900:
+       there the bar scrolls sideways rather than squashing the names. */
+    overflow-x:auto; overflow-y:hidden; scrollbar-width:thin;
+    scrollbar-color:#3a3a42 transparent;
+  }
+  #bar::-webkit-scrollbar{ height:4px }
+  #bar::-webkit-scrollbar-thumb{ background:#3a3a42; border-radius:2px }
+  #bar::-webkit-scrollbar-track{ background:transparent }
+  .tab{
+    flex:0 0 auto; display:flex; align-items:center; gap:8px;
+    padding:0 13px; height:38px; border:0; background:none; cursor:pointer;
+    color:var(--ink-dim); font:inherit; font-weight:500; white-space:nowrap;
+    border-bottom:2px solid transparent;
+  }
+  .tab:hover{ background:var(--hover); color:var(--ink) }
+  .tab.on{ color:var(--ink); border-bottom-color:var(--ink) }
+  .tab .num{ color:var(--ink-dim); font-size:11px; opacity:.6 }
+
+  /* Hide button at the right end of the bar */
+  #hide{
+    margin-left:auto; flex:0 0 auto; align-self:center; border:0; background:none;
+    color:var(--ink-dim); cursor:pointer; padding:4px 8px; border-radius:4px; font:inherit;
+  }
+  #hide:hover{ background:var(--hover); color:var(--ink) }
+  #hide svg{ display:block }
+
+  /* Hidden bar: the tool gets the whole window. The bar slides back over
+     it while the mouse is on the top edge of the window, and goes away
+     again when the mouse leaves it. */
+  body.nobar #bar{
+    position:absolute; top:0; left:0; right:0; z-index:10;
+    transform:translateY(-100%); transition:transform .14s ease;
+    box-shadow:0 6px 18px rgba(0,0,0,.45);
+  }
+  body.nobar #bar.peek{ transform:none }
+  #edge{ display:none }
+  body.nobar #edge{
+    display:block; position:absolute; top:0; left:0; right:0; height:5px; z-index:9;
+    background:linear-gradient(#3a3a42, transparent);
+  }
+  .tab.on .num{ opacity:.8 }
+
+  /* --------------------------------------------------------------- stage */
+  #stage{ position:relative; flex:1 1 auto; min-height:0 }
+  #stage iframe{
+    position:absolute; inset:0; width:100%; height:100%;
+    border:0; display:block; background:#101013;
+  }
+  #stage iframe[hidden]{ display:none }
+  #hint{
+    position:absolute; inset:0; display:flex; align-items:center;
+    justify-content:center; color:var(--ink-dim);
+  }
+</style>
+</head>
+<body>
+
+<div id="bar" role="tablist"></div>
+<div id="edge" title="Tools"></div>
+<div id="stage"><div id="hint">Loading&hellip;</div></div>
+
+<script>
+'use strict';
+/*
+ * The shell is only a tab bar. Each tool is its own page, loaded unchanged in
+ * an iframe: its script, its styles and its keyboard shortcuts stay inside its
+ * own document, so the five cannot tread on each other and any one of them can
+ * be updated on its own exactly as before.
+ *
+ * Frames are built the first time their tab is opened and then kept, so
+ * switching back is instant and nothing a tool holds in memory - a decoded
+ * video, a loaded folder, an unsaved drawing - is thrown away by going to look
+ * at another tab.
+ */
+var TOOLS = [
+  { id:'flipbook', dir:'flipbook', name:'Flipbook Previewer', bg:'#191a1c' },
+  { id:'video',    dir:'video',    name:'Video Comparison',   bg:'#111111' },
+  { id:'textures', dir:'textures', name:'Texture Prep',       bg:'#141416' },
+  { id:'frames',   dir:'frames',   name:'Frame Strip',        bg:'#101013' },
+  { id:'annotate', dir:'annotate', name:'Annotate',           bg:'#141416' },
+  { id:'texgen',   dir:'texgen',   name:'TexGen',             bg:'#141416' },
+  { id:'store',    dir:'store',    name:'Store Graphics',     bg:'#141416' },
+  { id:'scene-sync', dir:'scene-sync', name:'Scene Sync', bg:'#141416' },
+  { id:'clips',    dir:'clips',    name:'Clip Joiner',        bg:'#121214' }
+];
+
+var LAST_KEY = 'toolbox.lastTab';
+var bar = document.getElementById('bar');
+var stage = document.getElementById('stage');
+var hint = document.getElementById('hint');
+var frames = {};
+var buttons = {};
+var current = null;
+
+TOOLS.forEach(function (t, i) {
+  var b = document.createElement('button');
+  b.className = 'tab';
+  b.type = 'button';
+  b.setAttribute('role', 'tab');
+  b.title = t.name + '  (Ctrl+' + (i + 1) + ')';
+  b.innerHTML = '<span></span><span class="num">' + (i + 1) + '</span>';
+  b.children[0].textContent = t.name;
+  b.onclick = function () { show(t.id); };
+  bar.appendChild(b);
+  buttons[t.id] = b;
+});
+
+/* ------------------------------------------------------------ hiding the bar
+   Once inside a tool the bar is just height taken away from it. The button
+   at the right end hides it; the choice is remembered. With the bar hidden,
+   touching the top edge of the window brings it back over the tool, and
+   picking a tab or moving away sends it off again. Ctrl+1..9 works either way. */
+var BAR_KEY = 'toolbox.barHidden';
+var hideBtn = document.createElement('button');
+hideBtn.id = 'hide'; hideBtn.type = 'button';
+bar.appendChild(hideBtn);
+var edge = document.getElementById('edge');
+var peekTimer = null;
+function setBar(hidden) {
+  document.body.classList.toggle('nobar', hidden);
+  bar.classList.remove('peek');
+  hideBtn.title = hidden ? 'Keep this bar always visible' : 'Hide this bar. Touch the top edge of the window to bring it back';
+  hideBtn.innerHTML = hidden
+    ? '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 10l5-5 5 5"/><path d="M3 13h10"/></svg>'
+    : '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6l5 5 5-5"/><path d="M3 3h10"/></svg>';
+  try { localStorage.setItem(BAR_KEY, hidden ? '1' : ''); } catch (err) {}
+}
+hideBtn.onclick = function () { setBar(!document.body.classList.contains('nobar')); };
+function peek(on) {
+  if (!document.body.classList.contains('nobar')) return;
+  clearTimeout(peekTimer);
+  if (on) bar.classList.add('peek');
+  else peekTimer = setTimeout(function () { bar.classList.remove('peek'); }, 350);
+}
+edge.addEventListener('mouseenter', function () { peek(true); });
+bar.addEventListener('mouseenter', function () { peek(true); });
+bar.addEventListener('mouseleave', function () { peek(false); });
+try { setBar(localStorage.getItem(BAR_KEY) === '1'); } catch (err) { setBar(false); }
+
+/* ------------------------------------------------------------ tool settings
+   Most tools remember their own settings. Three did not: Video Comparison
+   (only its collage options), Frame Strip and Annotate. For those the shell
+   keeps the value of every control with an id - sliders, menus, ticks, text
+   - and puts it back when the tool opens, firing the same events a hand
+   would, so the tool reacts exactly as if it had been set again. Files and
+   loaded media cannot come back this way. */
+var KEEP = { video: 1, frames: 1, annotate: 1 };
+function keepKey(id) { return 'toolbox.controls.' + id; }
+function controlsOf(doc) {
+  return [].slice.call(doc.querySelectorAll('input[id], select[id], textarea[id]')).filter(function (el) {
+    return el.type !== 'file' && el.type !== 'button' && el.type !== 'submit' && el.type !== 'password';
+  });
+}
+function restoreControls(id, frame) {
+  var doc = frame.contentDocument, saved;
+  try { saved = JSON.parse(localStorage.getItem(keepKey(id)) || '{}'); } catch (err) { saved = {}; }
+  controlsOf(doc).forEach(function (el) {
+    if (!(el.id in saved)) return;
+    var v = saved[el.id];
+    if (el.type === 'checkbox' || el.type === 'radio') { if (el.checked === v) return; el.checked = v; }
+    else { if (el.value === v) return; el.value = v; if (el.value !== v) return; }
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  var t = null;
+  function store() {
+    var all = {};
+    controlsOf(doc).forEach(function (el) {
+      all[el.id] = (el.type === 'checkbox' || el.type === 'radio') ? el.checked : el.value;
+    });
+    try { localStorage.setItem(keepKey(id), JSON.stringify(all)); } catch (err) {}
+  }
+  function later() { clearTimeout(t); t = setTimeout(store, 400); }
+  doc.addEventListener('input', later, true);
+  doc.addEventListener('change', later, true);
+}
+
+function show(id) {
+  var tool = TOOLS.filter(function (t) { return t.id === id; })[0];
+  if (!tool || current === id) { focusTool(id); return; }
+  if (hint) { hint.remove(); hint = null; }
+
+  if (!frames[id]) {
+    var f = document.createElement('iframe');
+    f.src = tool.dir + '/' + (tool.page || 'index.html');
+    f.style.background = tool.bg;
+    /* A tool that only ever shows its own pages has no use for popups or for
+       navigating the frame somewhere else. */
+    f.setAttribute('allow', 'clipboard-read; clipboard-write');
+    f.addEventListener('load', function () {
+      lendDesktop(f); wireKeys(f);
+      if (KEEP[id]) { try { restoreControls(id, f); } catch (err) { /* never break a tool over its settings */ } }
+      focusTool(id);
+    });
+    stage.appendChild(f);
+    frames[id] = f;
+  }
+
+  Object.keys(frames).forEach(function (k) { frames[k].hidden = (k !== id); });
+  Object.keys(buttons).forEach(function (k) { buttons[k].classList.toggle('on', k === id); });
+  /* in a narrow window the bar scrolls, and Ctrl+7 must not land on a tab
+     that is off to the right where you cannot see it */
+  try { buttons[id].scrollIntoView({ block:'nearest', inline:'nearest' }); } catch (err) {}
+  current = id;
+  bar.classList.remove('peek');
+  document.title = tool.name + ' - Toolbox';
+  try { localStorage.setItem(LAST_KEY, id); } catch (err) { /* private mode */ }
+  focusTool(id);
+}
+
+/* Clicking a tab should leave the keyboard where the work is, not on the tab
+   button: every one of these tools is driven by single keys. */
+function focusTool(id) {
+  var f = frames[id];
+  if (!f || f.hidden) return;
+  setTimeout(function () {
+    try { f.contentWindow.focus(); } catch (err) { /* not loaded yet */ }
+  }, 0);
+}
+
+/* Textures is the one tool that reaches the filesystem, through window.desktop.
+ * That bridge is set up by the preload script, which Electron runs in the top
+ * page only: a sandboxed preload does not reach iframes. The frames are
+ * same-origin, so the shell hands its own bridge down instead. Texture Prep
+ * looks window.desktop up when the button is pressed, never while it loads, so
+ * handing it over once the frame has loaded is soon enough. */
+function lendDesktop(frame) {
+  try {
+    if (window.desktop && frame.contentWindow && !frame.contentWindow.desktop) {
+      frame.contentWindow.desktop = window.desktop;
+    }
+  } catch (err) { /* a tool without the bridge simply says so in its own UI */ }
+}
+
+/* Ctrl+1..5 has to work while the keyboard is inside a tool, and a keystroke
+   there never reaches this document. The frames are same-origin, so the same
+   listener is added to each one as it loads. Nothing else is touched: no tool
+   uses Ctrl with a digit. */
+function wireKeys(frame) {
+  try {
+    var doc = frame.contentDocument;
+    if (doc) doc.addEventListener('keydown', onKey, true);
+  } catch (err) { /* cross-origin: cannot happen here, but never break the tab */ }
+}
+
+function onKey(e) {
+  if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
+  var n = parseInt(e.key, 10);
+  if (!(n >= 1 && n <= TOOLS.length)) return;
+  e.preventDefault();
+  e.stopPropagation();
+  show(TOOLS[n - 1].id);
+}
+document.addEventListener('keydown', onKey, true);
+
+var start = TOOLS[0].id;
+try {
+  var saved = localStorage.getItem(LAST_KEY);
+  if (saved && TOOLS.some(function (t) { return t.id === saved; })) start = saved;
+} catch (err) { /* private mode: start on the first tab */ }
+show(start);
+</script>
+</body>
+</html>

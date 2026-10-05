@@ -1,0 +1,3358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>VFX Flipbook Studio v2</title>
+<style>
+/* ============================================================
+   Theme
+   ============================================================ */
+:root{
+    --bg-0:#191a1c;
+    --bg-1:#212226;
+    --bg-2:#2a2b30;
+    --bg-3:#33343a;
+    --line:#3b3c43;
+    --line-soft:#2e2f35;
+    --txt:#d6d7da;
+    --txt-dim:#8d8e97;
+    --txt-faint:#64656e;
+    --acc:#2f9bff;
+    --acc-dim:#1c6cba;
+    --warn:#ff9a3d;
+    --danger:#ff5f5f;
+    --r:6px;
+    --sidebar:322px;
+}
+
+*{box-sizing:border-box;}
+html,body{height:100%;margin:0;}
+body{
+    background:var(--bg-0);
+    color:var(--txt);
+    font:400 12px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    overflow:hidden;
+    user-select:none;
+    -webkit-user-select:none;
+}
+button,input,select{font-family:inherit;}
+button{cursor:pointer;}
+
+#app{display:flex;height:100%;width:100%;}
+
+/* ============================================================
+   Stage
+   ============================================================ */
+#stage{flex:1;display:flex;flex-direction:column;position:relative;min-width:0;}
+
+#canvasWrapper{
+    flex:1;position:relative;overflow:hidden;touch-action:none;min-height:0;
+    background:#000;
+}
+#mainCanvas{display:block;width:100%;height:100%;}
+
+/* Floating toolbar */
+#toolbar{
+    position:absolute;top:8px;left:8px;z-index:10;
+    display:flex;gap:6px;flex-wrap:wrap;max-width:calc(100% - 16px);
+}
+.tgroup{
+    display:flex;gap:3px;padding:3px;border-radius:var(--r);
+    background:rgba(33,34,38,.92);
+    border:1px solid var(--line);
+    backdrop-filter:blur(6px);
+    box-shadow:0 2px 10px rgba(0,0,0,.4);
+}
+.tbtn{
+    width:30px;height:30px;border-radius:4px;
+    display:flex;align-items:center;justify-content:center;
+    background:transparent;border:1px solid transparent;color:var(--txt);
+    transition:background .12s,border-color .12s,color .12s;
+}
+.tbtn:hover{background:var(--bg-3);}
+.tbtn.active{background:var(--acc);border-color:var(--acc);color:#fff;}
+.tsep{width:1px;background:var(--line);margin:2px 2px;}
+.swatch{
+    width:30px;height:30px;border-radius:4px;border:1px solid #55565d;
+    padding:0;transition:border-color .12s,transform .12s;
+}
+.swatch:hover{border-color:#fff;}
+.checker-preview{
+    background-image:
+        linear-gradient(45deg,#3a3a3a 25%,transparent 25%),
+        linear-gradient(-45deg,#3a3a3a 25%,transparent 25%),
+        linear-gradient(45deg,transparent 75%,#3a3a3a 75%),
+        linear-gradient(-45deg,transparent 75%,#3a3a3a 75%);
+    background-size:12px 12px;
+    background-position:0 0,0 6px,6px -6px,-6px 0;
+    background-color:#222;
+}
+
+#zoomBadge{
+    display:none;align-items:center;padding:0 9px;height:36px;
+    border-radius:var(--r);font:600 11px/1 ui-monospace,Consolas,monospace;
+    background:rgba(33,34,38,.92);border:1px solid var(--line);
+    backdrop-filter:blur(6px);
+}
+#zoomBadge.show{display:flex;}
+
+#stats{
+    position:absolute;top:8px;right:8px;z-index:10;
+    padding:8px 10px;border-radius:var(--r);
+    background:rgba(33,34,38,.85);border:1px solid var(--line);
+    backdrop-filter:blur(6px);
+    font:400 10px/1.55 ui-monospace,Consolas,monospace;
+    text-align:right;color:var(--txt-dim);pointer-events:none;
+}
+#stats.hidden{display:none;}
+#stats b{display:block;color:var(--acc);font-weight:600;margin-bottom:3px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#stats span{color:var(--txt);}
+
+#emptyState{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    pointer-events:none;padding:20px;
+}
+#emptyState .card{
+    background:rgba(33,34,38,.94);border:1px solid var(--line);
+    border-radius:10px;padding:22px 26px;max-width:400px;
+    box-shadow:0 10px 40px rgba(0,0,0,.5);
+}
+#emptyState h2{margin:0 0 4px;font-size:14px;color:var(--txt);}
+#emptyState p{margin:0 0 12px;font-size:11px;color:var(--txt-dim);}
+#emptyState ul{margin:0;padding-left:16px;font-size:11px;color:var(--txt-dim);line-height:1.9;}
+#emptyState kbd{
+    display:inline-block;padding:1px 5px;border-radius:3px;
+    background:var(--bg-3);border:1px solid var(--line);
+    font:600 10px/1.4 ui-monospace,Consolas,monospace;color:var(--txt);
+}
+#emptyState.hidden{display:none;}
+
+#dropOverlay{
+    position:fixed;inset:0;z-index:100;display:none;
+    align-items:center;justify-content:center;flex-direction:column;gap:8px;
+    background:rgba(47,155,255,.16);
+    border:3px dashed var(--acc);
+    backdrop-filter:blur(3px);
+    pointer-events:none;
+}
+#dropOverlay.show{display:flex;}
+#dropOverlay .big{font-size:22px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#fff;}
+#dropOverlay .small{font-size:12px;color:rgba(255,255,255,.75);}
+
+/* Timeline */
+#timeline{
+    height:56px;flex:0 0 56px;display:none;align-items:center;gap:12px;
+    padding:0 14px;background:var(--bg-1);border-top:1px solid var(--line);
+}
+#timeline.show{display:flex;}
+#playBtn,#restartBtn{
+    width:36px;height:36px;flex:0 0 36px;border-radius:var(--r);
+    background:var(--bg-3);border:1px solid var(--line);color:#fff;
+    display:flex;align-items:center;justify-content:center;transition:background .12s;
+}
+#playBtn:hover,#restartBtn:hover{background:var(--acc);border-color:var(--acc);}
+#restartBtn{margin-left:-6px;}
+#frameCounter{
+    min-width:66px;text-align:right;
+    font:500 11px/1 ui-monospace,Consolas,monospace;color:var(--txt-dim);
+}
+
+/* ============================================================
+   Sidebar
+   ============================================================ */
+#sidebar{
+    width:var(--sidebar);flex:0 0 var(--sidebar);
+    background:var(--bg-1);border-left:1px solid var(--line);
+    display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;
+}
+
+details.sec{border-bottom:1px solid var(--line-soft);}
+details.sec[hidden]{display:none;}
+details.sec>summary{
+    list-style:none;cursor:pointer;padding:11px 14px;
+    display:flex;align-items:center;gap:8px;
+    font:700 10px/1 -apple-system,'Segoe UI',sans-serif;
+    letter-spacing:.13em;text-transform:uppercase;color:var(--txt-dim);
+}
+details.sec>summary::-webkit-details-marker{display:none;}
+details.sec>summary::before{
+    content:'';width:0;height:0;flex:0 0 auto;
+    border-left:4px solid var(--txt-faint);
+    border-top:3.5px solid transparent;border-bottom:3.5px solid transparent;
+    transition:transform .15s;
+}
+details.sec[open]>summary::before{transform:rotate(90deg) translateX(-1px);}
+details.sec>summary:hover{color:var(--txt);}
+details.sec .body{padding:0 14px 16px;}
+details.sec.accent>summary{color:var(--acc);}
+
+#controlsContent.disabled{opacity:.4;pointer-events:none;}
+
+.field{margin-bottom:12px;}
+.field:last-child{margin-bottom:0;}
+.lbl{
+    display:flex;justify-content:space-between;align-items:center;gap:8px;
+    font-size:10px;color:var(--txt-dim);margin-bottom:5px;
+}
+.lbl .val{color:var(--txt);font:500 10px/1 ui-monospace,Consolas,monospace;}
+.row{display:flex;align-items:center;gap:8px;}
+.row.tight{gap:5px;}
+.grow{flex:1;min-width:0;}
+.hr{height:1px;background:var(--line-soft);margin:14px 0;}
+
+.inp{
+    background:var(--bg-3);border:1px solid transparent;color:var(--txt);
+    border-radius:4px;padding:6px 8px;font-size:11px;width:100%;
+    transition:border-color .12s;
+}
+.inp:focus{border-color:var(--acc);outline:none;}
+.inp.num{text-align:center;font-weight:600;font-family:ui-monospace,Consolas,monospace;}
+select.inp{
+    appearance:none;padding-right:22px;cursor:pointer;
+    background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%238d8e97' d='M0 0h10L5 6z'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 8px center;
+}
+
+.btn{
+    background:var(--bg-3);border:1px solid var(--line);color:var(--txt-dim);
+    border-radius:4px;padding:6px 8px;font-size:10px;font-weight:600;
+    transition:background .12s,color .12s,border-color .12s;
+}
+.btn:hover{background:var(--acc);border-color:var(--acc);color:#fff;}
+.btn.active{background:var(--acc);border-color:var(--acc);color:#fff;}
+.btn.mini{padding:3px 6px;font-size:9px;font-weight:500;}
+.btn.danger:hover{background:var(--danger);border-color:var(--danger);}
+.btn.full{width:100%;padding:9px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt);}
+.seg{display:flex;gap:4px;}
+.seg>.btn{flex:1;}
+
+.chk{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--txt-dim);cursor:pointer;}
+.chk:hover{color:var(--txt);}
+input[type=checkbox]{accent-color:var(--acc);width:14px;height:14px;margin:0;cursor:pointer;}
+
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;background:transparent;margin:0;height:16px;cursor:pointer;}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:var(--bg-3);}
+input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;height:14px;width:14px;border-radius:50%;
+    background:var(--acc);margin-top:-5px;border:none;transition:transform .1s;
+}
+input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.15);}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--bg-3);}
+input[type=range]::-moz-range-thumb{height:14px;width:14px;border-radius:50%;background:var(--acc);border:none;}
+
+input[type=color]{
+    -webkit-appearance:none;appearance:none;border:none;background:transparent;
+    width:34px;height:26px;padding:0;border-radius:4px;cursor:pointer;flex:0 0 34px;
+}
+input[type=color]::-webkit-color-swatch-wrapper{padding:0;}
+input[type=color]::-webkit-color-swatch{border:1px solid var(--line);border-radius:4px;}
+input[type=color]::-moz-color-swatch{border:1px solid var(--line);border-radius:4px;}
+
+.box{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--r);padding:11px;}
+.tag{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;}
+.tag.blue{color:var(--acc);}
+.tag.orange{color:var(--warn);}
+.muted{color:var(--txt-faint);font-size:10px;font-style:italic;}
+.dim{opacity:.4;pointer-events:none;}
+
+/* Texture strip */
+#texThumbs{
+    display:flex;gap:7px;overflow-x:auto;min-height:52px;align-items:center;
+    padding-bottom:6px;margin-bottom:10px;
+}
+.thumb{
+    position:relative;width:46px;height:46px;flex:0 0 46px;border-radius:5px;
+    overflow:hidden;border:2px solid transparent;background:#000;
+    opacity:.45;transition:opacity .12s,border-color .12s;padding:0;
+}
+.thumb:hover{opacity:1;}
+.thumb.on{opacity:1;border-color:var(--acc);}
+.thumb img{width:100%;height:100%;object-fit:contain;display:block;}
+.thumb .x{
+    position:absolute;top:0;right:0;width:15px;height:15px;line-height:13px;
+    font-size:11px;text-align:center;color:#fff;
+    background:rgba(0,0,0,.65);border:none;border-radius:0 0 0 5px;
+    opacity:0;transition:opacity .12s;padding:0;
+}
+.thumb:hover .x{opacity:1;}
+.thumb .x:hover{background:var(--danger);}
+.thumb .re{
+    position:absolute;top:0;left:0;width:15px;height:15px;line-height:14px;
+    font-size:11px;text-align:center;color:#fff;
+    background:rgba(0,0,0,.65);border:none;border-radius:0 0 5px 0;
+    opacity:0;transition:opacity .12s;padding:0;
+}
+.thumb:hover .re{opacity:1;}
+.thumb .re:hover{background:var(--acc);}
+@keyframes texFlash{
+    from{box-shadow:0 0 0 2px var(--acc), 0 0 10px 2px var(--acc);}
+    to  {box-shadow:0 0 0 2px rgba(47,155,255,0), 0 0 10px 2px rgba(47,155,255,0);}
+}
+.thumb.flash{animation:texFlash .6s ease-out;}
+.thumb .tintdot{
+    position:absolute;left:2px;bottom:2px;width:10px;height:10px;border-radius:50%;
+    border:1px solid rgba(0,0,0,.75);box-shadow:0 0 0 1px rgba(255,255,255,.35);
+    pointer-events:none;
+}
+
+/* Tint swatches */
+.tintrow{display:flex;gap:4px;margin-top:6px;}
+.tintrow .swatch{flex:1;height:16px;border-radius:3px;min-width:0;}
+.tintrow .swatch.on{border-color:#fff;box-shadow:0 0 0 1px var(--acc);}
+
+/* Texture library */
+.libfolder{
+    background:var(--bg-2);border:1px solid var(--line);border-radius:var(--r);
+    padding:8px;margin-bottom:7px;
+}
+.libfolder.stale{border-style:dashed;}
+.libname{
+    background:none;border:none;padding:0;flex:1;min-width:0;text-align:left;
+    color:var(--txt);font-size:11px;font-weight:600;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.libname:hover{color:var(--acc);}
+.libcount{font:500 9px/1 ui-monospace,Consolas,monospace;color:var(--txt-faint);flex:0 0 auto;}
+.libfiles{
+    margin-top:8px;padding-top:7px;border-top:1px solid var(--line-soft);
+    max-height:196px;overflow-y:auto;
+}
+.libfile{
+    display:flex;align-items:center;gap:7px;padding:2px 0;cursor:pointer;
+    font-size:10px;color:var(--txt-dim);
+}
+.libfile:hover{color:var(--txt);}
+.libfile span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.libbar{display:flex;gap:5px;margin-top:8px;}
+.libbar>.btn{flex:1;}
+
+/* Scrollbars */
+::-webkit-scrollbar{width:9px;height:7px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#45464d;border-radius:5px;border:2px solid var(--bg-1);}
+::-webkit-scrollbar-thumb:hover{background:#55565e;}
+
+@media (max-width:820px){
+    #app{flex-direction:column;}
+    #sidebar{width:100%;flex:0 0 45%;border-left:none;border-top:1px solid var(--line);}
+    #stage{flex:1 1 55%;}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+    <!-- ================= STAGE ================= -->
+    <main id="stage">
+
+        <div id="toolbar">
+            <div class="tgroup">
+                <button class="swatch checker-preview" data-quickbg="checker" title="Checkerboard background"></button>
+                <button class="swatch" data-quickbg="#000000" style="background:#000" title="Black background"></button>
+                <button class="swatch" data-quickbg="#808080" style="background:#808080" title="50% grey background"></button>
+                <button class="swatch" data-quickbg="#ffffff" style="background:#fff" title="White background"></button>
+            </div>
+
+            <div class="tgroup">
+                <button id="toolPan" class="tbtn" title="Pan (H — or hold Space)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="19 9 22 12 19 15"/><polyline points="9 19 12 22 15 19"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>
+                </button>
+                <button id="toolSelect" class="tbtn active" title="Select &amp; transform (V)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>
+                </button>
+                <button id="toolScatter" class="tbtn" title="Scatter / paint (B)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                </button>
+                <div class="tsep"></div>
+                <button id="btnZoomIn" class="tbtn" title="Zoom in (+)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                </button>
+                <button id="btnZoomOut" class="tbtn" title="Zoom out (−)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                </button>
+                <button id="btnFit" class="tbtn" title="Fit content to view (F)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9V4a1 1 0 0 1 1-1h5M21 9V4a1 1 0 0 0-1-1h-5M3 15v5a1 1 0 0 0 1 1h5M21 15v5a1 1 0 0 1-1 1h-5"/></svg>
+                </button>
+                <button id="btnReset" class="tbtn" title="Reset view to 100% (0)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </button>
+                <div class="tsep"></div>
+                <button id="btnGrid" class="tbtn" title="Toggle frame guides (G)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+                </button>
+                <button id="btnPoint" class="tbtn" title="Point / nearest filtering — crisp pixels (P)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="6" height="6"/><rect x="10" y="3" width="4" height="4" opacity=".55"/><rect x="3" y="10" width="4" height="4" opacity=".55"/><rect x="11" y="11" width="10" height="10"/><rect x="15" y="7" width="3" height="3" opacity=".55"/><rect x="7" y="15" width="3" height="3" opacity=".55"/></svg>
+                </button>
+            </div>
+
+            <div id="zoomBadge">100%</div>
+        </div>
+
+        <div id="stats" class="hidden">
+            <b id="statFilename">file.png</b>
+            Source <span id="statSrcRes">0×0</span><br>
+            Frame <span id="statFrameRes">0×0</span><br>
+            Instances <span id="statInstances">0</span>
+        </div>
+
+        <div id="canvasWrapper">
+            <canvas id="mainCanvas"></canvas>
+            <div id="emptyState">
+                <div class="card">
+                    <h2>Import a flipbook</h2>
+                    <p>Drag &amp; drop one or more sprite sheets anywhere, or use “Add texture”.</p>
+                    <ul>
+                        <li>Grid is auto-detected from names like <code>fire_8x8.png</code></li>
+                        <li><kbd>V</kbd> select &amp; transform · <kbd>B</kbd> scatter · <kbd>H</kbd> pan</li>
+                        <li><kbd>Space</kbd> play / pause · <kbd>R</kbd> restart · wheel to zoom · <kbd>F</kbd> fit</li>
+                        <li>Hold <kbd>Space</kbd> and drag to pan · middle mouse drags too</li>
+                        <li><kbd>Ctrl</kbd>+<kbd>D</kbd> duplicate · <kbd>Del</kbd> remove · arrows nudge</li>
+                        <li>Hold <kbd>Shift</kbd> while dropping to set a background image</li>
+                        <li><kbd>I</kbd> reimports every sheet from disk after you re-export it</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="timeline">
+            <button id="playBtn" title="Play / pause (Space or K)">
+                <svg id="playIcon" width="15" height="15" viewBox="0 0 20 20" fill="currentColor" style="margin-left:2px"><path d="M4 3l13 7-13 7z"/></svg>
+                <svg id="pauseIcon" width="15" height="15" viewBox="0 0 20 20" fill="currentColor" hidden><path d="M5 3h3v14H5zm7 0h3v14h-3z"/></svg>
+            </button>
+            <button id="restartBtn" title="Restart from frame 1 and play (R)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 3 3 9 9 9"/></svg>
+            </button>
+            <input type="range" id="frameSlider" class="grow" min="0" max="63" value="0">
+            <span id="frameCounter">1/64</span>
+            <button id="btnClear" class="btn danger" title="Delete every instance on the canvas">Clear canvas</button>
+        </div>
+    </main>
+
+    <!-- ================= SIDEBAR ================= -->
+    <aside id="sidebar">
+
+        <details class="sec" open>
+            <summary>Textures</summary>
+            <div class="body">
+                <div id="texThumbs"><span class="muted">No textures loaded</span></div>
+                <div class="row tight">
+                    <button class="btn full grow" id="btnAddTex">+ Add texture</button>
+                    <button class="btn full grow" id="btnReimportAll" title="Reload every texture from disk, keeping grid, tint and everything placed (I)">↻ Reimport all</button>
+                </div>
+                <input type="file" id="fileInput" accept="image/*" multiple hidden>
+                <div class="muted" id="reimportStatus" style="margin-top:8px" hidden></div>
+            </div>
+        </details>
+
+        <details class="sec" id="librarySec">
+            <summary>Texture library</summary>
+            <div class="body">
+                <div id="libList"><span class="muted">No folders saved</span></div>
+                <button class="btn full" id="btnAddFolder">+ Add folder</button>
+                <div class="muted" id="libStatus" style="margin-top:8px"></div>
+            </div>
+        </details>
+
+        <div id="controlsContent" class="disabled">
+
+            <details class="sec accent" open>
+                <summary>Active texture</summary>
+                <div class="body">
+                    <div class="row" style="margin-bottom:8px">
+                        <div class="grow">
+                            <div class="lbl">Columns (X)</div>
+                            <input type="number" id="colsInput" class="inp num" min="1" value="8">
+                        </div>
+                        <div class="grow">
+                            <div class="lbl">Rows (Y)</div>
+                            <input type="number" id="rowsInput" class="inp num" min="1" value="8">
+                        </div>
+                    </div>
+                    <div class="seg" id="presetRow" style="margin-bottom:10px">
+                        <button class="btn" data-preset="2,2">2×2</button>
+                        <button class="btn" data-preset="4,4">4×4</button>
+                        <button class="btn" data-preset="6,6">6×6</button>
+                        <button class="btn" data-preset="7,7">7×7</button>
+                        <button class="btn" data-preset="8,8">8×8</button>
+                    </div>
+                    <div class="field">
+                        <div class="lbl">Total frames</div>
+                        <input type="number" id="totalFramesInput" class="inp num" min="1" value="64">
+                    </div>
+                    <div class="field">
+                        <div class="lbl">Channel preview</div>
+                        <div class="seg" id="channelBtns">
+                            <button class="btn active" data-ch="all">RGB</button>
+                            <button class="btn" data-ch="r" style="color:#ff7a7a">R</button>
+                            <button class="btn" data-ch="g" style="color:#7ee08a">G</button>
+                            <button class="btn" data-ch="b" style="color:#7ab6ff">B</button>
+                            <button class="btn" data-ch="a">A</button>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="lbl">
+                            <span>Tint <span class="tag blue">this texture only</span></span>
+                            <span class="row tight">
+                                <button class="btn mini" id="btnTintAll" title="Copy this tint to every loaded texture">All</button>
+                                <button class="btn mini" id="btnResetTint">Reset</button>
+                            </span>
+                        </div>
+                        <div class="row tight">
+                            <input type="color" id="tintColor" value="#ffffff">
+                            <input type="range" id="tintSlider" class="grow" min="0" max="100" value="100">
+                            <span class="val" id="tintValue" style="width:34px;text-align:right">100%</span>
+                        </div>
+                        <div class="tintrow" id="tintSwatches">
+                            <button class="swatch" style="background:#ffffff" data-tint="#ffffff" title="Neutral"></button>
+                            <button class="swatch" style="background:#ff4423" data-tint="#ff4423" title="Fire"></button>
+                            <button class="swatch" style="background:#ffb02e" data-tint="#ffb02e" title="Ember"></button>
+                            <button class="swatch" style="background:#6cff8a" data-tint="#6cff8a" title="Toxic"></button>
+                            <button class="swatch" style="background:#4dd2ff" data-tint="#4dd2ff" title="Ice"></button>
+                            <button class="swatch" style="background:#3a6bff" data-tint="#3a6bff" title="Arcane"></button>
+                            <button class="swatch" style="background:#b46cff" data-tint="#b46cff" title="Magic"></button>
+                            <button class="swatch" style="background:#ff5fa8" data-tint="#ff5fa8" title="Candy"></button>
+                            <button class="swatch" style="background:#8a8f99" data-tint="#8a8f99" title="Smoke"></button>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+        </div>
+
+        <details class="sec" open>
+            <summary>Background</summary>
+            <div class="body">
+                <div class="seg" id="bgModeBtns" style="margin-bottom:12px">
+                    <button class="btn active" data-mode="solid">Solid</button>
+                    <button class="btn" data-mode="checker">Checker</button>
+                    <button class="btn" data-mode="image">Image</button>
+                </div>
+
+                <div class="field">
+                    <div class="lbl"><span>Colour</span></div>
+                    <div class="row tight">
+                        <input type="color" id="bgColor" value="#000000">
+                        <input type="text" id="bgHex" class="inp num grow" value="#000000" maxlength="7" spellcheck="false">
+                    </div>
+                    <div class="row tight" id="bgSwatches" style="margin-top:7px">
+                        <button class="swatch grow" style="height:20px;background:#000000" data-color="#000000" title="#000000"></button>
+                        <button class="swatch grow" style="height:20px;background:#1b1b1b" data-color="#1b1b1b" title="#1b1b1b"></button>
+                        <button class="swatch grow" style="height:20px;background:#808080" data-color="#808080" title="#808080"></button>
+                        <button class="swatch grow" style="height:20px;background:#ffffff" data-color="#ffffff" title="#ffffff"></button>
+                        <button class="swatch grow" style="height:20px;background:#0d1b2a" data-color="#0d1b2a" title="#0d1b2a"></button>
+                        <button class="swatch grow" style="height:20px;background:#2a120d" data-color="#2a120d" title="#2a120d"></button>
+                        <button class="swatch grow" style="height:20px;background:#12261a" data-color="#12261a" title="#12261a"></button>
+                    </div>
+                </div>
+
+                <div class="hr"></div>
+
+                <div class="field">
+                    <div class="lbl"><span>Image</span><span class="val" id="bgImgName">—</span></div>
+                    <div class="row tight">
+                        <label class="btn grow" style="text-align:center">
+                            Load image
+                            <input type="file" id="bgFileInput" accept="image/*" hidden>
+                        </label>
+                        <button class="btn danger" id="btnBgClear">Clear</button>
+                    </div>
+                </div>
+
+                <div class="field" id="fieldFit">
+                    <div class="lbl">Fit mode</div>
+                    <select id="bgFit" class="inp">
+                        <option value="cover">Cover (fill viewport)</option>
+                        <option value="contain">Contain (fit inside)</option>
+                        <option value="stretch">Stretch</option>
+                        <option value="tile">Tile</option>
+                    </select>
+                </div>
+
+                <div class="field" id="fieldScale" hidden>
+                    <div class="lbl"><span>Image scale</span><span class="val" id="bgScaleVal">100%</span></div>
+                    <input type="range" id="bgScale" min="5" max="400" value="100">
+                </div>
+
+                <div class="field">
+                    <div class="lbl"><span>Image opacity</span><span class="val" id="bgOpacityVal">100%</span></div>
+                    <input type="range" id="bgOpacity" min="0" max="100" value="100">
+                </div>
+
+                <label class="chk"><input type="checkbox" id="bgWorldLock"> Lock image to canvas (pans &amp; zooms)</label>
+            </div>
+        </details>
+
+        <div id="controlsContent2" class="disabled">
+
+            <details class="sec" open>
+                <summary>Playback &amp; material</summary>
+                <div class="body">
+                    <div class="field">
+                        <div class="lbl"><span>Speed</span><span class="val"><b id="fpsValue">60</b> fps</span></div>
+                        <input type="range" id="fpsSlider" min="1" max="120" value="60">
+                    </div>
+                    <div class="field">
+                        <div class="lbl">Blend mode</div>
+                        <select id="blendSelect" class="inp">
+                            <option value="source-over" selected>Normal (translucent)</option>
+                            <option value="lighter">Additive (lighter)</option>
+                            <option value="multiply">Multiply</option>
+                            <option value="screen">Screen</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <div class="muted">Tint is per texture — set it under “Active texture”.</div>
+                    </div>
+                    <label class="chk"><input type="checkbox" id="nearestCheck"> Point filter — nearest neighbour, crisp pixels (P)</label>
+                </div>
+            </details>
+
+            <details class="sec">
+                <summary>Post process</summary>
+                <div class="body">
+                    <div class="field">
+                        <div class="lbl"><span>Brightness</span><span class="val" id="brValue">100%</span></div>
+                        <input type="range" id="brSlider" min="0" max="300" step="5" value="100">
+                    </div>
+                    <div class="field">
+                        <div class="lbl"><span>Contrast</span><span class="val" id="coValue">100%</span></div>
+                        <input type="range" id="coSlider" min="0" max="300" step="5" value="100">
+                    </div>
+                    <div class="field">
+                        <div class="lbl"><span>Saturation</span><span class="val" id="satValue">100%</span></div>
+                        <input type="range" id="satSlider" min="0" max="300" step="5" value="100">
+                    </div>
+                    <div class="row" style="justify-content:space-between">
+                        <label class="chk"><input type="checkbox" id="invertCheck"> Invert colours</label>
+                        <button class="btn mini" id="btnResetPP">Reset all</button>
+                    </div>
+                </div>
+            </details>
+
+            <details class="sec">
+                <summary>Scatter &amp; emitter</summary>
+                <div class="body">
+
+                    <div class="box" style="margin-bottom:12px">
+                        <div class="row" style="justify-content:space-between;margin-bottom:9px">
+                            <span class="tag blue">Placement defaults</span>
+                            <button class="btn mini" id="btnClearManual">Clear placed</button>
+                        </div>
+                        <div class="field">
+                            <div class="lbl"><span>Base scale</span><span class="val" id="baseScaleVal">1.0×</span></div>
+                            <input type="range" id="baseScaleSlider" min="0.1" max="5" step="0.1" value="1">
+                        </div>
+                        <div class="field">
+                            <div class="lbl"><span>Scale randomness</span><span class="val" id="randScaleVal">50%</span></div>
+                            <input type="range" id="randScaleSlider" min="0" max="100" value="50">
+                        </div>
+                        <div class="field">
+                            <div class="lbl"><span>Animation duration</span><span class="val" id="manualDurVal">Global</span></div>
+                            <input type="range" id="manualDurSlider" min="0" max="10" step="0.1" value="0">
+                        </div>
+                        <div class="row" style="flex-wrap:wrap;gap:12px">
+                            <label class="chk"><input type="checkbox" id="manualLoopCheck" checked> Loop</label>
+                            <label class="chk"><input type="checkbox" id="randPhaseCheck"> Random phase</label>
+                            <label class="chk"><input type="checkbox" id="randRotCheck"> Random rotation</label>
+                        </div>
+                    </div>
+
+                    <div class="box">
+                        <div class="row" style="justify-content:space-between;margin-bottom:9px">
+                            <span class="tag orange">Auto emitter</span>
+                            <label class="chk" style="color:var(--warn);font-weight:700"><input type="checkbox" id="autoEmitCheck"> Enable</label>
+                        </div>
+                        <div id="emitterControls" class="dim">
+                            <div class="field">
+                                <div class="lbl"><span>Lifespan</span><span class="val" id="emitLifetimeVal">2.0s</span></div>
+                                <input type="range" id="emitLifetimeSlider" min="0.1" max="10" step="0.1" value="2">
+                            </div>
+                            <div class="field">
+                                <div class="lbl"><span>Spawn rate</span><span class="val" id="emitRateVal">15/s</span></div>
+                                <input type="range" id="emitRateSlider" min="1" max="60" value="15">
+                            </div>
+                            <div class="field">
+                                <div class="lbl"><span>Spawn radius</span><span class="val" id="emitRadiusVal">200px</span></div>
+                                <input type="range" id="emitRadiusSlider" min="0" max="1200" value="200">
+                            </div>
+                            <div class="field">
+                                <div class="lbl"><span>Max particles</span><span class="val" id="emitMaxVal">50</span></div>
+                                <input type="range" id="emitMaxSlider" min="1" max="400" value="50">
+                            </div>
+                            <label class="chk"><input type="checkbox" id="emitFadeCheck" checked> Fade in / out</label>
+                        </div>
+                    </div>
+
+                </div>
+            </details>
+
+        </div>
+
+        <details class="sec accent" id="selSection" open hidden>
+            <summary id="selHeader">Selection</summary>
+            <div class="body">
+                <div class="row" style="margin-bottom:12px">
+                    <div class="grow">
+                        <div class="lbl">Position X</div>
+                        <input type="number" id="selPosX" class="inp num" step="1" value="0">
+                    </div>
+                    <div class="grow">
+                        <div class="lbl">Position Y</div>
+                        <input type="number" id="selPosY" class="inp num" step="1" value="0">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="lbl"><span>Scale (uniform)</span><span class="val" id="selScaleUniVal">1.0×</span></div>
+                    <input type="range" id="selScaleUni" min="0.05" max="10" step="0.05" value="1">
+                </div>
+                <div class="row" style="margin-bottom:12px">
+                    <div class="grow">
+                        <div class="lbl"><span>Scale X</span><span class="val" id="selScaleXVal">1.0×</span></div>
+                        <input type="range" id="selScaleX" min="0.05" max="10" step="0.05" value="1">
+                    </div>
+                    <div class="grow">
+                        <div class="lbl"><span>Scale Y</span><span class="val" id="selScaleYVal">1.0×</span></div>
+                        <input type="range" id="selScaleY" min="0.05" max="10" step="0.05" value="1">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="lbl"><span>Rotation</span><span class="val" id="selRotVal">0°</span></div>
+                    <input type="range" id="selRot" min="-180" max="180" step="1" value="0">
+                </div>
+
+                <div class="row" style="gap:14px;margin-bottom:12px">
+                    <label class="chk"><input type="checkbox" id="selFlipX"> Flip X</label>
+                    <label class="chk"><input type="checkbox" id="selFlipY"> Flip Y</label>
+                </div>
+
+                <div class="hr"></div>
+
+                <div class="field">
+                    <div class="lbl"><span>Start phase</span><span class="val" id="selPhaseVal">0%</span></div>
+                    <input type="range" id="selPhase" min="0" max="100" value="0">
+                </div>
+                <div class="field">
+                    <div class="lbl"><span>Duration</span><span class="val" id="selDurVal">Global</span></div>
+                    <input type="range" id="selDur" min="0" max="10" step="0.1" value="0">
+                </div>
+                <label class="chk" style="margin-bottom:12px"><input type="checkbox" id="selLoop"> Loop animation</label>
+
+                <div class="row tight" style="margin-bottom:7px">
+                    <button class="btn grow" id="btnMoveUp">▲ Forward</button>
+                    <button class="btn grow" id="btnMoveDown">▼ Backward</button>
+                </div>
+                <div class="row tight">
+                    <button class="btn grow" id="btnDup">Duplicate</button>
+                    <button class="btn grow danger" id="btnDelete">Delete</button>
+                </div>
+            </div>
+        </details>
+
+    </aside>
+</div>
+
+<div id="dropOverlay">
+    <div class="big">Drop textures</div>
+    <div class="small">Hold Shift to use the image as background</div>
+</div>
+
+<script>
+'use strict';
+
+/* ============================================================
+   Constants
+   ============================================================ */
+const HANDLE_SIZE     = 11;   // drawn handle size, screen px
+const HANDLE_HIT      = 21;   // pointer hit radius, screen px (mouse)
+const HANDLE_HIT_FAR  = 38;   // forgiving second pass, used only when nothing else was hit
+const TOUCH_MULT      = 1.7;  // hit radius multiplier for touch
+const ROT_OFFSET      = 36;   // rotation handle distance above the box, screen px
+const MIN_GIZMO_HALF  = 28;   // gizmo box is padded to at least this half-size, screen px
+const GIZMO_CORE      = 0.5;  // inner fraction of the frame reserved for moving, never a handle
+const MIN_SCALE       = 0.05;
+const MAX_SCALE       = 20;
+
+/* ============================================================
+   State
+   ============================================================ */
+const state = {
+    textures: [],
+    activeTexId: null,
+    instances: [],
+    selection: [],
+    hovered: null,
+
+    isLoaded: false,
+    isPlaying: true,
+    dirty: true,
+    absoluteFrame: 0,
+    frameTimer: 0,
+    lastSysTime: 0,
+
+    fps: 60,
+    blendMode: 'source-over',
+    nearest: false,
+    // tint is per texture (tex.tint / tex.tintAmount); these are only the
+    // values a newly loaded texture starts with, so a batch keeps one look.
+    lastTint: '#ffffff',
+    lastTintAmount: 1,
+    brightness: 1, contrast: 1, saturation: 1, invert: false,
+
+    showGrid: false,
+
+    bg: {
+        mode: 'solid',
+        color: '#000000',
+        img: null,
+        imgName: '',
+        fit: 'cover',
+        opacity: 1,
+        worldLock: false,
+        scale: 1
+    },
+
+    // view
+    scale: 1, offsetX: 0, offsetY: 0,
+
+    // tools
+    tool: 'select',
+    spaceDown: false, spacePanned: false,
+    shiftDown: false,
+
+    // placement defaults
+    baseScale: 1, randScaleAmt: 0.5, randRot: false,
+    manualDuration: 0, manualLoop: true, randPhase: false,
+
+    // emitter
+    autoEmit: false, emitRate: 15, emitRadius: 200, emitMax: 50,
+    emitLifetime: 2, emitFade: true, emitAccumulator: 0
+};
+
+/* Active pointer interaction */
+const drag = {
+    kind: null,      // 'pan' | 'move' | 'scale' | 'rotate' | 'marquee' | 'spawn'
+    pointerId: null,
+    touch: false,
+    handle: null,    // {ux, uy, type}
+    startScreen: {x:0, y:0},
+    startWorld: {x:0, y:0},
+    startOffset: {x:0, y:0},
+    startLocal: {x:0, y:0},
+    startAngle: 0,
+    pivot: {x:0, y:0},
+    snapshot: [],    // per-instance starting transform
+    marquee: null,
+    spawnInst: null
+};
+
+const pointers = new Map();
+const view = { w: 0, h: 0, dpr: 1 };
+
+/* ============================================================
+   DOM
+   ============================================================ */
+const $ = id => document.getElementById(id);
+
+const canvas  = $('mainCanvas');
+const ctx     = canvas.getContext('2d');
+const wrapper = $('canvasWrapper');
+
+const ui = {
+    emptyState:$('emptyState'), stats:$('stats'), timeline:$('timeline'),
+    controls:$('controlsContent'), controls2:$('controlsContent2'),
+    dropOverlay:$('dropOverlay'), zoomBadge:$('zoomBadge'),
+    texThumbs:$('texThumbs'), fileInput:$('fileInput'),
+    btnAddTex:$('btnAddTex'), btnReimportAll:$('btnReimportAll'), reimportStatus:$('reimportStatus'),
+    librarySec:$('librarySec'), libList:$('libList'), btnAddFolder:$('btnAddFolder'), libStatus:$('libStatus'),
+
+    cols:$('colsInput'), rows:$('rowsInput'), total:$('totalFramesInput'),
+    presetRow:$('presetRow'), channelBtns:$('channelBtns'),
+
+    bgModeBtns:$('bgModeBtns'), bgColor:$('bgColor'), bgHex:$('bgHex'), bgSwatches:$('bgSwatches'),
+    bgFileInput:$('bgFileInput'), bgImgName:$('bgImgName'), btnBgClear:$('btnBgClear'),
+    bgFit:$('bgFit'), fieldFit:$('fieldFit'), fieldScale:$('fieldScale'),
+    bgScale:$('bgScale'), bgScaleVal:$('bgScaleVal'),
+    bgOpacity:$('bgOpacity'), bgOpacityVal:$('bgOpacityVal'), bgWorldLock:$('bgWorldLock'),
+
+    fpsSlider:$('fpsSlider'), fpsValue:$('fpsValue'), blendSelect:$('blendSelect'),
+    tintColor:$('tintColor'), tintSlider:$('tintSlider'), tintValue:$('tintValue'),
+    tintSwatches:$('tintSwatches'), btnResetTint:$('btnResetTint'), btnTintAll:$('btnTintAll'),
+    nearestCheck:$('nearestCheck'),
+
+    brSlider:$('brSlider'), brValue:$('brValue'), coSlider:$('coSlider'), coValue:$('coValue'),
+    satSlider:$('satSlider'), satValue:$('satValue'), invertCheck:$('invertCheck'), btnResetPP:$('btnResetPP'),
+
+    baseScaleSlider:$('baseScaleSlider'), baseScaleVal:$('baseScaleVal'),
+    randScaleSlider:$('randScaleSlider'), randScaleVal:$('randScaleVal'),
+    manualDurSlider:$('manualDurSlider'), manualDurVal:$('manualDurVal'),
+    manualLoopCheck:$('manualLoopCheck'), randPhaseCheck:$('randPhaseCheck'), randRotCheck:$('randRotCheck'),
+    btnClearManual:$('btnClearManual'),
+
+    autoEmitCheck:$('autoEmitCheck'), emitterControls:$('emitterControls'),
+    emitLifetimeSlider:$('emitLifetimeSlider'), emitLifetimeVal:$('emitLifetimeVal'),
+    emitRateSlider:$('emitRateSlider'), emitRateVal:$('emitRateVal'),
+    emitRadiusSlider:$('emitRadiusSlider'), emitRadiusVal:$('emitRadiusVal'),
+    emitMaxSlider:$('emitMaxSlider'), emitMaxVal:$('emitMaxVal'), emitFadeCheck:$('emitFadeCheck'),
+
+    selSection:$('selSection'), selHeader:$('selHeader'),
+    selPosX:$('selPosX'), selPosY:$('selPosY'),
+    selScaleUni:$('selScaleUni'), selScaleUniVal:$('selScaleUniVal'),
+    selScaleX:$('selScaleX'), selScaleXVal:$('selScaleXVal'),
+    selScaleY:$('selScaleY'), selScaleYVal:$('selScaleYVal'),
+    selRot:$('selRot'), selRotVal:$('selRotVal'),
+    selFlipX:$('selFlipX'), selFlipY:$('selFlipY'),
+    selPhase:$('selPhase'), selPhaseVal:$('selPhaseVal'),
+    selDur:$('selDur'), selDurVal:$('selDurVal'), selLoop:$('selLoop'),
+    btnMoveUp:$('btnMoveUp'), btnMoveDown:$('btnMoveDown'), btnDup:$('btnDup'), btnDelete:$('btnDelete'),
+
+    playBtn:$('playBtn'), playIcon:$('playIcon'), pauseIcon:$('pauseIcon'), restartBtn:$('restartBtn'),
+    frameSlider:$('frameSlider'), frameCounter:$('frameCounter'), btnClear:$('btnClear'),
+
+    toolPan:$('toolPan'), toolSelect:$('toolSelect'), toolScatter:$('toolScatter'),
+    btnZoomIn:$('btnZoomIn'), btnZoomOut:$('btnZoomOut'), btnFit:$('btnFit'),
+    btnReset:$('btnReset'), btnGrid:$('btnGrid'), btnPoint:$('btnPoint')
+};
+
+/* ============================================================
+   Small helpers
+   ============================================================ */
+const clamp = (v, lo, hi) => v < lo ? lo : v > hi ? hi : v;
+const invalidate = () => { state.dirty = true; };
+const texById = id => state.textures.find(t => t.id === id);
+
+function frameSize(tex){
+    return { w: tex.img.width / tex.cols, h: tex.img.height / tex.rows };
+}
+function instSize(inst){
+    const tex = texById(inst.texId);
+    if (!tex) return { w: 0, h: 0 };
+    const f = frameSize(tex);
+    return { w: f.w * inst.scaleX, h: f.h * inst.scaleY };
+}
+
+function w2s(x, y){
+    return { x: view.w / 2 + state.offsetX + x * state.scale,
+             y: view.h / 2 + state.offsetY + y * state.scale };
+}
+function s2w(x, y){
+    return { x: (x - view.w / 2 - state.offsetX) / state.scale,
+             y: (y - view.h / 2 - state.offsetY) / state.scale };
+}
+function pointerPos(e){
+    const r = wrapper.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+/** Pointer position in the un-rotated local space of an instance (origin = its centre). */
+function toLocal(inst, wx, wy){
+    const dx = wx - inst.x, dy = wy - inst.y;
+    const c = Math.cos(-inst.rotation), s = Math.sin(-inst.rotation);
+    return { x: dx * c - dy * s, y: dx * s + dy * c };
+}
+
+function hexToRgb(hex){
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return m ? { r: parseInt(m[1],16), g: parseInt(m[2],16), b: parseInt(m[3],16) } : null;
+}
+function shade(hex, amount){
+    const c = hexToRgb(hex) || { r:0, g:0, b:0 };
+    const f = v => clamp(Math.round(v + 255 * amount), 0, 255);
+    return `rgb(${f(c.r)},${f(c.g)},${f(c.b)})`;
+}
+
+/* ============================================================
+   View
+   ============================================================ */
+function resizeCanvas(){
+    const dpr = window.devicePixelRatio || 1;
+    const r = wrapper.getBoundingClientRect();
+    view.dpr = dpr;
+    view.w = r.width;
+    view.h = r.height;
+
+    const w = Math.max(1, Math.round(r.width  * dpr));
+    const h = Math.max(1, Math.round(r.height * dpr));
+    if (canvas.width === w && canvas.height === h) return;
+    canvas.width  = w;
+    canvas.height = h;
+    invalidate();
+}
+window.addEventListener('resize', resizeCanvas);
+
+/* The canvas is sized from its wrapper, and the wrapper changes size for
+   reasons no window resize event covers — the timeline bar appearing on the
+   first import, the sidebar reflowing, the page being zoomed. Left stale, the
+   backing store no longer matches the element and CSS quietly rescales the
+   whole drawing: the gizmo is then painted tens of pixels away from where the
+   hit test believes it is, and the handles stop taking. */
+if (window.ResizeObserver) new ResizeObserver(() => resizeCanvas()).observe(wrapper);
+
+function showZoomBadge(){
+    ui.zoomBadge.textContent = Math.round(state.scale * 100) + '%';
+    ui.zoomBadge.classList.add('show');
+    clearTimeout(showZoomBadge.t);
+    showZoomBadge.t = setTimeout(() => ui.zoomBadge.classList.remove('show'), 1400);
+}
+
+function zoomBy(delta, sx = view.w / 2, sy = view.h / 2){
+    const old = state.scale;
+    state.scale = clamp(state.scale * Math.exp(delta * 1.5), 0.05, 40);
+    const k = state.scale / old - 1;
+    state.offsetX -= (sx - view.w / 2 - state.offsetX) * k;
+    state.offsetY -= (sy - view.h / 2 - state.offsetY) * k;
+    showZoomBadge();
+    invalidate();
+}
+
+function resetView(){
+    state.scale = 1; state.offsetX = 0; state.offsetY = 0;
+    showZoomBadge(); invalidate();
+}
+
+function fitView(){
+    if (!state.instances.length) { resetView(); return; }
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    state.instances.forEach(inst => {
+        const { w, h } = instSize(inst);
+        const r = Math.hypot(w, h) / 2;             // rotation-safe bound
+        minX = Math.min(minX, inst.x - r); maxX = Math.max(maxX, inst.x + r);
+        minY = Math.min(minY, inst.y - r); maxY = Math.max(maxY, inst.y + r);
+    });
+    const bw = Math.max(1, maxX - minX), bh = Math.max(1, maxY - minY);
+    state.scale = clamp(Math.min(view.w / bw, view.h / bh) * 0.85, 0.05, 40);
+    state.offsetX = -((minX + maxX) / 2) * state.scale;
+    state.offsetY = -((minY + maxY) / 2) * state.scale;
+    showZoomBadge(); invalidate();
+}
+
+/* ============================================================
+   Textures
+   ============================================================ */
+/**
+ * @param file    the image to load
+ * @param handle  optional FileSystemFileHandle — kept so "Reimport" can pull
+ *                fresh pixels off disk later without a second file dialog.
+ */
+function handleTextureFile(file, handle){
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+            let cols = 8, rows = 8;
+            const m = file.name.match(/(\d+)\s*[xX]\s*(\d+)/);
+            if (m) { cols = Math.max(1, parseInt(m[1])); rows = Math.max(1, parseInt(m[2])); }
+
+            const tex = {
+                id: Date.now() + Math.random(),
+                img, name: file.name,
+                handle: handle || null,
+                cols, rows, totalFrames: cols * rows,
+                channel: 'all',
+                tint: state.lastTint, tintAmount: state.lastTintAmount,
+                proc: null, procCtx: null, procKey: null,
+                chan: null, chanCtx: null, chanKey: null
+            };
+            state.textures.push(tex);
+            state.activeTexId = tex.id;
+            state.absoluteFrame = 0;
+
+            if (!state.isLoaded) {
+                bootstrap();
+            } else {
+                const inst = createInstance(0, 0, false);
+                renderTextureStrip();
+                loadActiveTextureSettings();
+                if (inst) setSelection([inst]);
+                updateRanges();
+                invalidate();
+            }
+        };
+        img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeTexture(id){
+    state.textures = state.textures.filter(t => t.id !== id);
+    state.instances = state.instances.filter(i => i.texId !== id);
+    setSelection(state.selection.filter(i => state.instances.includes(i)));
+    if (state.activeTexId === id) state.activeTexId = state.textures.length ? state.textures[0].id : null;
+
+    if (!state.textures.length) {
+        state.isLoaded = false;
+        ui.emptyState.classList.remove('hidden');
+        ui.stats.classList.add('hidden');
+        ui.timeline.classList.remove('show');
+        ui.controls.classList.add('disabled');
+        ui.controls2.classList.add('disabled');
+    } else {
+        loadActiveTextureSettings();
+    }
+    renderTextureStrip();
+    updateStats();
+    invalidate();
+}
+
+/* ------------------------------------------------------------
+   Reimport
+
+   A texture is a live link to a file, not a snapshot: re-export the
+   sheet from Photoshop / Blender / Substance, hit Reimport, and every
+   instance already on the canvas picks up the new pixels while keeping
+   its grid, channel, tint, transform and animation offset.
+
+   When the browser gives us a FileSystemFileHandle (Chrome / Edge, via
+   the file picker or drag & drop) the reload is silent. Otherwise we
+   fall back to asking for the file once and remembering the handle if
+   one comes back.
+   ------------------------------------------------------------ */
+let statusTimer = 0;
+
+function setReimportStatus(msg){
+    ui.reimportStatus.textContent = msg || '';
+    ui.reimportStatus.hidden = !msg;
+    clearTimeout(statusTimer);
+    if (msg) statusTimer = setTimeout(() => { ui.reimportStatus.hidden = true; }, 7000);
+}
+
+function flashThumb(id){
+    const el = ui.texThumbs.querySelector(`[data-texid="${id}"]`);
+    if (!el) return;
+    el.classList.remove('flash');
+    void el.offsetWidth;      // restart the animation
+    el.classList.add('flash');
+}
+
+/** Swap fresh pixels into a texture already in the scene. Everything else survives. */
+function applyReloadedFile(tex, file){
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('read failed'));
+        reader.onload = ev => {
+            const img = new Image();
+            img.onerror = () => reject(new Error('decode failed'));
+            img.onload = () => {
+                tex.img = img;
+                tex.name = file.name;
+                tex.procKey = null;   // both caches were built from the old pixels
+                tex.chanKey = null;
+                renderTextureStrip();
+                if (tex.id === state.activeTexId) loadActiveTextureSettings();
+                updateStats();
+                invalidate();
+                resolve();
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+async function fileFromHandle(handle){
+    if (handle.queryPermission) {
+        let perm = await handle.queryPermission({ mode: 'read' });
+        if (perm !== 'granted') perm = await handle.requestPermission({ mode: 'read' });
+        if (perm !== 'granted') return null;
+    }
+    return handle.getFile();
+}
+
+/** Manual file dialog — the fallback when there is no handle to re-read. */
+function pickFiles(multiple){
+    return new Promise(resolve => {
+        const inp = document.createElement('input');
+        inp.type = 'file';
+        inp.accept = 'image/*';
+        inp.multiple = !!multiple;
+        inp.addEventListener('change',  () => resolve(Array.from(inp.files)), { once: true });
+        inp.addEventListener('cancel',  () => resolve([]), { once: true });
+        inp.click();
+    });
+}
+
+/**
+ * @param tex     texture to refresh
+ * @param silent  true inside "Reimport all" — skip anything that would pop a dialog
+ * @returns       true if the texture actually got new pixels
+ */
+async function reimportTexture(tex, silent){
+    let file = null;
+
+    if (tex.handle) {
+        try { file = await fileFromHandle(tex.handle); }
+        catch (err) { file = null; }   // moved, renamed or deleted — ask below
+    }
+
+    if (!file && !silent) {
+        if (window.showOpenFilePicker) {
+            try {
+                const [h] = await window.showOpenFilePicker({ multiple: false });
+                tex.handle = h;                       // silent from here on
+                file = await h.getFile();
+            } catch (err) {
+                if (err && err.name === 'AbortError') return false;
+            }
+        }
+        if (!file) file = (await pickFiles(false))[0] || null;
+    }
+
+    if (!file) return false;
+    try { await applyReloadedFile(tex, file); }
+    catch (err) { setReimportStatus(`Could not read ${file.name}.`); return false; }
+    flashThumb(tex.id);
+    return true;
+}
+
+async function reimportAll(){
+    if (!state.textures.length) { setReimportStatus('No textures to reload.'); return; }
+
+    let done = 0;
+    const manual = [];
+    for (const tex of state.textures.slice()) {
+        if (!state.textures.includes(tex)) continue;          // removed mid-loop
+        if (await reimportTexture(tex, true)) done++;
+        else manual.push(tex);
+    }
+
+    // Nothing could be re-read on its own (no handles — Firefox, or the page
+    // was opened in a way that blocks the API): let one dialog cover them all
+    // and match what comes back by filename.
+    if (!done && manual.length) {
+        const files = await pickFiles(true);
+        for (const f of files) {
+            const tex = manual.length === 1 && files.length === 1
+                ? manual[0]
+                : manual.find(t => t.name === f.name);
+            if (!tex) continue;
+            try { await applyReloadedFile(tex, f); flashThumb(tex.id); done++; manual.splice(manual.indexOf(tex), 1); }
+            catch (err) { /* skip unreadable file */ }
+        }
+    }
+
+    const time = new Date().toLocaleTimeString();
+    if (!done) setReimportStatus('Nothing reloaded.');
+    else setReimportStatus(
+        `Reloaded ${done} texture${done > 1 ? 's' : ''} at ${time}` +
+        (manual.length ? ` · ${manual.length} need the ↻ on the thumbnail` : ''));
+}
+
+/** "+ Add texture" — prefer the picker that hands back handles. */
+async function addTextures(){
+    if (window.showOpenFilePicker) {
+        try {
+            const handles = await window.showOpenFilePicker({
+                multiple: true,
+                types: [{ description: 'Images', accept: { 'image/*': ['.png','.jpg','.jpeg','.webp','.gif','.bmp','.tga'] } }]
+            });
+            for (const h of handles) handleTextureFile(await h.getFile(), h);
+            return;
+        } catch (err) {
+            if (err && err.name === 'AbortError') return;      // cancelled
+            // unsupported or blocked — plain input below, reimport still works
+            // through its own dialog.
+        }
+    }
+    ui.fileInput.click();
+}
+
+function renderTextureStrip(){
+    ui.texThumbs.innerHTML = '';
+    if (!state.textures.length) {
+        ui.texThumbs.innerHTML = '<span class="muted">No textures loaded</span>';
+        return;
+    }
+    state.textures.forEach(tex => {
+        const btn = document.createElement('button');
+        btn.className = 'thumb' + (tex.id === state.activeTexId ? ' on' : '');
+        btn.title = tex.name + (tex.handle ? '' : '  (reimport will ask for the file)');
+        btn.dataset.texid = tex.id;
+        btn.addEventListener('click', () => {
+            state.activeTexId = tex.id;
+            renderTextureStrip();
+            loadActiveTextureSettings();
+            invalidate();
+        });
+
+        const img = document.createElement('img');
+        img.src = tex.img.src;
+        btn.appendChild(img);
+
+        if (tintActive(tex)) {
+            const dot = document.createElement('span');
+            dot.className = 'tintdot';
+            dot.style.background = tex.tint;
+            dot.title = `Tint ${tex.tint} @ ${Math.round(tex.tintAmount * 100)}%`;
+            btn.appendChild(dot);
+        }
+
+        const re = document.createElement('button');
+        re.className = 're';
+        re.textContent = '↻';
+        re.title = 'Reimport this texture from disk';
+        re.addEventListener('click', async e => {
+            e.stopPropagation();
+            if (await reimportTexture(tex, false)) setReimportStatus(`Reloaded ${tex.name} at ${new Date().toLocaleTimeString()}`);
+        });
+        btn.appendChild(re);
+
+        const x = document.createElement('button');
+        x.className = 'x';
+        x.textContent = '×';
+        x.title = 'Remove texture and its instances';
+        x.addEventListener('click', e => { e.stopPropagation(); removeTexture(tex.id); });
+        btn.appendChild(x);
+
+        ui.texThumbs.appendChild(btn);
+    });
+}
+
+function loadActiveTextureSettings(){
+    const tex = texById(state.activeTexId);
+    if (!tex) return;
+    ui.cols.value  = tex.cols;
+    ui.rows.value  = tex.rows;
+    ui.total.value = tex.totalFrames;
+    $('statFilename').textContent = tex.name;
+    $('statSrcRes').textContent   = `${tex.img.width}×${tex.img.height}`;
+
+    ui.presetRow.querySelectorAll('button').forEach(b => {
+        b.classList.toggle('active', b.dataset.preset === `${tex.cols},${tex.rows}`);
+    });
+    ui.channelBtns.querySelectorAll('button').forEach(b => {
+        b.classList.toggle('active', b.dataset.ch === tex.channel);
+    });
+    syncTintUI();
+    updateRanges();
+}
+
+function bootstrap(){
+    state.isLoaded = true;
+    ui.emptyState.classList.add('hidden');
+    ui.stats.classList.remove('hidden');
+    ui.timeline.classList.add('show');
+    ui.controls.classList.remove('disabled');
+    ui.controls2.classList.remove('disabled');
+    resizeCanvas();   // after the timeline has taken its height, not before
+
+    renderTextureStrip();
+    loadActiveTextureSettings();
+    resetView();
+    state.instances = [];
+    const inst = createInstance(0, 0, false);
+    if (inst) setSelection([]);
+    updateStats();
+    updateRanges();
+    if (!state.isPlaying) togglePlay();
+    invalidate();
+}
+
+/* ============================================================
+   Texture library
+
+   Folders you import from, remembered between sessions.
+
+   Chrome and Edge hand back a real directory handle, and a handle survives
+   a structured clone — so it goes into IndexedDB and comes back when the
+   page reopens. The browser still will not grant read access without a
+   gesture, so a remembered folder shows Connect: one click and the sheets
+   are listed again. Elsewhere the folder is picked with a plain directory
+   input; the tick list is still remembered, only the link to the folder
+   has to be drawn again each session.
+   ============================================================ */
+const LIB_DB = 'flipbookStudio', LIB_STORE = 'folders', LIB_KEY = 'flipbookStudio.library';
+const IMAGE_RE = /\.(png|jpe?g|webp|gif|bmp)$/i;
+
+let library = [];
+const libMode = typeof window.showDirectoryPicker === 'function' ? 'native' : 'fallback';
+let libPersist = 'none';        // 'idb' | 'ls' | 'none'
+let libStatusTimer = 0;
+
+function idb(){
+    return new Promise((resolve, reject) => {
+        if (!window.indexedDB) return reject(new Error('no indexedDB'));
+        const req = indexedDB.open(LIB_DB, 1);
+        req.onupgradeneeded = () => {
+            const db = req.result;
+            if (!db.objectStoreNames.contains(LIB_STORE)) db.createObjectStore(LIB_STORE, { keyPath:'id' });
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror   = () => reject(req.error || new Error('indexedDB unavailable'));
+        req.onblocked = () => reject(new Error('indexedDB blocked'));
+    });
+}
+
+function normalizeEntry(r){
+    return {
+        id: r.id, name: r.name || 'Folder',
+        handle: r.handle || null,
+        picks: Array.isArray(r.picks) ? r.picks.slice() : [],
+        auto: !!r.auto,
+        files: null, expanded: false, error: ''
+    };
+}
+
+async function loadLibrary(){
+    try {
+        const db = await idb();
+        const recs = await new Promise((resolve, reject) => {
+            const req = db.transaction(LIB_STORE, 'readonly').objectStore(LIB_STORE).getAll();
+            req.onsuccess = () => { resolve(req.result || []); db.close(); };
+            req.onerror   = () => { reject(req.error); db.close(); };
+        });
+        libPersist = 'idb';
+        return recs.map(normalizeEntry);
+    } catch (err) { /* no IndexedDB here — plain metadata below */ }
+
+    try {
+        const raw = localStorage.getItem(LIB_KEY);
+        libPersist = 'ls';
+        return raw ? JSON.parse(raw).map(normalizeEntry) : [];
+    } catch (err) { libPersist = 'none'; return []; }
+}
+
+async function saveLibrary(){
+    const recs = library.map(e => ({ id:e.id, name:e.name, handle:e.handle || null, picks:e.picks.slice(), auto:!!e.auto }));
+    try {
+        const db = await idb();
+        await new Promise((resolve, reject) => {
+            const tx = db.transaction(LIB_STORE, 'readwrite');
+            const st = tx.objectStore(LIB_STORE);
+            st.clear();
+            recs.forEach(r => st.put(r));
+            tx.oncomplete = () => { resolve(); db.close(); };
+            tx.onerror    = () => { reject(tx.error); db.close(); };
+        });
+        libPersist = 'idb';
+        return;
+    } catch (err) { /* fall back to metadata only */ }
+
+    try {
+        // a handle cannot be stringified, so this keeps the ticks and nothing else
+        localStorage.setItem(LIB_KEY, JSON.stringify(recs.map(r => ({ id:r.id, name:r.name, picks:r.picks, auto:r.auto }))));
+        libPersist = 'ls';
+    } catch (err) { libPersist = 'none'; }
+}
+
+/** Read the folder's image list. `allowPrompt` can raise a permission dialog, so it needs a gesture. */
+async function refreshFolder(entry, allowPrompt){
+    if (!entry.handle) return !!entry.files;
+    try {
+        let perm = await entry.handle.queryPermission({ mode:'read' });
+        if (perm !== 'granted' && allowPrompt) perm = await entry.handle.requestPermission({ mode:'read' });
+        if (perm !== 'granted') { entry.files = null; return false; }
+
+        const files = [];
+        for await (const [name, h] of entry.handle.entries()) {
+            if (h.kind === 'file' && IMAGE_RE.test(name)) files.push({ name, handle: h });
+        }
+        files.sort((a, b) => a.name.localeCompare(b.name));
+        entry.files = files;
+        entry.error = '';
+        return true;
+    } catch (err) {
+        entry.files = null;
+        entry.error = 'unavailable';
+        return false;
+    }
+}
+
+/** Plain directory input — one session's worth of link, but it works anywhere. */
+function pickDirectory(){
+    return new Promise(resolve => {
+        const inp = document.createElement('input');
+        inp.type = 'file';
+        inp.webkitdirectory = true;
+        inp.multiple = true;
+        inp.addEventListener('change', () => resolve(Array.from(inp.files)), { once:true });
+        inp.addEventListener('cancel', () => resolve([]), { once:true });
+        inp.click();
+    });
+}
+
+function attachPickedDirectory(entry, files){
+    const inside = f => {
+        const rel = f.webkitRelativePath || f.name;
+        return rel.includes('/') ? rel.split('/').slice(1).join('/') : rel;
+    };
+    entry.files = files.filter(f => IMAGE_RE.test(f.name))
+                       .map(f => ({ name: inside(f), file: f }))
+                       .sort((a, b) => a.name.localeCompare(b.name));
+    entry.error = '';
+    const root = (files[0].webkitRelativePath || '').split('/')[0];
+    if (root) entry.name = root;
+}
+
+async function addFolder(){
+    if (window.showDirectoryPicker) {
+        try {
+            const handle = await window.showDirectoryPicker({ mode: 'read' });
+            const entry = normalizeEntry({ id: Date.now() + Math.random(), name: handle.name, handle });
+            library.push(entry);
+            entry.expanded = true;
+            await refreshFolder(entry, true);
+            entry.picks = (entry.files || []).map(f => f.name);   // a new folder starts fully ticked
+            await saveLibrary();
+            renderLibrary();
+            return;
+        } catch (err) {
+            if (err && err.name === 'AbortError') return;
+            // unsupported or blocked here — plain directory input below
+        }
+    }
+
+    const files = await pickDirectory();
+    if (!files.length) return;
+    const entry = normalizeEntry({ id: Date.now() + Math.random(), name: 'Folder' });
+    attachPickedDirectory(entry, files);
+    entry.picks = entry.files.map(f => f.name);
+    entry.expanded = true;
+    library.push(entry);
+    await saveLibrary();
+    renderLibrary();
+}
+
+async function importFolder(entry){
+    if (!entry.files && !(await refreshFolder(entry, true))) { renderLibrary(); return; }
+
+    const wanted = entry.files.filter(f => entry.picks.includes(f.name));
+    if (!wanted.length) { setLibStatus('Nothing ticked in ' + entry.name + '.'); return; }
+
+    for (const f of wanted) {
+        const file = f.handle ? await f.handle.getFile() : f.file;
+        handleTextureFile(file, f.handle || null);   // the handle travels along, so Reimport works
+    }
+    setLibStatus(`Imported ${wanted.length} sheet${wanted.length > 1 ? 's' : ''} from ${entry.name}.`);
+}
+
+function togglePick(entry, name, on){
+    const i = entry.picks.indexOf(name);
+    if (on && i < 0) entry.picks.push(name);
+    if (!on && i > -1) entry.picks.splice(i, 1);
+    saveLibrary();
+}
+
+function libBtn(label, title, fn){
+    const b = document.createElement('button');
+    b.className = 'btn mini';
+    b.textContent = label;
+    if (title) b.title = title;
+    b.addEventListener('click', fn);
+    return b;
+}
+
+function folderRow(entry){
+    const box = document.createElement('div');
+    box.className = 'libfolder' + (entry.files ? '' : ' stale');
+
+    const head = document.createElement('div');
+    head.className = 'row tight';
+
+    const name = document.createElement('button');
+    name.className = 'libname';
+    name.textContent = (entry.expanded ? '▾ ' : '▸ ') + entry.name;
+    name.title = entry.name;
+    name.addEventListener('click', async () => {
+        entry.expanded = !entry.expanded;
+        if (entry.expanded && !entry.files) await refreshFolder(entry, true);
+        renderLibrary();
+    });
+    head.appendChild(name);
+
+    const count = document.createElement('span');
+    count.className = 'libcount';
+    head.appendChild(count);
+
+    // ticking a box only moves the counter — rebuilding the row would throw away
+    // the scroll position of a long file list under the pointer
+    const syncCount = () => {
+        count.textContent = entry.files ? `${entry.picks.length}/${entry.files.length}`
+                                        : (entry.error || 'not connected');
+    };
+    syncCount();
+
+    head.appendChild(libBtn('×', 'Forget this folder — nothing on disk is touched', async () => {
+        library = library.filter(e => e !== entry);
+        await saveLibrary();
+        renderLibrary();
+    }));
+    box.appendChild(head);
+
+    if (!entry.expanded) return box;
+
+    if (entry.files) {
+        const list = document.createElement('div');
+        list.className = 'libfiles';
+        entry.files.forEach(f => {
+            const row = document.createElement('label');
+            row.className = 'libfile';
+            row.title = f.name;
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.checked = entry.picks.includes(f.name);
+            cb.addEventListener('change', () => { togglePick(entry, f.name, cb.checked); syncCount(); });
+            const label = document.createElement('span');
+            label.textContent = f.name;
+            row.appendChild(cb);
+            row.appendChild(label);
+            list.appendChild(row);
+        });
+        box.appendChild(list);
+    }
+
+    const bar = document.createElement('div');
+    bar.className = 'libbar';
+    if (entry.files) {
+        const setAll = on => {
+            entry.picks = on ? entry.files.map(f => f.name) : [];
+            box.querySelectorAll('.libfile input').forEach(cb => { cb.checked = on; });
+            saveLibrary();
+            syncCount();
+        };
+        bar.appendChild(libBtn('All',  'Tick every sheet',   () => setAll(true)));
+        bar.appendChild(libBtn('None', 'Untick every sheet', () => setAll(false)));
+        bar.appendChild(libBtn('Import', 'Load the ticked sheets as textures', () => importFolder(entry)));
+    } else {
+        bar.appendChild(libBtn(entry.handle ? 'Connect' : 'Relink folder',
+            'Give the page read access to this folder again', async () => {
+                if (entry.handle) await refreshFolder(entry, true);
+                else {
+                    const files = await pickDirectory();
+                    if (files.length) { attachPickedDirectory(entry, files); await saveLibrary(); }
+                }
+                renderLibrary();
+            }));
+    }
+    box.appendChild(bar);
+
+    const auto = document.createElement('label');
+    auto.className = 'chk';
+    auto.style.marginTop = '9px';
+    const acb = document.createElement('input');
+    acb.type = 'checkbox';
+    acb.checked = !!entry.auto;
+    acb.addEventListener('change', () => { entry.auto = acb.checked; saveLibrary(); });
+    auto.appendChild(acb);
+    auto.appendChild(document.createTextNode(' Load ticked sheets when the page opens'));
+    box.appendChild(auto);
+
+    return box;
+}
+
+function updateLibStatus(){
+    const n = library.length;
+    const where = libPersist === 'idb' ? 'remembered in this browser'
+                : libPersist === 'ls'  ? 'ticks remembered, folder link is not'
+                :                        'nothing can be saved — this browser blocks local storage here';
+    const how = libMode === 'native'
+        ? 'Reopen the page and click Connect once to allow reading again.'
+        : 'This browser cannot keep a folder link, so pick the folder again each session.';
+    ui.libStatus.textContent = `${n} folder${n === 1 ? '' : 's'} · ${where}. ${how}`;
+}
+
+function setLibStatus(msg){
+    ui.libStatus.textContent = msg;
+    clearTimeout(libStatusTimer);
+    libStatusTimer = setTimeout(updateLibStatus, 7000);
+}
+
+function renderLibrary(){
+    ui.libList.innerHTML = '';
+    if (!library.length) {
+        ui.libList.innerHTML = '<span class="muted">No folders saved</span>';
+    } else {
+        library.forEach(entry => ui.libList.appendChild(folderRow(entry)));
+    }
+    updateLibStatus();
+}
+
+async function initLibrary(){
+    library = await loadLibrary();
+    renderLibrary();
+
+    for (const entry of library) {
+        // a permission prompt needs a gesture, so only folders the browser still
+        // trusts can come back on their own; the rest wait behind Connect.
+        if (entry.auto && entry.handle && await refreshFolder(entry, false)) await importFolder(entry);
+    }
+    renderLibrary();
+
+    if (library.some(e => e.auto && !e.files)) {
+        ui.librarySec.open = true;
+        setLibStatus('A folder is set to load on startup — open it and click Connect to allow reading.');
+    }
+}
+
+/* ============================================================
+   Instances
+   ============================================================ */
+function createInstance(x, y, isAuto){
+    const tex = texById(state.activeTexId);
+    if (!tex) return null;
+
+    const lo = state.baseScale * (1 - state.randScaleAmt);
+    const hi = state.baseScale * (1 + state.randScaleAmt);
+    const s  = clamp(lo + Math.random() * (hi - lo), MIN_SCALE, MAX_SCALE);
+    const rot = state.randRot ? Math.random() * Math.PI * 2 : 0;
+    const life = isAuto ? state.emitLifetime * (0.8 + Math.random() * 0.4) : Infinity;
+
+    // Phase: random, or aligned so a freshly placed sprite starts at frame 0.
+    let phase = 0;
+    if (state.randPhase) {
+        phase = Math.random();
+    } else if (!isAuto && state.manualDuration === 0) {
+        const cur = state.absoluteFrame % tex.totalFrames;
+        phase = (tex.totalFrames - cur) / tex.totalFrames;
+        if (phase >= 1) phase = 0;
+    }
+
+    const inst = {
+        texId: tex.id,
+        x, y,
+        scaleX: s, scaleY: s,
+        rotation: rot,
+        flipX: false, flipY: false,
+        timeOffset: phase,
+        age: 0,
+        lifespan: life,
+        animDuration: isAuto ? life : state.manualDuration,
+        loop: isAuto ? false : state.manualLoop
+    };
+    state.instances.push(inst);
+    updateStats();
+    invalidate();
+    return inst;
+}
+
+function instCorners(inst){
+    const { w, h } = instSize(inst);
+    const c = Math.cos(inst.rotation), s = Math.sin(inst.rotation);
+    const hw = w / 2, hh = h / 2;
+    return [[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].map(([lx,ly]) => ({
+        x: inst.x + lx * c - ly * s,
+        y: inst.y + lx * s + ly * c
+    }));
+}
+
+function pointInInstance(wx, wy, inst){
+    const { w, h } = instSize(inst);
+    if (w <= 0 || h <= 0) return false;
+    const l = toLocal(inst, wx, wy);
+    // tiny sprites still need a grabbable body
+    const padX = Math.max(0, 6 / state.scale - w / 2);
+    const padY = Math.max(0, 6 / state.scale - h / 2);
+    return Math.abs(l.x) <= w / 2 + padX && Math.abs(l.y) <= h / 2 + padY;
+}
+
+function instanceAt(wx, wy){
+    for (let i = state.selection.length - 1; i >= 0; i--)
+        if (pointInInstance(wx, wy, state.selection[i])) return state.selection[i];
+    for (let i = state.instances.length - 1; i >= 0; i--)
+        if (pointInInstance(wx, wy, state.instances[i])) return state.instances[i];
+    return null;
+}
+
+function setSelection(list){
+    state.selection = list;
+    syncSelectionPanel();
+    invalidate();
+}
+
+/* ============================================================
+   Gizmo — everything below works in SCREEN space, so handles keep
+   a constant, comfortable size no matter the zoom or sprite size.
+   ============================================================ */
+
+/** Gizmo frame: centre + half-extents (screen px) + rotation. */
+function getGizmo(){
+    const sel = state.selection;
+    if (!sel.length) return null;
+
+    let cx, cy, hwS, hhS, rot, trueHwS, trueHhS;
+
+    if (sel.length === 1) {
+        const inst = sel[0];
+        const { w, h } = instSize(inst);
+        cx = inst.x; cy = inst.y; rot = inst.rotation;
+        trueHwS = (w / 2) * state.scale;
+        trueHhS = (h / 2) * state.scale;
+    } else {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        sel.forEach(inst => instCorners(inst).forEach(p => {
+            minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+            minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+        }));
+        cx = (minX + maxX) / 2; cy = (minY + maxY) / 2; rot = 0;
+        trueHwS = ((maxX - minX) / 2) * state.scale;
+        trueHhS = ((maxY - minY) / 2) * state.scale;
+    }
+
+    hwS = Math.max(trueHwS, MIN_GIZMO_HALF);
+    hhS = Math.max(trueHhS, MIN_GIZMO_HALF);
+
+    const c = w2s(cx, cy);
+    return {
+        multi: sel.length > 1,
+        worldX: cx, worldY: cy,
+        sx: c.x, sy: c.y,
+        hw: hwS, hh: hhS,
+        trueHw: trueHwS, trueHh: trueHhS,
+        padded: hwS > trueHwS + 0.5 || hhS > trueHhS + 0.5,
+        rot,
+        ax: { x: Math.cos(rot),  y: Math.sin(rot) },   // screen dir of local +X
+        ay: { x: -Math.sin(rot), y: Math.cos(rot) }    // screen dir of local +Y
+    };
+}
+
+/** Screen position of a handle given unit coords (-1..1). */
+function gizmoPoint(g, ux, uy, outward = 0){
+    let x = g.sx + g.ax.x * (ux * g.hw) + g.ay.x * (uy * g.hh);
+    let y = g.sy + g.ax.y * (ux * g.hw) + g.ay.y * (uy * g.hh);
+    if (outward) {
+        x += g.ay.x * outward;
+        y += g.ay.y * outward;
+    }
+    return { x, y };
+}
+
+const HANDLES = [
+    { ux:-1, uy:-1, type:'corner' }, { ux: 1, uy:-1, type:'corner' },
+    { ux: 1, uy: 1, type:'corner' }, { ux:-1, uy: 1, type:'corner' },
+    { ux: 0, uy:-1, type:'edgeY'  }, { ux: 0, uy: 1, type:'edgeY'  },
+    { ux: 1, uy: 0, type:'edgeX'  }, { ux:-1, uy: 0, type:'edgeX'  }
+];
+
+/**
+ * Returns the handle under the pointer, or null.
+ *
+ * The middle of the frame is reserved outright — a hit radius four times the
+ * drawn handle blankets a small gizmo otherwise, and then there is nowhere left
+ * to grab the sprite itself. Past the core the nearest handle wins: corners
+ * carry a small bias so they beat the edges they sit next to, and rotation
+ * competes on distance like everything else instead of swallowing the top edge
+ * whenever it is anywhere near.
+ */
+function hitTestGizmo(sx, sy, touch, radius){
+    const g = getGizmo();
+    if (!g) return null;
+    if (pointInGizmo(g, sx, sy, GIZMO_CORE)) return null;
+
+    const R = (radius || HANDLE_HIT) * (touch ? TOUCH_MULT : 1);
+
+    let best = null, bestD = Infinity;
+    const consider = (h, p, bias) => {
+        const d = Math.hypot(sx - p.x, sy - p.y);
+        if (d <= R && d - bias < bestD) {
+            best = { type:h.type, ux:h.ux, uy:h.uy, g };
+            bestD = d - bias;
+        }
+    };
+
+    consider({ type:'rotate', ux:0, uy:-1 }, gizmoPoint(g, 0, -1, -ROT_OFFSET), 0);
+    for (const h of HANDLES) consider(h, gizmoPoint(g, h.ux, h.uy), h.type === 'corner' ? 4 : 0);
+    return best;
+}
+
+/** Is a screen point inside the gizmo frame, scaled by `k` (1 = the frame itself)? */
+function pointInGizmo(g, sx, sy, k){
+    const f = k || 1;
+    const dx = sx - g.sx, dy = sy - g.sy;
+    const lx = dx * g.ax.x + dy * g.ax.y;   // ax / ay are unit vectors
+    const ly = dx * g.ay.x + dy * g.ay.y;
+    return Math.abs(lx) <= g.hw * f && Math.abs(ly) <= g.hh * f;
+}
+
+/**
+ * What a press at this point would act on — the single answer both the hover
+ * feedback and the actual press go through, so the cursor can never promise a
+ * scale that the click then turns into a move.
+ *
+ * @returns {kind:'handle', h} | {kind:'move'} | {kind:'body', inst} | null
+ */
+function pickTarget(p, w, touch){
+    const g = state.selection.length ? getGizmo() : null;
+
+    if (g) {
+        const h = hitTestGizmo(p.x, p.y, touch);
+        if (h) return { kind:'handle', h };
+        // the rest of a padded frame moves the sprite rather than deselecting it
+        if (g.padded && pointInGizmo(g, p.x, p.y)) return { kind:'move' };
+    }
+
+    const inst = instanceAt(w.x, w.y);
+    if (inst) return { kind:'body', inst };
+
+    // nothing under the pointer: a near miss on a handle is far more likely to
+    // be what was meant than a click on empty space, so widen and retry before
+    // throwing the selection away.
+    if (g) {
+        const far = hitTestGizmo(p.x, p.y, touch, HANDLE_HIT_FAR);
+        if (far) return { kind:'handle', h: far };
+    }
+    return null;
+}
+
+/** CSS cursor matching the screen-space direction of a handle. */
+function cursorForHandle(h){
+    if (h.type === 'rotate') return 'grab';
+    const g = h.g;
+    const dx = g.ax.x * h.ux * g.hw + g.ay.x * h.uy * g.hh;
+    const dy = g.ax.y * h.ux * g.hw + g.ay.y * h.uy * g.hh;
+    let a = Math.atan2(dy, dx) * 180 / Math.PI;
+    if (a < 0) a += 180;
+    if (a < 22.5 || a >= 157.5) return 'ew-resize';
+    if (a < 67.5)  return 'nwse-resize';
+    if (a < 112.5) return 'ns-resize';
+    return 'nesw-resize';
+}
+
+/* ============================================================
+   Pointer interaction (mouse / pen / touch unified)
+   ============================================================ */
+function setTool(tool){
+    state.tool = tool;
+    ui.toolPan.classList.toggle('active', tool === 'pan');
+    ui.toolSelect.classList.toggle('active', tool === 'select');
+    ui.toolScatter.classList.toggle('active', tool === 'scatter');
+    if (tool !== 'select') { setSelection([]); state.hovered = null; }
+    applyCursor();
+    invalidate();
+}
+
+let lastCursor = null;
+function applyCursor(cursorOverride){
+    let c = cursorOverride;
+    if (!c) {
+        if (drag.kind === 'pan')            c = 'grabbing';
+        else if (state.spaceDown)           c = 'grab';
+        else if (state.tool === 'pan')      c = 'grab';
+        else if (state.tool === 'scatter')  c = 'crosshair';
+        else                                c = 'default';
+    }
+    if (c === lastCursor) return;
+    lastCursor = c;
+    wrapper.style.cursor = c;
+}
+
+function snapshotSelection(){
+    drag.snapshot = state.selection.map(i => ({
+        inst: i, x: i.x, y: i.y, sx: i.scaleX, sy: i.scaleY, rot: i.rotation
+    }));
+}
+
+wrapper.addEventListener('pointerdown', e => {
+    // A primary press always starts a fresh gesture. Without this, a pointerup
+    // that never arrived (released off-window, cancelled by the OS) would leave a
+    // stale id behind and the next press would be mistaken for a second finger.
+    if (e.isPrimary) pointers.clear();
+    pointers.set(e.pointerId, pointerPos(e));
+
+    if (pointers.size === 2) { cancelDrag(); beginPinch(); return; }
+    if (pointers.size > 2 || !state.isLoaded) return;
+
+    const touch = e.pointerType === 'touch';
+    const p = pointerPos(e);
+    const w = s2w(p.x, p.y);
+    try { wrapper.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ }
+
+    // --- pan: middle button, space, or the pan tool
+    if (e.button === 1 || state.spaceDown || state.tool === 'pan') {
+        if (state.spaceDown) state.spacePanned = true;   // this press was a pan, not a play toggle
+        drag.kind = 'pan';
+        drag.pointerId = e.pointerId;
+        drag.startScreen = p;
+        drag.startOffset = { x: state.offsetX, y: state.offsetY };
+        applyCursor();
+        e.preventDefault();
+        return;
+    }
+    if (e.button !== 0) return;
+
+    if (state.tool === 'select') {
+        const ctrl = e.ctrlKey || e.metaKey;
+
+        const beginHandle = h => {
+            drag.pointerId = e.pointerId;
+            drag.touch = touch;
+            drag.handle = h;
+            drag.startScreen = p;
+            drag.startWorld = w;
+            drag.pivot = { x: h.g.worldX, y: h.g.worldY };
+            snapshotSelection();
+
+            if (h.type === 'rotate') {
+                drag.kind = 'rotate';
+                drag.startAngle = Math.atan2(w.y - drag.pivot.y, w.x - drag.pivot.x);
+            } else {
+                drag.kind = 'scale';
+                drag.startLocal = state.selection.length === 1
+                    ? toLocal(state.selection[0], w.x, w.y)
+                    : { x: w.x - drag.pivot.x, y: w.y - drag.pivot.y };
+            }
+            applyCursor(cursorForHandle(h));
+        };
+
+        const beginMove = () => {
+            drag.kind = 'move';
+            drag.pointerId = e.pointerId;
+            drag.startWorld = w;
+            snapshotSelection();
+            applyCursor('move');
+        };
+
+        // ctrl-click is always about editing the selection set, never the handles
+        if (ctrl) {
+            const pick = instanceAt(w.x, w.y);
+            if (pick) {
+                const i = state.selection.indexOf(pick);
+                const next = state.selection.slice();
+                if (i > -1) next.splice(i, 1); else next.push(pick);
+                setSelection(next);
+                return;
+            }
+        }
+
+        const target = pickTarget(p, w, touch);
+
+        if (target && target.kind === 'handle') { beginHandle(target.h); return; }
+        if (target && target.kind === 'move' && !ctrl) { beginMove(); return; }
+        if (target && target.kind === 'body') {
+            if (!state.selection.includes(target.inst)) setSelection([target.inst]);
+            else syncSelectionPanel();
+            beginMove();
+            return;
+        }
+
+        // empty space -> marquee
+        if (!ctrl) setSelection([]);
+        drag.kind = 'marquee';
+        drag.pointerId = e.pointerId;
+        drag.startWorld = w;
+        drag.marquee = { x0: w.x, y0: w.y, x1: w.x, y1: w.y, add: ctrl };
+        invalidate();
+        return;
+    }
+
+    if (state.tool === 'scatter') {
+        const inst = createInstance(w.x, w.y, false);
+        if (!inst) return;
+        drag.kind = 'spawn';
+        drag.pointerId = e.pointerId;
+        drag.spawnInst = inst;
+        drag.startWorld = w;
+        setSelection([inst]);
+    }
+});
+
+window.addEventListener('pointermove', e => {
+    if (pointers.has(e.pointerId)) pointers.set(e.pointerId, pointerPos(e));
+    if (pointers.size >= 2) { updatePinch(); return; }
+
+    const p = pointerPos(e);
+    const w = s2w(p.x, p.y);
+
+    // hover feedback when idle
+    if (!drag.kind) {
+        if (state.tool === 'select' && !state.spaceDown && state.isLoaded) {
+            // same resolver as the press, so what lights up is what you get
+            const t = pickTarget(p, w, e.pointerType === 'touch');
+
+            const key = t && t.kind === 'handle' ? t.h.type + t.h.ux + t.h.uy : null;
+            if (state.hoveredHandle !== key) { state.hoveredHandle = key; invalidate(); }
+
+            const body = t && t.kind === 'body' ? t.inst : null;
+            if (state.hovered !== body) { state.hovered = body; invalidate(); }
+
+            if (t && t.kind === 'handle')    applyCursor(cursorForHandle(t.h));
+            else if (t && t.kind === 'move') applyCursor('move');
+            else                             applyCursor();
+        } else if (state.hovered || state.hoveredHandle) {
+            state.hovered = null; state.hoveredHandle = null; invalidate();
+        }
+        return;
+    }
+
+    if (drag.pointerId !== e.pointerId) return;
+
+    switch (drag.kind) {
+        case 'pan':
+            state.offsetX = drag.startOffset.x + (p.x - drag.startScreen.x);
+            state.offsetY = drag.startOffset.y + (p.y - drag.startScreen.y);
+            invalidate();
+            break;
+
+        case 'move': {
+            const dx = w.x - drag.startWorld.x;
+            const dy = w.y - drag.startWorld.y;
+            drag.snapshot.forEach(s => { s.inst.x = s.x + dx; s.inst.y = s.y + dy; });
+            syncSelectionPanel();
+            invalidate();
+            break;
+        }
+
+        case 'scale': doScale(w, e.shiftKey); break;
+
+        case 'rotate': {
+            let a = Math.atan2(w.y - drag.pivot.y, w.x - drag.pivot.x) - drag.startAngle;
+            if (e.shiftKey) {
+                const step = Math.PI / 12;                       // 15°
+                const base = drag.snapshot[0] ? drag.snapshot[0].rot : 0;
+                a = Math.round((base + a) / step) * step - base;
+            }
+            const c = Math.cos(a), s = Math.sin(a);
+            drag.snapshot.forEach(sn => {
+                sn.inst.rotation = sn.rot + a;
+                if (drag.handle.g.multi) {
+                    const dx = sn.x - drag.pivot.x, dy = sn.y - drag.pivot.y;
+                    sn.inst.x = drag.pivot.x + dx * c - dy * s;
+                    sn.inst.y = drag.pivot.y + dx * s + dy * c;
+                }
+            });
+            syncSelectionPanel();
+            invalidate();
+            break;
+        }
+
+        case 'marquee':
+            drag.marquee.x1 = w.x; drag.marquee.y1 = w.y;
+            invalidate();
+            break;
+
+        case 'spawn': {
+            const dx = w.x - drag.startWorld.x, dy = w.y - drag.startWorld.y;
+            if (dx * dx + dy * dy > 4 / (state.scale * state.scale)) {
+                drag.spawnInst.rotation = Math.atan2(dy, dx);
+                syncSelectionPanel();
+                invalidate();
+            }
+            break;
+        }
+    }
+});
+
+function doScale(w, shift){
+    const h = drag.handle;
+    const EPS = 1e-6;
+
+    if (!h.g.multi) {
+        const inst = state.selection[0];
+        const s0 = drag.snapshot[0];
+        if (!inst || !s0) return;
+        const L  = toLocal(inst, w.x, w.y);
+        const L0 = drag.startLocal;
+
+        let rx = Math.abs(L0.x) > EPS ? L.x / L0.x : 1;
+        let ry = Math.abs(L0.y) > EPS ? L.y / L0.y : 1;
+
+        if (h.type === 'corner') {
+            if (shift) { /* free aspect */ }
+            else {
+                const d0 = Math.hypot(L0.x, L0.y), d = Math.hypot(L.x, L.y);
+                rx = ry = d0 > EPS ? d / d0 : 1;
+            }
+            inst.scaleX = clamp(s0.sx * rx, MIN_SCALE, MAX_SCALE);
+            inst.scaleY = clamp(s0.sy * ry, MIN_SCALE, MAX_SCALE);
+        } else if (h.type === 'edgeX') {
+            inst.scaleX = clamp(s0.sx * rx, MIN_SCALE, MAX_SCALE);
+            if (shift) inst.scaleY = clamp(s0.sy * rx, MIN_SCALE, MAX_SCALE);
+        } else {
+            inst.scaleY = clamp(s0.sy * ry, MIN_SCALE, MAX_SCALE);
+            if (shift) inst.scaleX = clamp(s0.sx * ry, MIN_SCALE, MAX_SCALE);
+        }
+    } else {
+        const L0 = drag.startLocal;
+        const L  = { x: w.x - drag.pivot.x, y: w.y - drag.pivot.y };
+        let rx = Math.abs(L0.x) > EPS ? L.x / L0.x : 1;
+        let ry = Math.abs(L0.y) > EPS ? L.y / L0.y : 1;
+
+        if (h.type === 'corner' && !shift) {
+            const d0 = Math.hypot(L0.x, L0.y), d = Math.hypot(L.x, L.y);
+            rx = ry = d0 > EPS ? d / d0 : 1;
+        } else if (h.type === 'edgeX') { ry = shift ? rx : 1; }
+        else if (h.type === 'edgeY')   { rx = shift ? ry : 1; }
+
+        drag.snapshot.forEach(s => {
+            s.inst.x = drag.pivot.x + (s.x - drag.pivot.x) * rx;
+            s.inst.y = drag.pivot.y + (s.y - drag.pivot.y) * ry;
+            s.inst.scaleX = clamp(s.sx * Math.abs(rx), MIN_SCALE, MAX_SCALE);
+            s.inst.scaleY = clamp(s.sy * Math.abs(ry), MIN_SCALE, MAX_SCALE);
+        });
+    }
+    syncSelectionPanel();
+    invalidate();
+}
+
+function endDrag(){
+    if (drag.kind === 'marquee' && drag.marquee) {
+        const m = drag.marquee;
+        const minX = Math.min(m.x0, m.x1), maxX = Math.max(m.x0, m.x1);
+        const minY = Math.min(m.y0, m.y1), maxY = Math.max(m.y0, m.y1);
+        const inside = state.instances.filter(inst => {
+            const pts = instCorners(inst);
+            const bx0 = Math.min(...pts.map(p => p.x)), bx1 = Math.max(...pts.map(p => p.x));
+            const by0 = Math.min(...pts.map(p => p.y)), by1 = Math.max(...pts.map(p => p.y));
+            return bx1 >= minX && bx0 <= maxX && by1 >= minY && by0 <= maxY;
+        });
+        if (m.add) {
+            const next = state.selection.slice();
+            inside.forEach(i => { if (!next.includes(i)) next.push(i); });
+            setSelection(next);
+        } else {
+            setSelection(inside);
+        }
+    }
+    drag.kind = null;
+    drag.pointerId = null;
+    drag.handle = null;
+    drag.marquee = null;
+    drag.spawnInst = null;
+    drag.snapshot = [];
+    applyCursor();
+    invalidate();
+}
+function cancelDrag(){
+    drag.kind = null; drag.pointerId = null; drag.handle = null;
+    drag.marquee = null; drag.spawnInst = null; drag.snapshot = [];
+    applyCursor();
+}
+
+function onPointerUp(e){
+    pointers.delete(e.pointerId);
+    if (pointers.size < 2) pinch.active = false;
+    if (drag.pointerId === e.pointerId || drag.kind === 'marquee') endDrag();
+}
+window.addEventListener('pointerup', onPointerUp);
+window.addEventListener('pointercancel', onPointerUp);
+wrapper.addEventListener('lostpointercapture', onPointerUp);
+
+/* Losing focus mid-gesture (alt-tab, OS dialog) would otherwise leave Space or a
+   drag latched on, which reads as "the handles stopped responding". */
+window.addEventListener('blur', () => {
+    pointers.clear();
+    pinch.active = false;
+    state.spaceDown = false;
+    state.spacePanned = false;
+    state.shiftDown = false;
+    if (drag.kind) cancelDrag();
+    applyCursor();
+});
+
+/* Pinch zoom */
+const pinch = { active:false, dist:0, cx:0, cy:0 };
+function twoPointers(){
+    const it = pointers.values();
+    return [it.next().value, it.next().value];
+}
+function beginPinch(){
+    const [a, b] = twoPointers();
+    if (!a || !b) return;
+    pinch.active = true;
+    pinch.dist = Math.hypot(b.x - a.x, b.y - a.y);
+    pinch.cx = (a.x + b.x) / 2;
+    pinch.cy = (a.y + b.y) / 2;
+}
+function updatePinch(){
+    if (!pinch.active) return;
+    const [a, b] = twoPointers();
+    if (!a || !b) return;
+    const dist = Math.hypot(b.x - a.x, b.y - a.y);
+    const cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2;
+
+    state.offsetX += cx - pinch.cx;
+    state.offsetY += cy - pinch.cy;
+    if (pinch.dist > 0) zoomBy((dist - pinch.dist) * 0.01, cx, cy);
+
+    pinch.dist = dist; pinch.cx = cx; pinch.cy = cy;
+    invalidate();
+}
+
+wrapper.addEventListener('wheel', e => {
+    e.preventDefault();
+    const p = pointerPos(e);
+    zoomBy(e.deltaY > 0 ? -0.12 : 0.12, p.x, p.y);
+}, { passive:false });
+
+wrapper.addEventListener('contextmenu', e => e.preventDefault());
+
+/* ============================================================
+   Keyboard
+   ============================================================ */
+function isTyping(){
+    const el = document.activeElement;
+    return el && (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA');
+}
+
+window.addEventListener('keydown', e => {
+    state.shiftDown = e.shiftKey;
+
+    if (e.code === 'Space' && !isTyping()) {
+        // Held down space still pans (and preventDefault keeps it off buttons
+        // and the scrollbar); a tap that never panned toggles play on release.
+        e.preventDefault();
+        if (!state.spaceDown) {
+            state.spaceDown = true;
+            state.spacePanned = false;
+            applyCursor();
+        }
+        return;
+    }
+    if (isTyping()) return;
+
+    const ctrl = e.ctrlKey || e.metaKey;
+
+    if (!ctrl) {
+        if (e.code === 'KeyV') { setTool('select'); return; }
+        if (e.code === 'KeyB') { setTool('scatter'); return; }
+        if (e.code === 'KeyH') { setTool('pan'); return; }
+        if (e.code === 'KeyG') { toggleGrid(); return; }
+        if (e.code === 'KeyP') { setPointFilter(!state.nearest); return; }
+        if (e.code === 'KeyF') { fitView(); return; }
+        if (e.code === 'KeyR') { restartPlayback(); return; }
+        if (e.code === 'KeyI') { reimportAll(); return; }
+        if (e.code === 'KeyK') { togglePlay(); return; }
+        if (e.code === 'Digit0' || e.code === 'Numpad0') { resetView(); return; }
+        if (e.code === 'Equal' || e.code === 'NumpadAdd')      { zoomBy(0.15); return; }
+        if (e.code === 'Minus' || e.code === 'NumpadSubtract') { zoomBy(-0.15); return; }
+        if (e.code === 'Escape') { setSelection([]); return; }
+    }
+
+    if (!state.isLoaded) return;
+
+    if (ctrl && e.code === 'KeyA') {
+        e.preventDefault();
+        setTool('select');
+        setSelection(state.instances.slice());
+        return;
+    }
+    if (ctrl && e.code === 'KeyD') { e.preventDefault(); duplicateSelection(); return; }
+
+    if (e.code === 'Delete' || e.code === 'Backspace') { deleteSelection(); return; }
+
+    const arrows = { ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1] };
+    if (arrows[e.code] && state.selection.length) {
+        e.preventDefault();
+        const step = (e.shiftKey ? 10 : 1) / state.scale;
+        const [dx, dy] = arrows[e.code];
+        state.selection.forEach(i => { i.x += dx * step; i.y += dy * step; });
+        syncSelectionPanel();
+        invalidate();
+    }
+});
+
+window.addEventListener('keyup', e => {
+    state.shiftDown = e.shiftKey;
+    if (e.code === 'Space') {
+        const tapped = state.spaceDown && !state.spacePanned;
+        state.spaceDown = false;
+        state.spacePanned = false;
+        applyCursor();
+        if (tapped && !isTyping()) togglePlay();
+    }
+});
+
+/* ============================================================
+   Drag & drop
+   ============================================================ */
+let dropShift = false;
+window.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropShift = e.shiftKey;
+    ui.dropOverlay.classList.add('show');
+});
+window.addEventListener('dragleave', e => {
+    if (e.relatedTarget === null) ui.dropOverlay.classList.remove('show');
+});
+window.addEventListener('drop', async e => {
+    e.preventDefault();
+    ui.dropOverlay.classList.remove('show');
+    const asBackground = e.shiftKey || dropShift;
+
+    // dataTransfer is emptied as soon as we await, so pull the files *and* ask
+    // for their handles synchronously — the handles are what makes a dropped
+    // sheet reimportable later.
+    const items = e.dataTransfer.items ? Array.from(e.dataTransfer.items) : [];
+    let dropped = items
+        .filter(it => it.kind === 'file')
+        .map(it => ({
+            file: it.getAsFile(),
+            handle: it.getAsFileSystemHandle ? it.getAsFileSystemHandle().catch(() => null) : Promise.resolve(null)
+        }));
+    if (!dropped.length) {
+        dropped = Array.from(e.dataTransfer.files).map(f => ({ file: f, handle: Promise.resolve(null) }));
+    }
+    dropped = dropped.filter(d => d.file && d.file.type.startsWith('image/'));
+    if (!dropped.length) return;
+
+    if (asBackground) { loadBackgroundImage(dropped[0].file); return; }
+    for (const d of dropped) {
+        const h = await d.handle;
+        handleTextureFile(d.file, h && h.kind === 'file' ? h : null);
+    }
+});
+
+/* ============================================================
+   Image processing
+
+   Brightness / contrast / saturation / invert are global and run as
+   native canvas filters (GPU) instead of a per-pixel JS loop; the tint
+   is per texture and is a multiply pass — so dragging a slider costs a
+   couple of blits on that one sheet rather than millions of JS
+   iterations. Each texture caches its own processed sheet, so tinting
+   one texture never re-processes the others.
+
+   Only channel isolation still needs real pixel access, and that is
+   a toggle, not a slider, so it is cached until the channel changes.
+   ============================================================ */
+function filterString(){
+    const f = [];
+    if (state.invert)            f.push('invert(1)');
+    if (state.saturation !== 1)  f.push(`saturate(${state.saturation})`);
+    if (state.contrast !== 1)    f.push(`contrast(${state.contrast})`);
+    if (state.brightness !== 1)  f.push(`brightness(${state.brightness})`);
+    return f.length ? f.join(' ') : 'none';
+}
+function tintActive(tex){
+    return !!tex && tex.tintAmount > 0 && tex.tint.toLowerCase() !== '#ffffff';
+}
+function ppActive(tex){
+    return filterString() !== 'none' || tintActive(tex);
+}
+
+/** Greyscale view of a single channel. Cached — rebuilt only when the channel changes. */
+function channelSource(tex){
+    if (tex.channel === 'all') return tex.img;
+    if (tex.chanKey === tex.channel && tex.chan) return tex.chan;
+
+    if (!tex.chan) {
+        tex.chan = document.createElement('canvas');
+        tex.chanCtx = tex.chan.getContext('2d', { willReadFrequently:true });
+    }
+    const W = tex.img.width, H = tex.img.height;
+    tex.chan.width = W; tex.chan.height = H;
+    tex.chanCtx.clearRect(0, 0, W, H);
+    tex.chanCtx.drawImage(tex.img, 0, 0);
+    try {
+        const data = tex.chanCtx.getImageData(0, 0, W, H);
+        const d = data.data;
+        const ch = tex.channel;
+        for (let i = 0; i < d.length; i += 4) {
+            const v = ch === 'r' ? d[i] : ch === 'g' ? d[i+1] : ch === 'b' ? d[i+2] : d[i+3];
+            d[i] = d[i+1] = d[i+2] = v;
+            d[i+3] = 255;
+        }
+        tex.chanCtx.putImageData(data, 0, 0);
+        tex.chanKey = tex.channel;
+    } catch (err) {
+        return tex.img;
+    }
+    return tex.chan;
+}
+
+/** Drawable source for a texture — rebuilt only when a setting actually changes. */
+function sourceFor(tex){
+    const base = channelSource(tex);
+    const filter = filterString();
+    const tint = tintActive(tex);
+
+    if (filter === 'none' && !tint) { tex.procKey = null; return base; }
+
+    const key = [filter, tex.tint, tex.tintAmount, tex.channel].join('|');
+    if (tex.procKey === key && tex.proc) return tex.proc;
+
+    if (!tex.proc) {
+        // deliberately NOT willReadFrequently: this canvas is only ever blitted,
+        // and that flag would force a slow software backend.
+        tex.proc = document.createElement('canvas');
+        tex.procCtx = tex.proc.getContext('2d');
+    }
+    const c = tex.procCtx;
+    const W = base.width, H = base.height;
+    tex.proc.width = W; tex.proc.height = H;
+
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.globalCompositeOperation = 'source-over';
+    c.globalAlpha = 1;
+    c.clearRect(0, 0, W, H);
+
+    c.filter = filter;
+    c.drawImage(base, 0, 0);
+    c.filter = 'none';
+
+    if (tint) {
+        // multiply the sheet by the tint colour, lerped by the tint amount…
+        c.globalCompositeOperation = 'multiply';
+        c.globalAlpha = tex.tintAmount;
+        c.fillStyle = tex.tint;
+        c.fillRect(0, 0, W, H);
+        // …then restore the original alpha, which the fill flooded.
+        c.globalAlpha = 1;
+        c.globalCompositeOperation = 'destination-in';
+        c.drawImage(base, 0, 0);
+        c.globalCompositeOperation = 'source-over';
+    }
+
+    tex.procKey = key;
+    return tex.proc;
+}
+
+/* ============================================================
+   Background
+   ============================================================ */
+let checkerPattern = null, checkerKey = '';
+
+function getCheckerPattern(){
+    const key = state.bg.color;
+    if (checkerPattern && checkerKey === key) return checkerPattern;
+    const c = document.createElement('canvas');
+    c.width = c.height = 40;
+    const cc = c.getContext('2d');
+    cc.fillStyle = state.bg.color;
+    cc.fillRect(0, 0, 40, 40);
+    const lum = (hexToRgb(state.bg.color) || {r:0,g:0,b:0});
+    const bright = (lum.r + lum.g + lum.b) / 3 > 127;
+    cc.fillStyle = shade(state.bg.color, bright ? -0.09 : 0.09);
+    cc.fillRect(0, 0, 20, 20);
+    cc.fillRect(20, 20, 20, 20);
+    checkerPattern = ctx.createPattern(c, 'repeat');
+    checkerKey = key;
+    return checkerPattern;
+}
+
+function loadBackgroundImage(file){
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+            state.bg.img = img;
+            state.bg.imgName = file.name;
+            state.bg.mode = 'image';
+            ui.bgImgName.textContent = file.name.length > 22 ? file.name.slice(0, 21) + '…' : file.name;
+            syncBackgroundUI();
+            invalidate();
+        };
+        img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function drawBackground(){
+    const bg = state.bg;
+    const W = view.w, H = view.h;
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+
+    if (bg.mode === 'checker') {
+        ctx.fillStyle = getCheckerPattern();
+        ctx.fillRect(0, 0, W, H);
+    } else {
+        ctx.fillStyle = bg.color;
+        ctx.fillRect(0, 0, W, H);
+    }
+
+    if (bg.mode === 'image' && bg.img) {
+        const iw = bg.img.width, ih = bg.img.height;
+        ctx.globalAlpha = bg.opacity;
+
+        if (bg.worldLock) {
+            ctx.translate(W / 2 + state.offsetX, H / 2 + state.offsetY);
+            ctx.scale(state.scale * bg.scale, state.scale * bg.scale);
+            ctx.drawImage(bg.img, -iw / 2, -ih / 2, iw, ih);
+        } else if (bg.fit === 'tile') {
+            const pat = ctx.createPattern(bg.img, 'repeat');
+            ctx.fillStyle = pat;
+            ctx.fillRect(0, 0, W, H);
+        } else if (bg.fit === 'stretch') {
+            ctx.drawImage(bg.img, 0, 0, W, H);
+        } else {
+            const k = bg.fit === 'cover' ? Math.max(W / iw, H / ih) : Math.min(W / iw, H / ih);
+            const dw = iw * k, dh = ih * k;
+            ctx.drawImage(bg.img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+        }
+    }
+    ctx.restore();
+}
+
+/* ============================================================
+   Render
+   ============================================================ */
+function draw(){
+    const dpr = view.dpr;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = !state.nearest;
+    ctx.imageSmoothingQuality = 'high';
+
+    drawBackground();
+
+    // ---- world space: sprites
+    ctx.save();
+    ctx.translate(view.w / 2 + state.offsetX, view.h / 2 + state.offsetY);
+    ctx.scale(state.scale, state.scale);
+
+    const sources = new Map();
+    state.textures.forEach(t => sources.set(t.id, sourceFor(t)));
+
+    const activeTex = texById(state.activeTexId);
+    if (activeTex) {
+        const f = frameSize(activeTex);
+        $('statFrameRes').textContent = `${Math.floor(f.w)}×${Math.floor(f.h)}`;
+    }
+
+    state.instances.forEach(inst => {
+        const tex = texById(inst.texId);
+        if (!tex) return;
+        const src = sources.get(tex.id) || tex.img;
+        const f = frameSize(tex);
+
+        const frame = currentFrame(inst, tex);
+        const sX = (frame % tex.cols) * f.w;
+        const sY = Math.floor(frame / tex.cols) * f.h;
+        const dW = f.w * inst.scaleX, dH = f.h * inst.scaleY;
+
+        let alpha = 1;
+        if (state.emitFade && inst.lifespan !== Infinity) {
+            const fade = inst.lifespan * 0.2;
+            if (inst.age < fade) alpha = inst.age / fade;
+            else if (inst.age > inst.lifespan - fade) alpha = Math.max(0, (inst.lifespan - inst.age) / fade);
+        }
+
+        ctx.save();
+        ctx.globalCompositeOperation = state.blendMode;
+        ctx.globalAlpha = alpha;
+        ctx.translate(inst.x, inst.y);
+        ctx.rotate(inst.rotation);
+        ctx.scale(inst.flipX ? -1 : 1, inst.flipY ? -1 : 1);
+        ctx.drawImage(src, sX, sY, f.w, f.h, -dW / 2, -dH / 2, dW, dH);
+        ctx.restore();
+    });
+
+    if (state.showGrid) drawFrameGuides();
+    ctx.restore();
+
+    // ---- screen space: overlays
+    drawOverlays();
+}
+
+function currentFrame(inst, tex){
+    if (inst.animDuration === 0) {
+        const off = Math.floor(inst.timeOffset * tex.totalFrames);
+        return (state.absoluteFrame + off) % tex.totalFrames;
+    }
+    let p = inst.age / inst.animDuration + inst.timeOffset;
+    p = inst.loop ? p % 1 : Math.min(p, 0.9999);
+    return Math.floor(clamp(p, 0, 0.9999) * tex.totalFrames);
+}
+
+function drawFrameGuides(){
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = 'rgba(80,255,140,.55)';
+    ctx.lineWidth = 1 / state.scale;
+    state.instances.forEach(inst => {
+        const { w, h } = instSize(inst);
+        ctx.save();
+        ctx.translate(inst.x, inst.y);
+        ctx.rotate(inst.rotation);
+        ctx.strokeRect(-w / 2, -h / 2, w, h);
+        ctx.beginPath();
+        ctx.moveTo(0, -h / 2); ctx.lineTo(0, h / 2);
+        ctx.moveTo(-w / 2, 0); ctx.lineTo(w / 2, 0);
+        ctx.stroke();
+        ctx.restore();
+    });
+    ctx.restore();
+}
+
+function strokeQuad(pts, dash){
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    ctx.closePath();
+    ctx.setLineDash(dash || []);
+    ctx.stroke();
+    ctx.setLineDash([]);
+}
+
+function drawOverlays(){
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+
+    // hover outline
+    if (state.tool === 'select' && state.hovered && !state.selection.includes(state.hovered)) {
+        const pts = instCorners(state.hovered).map(p => w2s(p.x, p.y));
+        ctx.strokeStyle = 'rgba(255,255,255,.5)';
+        ctx.lineWidth = 1.5;
+        strokeQuad(pts, [4, 4]);
+    }
+
+    // per-instance outlines when several are selected
+    if (state.selection.length > 1) {
+        ctx.strokeStyle = 'rgba(47,155,255,.65)';
+        ctx.fillStyle = 'rgba(47,155,255,.08)';
+        ctx.lineWidth = 1.5;
+        state.selection.forEach(inst => {
+            const pts = instCorners(inst).map(p => w2s(p.x, p.y));
+            ctx.beginPath();
+            ctx.moveTo(pts[0].x, pts[0].y);
+            for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        });
+    }
+
+    // marquee
+    if (drag.kind === 'marquee' && drag.marquee) {
+        const a = w2s(drag.marquee.x0, drag.marquee.y0);
+        const b = w2s(drag.marquee.x1, drag.marquee.y1);
+        ctx.fillStyle = 'rgba(47,155,255,.15)';
+        ctx.strokeStyle = 'rgba(47,155,255,.85)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 4]);
+        ctx.fillRect(a.x, a.y, b.x - a.x, b.y - a.y);
+        ctx.strokeRect(a.x, a.y, b.x - a.x, b.y - a.y);
+        ctx.setLineDash([]);
+    }
+
+    // gizmo
+    const showGizmo = state.selection.length > 0 &&
+                      (state.tool === 'select' || drag.kind === 'spawn');
+    if (showGizmo) drawGizmo();
+
+    ctx.restore();
+}
+
+function drawGizmo(){
+    const g = getGizmo();
+    if (!g) return;
+
+    const box = [
+        gizmoPoint(g, -1, -1), gizmoPoint(g, 1, -1),
+        gizmoPoint(g, 1, 1),   gizmoPoint(g, -1, 1)
+    ];
+
+    // real sprite bounds, when the handle box had to be padded out
+    if (g.padded && !g.multi && state.selection[0]) {
+        const pts = instCorners(state.selection[0]).map(p => w2s(p.x, p.y));
+        ctx.strokeStyle = 'rgba(47,155,255,.45)';
+        ctx.lineWidth = 1;
+        strokeQuad(pts, [2, 3]);
+    }
+
+    // the reserved move zone at the centre of a padded frame
+    if (g.padded) {
+        ctx.beginPath();
+        ctx.arc(g.sx, g.sy, 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(47,155,255,.9)';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    ctx.strokeStyle = '#2f9bff';
+    ctx.lineWidth = 1.5;
+    strokeQuad(box, [5, 4]);
+
+    // rotation stem + knob
+    const top = gizmoPoint(g, 0, -1);
+    const rp  = gizmoPoint(g, 0, -1, -ROT_OFFSET);
+    ctx.beginPath();
+    ctx.moveTo(top.x, top.y); ctx.lineTo(rp.x, rp.y);
+    ctx.stroke();
+
+    const rotHot = state.hoveredHandle === 'rotate0-1' ||
+                   (drag.kind === 'rotate');
+    ctx.beginPath();
+    ctx.arc(rp.x, rp.y, rotHot ? 9 : 7, 0, Math.PI * 2);
+    ctx.fillStyle = rotHot ? '#7dc4ff' : '#2f9bff';
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // scale handles
+    HANDLES.forEach(h => {
+        const p = gizmoPoint(g, h.ux, h.uy);
+        const hot = state.hoveredHandle === h.type + h.ux + h.uy ||
+                    (drag.kind === 'scale' && drag.handle &&
+                     drag.handle.ux === h.ux && drag.handle.uy === h.uy);
+        const s = (hot ? HANDLE_SIZE + 3 : HANDLE_SIZE);
+
+        ctx.beginPath();
+        if (h.type === 'corner') {
+            ctx.rect(p.x - s / 2, p.y - s / 2, s, s);
+            ctx.fillStyle = hot ? '#ffffff' : '#e8f3ff';
+        } else {
+            ctx.rect(p.x - s / 2, p.y - s / 2, s, s);
+            ctx.fillStyle = hot ? '#ffc182' : '#ff9a3d';
+        }
+        ctx.fill();
+        ctx.strokeStyle = h.type === 'corner' ? '#2f9bff' : '#7a4413';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    });
+}
+
+/* ============================================================
+   Main loop
+   ============================================================ */
+function loop(ts){
+    requestAnimationFrame(loop);
+
+    if (!state.lastSysTime) state.lastSysTime = ts;
+    const dt = Math.min((ts - state.lastSysTime) / 1000, 0.1);
+    state.lastSysTime = ts;
+
+    if (state.isPlaying && state.isLoaded) {
+        let changed = false;
+        const before = state.instances.length;
+
+        state.instances = state.instances.filter(inst => {
+            inst.age += dt;
+            return inst.lifespan === Infinity || inst.age < inst.lifespan;
+        });
+        if (state.instances.length !== before) {
+            changed = true;
+            const selBefore = state.selection.length;
+            state.selection = state.selection.filter(i => state.instances.includes(i));
+            if (selBefore !== state.selection.length) syncSelectionPanel();
+        }
+
+        if (state.autoEmit && state.activeTexId) {
+            state.emitAccumulator += dt * state.emitRate;
+            while (state.emitAccumulator >= 1) {
+                const a = Math.random() * Math.PI * 2;
+                const r = Math.sqrt(Math.random()) * state.emitRadius;
+                createInstance(Math.cos(a) * r, Math.sin(a) * r, true);
+                state.emitAccumulator -= 1;
+                changed = true;
+            }
+            const manual = state.instances.filter(i => i.lifespan === Infinity);
+            let auto = state.instances.filter(i => i.lifespan !== Infinity);
+            if (auto.length > state.emitMax) {
+                auto = auto.slice(auto.length - state.emitMax);
+                state.instances = manual.concat(auto);
+                changed = true;
+            }
+        }
+        if (changed) updateStats();
+
+        state.frameTimer += dt;
+        const spf = 1 / state.fps;
+        if (state.frameTimer >= spf) {
+            const adv = Math.floor(state.frameTimer / spf);
+            state.frameTimer -= adv * spf;
+            state.absoluteFrame += adv;
+            const maxF = maxFrames();
+            if (maxF > 0) state.absoluteFrame %= maxF;
+            updateTimelineUI();
+        }
+        state.dirty = true;
+    }
+
+    if (state.dirty) { draw(); state.dirty = false; }
+}
+
+function maxFrames(){
+    return state.textures.length ? Math.max(...state.textures.map(t => t.totalFrames)) : 0;
+}
+
+/* ============================================================
+   Selection commands
+   ============================================================ */
+function duplicateSelection(){
+    if (!state.selection.length) return;
+    const copies = state.selection.map(src => Object.assign({}, src, {
+        x: src.x + 20 / state.scale,
+        y: src.y + 20 / state.scale,
+        age: 0,
+        timeOffset: state.randPhase ? Math.random() : src.timeOffset
+    }));
+    state.instances.push(...copies);
+    setSelection(copies);
+    updateStats();
+}
+
+function deleteSelection(){
+    if (!state.selection.length) return;
+    state.instances = state.instances.filter(i => !state.selection.includes(i));
+    setSelection([]);
+    updateStats();
+}
+
+/* ============================================================
+   Selection panel
+   ============================================================ */
+let syncing = false;
+
+function syncSelectionPanel(){
+    const sel = state.selection;
+    if (!sel.length || (state.tool !== 'select' && drag.kind !== 'spawn')) {
+        ui.selSection.hidden = true;
+        return;
+    }
+    syncing = true;
+    const p = sel[0];
+    ui.selSection.hidden = false;
+    ui.selHeader.textContent = sel.length > 1 ? `Selection — ${sel.length} instances` : 'Selection';
+
+    ui.selPosX.value = Math.round(p.x);
+    ui.selPosY.value = Math.round(p.y);
+
+    const uni = Math.max(p.scaleX, p.scaleY);
+    ui.selScaleUni.value = uni;
+    ui.selScaleUni.dataset.prev = uni;
+    ui.selScaleUniVal.textContent = uni.toFixed(2) + '×';
+    ui.selScaleX.value = p.scaleX; ui.selScaleXVal.textContent = p.scaleX.toFixed(2) + '×';
+    ui.selScaleY.value = p.scaleY; ui.selScaleYVal.textContent = p.scaleY.toFixed(2) + '×';
+
+    const deg = Math.round(((p.rotation * 180 / Math.PI) % 360 + 540) % 360 - 180);
+    ui.selRot.value = deg; ui.selRotVal.textContent = deg + '°';
+
+    ui.selFlipX.checked = p.flipX;
+    ui.selFlipY.checked = p.flipY;
+    ui.selPhase.value = Math.round(p.timeOffset * 100);
+    ui.selPhaseVal.textContent = ui.selPhase.value + '%';
+    ui.selDur.value = p.animDuration === Infinity ? 0 : p.animDuration;
+    ui.selDurVal.textContent = p.animDuration ? p.animDuration.toFixed(1) + 's' : 'Global';
+    ui.selLoop.checked = p.loop;
+    syncing = false;
+}
+
+function eachSelected(fn){
+    if (!state.selection.length) return;
+    state.selection.forEach(fn);
+    invalidate();
+}
+
+ui.selPosX.addEventListener('input', () => {
+    if (syncing || !state.selection.length) return;
+    const dx = (parseFloat(ui.selPosX.value) || 0) - state.selection[0].x;
+    eachSelected(i => i.x += dx);
+});
+ui.selPosY.addEventListener('input', () => {
+    if (syncing || !state.selection.length) return;
+    const dy = (parseFloat(ui.selPosY.value) || 0) - state.selection[0].y;
+    eachSelected(i => i.y += dy);
+});
+
+ui.selScaleUni.addEventListener('input', e => {
+    if (syncing || !state.selection.length) return;
+    const v = parseFloat(e.target.value);
+    const prev = parseFloat(e.target.dataset.prev || 1) || 1;
+    const r = v / prev;
+    e.target.dataset.prev = v;
+    eachSelected(i => {
+        i.scaleX = clamp(i.scaleX * r, MIN_SCALE, MAX_SCALE);
+        i.scaleY = clamp(i.scaleY * r, MIN_SCALE, MAX_SCALE);
+    });
+    ui.selScaleUniVal.textContent = v.toFixed(2) + '×';
+    const p = state.selection[0];
+    ui.selScaleX.value = p.scaleX; ui.selScaleXVal.textContent = p.scaleX.toFixed(2) + '×';
+    ui.selScaleY.value = p.scaleY; ui.selScaleYVal.textContent = p.scaleY.toFixed(2) + '×';
+});
+ui.selScaleX.addEventListener('input', e => {
+    if (syncing) return;
+    const v = parseFloat(e.target.value);
+    eachSelected(i => i.scaleX = v);
+    ui.selScaleXVal.textContent = v.toFixed(2) + '×';
+});
+ui.selScaleY.addEventListener('input', e => {
+    if (syncing) return;
+    const v = parseFloat(e.target.value);
+    eachSelected(i => i.scaleY = v);
+    ui.selScaleYVal.textContent = v.toFixed(2) + '×';
+});
+ui.selRot.addEventListener('input', e => {
+    if (syncing) return;
+    const rad = e.target.value * Math.PI / 180;
+    eachSelected(i => i.rotation = rad);
+    ui.selRotVal.textContent = e.target.value + '°';
+});
+ui.selFlipX.addEventListener('change', e => eachSelected(i => i.flipX = e.target.checked));
+ui.selFlipY.addEventListener('change', e => eachSelected(i => i.flipY = e.target.checked));
+ui.selPhase.addEventListener('input', e => {
+    if (syncing) return;
+    const v = e.target.value / 100;
+    eachSelected(i => i.timeOffset = v);
+    ui.selPhaseVal.textContent = e.target.value + '%';
+});
+ui.selDur.addEventListener('input', e => {
+    if (syncing) return;
+    const v = parseFloat(e.target.value);
+    eachSelected(i => { i.animDuration = v; i.age = 0; });
+    ui.selDurVal.textContent = v ? v.toFixed(1) + 's' : 'Global';
+});
+ui.selLoop.addEventListener('change', e => eachSelected(i => {
+    i.loop = e.target.checked;
+    if (!e.target.checked) i.age = 0;
+}));
+
+ui.btnMoveUp.addEventListener('click', () => {
+    if (!state.selection.length) return;
+    const rest = state.instances.filter(i => !state.selection.includes(i));
+    state.instances = rest.concat(state.selection);
+    invalidate();
+});
+ui.btnMoveDown.addEventListener('click', () => {
+    if (!state.selection.length) return;
+    const rest = state.instances.filter(i => !state.selection.includes(i));
+    state.instances = state.selection.concat(rest);
+    invalidate();
+});
+ui.btnDup.addEventListener('click', duplicateSelection);
+ui.btnDelete.addEventListener('click', deleteSelection);
+
+/* ============================================================
+   Panel bindings
+   ============================================================ */
+ui.fileInput.addEventListener('change', e => {
+    Array.from(e.target.files).forEach(f => handleTextureFile(f));
+    e.target.value = '';
+});
+ui.btnAddTex.addEventListener('click', addTextures);
+ui.btnReimportAll.addEventListener('click', reimportAll);
+ui.btnAddFolder.addEventListener('click', addFolder);
+ui.restartBtn.addEventListener('click', restartPlayback);
+
+function updateLayout(){
+    const tex = texById(state.activeTexId);
+    if (!tex) return;
+    tex.cols = Math.max(1, parseInt(ui.cols.value) || 1);
+    tex.rows = Math.max(1, parseInt(ui.rows.value) || 1);
+    tex.totalFrames = Math.max(1, parseInt(ui.total.value) || tex.cols * tex.rows);
+    ui.presetRow.querySelectorAll('button').forEach(b =>
+        b.classList.toggle('active', b.dataset.preset === `${tex.cols},${tex.rows}`));
+    updateRanges();
+    invalidate();
+}
+ui.cols.addEventListener('input', () => {
+    const tex = texById(state.activeTexId);
+    if (tex) ui.total.value = (parseInt(ui.cols.value) || 1) * (parseInt(ui.rows.value) || 1);
+    updateLayout();
+});
+ui.rows.addEventListener('input', () => {
+    const tex = texById(state.activeTexId);
+    if (tex) ui.total.value = (parseInt(ui.cols.value) || 1) * (parseInt(ui.rows.value) || 1);
+    updateLayout();
+});
+ui.total.addEventListener('input', updateLayout);
+
+ui.presetRow.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const [c, r] = btn.dataset.preset.split(',').map(Number);
+    ui.cols.value = c; ui.rows.value = r; ui.total.value = c * r;
+    updateLayout();
+});
+
+ui.channelBtns.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const tex = texById(state.activeTexId);
+    if (!tex) return;
+    ui.channelBtns.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    tex.channel = btn.dataset.ch;
+    invalidate();
+});
+
+/* --- tint (per texture) --- */
+function syncTintUI(){
+    const tex = texById(state.activeTexId);
+    const tint = tex ? tex.tint : '#ffffff';
+    const amt  = tex ? tex.tintAmount : 1;
+    ui.tintColor.value = tint;
+    ui.tintSlider.value = Math.round(amt * 100);
+    ui.tintValue.textContent = Math.round(amt * 100) + '%';
+    ui.tintSwatches.querySelectorAll('button').forEach(b =>
+        b.classList.toggle('on', b.dataset.tint.toLowerCase() === tint.toLowerCase()));
+}
+
+/** Write a tint onto the active texture (or onto all of them) and refresh. */
+function setTint({ color, amount, all = false }){
+    const active = texById(state.activeTexId);
+    if (!active) return;
+    if (color  !== undefined) state.lastTint = color;
+    if (amount !== undefined) state.lastTintAmount = amount;
+
+    (all ? state.textures : [active]).forEach(tex => {
+        if (color  !== undefined) tex.tint = color;
+        if (amount !== undefined) tex.tintAmount = amount;
+        tex.procKey = null;   // its cached sheet is stale now
+    });
+
+    syncTintUI();
+    renderTextureStrip();
+    invalidate();
+}
+
+ui.tintColor.addEventListener('input', e => setTint({ color: e.target.value }));
+ui.tintSlider.addEventListener('input', e => setTint({ amount: e.target.value / 100 }));
+
+ui.tintSwatches.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    // picking a colour with the amount at zero would look like nothing happened
+    const tex = texById(state.activeTexId);
+    const amount = tex && tex.tintAmount === 0 ? 1 : undefined;
+    setTint({ color: btn.dataset.tint, amount });
+});
+
+ui.btnResetTint.addEventListener('click', () => setTint({ color: '#ffffff', amount: 1 }));
+ui.btnTintAll.addEventListener('click', () => {
+    const tex = texById(state.activeTexId);
+    if (!tex) return;
+    setTint({ color: tex.tint, amount: tex.tintAmount, all: true });
+});
+
+/* --- background --- */
+function syncBackgroundUI(){
+    ui.bgModeBtns.querySelectorAll('button').forEach(b =>
+        b.classList.toggle('active', b.dataset.mode === state.bg.mode));
+    const imgMode = state.bg.mode === 'image';
+    ui.fieldFit.hidden   = !imgMode || state.bg.worldLock;
+    ui.fieldScale.hidden = !imgMode || !state.bg.worldLock;
+}
+
+ui.bgModeBtns.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    state.bg.mode = btn.dataset.mode;
+    syncBackgroundUI();
+    invalidate();
+});
+
+function setBgColor(hex){
+    if (!/^#[0-9a-f]{6}$/i.test(hex)) return;
+    state.bg.color = hex.toLowerCase();
+    ui.bgColor.value = state.bg.color;
+    ui.bgHex.value = state.bg.color;
+    checkerPattern = null;
+    invalidate();
+}
+ui.bgColor.addEventListener('input', e => setBgColor(e.target.value));
+ui.bgHex.addEventListener('input', e => {
+    let v = e.target.value.trim();
+    if (v && v[0] !== '#') v = '#' + v;
+    if (/^#[0-9a-f]{6}$/i.test(v)) setBgColor(v);
+});
+ui.bgSwatches.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    setBgColor(btn.dataset.color);
+    if (state.bg.mode === 'image') { state.bg.mode = 'solid'; syncBackgroundUI(); }
+});
+
+document.querySelectorAll('[data-quickbg]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const v = btn.dataset.quickbg;
+        if (v === 'checker') { state.bg.mode = 'checker'; }
+        else { state.bg.mode = 'solid'; setBgColor(v); }
+        syncBackgroundUI();
+        invalidate();
+    });
+});
+
+ui.bgFileInput.addEventListener('change', e => {
+    if (e.target.files[0]) loadBackgroundImage(e.target.files[0]);
+    e.target.value = '';
+});
+ui.btnBgClear.addEventListener('click', () => {
+    state.bg.img = null;
+    state.bg.imgName = '';
+    ui.bgImgName.textContent = '—';
+    if (state.bg.mode === 'image') state.bg.mode = 'solid';
+    syncBackgroundUI();
+    invalidate();
+});
+ui.bgFit.addEventListener('change', e => { state.bg.fit = e.target.value; invalidate(); });
+ui.bgOpacity.addEventListener('input', e => {
+    state.bg.opacity = e.target.value / 100;
+    ui.bgOpacityVal.textContent = e.target.value + '%';
+    invalidate();
+});
+ui.bgScale.addEventListener('input', e => {
+    state.bg.scale = e.target.value / 100;
+    ui.bgScaleVal.textContent = e.target.value + '%';
+    invalidate();
+});
+ui.bgWorldLock.addEventListener('change', e => {
+    state.bg.worldLock = e.target.checked;
+    syncBackgroundUI();
+    invalidate();
+});
+
+/* --- playback & material --- */
+ui.fpsSlider.addEventListener('input', e => {
+    state.fps = parseInt(e.target.value);
+    ui.fpsValue.textContent = state.fps;
+});
+ui.blendSelect.addEventListener('change', e => { state.blendMode = e.target.value; invalidate(); });
+
+function setPointFilter(on){
+    state.nearest = on;
+    ui.nearestCheck.checked = on;
+    ui.btnPoint.classList.toggle('active', on);
+    invalidate();
+}
+ui.nearestCheck.addEventListener('change', e => setPointFilter(e.target.checked));
+ui.btnPoint.addEventListener('click', () => setPointFilter(!state.nearest));
+
+/* --- post process --- */
+ui.brSlider.addEventListener('input', e => { state.brightness = e.target.value / 100; ui.brValue.textContent = e.target.value + '%'; invalidate(); });
+ui.coSlider.addEventListener('input', e => { state.contrast   = e.target.value / 100; ui.coValue.textContent = e.target.value + '%'; invalidate(); });
+ui.satSlider.addEventListener('input', e => { state.saturation= e.target.value / 100; ui.satValue.textContent = e.target.value + '%'; invalidate(); });
+ui.invertCheck.addEventListener('change', e => { state.invert = e.target.checked; invalidate(); });
+ui.btnResetPP.addEventListener('click', () => {
+    state.brightness = state.contrast = state.saturation = 1;
+    state.invert = false;
+    ui.brSlider.value = ui.coSlider.value = ui.satSlider.value = 100;
+    ui.brValue.textContent = ui.coValue.textContent = ui.satValue.textContent = '100%';
+    ui.invertCheck.checked = false;
+    invalidate();
+});
+
+/* --- scatter & emitter --- */
+ui.baseScaleSlider.addEventListener('input', e => {
+    state.baseScale = parseFloat(e.target.value);
+    ui.baseScaleVal.textContent = state.baseScale.toFixed(1) + '×';
+});
+ui.randScaleSlider.addEventListener('input', e => {
+    state.randScaleAmt = e.target.value / 100;
+    ui.randScaleVal.textContent = e.target.value + '%';
+});
+ui.manualDurSlider.addEventListener('input', e => {
+    state.manualDuration = parseFloat(e.target.value);
+    ui.manualDurVal.textContent = state.manualDuration ? state.manualDuration.toFixed(1) + 's' : 'Global';
+});
+ui.manualLoopCheck.addEventListener('change', e => state.manualLoop = e.target.checked);
+ui.randPhaseCheck.addEventListener('change', e => state.randPhase = e.target.checked);
+ui.randRotCheck.addEventListener('change', e => state.randRot = e.target.checked);
+ui.btnClearManual.addEventListener('click', () => {
+    state.instances = state.instances.filter(i => i.lifespan !== Infinity);
+    setSelection(state.selection.filter(i => state.instances.includes(i)));
+    updateStats();
+    invalidate();
+});
+
+ui.autoEmitCheck.addEventListener('change', e => {
+    state.autoEmit = e.target.checked;
+    ui.emitterControls.classList.toggle('dim', !state.autoEmit);
+});
+ui.emitLifetimeSlider.addEventListener('input', e => {
+    state.emitLifetime = parseFloat(e.target.value);
+    ui.emitLifetimeVal.textContent = state.emitLifetime.toFixed(1) + 's';
+});
+ui.emitRateSlider.addEventListener('input', e => {
+    state.emitRate = parseInt(e.target.value);
+    ui.emitRateVal.textContent = state.emitRate + '/s';
+});
+ui.emitRadiusSlider.addEventListener('input', e => {
+    state.emitRadius = parseInt(e.target.value);
+    ui.emitRadiusVal.textContent = state.emitRadius + 'px';
+});
+ui.emitMaxSlider.addEventListener('input', e => {
+    state.emitMax = parseInt(e.target.value);
+    ui.emitMaxVal.textContent = state.emitMax;
+});
+ui.emitFadeCheck.addEventListener('change', e => { state.emitFade = e.target.checked; invalidate(); });
+
+/* --- timeline --- */
+function togglePlay(){
+    state.isPlaying = !state.isPlaying;
+    ui.playIcon.hidden = state.isPlaying;
+    ui.pauseIcon.hidden = !state.isPlaying;
+    state.frameTimer = 0;
+    invalidate();
+}
+ui.playBtn.addEventListener('click', togglePlay);
+
+/**
+ * Rewind everything to the top and play: the sheet goes back to frame 1 and
+ * placed sprites restart their own animation. Emitted particles are thrown
+ * away rather than un-aged, so a burst replays from an empty canvas.
+ */
+function restartPlayback(){
+    if (!state.isLoaded) return;
+
+    state.absoluteFrame = 0;
+    state.frameTimer = 0;
+    state.emitAccumulator = 0;
+
+    const before = state.instances.length;
+    state.instances = state.instances.filter(i => i.lifespan === Infinity);
+    state.instances.forEach(i => { i.age = 0; });
+    if (state.instances.length !== before) setSelection(state.selection.filter(i => state.instances.includes(i)));
+
+    if (!state.isPlaying) togglePlay();
+    updateStats();
+    updateTimelineUI();
+    invalidate();
+}
+
+function updateTimelineUI(){
+    const maxF = maxFrames();
+    if (!maxF) return;
+    const f = state.absoluteFrame % maxF;
+    ui.frameSlider.value = f;
+    ui.frameCounter.textContent = `${f + 1}/${maxF}`;
+}
+function updateRanges(){
+    const maxF = maxFrames();
+    if (!maxF) return;
+    ui.frameSlider.max = maxF - 1;
+    updateTimelineUI();
+}
+ui.frameSlider.addEventListener('input', e => {
+    if (state.isPlaying) togglePlay();
+    state.absoluteFrame = parseInt(e.target.value);
+    updateTimelineUI();
+    invalidate();
+});
+ui.btnClear.addEventListener('click', () => {
+    state.instances = [];
+    setSelection([]);
+    updateStats();
+    invalidate();
+});
+
+/* --- toolbar --- */
+ui.toolPan.addEventListener('click', () => setTool('pan'));
+ui.toolSelect.addEventListener('click', () => setTool('select'));
+ui.toolScatter.addEventListener('click', () => setTool('scatter'));
+ui.btnZoomIn.addEventListener('click', () => zoomBy(0.15));
+ui.btnZoomOut.addEventListener('click', () => zoomBy(-0.15));
+ui.btnFit.addEventListener('click', fitView);
+ui.btnReset.addEventListener('click', resetView);
+
+function toggleGrid(){
+    state.showGrid = !state.showGrid;
+    ui.btnGrid.classList.toggle('active', state.showGrid);
+    invalidate();
+}
+ui.btnGrid.addEventListener('click', toggleGrid);
+
+function updateStats(){
+    $('statInstances').textContent = state.instances.length;
+}
+
+/* ============================================================
+   Boot
+   ============================================================ */
+syncBackgroundUI();
+setTool(state.tool);
+resizeCanvas();
+applyCursor();
+initLibrary();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

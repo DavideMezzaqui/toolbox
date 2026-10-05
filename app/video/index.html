@@ -1,0 +1,2338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Comparison</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scrollbar-gutter:stable}
+body{background:#111;color:#ccc;font-family:'Segoe UI',system-ui,sans-serif;font-size:13px;min-height:100vh;padding:20px;max-width:1500px;margin:0 auto}
+header{display:flex;align-items:baseline;gap:12px;margin-bottom:16px}
+header h1{font-size:12px;font-weight:600;color:#fff;letter-spacing:.08em;text-transform:uppercase}
+header span{font-size:11px;color:#444}
+
+/* ── two-column video panels ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.video-panel{display:flex;flex-direction:column;gap:6px}
+
+.drop-zone{border:1px dashed #333;border-radius:5px;padding:14px 12px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;position:relative;user-select:none}
+.drop-zone:hover{border-color:#555;background:#161616}
+.drop-zone.drag-over{border-color:#666;background:#1c1c1c}
+.drop-zone.loaded{border-color:#2a6;border-style:solid;background:#111a14}
+.drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.dz-title{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#555;margin-bottom:3px}
+.loaded .dz-title{color:#2a6}
+.dz-hint{font-size:11px;color:#444}
+.dz-name{font-size:10px;color:#2a6;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── per-video controls ── */
+.vc{background:#151515;border:1px solid #222;border-radius:5px;padding:8px 10px;display:flex;flex-direction:column;gap:5px}
+.vc-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.vc-lbl{font-size:10px;color:#555;letter-spacing:.04em;white-space:nowrap;min-width:38px}
+.vc-val{font-size:10px;color:#888;min-width:30px;text-align:right}
+.vc input[type=range]{flex:1;min-width:60px;accent-color:#2a6;cursor:pointer;height:14px}
+.vc input[type=number]{width:54px;background:#1c1c1c;border:1px solid #2a2a2a;color:#ccc;border-radius:3px;padding:3px 5px;font-size:11px;text-align:center}
+.vc input[type=number]:focus{outline:none;border-color:#444}
+.vc select{background:#1c1c1c;border:1px solid #2a2a2a;color:#ccc;border-radius:3px;padding:3px 6px;font-size:11px;cursor:pointer}
+.vc-sep{height:1px;background:#1e1e1e;margin:1px 0}
+.vc-reset{align-self:flex-end;background:none;border:1px solid #2a2a2a;color:#555;border-radius:3px;padding:2px 8px;font-size:10px;cursor:pointer;transition:color .1s,border-color .1s;letter-spacing:.03em}
+.vc-reset:hover{color:#aaa;border-color:#555}
+
+/* ── canvas ── */
+.canvas-wrap{background:#000;border-radius:4px;overflow:hidden;line-height:0;position:relative}
+canvas{width:100%;display:block;cursor:default}
+
+/* ── global controls ── */
+.controls{display:flex;align-items:center;gap:7px;margin-top:10px;flex-wrap:wrap}
+.ctrl-group{display:flex;align-items:center;gap:5px}
+.sep{width:1px;height:18px;background:#222;flex-shrink:0}
+button{background:#1c1c1c;border:1px solid #2e2e2e;color:#bbb;border-radius:4px;padding:5px 12px;font-size:12px;cursor:pointer;transition:background .1s,border-color .1s,color .1s;white-space:nowrap}
+button:hover:not(:disabled){background:#252525;border-color:#555;color:#fff}
+button:disabled{opacity:.25;cursor:not-allowed}
+.btn-mp4{background:#1a3d26;border-color:#2a6;color:#4da;font-weight:600}
+.btn-mp4:hover:not(:disabled){background:#1f4a2d;border-color:#3b7}
+.btn-webm{background:#1c2535;border-color:#446;color:#89a}
+.btn-webm:hover:not(:disabled){background:#22304a;border-color:#66a}
+.is-active{background:#3d1a1a !important;border-color:#a33 !important;color:#f66 !important;animation:blink 1.2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.55}}
+label{font-size:11px;color:#555;white-space:nowrap}
+input[type=range]{width:70px;accent-color:#2a6;cursor:pointer}
+input[type=color]{width:26px;height:24px;border:1px solid #2e2e2e;border-radius:3px;background:#1c1c1c;cursor:pointer;padding:2px}
+input[type=number].gnum{width:50px;background:#1c1c1c;border:1px solid #2e2e2e;color:#ccc;border-radius:3px;padding:4px 6px;font-size:12px;text-align:center}
+input[type=number].gnum:focus{outline:none;border-color:#555}
+select.gsel{background:#1c1c1c;border:1px solid #2e2e2e;color:#ccc;border-radius:3px;padding:4px 7px;font-size:12px;cursor:pointer}
+
+/* split indicator */
+.split-info{font-size:11px;color:#666;white-space:nowrap}
+
+/* ── status / progress ── */
+.status-bar{margin-top:7px;font-size:11px;color:#444;min-height:15px}
+.status-bar.active{color:#888}
+.status-bar.exporting{color:#4da}
+.status-bar.recording{color:#f55}
+.status-bar.done{color:#2a6}
+.status-bar.error{color:#c55}
+.progress-wrap{margin-top:5px;height:2px;background:#1e1e1e;border-radius:1px;overflow:hidden;display:none}
+.progress-wrap.show{display:block}
+.progress-bar{height:100%;background:#2a6;width:0%;transition:width .12s linear}
+.progress-bar.anim{background:#f55;animation:indet 1.5s linear infinite;width:100%}
+@keyframes indet{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+/* ── mode tabs ── */
+.tabs{display:flex;gap:4px;margin-left:auto}
+.tabs button{padding:4px 13px;font-size:11px;letter-spacing:.04em}
+.tabs button.on{background:#1a3d26;border-color:#2a6;color:#4da}
+
+/* ── collage ── */
+.cg-wrap{display:grid;grid-template-columns:296px 1fr;gap:14px;align-items:start}
+.cg-side{display:flex;flex-direction:column;gap:8px;min-width:0}
+.cg-drop{border:1px dashed #333;border-radius:5px;padding:18px 12px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;position:relative}
+.cg-drop:hover{border-color:#555;background:#161616}
+.cg-drop.drag-over{border-color:#2a6;background:#111a14}
+.cg-drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.cg-drop .dz-hint{margin-top:3px}
+.cg-list{display:flex;flex-direction:column;gap:5px;max-height:50vh;overflow-y:auto;padding-right:2px}
+.cg-item{display:flex;align-items:center;gap:7px;background:#151515;border:1px solid #222;border-radius:5px;padding:5px 6px;cursor:grab}
+.cg-item:active{cursor:grabbing}
+.cg-item.dragging{opacity:.3}
+.cg-item.drop-before{border-top-color:#2a6}
+.cg-item.drop-after{border-bottom-color:#2a6}
+.cg-item img{width:50px;height:32px;object-fit:cover;border-radius:2px;background:#000;flex:none}
+.cg-item .cg-meta{flex:1;min-width:0}
+.cg-item .cg-name{font-size:10px;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cg-item .cg-label{width:100%;margin-top:3px;background:#1c1c1c;border:1px solid #2a2a2a;color:#ccc;border-radius:3px;padding:2px 5px;font-size:11px}
+.cg-item .cg-label:focus{outline:none;border-color:#444}
+.cg-item .cg-del{background:none;border:none;color:#444;padding:0 4px;font-size:15px;line-height:1;cursor:pointer;flex:none}
+.cg-item .cg-del:hover{color:#c55;background:none;border:none}
+.cg-empty{font-size:11px;color:#3a3a3a;text-align:center;padding:14px 0}
+.cg-paste{width:100%;background:#1a3d26;border-color:#2a6;color:#4da;font-weight:600;padding:7px 12px}
+.cg-paste:hover:not(:disabled){background:#1f4a2d;border-color:#3b7;color:#6fc}
+
+/* Fixed height on purpose: the preview used to grow with the collage, and a
+   taller page toggled the scrollbar, which reflowed the options below it -
+   every slider jumped whenever the layout changed. */
+.cg-stage{position:relative;background:#0b0b0b;border:1px solid #1e1e1e;border-radius:5px;height:58vh;min-height:300px;overflow:hidden;cursor:grab;touch-action:none}
+.cg-stage.panning{cursor:grabbing}
+#cgCanvas{display:block;background-image:linear-gradient(45deg,#191919 25%,transparent 25%),linear-gradient(-45deg,#191919 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#191919 75%),linear-gradient(-45deg,transparent 75%,#191919 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0}
+.cg-view{position:absolute;right:8px;top:8px;display:flex;gap:5px;align-items:center;background:rgba(14,14,14,.86);border:1px solid #262626;border-radius:4px;padding:3px 5px}
+.cg-view span{font-size:11px;color:#777;min-width:44px;text-align:center}
+.cg-view button{padding:2px 8px;font-size:11px}
+
+/* A fixed column count, not auto-fit: auto-fit re-packs the controls whenever
+   the available width changes by a few pixels. */
+.cg-opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px 16px;margin-top:12px}
+@media(max-width:1180px){.cg-opts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.cg-opt{display:flex;align-items:center;gap:7px}
+.cg-opt>label{min-width:60px;flex:none}
+.cg-opt input[type=range]{flex:1;min-width:50px}
+.cg-opt select.gsel{flex:1;min-width:0}
+.cg-actions{display:flex;align-items:center;gap:7px;margin-top:12px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Video Comparison</h1>
+  <span id="modeHint">drag divider on canvas · zoom / pan / rotate / offset / speed per video</span>
+  <div class="tabs">
+    <button id="tabCompare" class="on">Compare</button>
+    <button id="tabCollage">Collage</button>
+    <button id="tabGrid">Grid</button>
+  </div>
+</header>
+
+<div id="modeCompare">
+<div class="two-col">
+
+  <!-- LEFT VIDEO -->
+  <div class="video-panel">
+    <div class="drop-zone" id="dropA">
+      <input type="file" accept="video/*" id="fileA" title="">
+      <div class="dz-title">Left</div>
+      <div class="dz-hint" id="hintA">click or drag a video</div>
+      <div class="dz-name" id="nameA"></div>
+    </div>
+    <div class="vc" id="vcA">
+      <div class="vc-row">
+        <span class="vc-lbl">Offset</span>
+        <input type="number" id="offsetA" value="0" step="0.1" min="-9999" max="9999">
+        <span class="vc-val">s</span>
+        <span class="vc-lbl" style="margin-left:8px">Speed</span>
+        <select id="speedA">
+          <option value="0.1">0.1×</option><option value="0.25">0.25×</option>
+          <option value="0.5">0.5×</option><option value="0.75">0.75×</option>
+          <option value="1" selected>1×</option><option value="1.25">1.25×</option>
+          <option value="1.5">1.5×</option><option value="2">2×</option>
+          <option value="3">3×</option><option value="4">4×</option>
+          <option value="8">8×</option>
+        </select>
+      </div>
+      <div class="vc-sep"></div>
+      <div class="vc-row">
+        <span class="vc-lbl">Zoom</span>
+        <input type="range" id="zoomA" min="0.1" max="8" step="0.05" value="1">
+        <span class="vc-val" id="zoomAv">1.0×</span>
+      </div>
+      <div class="vc-row">
+        <span class="vc-lbl">Rotate</span>
+        <input type="range" id="rotA" min="-180" max="180" step="0.5" value="0">
+        <span class="vc-val" id="rotAv">0°</span>
+      </div>
+      <div class="vc-row">
+        <span class="vc-lbl">Pan X</span>
+        <input type="range" id="panXA" min="-100" max="100" step="1" value="0">
+        <span class="vc-val" id="panXAv">0</span>
+      </div>
+      <div class="vc-row">
+        <span class="vc-lbl">Pan Y</span>
+        <input type="range" id="panYA" min="-100" max="100" step="1" value="0">
+        <span class="vc-val" id="panYAv">0</span>
+      </div>
+      <button class="vc-reset" onclick="resetVC('A')">↺ Reset</button>
+    </div>
+  </div>
+
+  <!-- RIGHT VIDEO -->
+  <div class="video-panel">
+    <div class="drop-zone" id="dropB">
+      <input type="file" accept="video/*" id="fileB" title="">
+      <div class="dz-title">Right</div>
+      <div class="dz-hint" id="hintB">click or drag a video</div>
+      <div class="dz-name" id="nameB"></div>
+    </div>
+    <div class="vc" id="vcB">
+      <div class="vc-row">
+        <span class="vc-lbl">Offset</span>
+        <input type="number" id="offsetB" value="0" step="0.1" min="-9999" max="9999">
+        <span class="vc-val">s</span>
+        <span class="vc-lbl" style="margin-left:8px">Speed</span>
+        <select id="speedB">
+          <option value="0.1">0.1×</option><option value="0.25">0.25×</option>
+          <option value="0.5">0.5×</option><option value="0.75">0.75×</option>
+          <option value="1" selected>1×</option><option value="1.25">1.25×</option>
+          <option value="1.5">1.5×</option><option value="2">2×</option>
+          <option value="3">3×</option><option value="4">4×</option>
+          <option value="8">8×</option>
+        </select>
+      </div>
+      <div class="vc-sep"></div>
+      <div class="vc-row">
+        <span class="vc-lbl">Zoom</span>
+        <input type="range" id="zoomB" min="0.1" max="8" step="0.05" value="1">
+        <span class="vc-val" id="zoomBv">1.0×</span>
+      </div>
+      <div class="vc-row">
+        <span class="vc-lbl">Rotate</span>
+        <input type="range" id="rotB" min="-180" max="180" step="0.5" value="0">
+        <span class="vc-val" id="rotBv">0°</span>
+      </div>
+      <div class="vc-row">
+        <span class="vc-lbl">Pan X</span>
+        <input type="range" id="panXB" min="-100" max="100" step="1" value="0">
+        <span class="vc-val" id="panXBv">0</span>
+      </div>
+      <div class="vc-row">
+        <span class="vc-lbl">Pan Y</span>
+        <input type="range" id="panYB" min="-100" max="100" step="1" value="0">
+        <span class="vc-val" id="panYBv">0</span>
+      </div>
+      <button class="vc-reset" onclick="resetVC('B')">↺ Reset</button>
+    </div>
+  </div>
+
+</div><!-- .two-col -->
+
+<div class="canvas-wrap">
+  <canvas id="canvas" width="1920" height="540"></canvas>
+</div>
+
+<div class="controls">
+  <div class="ctrl-group">
+    <button id="btnPlay" disabled>▶ Play</button>
+    <button id="btnStop" disabled>■ Stop</button>
+  </div>
+  <div class="sep"></div>
+  <div class="ctrl-group">
+    <label>Line</label>
+    <input type="range" id="lineW" min="1" max="16" value="3">
+    <input type="number" class="gnum" id="lineWn" value="3" min="1" max="16">
+    <input type="color" id="lineC" value="#ffffff">
+  </div>
+  <div class="sep"></div>
+  <div class="ctrl-group">
+    <label>Split</label>
+    <span class="split-info" id="splitInfo">50%</span>
+    <label style="margin-left:4px;color:#333">(drag on canvas)</label>
+  </div>
+  <div class="sep"></div>
+  <div class="ctrl-group">
+    <label>FPS</label>
+    <select class="gsel" id="exportFps">
+      <option value="24">24</option>
+      <option value="30" selected>30</option>
+      <option value="60">60</option>
+    </select>
+  </div>
+  <div class="sep"></div>
+  <div class="ctrl-group">
+    <label>Bitrate</label>
+    <select class="gsel" id="bitrate">
+      <option value="4000000">4 Mbps</option>
+      <option value="8000000" selected>8 Mbps</option>
+      <option value="16000000">16 Mbps</option>
+    </select>
+  </div>
+  <div class="sep"></div>
+  <select class="gsel" id="exportMode">
+    <option value="fast">Fast</option>
+    <option value="accurate">Accurate (slow)</option>
+  </select>
+  <button id="btnMP4"    class="btn-mp4"  disabled>⬇ Export MP4</button>
+  <button id="btnRecord" class="btn-webm" disabled>⏺ Record WebM</button>
+</div>
+
+<div class="status-bar" id="status">Load both videos to start.</div>
+</div><!-- #modeCompare -->
+
+<!-- ═══ collage mode ═══ -->
+<div id="modeCollage" hidden>
+<div class="cg-wrap">
+
+  <aside class="cg-side">
+    <div class="cg-drop" id="cgDrop">
+      <input type="file" id="cgFiles" accept="image/*" multiple>
+      <div class="dz-title">Screenshots</div>
+      <div class="dz-hint">drop images &middot; paste with Ctrl+V &middot; or click to choose</div>
+    </div>
+    <button id="cgPaste" class="cg-paste">Paste screenshot</button>
+    <div class="cg-list" id="cgList"></div>
+    <div class="cg-actions" style="margin-top:0">
+      <button id="cgClear">Clear all</button>
+      <span class="cg-hint dz-hint" id="cgCount"></span>
+    </div>
+  </aside>
+
+  <div class="cg-main">
+    <div class="cg-stage" id="cgStage">
+      <canvas id="cgCanvas" width="16" height="9"></canvas>
+      <div class="cg-view">
+        <button id="cgZoomOut" title="Zoom out">&minus;</button>
+        <span id="cgZoomV">100%</span>
+        <button id="cgZoomIn" title="Zoom in">+</button>
+        <button id="cgFit" title="Fit to view">Fit</button>
+      </div>
+    </div>
+
+    <div class="cg-opts">
+      <div class="cg-opt"><label>Layout</label>
+        <select class="gsel" id="cgLayout">
+          <option value="grid" selected>Grid</option>
+          <option value="row">Single row</option>
+          <option value="col">Single column</option>
+        </select>
+      </div>
+      <div class="cg-opt" id="cgColsRow"><label>Columns</label>
+        <input type="range" id="cgCols" min="1" max="8" step="1" value="2">
+        <span class="vc-val" id="cgColsV">2</span>
+      </div>
+      <div class="cg-opt"><label>Cells</label>
+        <select class="gsel" id="cgSizing">
+          <option value="proportional" selected>Keep aspect</option>
+          <option value="uniform">Uniform</option>
+        </select>
+      </div>
+      <div class="cg-opt"><label>Fit</label>
+        <select class="gsel" id="cgFit">
+          <option value="cover" selected>Crop to fill</option>
+          <option value="contain">Fit inside</option>
+        </select>
+      </div>
+      <div class="cg-opt"><label>Gap</label>
+        <input type="range" id="cgGap" min="0" max="80" step="1" value="12">
+        <span class="vc-val" id="cgGapV">12</span>
+      </div>
+      <div class="cg-opt"><label>Margin</label>
+        <input type="range" id="cgPad" min="0" max="120" step="1" value="12">
+        <span class="vc-val" id="cgPadV">12</span>
+      </div>
+      <div class="cg-opt"><label>Corners</label>
+        <input type="range" id="cgRadius" min="0" max="60" step="1" value="0">
+        <span class="vc-val" id="cgRadiusV">0</span>
+      </div>
+      <div class="cg-opt"><label>Border</label>
+        <input type="range" id="cgBorder" min="0" max="20" step="1" value="0">
+        <input type="color" id="cgBorderColor" value="#2a2a2a">
+      </div>
+      <div class="cg-opt"><label>Background</label>
+        <input type="color" id="cgBg" value="#111111">
+        <label style="min-width:0"><input type="checkbox" id="cgTransparent"> none</label>
+      </div>
+      <div class="cg-opt"><label>Captions</label>
+        <label style="min-width:0"><input type="checkbox" id="cgLabels"> show</label>
+        <select class="gsel" id="cgLabelPos">
+          <option value="above" selected>Above image</option>
+          <option value="top">Over top</option>
+          <option value="bottom">Over bottom</option>
+        </select>
+      </div>
+      <div class="cg-opt"><label>Caption size</label>
+        <input type="range" id="cgLabelSize" min="10" max="64" step="1" value="22">
+        <span class="vc-val" id="cgLabelSizeV">22</span>
+        <input type="color" id="cgLabelColor" value="#e8e8e8">
+      </div>
+      <div class="cg-opt"><label>Width</label>
+        <input type="number" class="gnum" id="cgOutW" min="64" max="8192" step="16" value="1920">
+        <span class="vc-val" id="cgOutH">&nbsp;</span>
+      </div>
+    </div>
+
+    <div class="cg-actions">
+      <button id="cgExport" class="btn-mp4">Export PNG</button>
+      <button id="cgCopy">Copy to clipboard</button>
+      <div class="sep"></div>
+      <span class="split-info" id="cgInfo">No images yet.</span>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══ grid mode - several videos at once, in a grid ═══ -->
+<div id="modeGrid" hidden>
+<div class="cg-wrap">
+
+  <aside class="cg-side">
+    <div class="cg-drop" id="gvDrop">
+      <input type="file" id="gvFiles" accept="video/*" multiple>
+      <div class="dz-title">Clips</div>
+      <div class="dz-hint">drop videos &middot; or click to choose &middot; several at once</div>
+    </div>
+    <div class="cg-list" id="gvList"></div>
+    <div class="cg-actions" style="margin-top:0">
+      <button id="gvClear">Clear all</button>
+      <span class="cg-hint dz-hint" id="gvCount"></span>
+    </div>
+
+    <div class="vc" id="gvCell" hidden>
+      <div class="vc-row"><span class="vc-lbl" id="gvCellName">&nbsp;</span></div>
+      <div class="vc-row">
+        <span class="vc-lbl">Offset</span>
+        <input type="number" id="gvOffset" value="0" step="0.1" min="-9999" max="9999">
+        <span class="vc-val">s</span>
+        <span class="vc-lbl" style="margin-left:8px">Speed</span>
+        <select id="gvSpeed">
+          <option value="0.1">0.1&times;</option><option value="0.25">0.25&times;</option>
+          <option value="0.5">0.5&times;</option><option value="0.75">0.75&times;</option>
+          <option value="1" selected>1&times;</option><option value="1.25">1.25&times;</option>
+          <option value="1.5">1.5&times;</option><option value="2">2&times;</option>
+          <option value="3">3&times;</option><option value="4">4&times;</option>
+          <option value="8">8&times;</option>
+        </select>
+      </div>
+      <div class="vc-sep"></div>
+      <div class="vc-row"><span class="vc-lbl">Zoom</span>
+        <input type="range" id="gvZoom" min="0.1" max="8" step="0.05" value="1">
+        <span class="vc-val" id="gvZoomV">1.0&times;</span></div>
+      <div class="vc-row"><span class="vc-lbl">Rotate</span>
+        <input type="range" id="gvRot" min="-180" max="180" step="0.5" value="0">
+        <span class="vc-val" id="gvRotV">0&deg;</span></div>
+      <div class="vc-row"><span class="vc-lbl">Pan X</span>
+        <input type="range" id="gvPanX" min="-100" max="100" step="1" value="0">
+        <span class="vc-val" id="gvPanXv">0</span></div>
+      <div class="vc-row"><span class="vc-lbl">Pan Y</span>
+        <input type="range" id="gvPanY" min="-100" max="100" step="1" value="0">
+        <span class="vc-val" id="gvPanYv">0</span></div>
+      <button class="vc-reset" id="gvReset">&#8634; Reset this clip</button>
+    </div>
+  </aside>
+
+  <div class="cg-main">
+    <div class="cg-stage" id="gvStage">
+      <canvas id="gvCanvas" width="16" height="9"></canvas>
+      <div class="cg-view">
+        <button id="gvZoomOut" title="Zoom out">&minus;</button>
+        <span id="gvZoomPct">100%</span>
+        <button id="gvZoomIn" title="Zoom in">+</button>
+        <button id="gvFitView" title="Fit to view">Fit</button>
+      </div>
+    </div>
+
+    <div class="cg-opts">
+      <div class="cg-opt"><label>Columns</label>
+        <select class="gsel" id="gvCols">
+          <option value="0" selected>Square (auto)</option>
+          <option value="1">1</option><option value="2">2</option>
+          <option value="3">3</option><option value="4">4</option>
+          <option value="5">5</option><option value="6">6</option>
+        </select>
+      </div>
+      <div class="cg-opt"><label>Cells</label>
+        <select class="gsel" id="gvCellShape">
+          <option value="video" selected>Keep video aspect</option>
+          <option value="square">Square</option>
+        </select>
+      </div>
+      <div class="cg-opt"><label>Fit</label>
+        <select class="gsel" id="gvFit">
+          <option value="cover" selected>Crop to fill</option>
+          <option value="contain">Fit inside</option>
+        </select>
+      </div>
+      <div class="cg-opt"><label>Gap</label>
+        <input type="range" id="gvGap" min="0" max="80" step="1" value="8">
+        <span class="vc-val" id="gvGapV">8</span></div>
+      <div class="cg-opt"><label>Margin</label>
+        <input type="range" id="gvPad" min="0" max="120" step="1" value="0">
+        <span class="vc-val" id="gvPadV">0</span></div>
+      <div class="cg-opt"><label>Corners</label>
+        <input type="range" id="gvRadius" min="0" max="60" step="1" value="0">
+        <span class="vc-val" id="gvRadiusV">0</span></div>
+      <div class="cg-opt"><label>Border</label>
+        <input type="range" id="gvBorder" min="0" max="20" step="1" value="0">
+        <input type="color" id="gvBorderColor" value="#2a2a2a"></div>
+      <div class="cg-opt"><label>Background</label>
+        <input type="color" id="gvBg" value="#0d0d0d"></div>
+      <div class="cg-opt"><label>Labels</label>
+        <label style="min-width:0"><input type="checkbox" id="gvLabels"> show</label>
+        <select class="gsel" id="gvLabelPos">
+          <option value="top" selected>Over top</option>
+          <option value="bottom">Over bottom</option>
+        </select>
+      </div>
+      <div class="cg-opt"><label>Label size</label>
+        <input type="range" id="gvLabelSize" min="10" max="64" step="1" value="22">
+        <span class="vc-val" id="gvLabelSizeV">22</span>
+        <input type="color" id="gvLabelColor" value="#e8e8e8"></div>
+      <div class="cg-opt"><label>Width</label>
+        <input type="number" class="gnum" id="gvOutW" min="64" max="8192" step="16" value="1920">
+        <span class="vc-val" id="gvOutH">&nbsp;</span></div>
+      <div class="cg-opt"><label>FPS</label>
+        <select class="gsel" id="gvFps">
+          <option value="24">24</option><option value="30" selected>30</option><option value="60">60</option>
+        </select>
+      </div>
+      <div class="cg-opt"><label>Bitrate</label>
+        <select class="gsel" id="gvBitrate">
+          <option value="4000000">4 Mbps</option>
+          <option value="8000000" selected>8 Mbps</option>
+          <option value="16000000">16 Mbps</option>
+        </select>
+      </div>
+      <div class="cg-opt"><label>Export</label>
+        <select class="gsel" id="gvExportMode">
+          <option value="fast" selected>Fast</option>
+          <option value="accurate">Accurate (slow)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="cg-actions">
+      <button id="gvPlay" disabled>&#9654; Play</button>
+      <button id="gvStop" disabled>&#9632; Stop</button>
+      <div class="sep"></div>
+      <button id="gvMP4" class="btn-mp4" disabled>&#11015; Export MP4</button>
+      <button id="gvRecord" class="btn-webm" disabled>&#9210; Record WebM</button>
+      <div class="sep"></div>
+      <span class="split-info" id="gvInfo">No clips yet.</span>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div class="progress-wrap" id="progressWrap">
+  <div class="progress-bar" id="progressBar"></div>
+</div>
+
+<div id="gvVideos" style="display:none"></div>
+<video id="vidA" style="display:none" preload="auto"></video>
+<video id="vidB" style="display:none" preload="auto"></video>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx    = canvas.getContext('2d');
+const vidA   = document.getElementById('vidA');
+const vidB   = document.getElementById('vidB');
+const btnMP4 = document.getElementById('btnMP4');
+
+let loadedA = false, loadedB = false;
+let isPlaying = false, isRecording = false, isExporting = false;
+let animId = null, recorder = null, chunks = [];
+let audioCtx = null, audioSetup = false, audioDest = null;
+let splitRatio = 0.5;
+let isDraggingDiv = false;
+
+// ── DROP ZONES ────────────────────────────────────────────────────────────────
+
+function setupDrop(dropId, inputId, vid, nameId, hintId, side) {
+  const drop  = document.getElementById(dropId);
+  const input = document.getElementById(inputId);
+  function load(file) {
+    if (!file.type.startsWith('video/')) { setStatus('Not a valid video file.', 'error'); return; }
+    vid.src = URL.createObjectURL(file); vid.load();
+    document.getElementById(nameId).textContent = file.name;
+    document.getElementById(hintId).textContent = '';
+    drop.classList.add('loaded');
+    vid.onloadedmetadata = () => {
+      if (side === 'A') loadedA = true; else loadedB = true;
+      if (loadedA && loadedB) onBothLoaded(); else drawPlaceholder();
+    };
+    vid.onerror = () => setStatus('Error loading video.', 'error');
+  }
+  input.addEventListener('change', e => { if (e.target.files[0]) load(e.target.files[0]); });
+  drop.addEventListener('dragover',  e => { e.preventDefault(); drop.classList.add('drag-over'); });
+  drop.addEventListener('dragleave', e => { if (!drop.contains(e.relatedTarget)) drop.classList.remove('drag-over'); });
+  drop.addEventListener('drop',      e => { e.preventDefault(); drop.classList.remove('drag-over'); if (e.dataTransfer.files[0]) load(e.dataTransfer.files[0]); });
+}
+setupDrop('dropA','fileA',vidA,'nameA','hintA','A');
+setupDrop('dropB','fileB',vidB,'nameB','hintB','B');
+
+// ── CANVAS SIZING ─────────────────────────────────────────────────────────────
+
+function onBothLoaded() {
+  const H  = Math.max(vidA.videoHeight, vidB.videoHeight);
+  const wA = Math.round(vidA.videoWidth * H / vidA.videoHeight);
+  const wB = Math.round(vidB.videoWidth * H / vidB.videoHeight);
+  canvas.width  = wA + wB;
+  canvas.height = H;
+  ['btnPlay','btnMP4','btnRecord'].forEach(id => document.getElementById(id).disabled = false);
+  setStatus('Ready. Drag the divider on the canvas to reposition the split.', 'active');
+  drawBothFrames();
+}
+
+// ── DRAWING ───────────────────────────────────────────────────────────────────
+
+function getTx(s) {
+  return {
+    offset: parseFloat(document.getElementById('offset'+s).value) || 0,
+    speed:  parseFloat(document.getElementById('speed' +s).value) || 1,
+    zoom:   parseFloat(document.getElementById('zoom'  +s).value) || 1,
+    rot:    parseFloat(document.getElementById('rot'   +s).value) || 0,
+    panX:   parseFloat(document.getElementById('panX'  +s).value) || 0,
+    panY:   parseFloat(document.getElementById('panY'  +s).value) || 0,
+  };
+}
+
+function drawSide(vid, zoneX, zoneW, H, tx) {
+  const vw = vid.videoWidth, vh = vid.videoHeight;
+  if (!vw || !vh || zoneW <= 0) return;
+  const fit = Math.min(zoneW / vw, H / vh);  // contain (no stretch)
+  const cx  = zoneX + zoneW / 2 + (tx.panX / 100) * zoneW;
+  const cy  = H / 2 + (tx.panY / 100) * H;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(zoneX, 0, zoneW, H); ctx.clip();
+  ctx.translate(cx, cy);
+  ctx.rotate(tx.rot * Math.PI / 180);
+  ctx.scale(fit * tx.zoom, fit * tx.zoom);
+  ctx.drawImage(vid, -vw/2, -vh/2, vw, vh);
+  ctx.restore();
+}
+
+function drawBothFrames() {
+  const W = canvas.width, H = canvas.height;
+  const splitX = Math.round(W * splitRatio);
+  ctx.fillStyle = '#0d0d0d';
+  ctx.fillRect(0, 0, W, H);
+  if (loadedA) drawSide(vidA, 0,      splitX,     H, getTx('A'));
+  if (loadedB) drawSide(vidB, splitX, W - splitX, H, getTx('B'));
+  drawDivider(splitX);
+}
+
+function drawDivider(splitX) {
+  const lw = parseInt(document.getElementById('lineW').value) || 2;
+  const lc = document.getElementById('lineC').value;
+  ctx.fillStyle = lc;
+  ctx.fillRect(splitX - Math.floor(lw/2), 0, lw, canvas.height);
+}
+
+function drawPlaceholder() {
+  ctx.fillStyle = '#111'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = '#333'; ctx.font = '14px Segoe UI,system-ui,sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('Load both videos to preview', canvas.width/2, canvas.height/2);
+}
+
+function renderLoop() {
+  drawBothFrames();
+  if (isPlaying || isRecording) animId = requestAnimationFrame(renderLoop);
+}
+
+// ── DIVIDER DRAG ──────────────────────────────────────────────────────────────
+
+function canvasMouseX(e) {
+  const r = canvas.getBoundingClientRect();
+  return (e.clientX - r.left) * (canvas.width / r.width);
+}
+
+canvas.addEventListener('mousedown', e => {
+  const mx = canvasMouseX(e);
+  if (Math.abs(mx - canvas.width * splitRatio) < 14) {
+    isDraggingDiv = true;
+    e.preventDefault();
+  }
+});
+canvas.addEventListener('mousemove', e => {
+  const mx   = canvasMouseX(e);
+  const divX = canvas.width * splitRatio;
+  if (isDraggingDiv) {
+    splitRatio = Math.max(0.03, Math.min(0.97, mx / canvas.width));
+    document.getElementById('splitInfo').textContent = Math.round(splitRatio * 100) + '%';
+    if (!isPlaying && !isRecording && !isExporting) drawBothFrames();
+  }
+  canvas.style.cursor = (isDraggingDiv || Math.abs(mx - divX) < 14) ? 'col-resize' : 'default';
+});
+window.addEventListener('mouseup',   () => { isDraggingDiv = false; });
+canvas.addEventListener('mouseleave',() => { if (!isDraggingDiv) canvas.style.cursor = 'default'; });
+
+// ── PER-VIDEO CONTROL BINDINGS ────────────────────────────────────────────────
+
+function bindVC(id, dispId, suffix, decimals) {
+  const el   = document.getElementById(id);
+  const disp = document.getElementById(dispId);
+  function update() {
+    const v = parseFloat(el.value);
+    disp.textContent = (decimals ? v.toFixed(decimals) : Math.round(v)) + suffix;
+    if (!isPlaying && !isRecording && !isExporting) drawBothFrames();
+  }
+  el.addEventListener('input', update);
+  update();
+}
+bindVC('zoomA','zoomAv','×',1);  bindVC('zoomB','zoomBv','×',1);
+bindVC('rotA', 'rotAv', '°',1);  bindVC('rotB', 'rotBv', '°',1);
+bindVC('panXA','panXAv','',0);   bindVC('panXB','panXBv','',0);
+bindVC('panYA','panYAv','',0);   bindVC('panYB','panYBv','',0);
+
+['offsetA','offsetB','speedA','speedB'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    if (!isPlaying && !isRecording && !isExporting) drawBothFrames();
+  });
+});
+
+function resetVC(s) {
+  document.getElementById('offset'+s).value = 0;
+  document.getElementById('speed' +s).value = 1;
+  const el = id => document.getElementById(id);
+  el('zoom'+s).value = 1;   el('zoom'+s+'v').textContent = '1.0×';
+  el('rot' +s).value = 0;   el('rot' +s+'v').textContent = '0.0°';
+  el('panX'+s).value = 0;   el('panX'+s+'v').textContent = '0';
+  el('panY'+s).value = 0;   el('panY'+s+'v').textContent = '0';
+  if (!isPlaying && !isRecording && !isExporting) drawBothFrames();
+}
+
+// ── GLOBAL LINE CONTROLS ──────────────────────────────────────────────────────
+
+document.getElementById('lineW').addEventListener('input', function() {
+  document.getElementById('lineWn').value = this.value;
+  if (!isPlaying && !isRecording && !isExporting) drawBothFrames();
+});
+document.getElementById('lineWn').addEventListener('input', function() {
+  const v = Math.max(1, Math.min(16, parseInt(this.value)||1));
+  document.getElementById('lineW').value = v;
+  if (!isPlaying && !isRecording && !isExporting) drawBothFrames();
+});
+document.getElementById('lineC').addEventListener('input', () => {
+  if (!isPlaying && !isRecording && !isExporting) drawBothFrames();
+});
+
+// ── PREVIEW PLAY ──────────────────────────────────────────────────────────────
+
+document.getElementById('btnPlay').addEventListener('click', () => {
+  if (!isPlaying) {
+    initAudio();
+    const txA = getTx('A'), txB = getTx('B');
+    vidA.currentTime = Math.max(0, txA.offset);
+    vidB.currentTime = Math.max(0, txB.offset);
+    vidA.playbackRate = Math.max(0.1, Math.min(16, txA.speed));
+    vidB.playbackRate = Math.max(0.1, Math.min(16, txB.speed));
+    vidA.play(); vidB.play();
+    isPlaying = true;
+    document.getElementById('btnPlay').textContent = '⏸ Pause';
+    document.getElementById('btnStop').disabled = false;
+    animId = requestAnimationFrame(renderLoop);
+    let done = false;
+    function onEnd() { if (!done) { done = true; stopPlayback(); } }
+    vidA.onended = onEnd; vidB.onended = onEnd;
+  } else {
+    vidA.pause(); vidB.pause(); isPlaying = false;
+    cancelAnimationFrame(animId);
+    document.getElementById('btnPlay').textContent = '▶ Play';
+  }
+});
+
+document.getElementById('btnStop').addEventListener('click', stopPlayback);
+
+function stopPlayback() {
+  vidA.pause(); vidB.pause();
+  const txA = getTx('A'), txB = getTx('B');
+  vidA.currentTime = Math.max(0, txA.offset);
+  vidB.currentTime = Math.max(0, txB.offset);
+  isPlaying = false; cancelAnimationFrame(animId);
+  vidA.playbackRate = vidB.playbackRate = 1;
+  document.getElementById('btnPlay').textContent = '▶ Play';
+  document.getElementById('btnStop').disabled = true;
+  drawBothFrames(); setStatus('Stopped.', 'active');
+}
+
+function initAudio() {
+  if (audioSetup) return;
+  try {
+    audioCtx  = new AudioContext();
+    audioDest = audioCtx.createMediaStreamDestination();
+    const sA  = audioCtx.createMediaElementSource(vidA);
+    const sB  = audioCtx.createMediaElementSource(vidB);
+    sA.connect(audioCtx.destination); sB.connect(audioCtx.destination);
+    sA.connect(audioDest); sB.connect(audioDest);
+    audioSetup = true;
+  } catch(e) { console.warn('Audio:', e); }
+}
+
+// ── FAST MP4 EXPORT ───────────────────────────────────────────────────────────
+
+document.getElementById('btnMP4').addEventListener('click', () => {
+  if (isExporting) { isExporting = false; return; }
+  exportMP4();
+});
+
+async function exportMP4() {
+  if (!loadedA || !loadedB) return;
+  isExporting = true;
+  setLocked(true);
+  btnMP4.textContent = '⏹ Cancel'; btnMP4.classList.add('is-active');
+  try {
+    await runExport();
+  } catch(e) {
+    setStatus('Export error: ' + e.message, 'error');
+    console.error('[Export]', e);
+  } finally {
+    isExporting = false;
+    btnMP4.textContent = '⬇ Export MP4'; btnMP4.classList.remove('is-active');
+    setLocked(false); drawBothFrames();
+  }
+}
+
+async function runExport() {
+  if (typeof VideoEncoder === 'undefined')
+    throw new Error('WebCodecs not available — requires Chrome 94+.');
+
+  setStatus('Loading mp4-muxer…', 'exporting'); await tick();
+  let Muxer, ArrayBufferTarget;
+  try {
+    // Bundled copy first so the app works offline; CDN only as a fallback.
+    let mod;
+    try {
+      mod = await import('./lib/mp4-muxer.mjs');
+    } catch (localErr) {
+      mod = await import('https://esm.sh/mp4-muxer@5');
+    }
+    Muxer = mod.Muxer; ArrayBufferTarget = mod.ArrayBufferTarget;
+  } catch(e) { throw new Error('mp4-muxer load failed: ' + e.message); }
+  if (typeof Muxer !== 'function') throw new Error('mp4-muxer: Muxer not exported.');
+
+  // Read current transforms
+  const txA = getTx('A'), txB = getTx('B');
+  const W = canvas.width, H = canvas.height;
+  const splitX = Math.round(W * splitRatio);
+  const bitrate = parseInt(document.getElementById('bitrate').value) || 8_000_000;
+  const fps = parseInt(document.getElementById('exportFps').value) || 30;
+  // Compute export duration with per-video speed and offset
+  const durA = isFinite(vidA.duration) ? vidA.duration : 0;
+  const durB = isFinite(vidB.duration) ? vidB.duration : 0;
+  const outDurA = (durA - Math.max(0, txA.offset)) / Math.max(0.01, txA.speed);
+  const outDurB = (durB - Math.max(0, txB.offset)) / Math.max(0.01, txB.speed);
+  const dur = Math.min(outDurA, outDurB);
+  if (dur <= 0) throw new Error('Cannot compute export duration. Check offset/speed settings.');
+
+  const totalFrames = Math.ceil(dur * fps);
+  const frameDur_us = Math.round(1_000_000 / fps);
+
+  // Find supported codec — H.264 hardware/software, then VP9 software fallback
+  setStatus('Checking codec support…', 'exporting'); await tick();
+  const tryCodecs = [
+    { enc: 'avc1.640028', mux: 'avc', hw: 'prefer-hardware' },
+    { enc: 'avc1.4d0028', mux: 'avc', hw: 'prefer-hardware' },
+    { enc: 'avc1.42001f', mux: 'avc', hw: 'prefer-hardware' },
+    { enc: 'avc1.42001f', mux: 'avc', hw: 'prefer-software' },
+    { enc: 'vp09.00.41.08', mux: 'vp9', hw: 'prefer-software' },
+    { enc: 'vp09.00.10.08', mux: 'vp9', hw: 'prefer-software' },
+  ];
+  let chosen = null;
+  for (const c of tryCodecs) {
+    try {
+      const r = await VideoEncoder.isConfigSupported({ codec: c.enc, width: W, height: H, bitrate, framerate: fps, hardwareAcceleration: c.hw });
+      if (r.supported) { chosen = c; break; }
+    } catch(_) {}
+  }
+  if (!chosen) throw new Error('No supported video encoder found. Try Record WebM.');
+
+  const target = new ArrayBufferTarget();
+  const muxer  = new Muxer({ target, video: { codec: chosen.mux, width: W, height: H }, fastStart: 'in-memory' });
+
+  let encErr = null;
+  const encoder = new VideoEncoder({
+    output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+    error:  e => { encErr = e; }
+  });
+  encoder.configure({ codec: chosen.enc, width: W, height: H, bitrate, framerate: fps, hardwareAcceleration: chosen.hw });
+
+  showProgress(true);
+  document.getElementById('progressBar').classList.remove('anim');
+
+  const exportMode = document.getElementById('exportMode').value;
+
+  if (exportMode === 'accurate') {
+    // ── ACCURATE: seek frame-by-frame, every output frame is unique ──────────
+    for (let i = 0; i < totalFrames; i++) {
+      if (!isExporting) { setStatus('Cancelled.', 'active'); return; }
+      if (encErr) throw encErr;
+
+      const T  = i / fps;
+      const tA = clamp(T * txA.speed + txA.offset, 0, durA - 0.001);
+      const tB = clamp(T * txB.speed + txB.offset, 0, durB - 0.001);
+      await Promise.all([ seekTo(vidA, tA), seekTo(vidB, tB) ]);
+
+      ctx.fillStyle = '#0d0d0d'; ctx.fillRect(0, 0, W, H);
+      drawSide(vidA, 0,      splitX,     H, txA);
+      drawSide(vidB, splitX, W - splitX, H, txB);
+      drawDivider(splitX);
+
+      const vf = new VideoFrame(canvas, { timestamp: i * frameDur_us, duration: frameDur_us });
+      encoder.encode(vf, { keyFrame: i % fps === 0 });
+      vf.close();
+
+      if (i % 5 === 0) {
+        const pct = Math.round(i / totalFrames * 100);
+        document.getElementById('progressBar').style.width = pct + '%';
+        setStatus(`Encoding (accurate): ${pct}%  (${i+1}/${totalFrames})`, 'exporting');
+        while (encoder.encodeQueueSize > 12) await new Promise(r => setTimeout(r, 16));
+        await tick();
+      }
+    }
+
+  } else {
+    // ── FAST: RVFC at 2× playback, ~2× real-time ─────────────────────────────
+    await Promise.all([
+      seekTo(vidA, clamp(txA.offset, 0, durA - 0.001)),
+      seekTo(vidB, clamp(txB.offset, 0, durB - 0.001))
+    ]);
+
+    const captureRate = fps >= 60 ? 1 : 2;
+    vidA.playbackRate = clamp(txA.speed * captureRate, 0.1, 16);
+    vidB.playbackRate = clamp(txB.speed * captureRate, 0.1, 16);
+
+    let frameIndex = 0;
+
+    await new Promise(resolve => {
+      let done = false;
+      function finish() { if (!done) { done = true; vidA.pause(); vidB.pause(); resolve(); } }
+
+      function onFrame() {
+        if (done || !isExporting || encErr) { finish(); return; }
+
+        ctx.fillStyle = '#0d0d0d'; ctx.fillRect(0, 0, W, H);
+        drawSide(vidA, 0,      splitX,     H, txA);
+        drawSide(vidB, splitX, W - splitX, H, txB);
+        drawDivider(splitX);
+
+        const srcElapsed = Math.max(0, vidA.currentTime - txA.offset);
+        const outElapsed = srcElapsed / txA.speed;
+        const targetFrame = Math.min(Math.round(outElapsed * fps), totalFrames);
+
+        while (frameIndex < targetFrame) {
+          const vf = new VideoFrame(canvas, { timestamp: frameIndex * frameDur_us, duration: frameDur_us });
+          encoder.encode(vf, { keyFrame: frameIndex % fps === 0 });
+          vf.close();
+          frameIndex++;
+        }
+
+        if (frameIndex >= totalFrames) { finish(); return; }
+
+        if (frameIndex % 10 === 0) {
+          const pct = Math.min(98, Math.round(outElapsed / dur * 100));
+          document.getElementById('progressBar').style.width = pct + '%';
+          setStatus(`Encoding (fast): ${pct}%  (${frameIndex}/${totalFrames})`, 'exporting');
+        }
+
+        if (encoder.encodeQueueSize > 20) {
+          vidA.pause(); vidB.pause();
+          setTimeout(() => {
+            if (!isExporting) { finish(); return; }
+            vidA.play(); vidB.play();
+            vidA.requestVideoFrameCallback(onFrame);
+          }, 40);
+          return;
+        }
+
+        vidA.requestVideoFrameCallback(onFrame);
+      }
+
+      vidA.onended = finish;
+      vidB.onended = finish;
+      vidA.requestVideoFrameCallback(onFrame);
+      vidA.play();
+      vidB.play();
+    });
+
+    vidA.playbackRate = vidB.playbackRate = 1;
+  }
+
+  if (encErr) throw encErr;
+  if (!isExporting) { setStatus('Cancelled.', 'active'); return; }
+
+  setStatus('Finalizing…', 'exporting'); await tick();
+  await encoder.flush();
+  muxer.finalize();
+
+  document.getElementById('progressBar').style.width = '100%';
+  const blob = new Blob([target.buffer], { type: 'video/mp4' });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), { href: url, download: 'comparison.mp4' });
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 6000);
+  setStatus('Done — comparison.mp4 downloaded!', 'done');
+  setTimeout(() => showProgress(false), 2500);
+}
+
+// ── RECORD WEBM ───────────────────────────────────────────────────────────────
+
+document.getElementById('btnRecord').addEventListener('click', () => {
+  if (isRecording) { recorder.stop(); return; }
+  initAudio(); chunks = [];
+  const stream = canvas.captureStream(30);
+  if (audioSetup && audioDest) audioDest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+  const br   = parseInt(document.getElementById('bitrate').value) || 8_000_000;
+  const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
+  try { recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: br }); }
+  catch(_) { recorder = new MediaRecorder(stream); }
+  recorder.ondataavailable = e => { if (e.data?.size > 0) chunks.push(e.data); };
+  recorder.onstop = () => {
+    isRecording = false; cancelAnimationFrame(animId); vidA.pause(); vidB.pause();
+    document.getElementById('btnRecord').textContent = '⏺ Record WebM';
+    document.getElementById('btnRecord').classList.remove('is-active');
+    document.getElementById('progressBar').classList.remove('anim');
+    setLocked(false);
+    const blob = new Blob(chunks, { type: mime });
+    const url  = URL.createObjectURL(blob);
+    const a    = Object.assign(document.createElement('a'), { href: url, download: 'comparison.webm' });
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 6000);
+    setStatus('Done — comparison.webm downloaded!', 'done');
+    setTimeout(() => showProgress(false), 2500);
+    drawBothFrames();
+  };
+  const txA = getTx('A'), txB = getTx('B');
+  vidA.currentTime = Math.max(0, txA.offset);
+  vidB.currentTime = Math.max(0, txB.offset);
+  setTimeout(() => {
+    vidA.playbackRate = Math.max(0.1, Math.min(16, txA.speed));
+    vidB.playbackRate = Math.max(0.1, Math.min(16, txB.speed));
+    recorder.start(100); vidA.play(); vidB.play();
+    isRecording = true; setLocked(true);
+    document.getElementById('btnRecord').textContent = '⏹ Stop Recording';
+    document.getElementById('btnRecord').classList.add('is-active');
+    document.getElementById('progressBar').classList.add('anim');
+    showProgress(true); animId = requestAnimationFrame(renderLoop);
+    setStatus('Recording WebM… press Stop when done.', 'recording');
+    let done = false;
+    function onEnd() { if (!done && isRecording) { done = true; recorder.stop(); } }
+    vidA.onended = onEnd; vidB.onended = onEnd;
+  }, 200);
+});
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+
+function seekTo(vid, time) {
+  const tol = 1/60;
+  return new Promise(resolve => {
+    if (Math.abs(vid.currentTime - time) <= tol) { resolve(); return; }
+    let done = false;
+    const guard = setTimeout(() => { if (!done) { done = true; vid.removeEventListener('seeked', h); resolve(); } }, 4000);
+    const h = () => { if (!done) { done = true; clearTimeout(guard); vid.removeEventListener('seeked', h); resolve(); } };
+    vid.addEventListener('seeked', h);
+    vid.currentTime = time;
+  });
+}
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function tick() { return new Promise(r => setTimeout(r, 0)); }
+
+function setLocked(v) {
+  document.getElementById('btnPlay').disabled    = v;
+  document.getElementById('btnMP4').disabled     = v && !isExporting;
+  document.getElementById('btnRecord').disabled  = v && !isRecording;
+}
+function showProgress(v) {
+  const pw = document.getElementById('progressWrap');
+  const pb = document.getElementById('progressBar');
+  if (v) pw.classList.add('show'); else { pw.classList.remove('show'); pb.style.width = '0%'; pb.classList.remove('anim'); }
+}
+function setStatus(msg, type) {
+  const el = document.getElementById('status');
+  el.textContent = msg; el.className = 'status-bar ' + (type||'');
+}
+
+drawPlaceholder();
+
+/* ══════════════════════════════════════════════════════════════════════
+   Collage mode - combine screenshots into one image.
+   Self-contained: shares nothing with the comparison code above except
+   the page itself, so neither can break the other.
+   ══════════════════════════════════════════════════════════════════════ */
+(function () {
+  var items = [];          // { id, name, img, label }
+  var nextId = 1;
+  var dragId = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var stage = $('cgCanvas');
+  var ctx = stage.getContext('2d');
+
+  /* ---- options ------------------------------------------------------ */
+  function opts() {
+    return {
+      layout: $('cgLayout').value,
+      cols: parseInt($('cgCols').value, 10) || 1,
+      sizing: $('cgSizing').value,
+      fit: $('cgFit').value,
+      gap: parseInt($('cgGap').value, 10) || 0,
+      pad: parseInt($('cgPad').value, 10) || 0,
+      radius: parseInt($('cgRadius').value, 10) || 0,
+      border: parseInt($('cgBorder').value, 10) || 0,
+      borderColor: $('cgBorderColor').value,
+      bg: $('cgBg').value,
+      transparent: $('cgTransparent').checked,
+      labels: $('cgLabels').checked,
+      labelPos: $('cgLabelPos').value,
+      labelColor: $('cgLabelColor').value,
+      labelSize: parseInt($('cgLabelSize').value, 10) || 22,
+      outW: Math.max(64, Math.min(8192, parseInt($('cgOutW').value, 10) || 1920))
+    };
+  }
+
+  /* ---- layout -------------------------------------------------------
+     Two genuinely different results:
+       proportional - every image keeps its aspect ratio, and each row is
+                      justified to the full width (the classic gallery look)
+       uniform      - every cell identical, images cropped or letterboxed
+     ------------------------------------------------------------------- */
+  function layout(o) {
+    if (!items.length) return { width: o.outW, height: Math.round(o.outW * 9 / 16), cells: [] };
+
+    var cols = o.layout === 'row' ? items.length
+             : o.layout === 'col' ? 1
+             : Math.max(1, Math.min(o.cols, items.length));
+
+    var rows = [];
+    for (var i = 0; i < items.length; i += cols) rows.push(items.slice(i, i + cols));
+
+    var inner = Math.max(1, o.outW - o.pad * 2);
+    var cells = [];
+    var y = o.pad;
+
+    // Captions placed above the image need their own strip, so the image is
+    // never covered. Overlaid captions cost no extra height.
+    var capH = (o.labels && o.labelPos === 'above') ? Math.round(o.labelSize * 1.75) : 0;
+
+    if (o.sizing === 'uniform') {
+      var avg = items.reduce(function (s, it) { return s + aspect(it); }, 0) / items.length;
+      var cw = (inner - (cols - 1) * o.gap) / cols;
+      var ch = Math.max(1, cw / avg);
+      rows.forEach(function (row) {
+        y += capH;
+        row.forEach(function (it, i) {
+          cells.push({ x: o.pad + i * (cw + o.gap), y: y, w: cw, h: ch, item: it, cap: capH });
+        });
+        y += ch + o.gap;
+      });
+    } else {
+      rows.forEach(function (row) {
+        var avail = Math.max(1, inner - (row.length - 1) * o.gap);
+        var sum = row.reduce(function (s, it) { return s + aspect(it); }, 0);
+        var h = Math.max(1, avail / sum);
+        y += capH;
+        var x = o.pad;
+        row.forEach(function (it) {
+          var w = h * aspect(it);
+          cells.push({ x: x, y: y, w: w, h: h, item: it, cap: capH });
+          x += w + o.gap;
+        });
+        y += h + o.gap;
+      });
+    }
+
+    return { width: o.outW, height: Math.max(1, Math.round(y - o.gap + o.pad)), cells: cells };
+  }
+
+  function aspect(it) {
+    var w = it.img.naturalWidth || 16, h = it.img.naturalHeight || 9;
+    return h > 0 ? w / h : 16 / 9;
+  }
+
+  function roundRect(c, x, y, w, h, r) {
+    r = Math.max(0, Math.min(r, w / 2, h / 2));
+    c.beginPath();
+    if (!r) { c.rect(x, y, w, h); return; }
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+  }
+
+  /* ---- draw --------------------------------------------------------- */
+  function draw(c, L, o, scale) {
+    c.save();
+    c.scale(scale, scale);
+    c.clearRect(0, 0, L.width, L.height);
+    if (!o.transparent) { c.fillStyle = o.bg; c.fillRect(0, 0, L.width, L.height); }
+
+    L.cells.forEach(function (cell) {
+      var img = cell.item.img, ia = aspect(cell.item), ca = cell.w / cell.h, dw, dh;
+      if (o.fit === 'cover' ? ia > ca : ia < ca) { dh = cell.h; dw = dh * ia; }
+      else { dw = cell.w; dh = dw / ia; }
+
+      c.save();
+      roundRect(c, cell.x, cell.y, cell.w, cell.h, o.radius);
+      c.clip();
+      c.drawImage(img, cell.x + (cell.w - dw) / 2, cell.y + (cell.h - dh) / 2, dw, dh);
+
+      // Overlaid captions are clipped to the image; the "above" variant is
+      // drawn after restore() so it is not clipped away.
+      if (o.labels && cell.item.label && o.labelPos !== 'above') {
+        var fs = o.labelSize;
+        var barH = fs * 1.9;
+        var barY = o.labelPos === 'top' ? cell.y : cell.y + cell.h - barH;
+        c.fillStyle = 'rgba(0,0,0,.62)';
+        c.fillRect(cell.x, barY, cell.w, barH);
+        c.fillStyle = o.labelColor;
+        c.font = '600 ' + fs + "px 'Segoe UI', system-ui, sans-serif";
+        c.textBaseline = 'middle';
+        c.textAlign = 'center';
+        c.fillText(cell.item.label, cell.x + cell.w / 2, barY + barH / 2, cell.w - fs);
+      }
+      c.restore();
+
+      if (o.labels && cell.item.label && o.labelPos === 'above' && cell.cap) {
+        c.save();
+        c.fillStyle = o.labelColor;
+        c.font = '600 ' + o.labelSize + "px 'Segoe UI', system-ui, sans-serif";
+        c.textBaseline = 'alphabetic';
+        c.textAlign = 'center';
+        c.fillText(cell.item.label, cell.x + cell.w / 2, cell.y - cell.cap * 0.32, cell.w);
+        c.restore();
+      }
+
+      if (o.border > 0) {
+        c.save();
+        roundRect(c, cell.x + o.border / 2, cell.y + o.border / 2,
+                  Math.max(1, cell.w - o.border), Math.max(1, cell.h - o.border), o.radius);
+        c.lineWidth = o.border;
+        c.strokeStyle = o.borderColor;
+        c.stroke();
+        c.restore();
+      }
+    });
+
+    c.restore();
+  }
+
+  /* ---- preview ------------------------------------------------------ */
+  /* ---- viewport: the canvas is the window, not the picture -------------
+     The canvas matches the stage; the collage is drawn into it through a
+     pan/zoom transform, so zooming re-renders at full sharpness instead of
+     magnifying pixels. -------------------------------------------------- */
+  var stageEl = $('cgStage');
+  var view = { zoom: 1, x: 0, y: 0, fitted: true };
+  var ZMIN = 0.02, ZMAX = 16;
+
+  function stageSize() {
+    return {
+      w: Math.max(40, stageEl.clientWidth),
+      h: Math.max(40, stageEl.clientHeight)
+    };
+  }
+
+  function fitView(L) {
+    var s = stageSize();
+    var pad = 16;
+    var z = Math.min((s.w - pad * 2) / L.width, (s.h - pad * 2) / L.height);
+    view.zoom = Math.max(ZMIN, Math.min(ZMAX, z));
+    view.x = (s.w - L.width * view.zoom) / 2;
+    view.y = (s.h - L.height * view.zoom) / 2;
+    view.fitted = true;
+  }
+
+  function render() {
+    var o = opts();
+    var L = layout(o);
+    var s = stageSize();
+    var dpr = window.devicePixelRatio || 1;
+
+    stage.width = Math.max(1, Math.round(s.w * dpr));
+    stage.height = Math.max(1, Math.round(s.h * dpr));
+    stage.style.width = s.w + 'px';
+    stage.style.height = s.h + 'px';
+
+    if (view.fitted) fitView(L);
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, s.w, s.h);
+    ctx.save();
+    ctx.translate(view.x, view.y);
+    draw(ctx, L, o, view.zoom);
+    ctx.restore();
+
+    // outline so the sheet's extent stays readable against the backdrop
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,.10)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(view.x + 0.5, view.y + 0.5, L.width * view.zoom, L.height * view.zoom);
+    ctx.restore();
+
+    $('cgZoomV').textContent = Math.round(view.zoom * 100) + '%';
+    $('cgOutH').textContent = items.length ? '× ' + L.height : '';
+    $('cgInfo').textContent = items.length
+      ? items.length + ' image' + (items.length > 1 ? 's' : '') + ' · ' + L.width + '×' + L.height
+      : 'No images yet.';
+    $('cgCount').textContent = items.length ? items.length + ' loaded' : '';
+    $('cgColsRow').style.opacity = ($('cgLayout').value === 'grid') ? '1' : '.35';
+    $('cgExport').disabled = !items.length;
+    $('cgCopy').disabled = !items.length;
+  }
+
+  function zoomAt(mx, my, factor) {
+    var nz = Math.max(ZMIN, Math.min(ZMAX, view.zoom * factor));
+    if (nz === view.zoom) return;
+    // keep whatever is under the pointer pinned in place
+    view.x = mx - (mx - view.x) * (nz / view.zoom);
+    view.y = my - (my - view.y) * (nz / view.zoom);
+    view.zoom = nz;
+    view.fitted = false;
+    render();
+  }
+
+  stageEl.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    var r = stageEl.getBoundingClientRect();
+    zoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1.12 : 1 / 1.12);
+  }, { passive: false });
+
+  var pan = null;
+  stageEl.addEventListener('pointerdown', function (e) {
+    if (e.button !== 0 && e.button !== 1) return;
+    if (e.target.closest && e.target.closest('.cg-view')) return;
+    pan = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y };
+    stageEl.classList.add('panning');
+    stageEl.setPointerCapture(e.pointerId);
+  });
+  stageEl.addEventListener('pointermove', function (e) {
+    if (!pan) return;
+    view.x = pan.vx + (e.clientX - pan.x);
+    view.y = pan.vy + (e.clientY - pan.y);
+    view.fitted = false;
+    render();
+  });
+  ['pointerup', 'pointercancel'].forEach(function (t) {
+    stageEl.addEventListener(t, function () { pan = null; stageEl.classList.remove('panning'); });
+  });
+  stageEl.addEventListener('dblclick', function () { view.fitted = true; render(); });
+
+  $('cgFit').addEventListener('click', function () { view.fitted = true; render(); });
+  $('cgZoomIn').addEventListener('click', function () {
+    var s = stageSize(); zoomAt(s.w / 2, s.h / 2, 1.25);
+  });
+  $('cgZoomOut').addEventListener('click', function () {
+    var s = stageSize(); zoomAt(s.w / 2, s.h / 2, 1 / 1.25);
+  });
+
+  // The stage is sized in vh, so a window resize changes the viewport.
+  window.addEventListener('resize', function () {
+    if (!$('modeCollage').hidden) render();
+  });
+
+  /* ---- list --------------------------------------------------------- */
+  function renderList() {
+    var list = $('cgList');
+    list.innerHTML = '';
+    if (!items.length) {
+      var e = document.createElement('div');
+      e.className = 'cg-empty';
+      e.textContent = 'No screenshots yet';
+      list.appendChild(e);
+      return;
+    }
+    items.forEach(function (it) {
+      var row = document.createElement('div');
+      row.className = 'cg-item';
+      row.draggable = true;
+      row.dataset.id = it.id;
+
+      var th = document.createElement('img');
+      th.src = it.img.src;
+      row.appendChild(th);
+
+      var meta = document.createElement('div');
+      meta.className = 'cg-meta';
+      var nm = document.createElement('div');
+      nm.className = 'cg-name';
+      nm.textContent = it.name;
+      nm.title = it.name;
+      var lb = document.createElement('input');
+      lb.className = 'cg-label';
+      lb.placeholder = 'caption';
+      lb.value = it.label;
+      lb.addEventListener('input', function () { it.label = lb.value; render(); });
+      // the row is draggable, which would otherwise swallow text selection
+      lb.addEventListener('mousedown', function (ev) { ev.stopPropagation(); });
+      lb.addEventListener('dragstart', function (ev) { ev.preventDefault(); ev.stopPropagation(); });
+      meta.appendChild(nm); meta.appendChild(lb);
+      row.appendChild(meta);
+
+      var del = document.createElement('button');
+      del.className = 'cg-del';
+      del.textContent = '×';
+      del.title = 'Remove';
+      del.addEventListener('click', function () {
+        items = items.filter(function (x) { return x.id !== it.id; });
+        renderList(); render();
+      });
+      row.appendChild(del);
+
+      row.addEventListener('dragstart', function () { dragId = it.id; row.classList.add('dragging'); });
+      row.addEventListener('dragend', function () {
+        dragId = null; row.classList.remove('dragging');
+        Array.prototype.forEach.call(list.children, function (c) { c.style.borderColor = ''; });
+      });
+      row.addEventListener('dragover', function (ev) {
+        if (dragId === null || dragId === it.id) return;
+        ev.preventDefault();
+        row.style.borderColor = '#2a6';
+      });
+      row.addEventListener('dragleave', function () { row.style.borderColor = ''; });
+      row.addEventListener('drop', function (ev) {
+        ev.preventDefault();
+        row.style.borderColor = '';
+        if (dragId === null || dragId === it.id) return;
+        var from = items.findIndex(function (x) { return x.id === dragId; });
+        var to = items.findIndex(function (x) { return x.id === it.id; });
+        if (from < 0 || to < 0) return;
+        items.splice(to, 0, items.splice(from, 1)[0]);
+        renderList(); render();
+      });
+
+      list.appendChild(row);
+    });
+  }
+
+  /* ---- loading ------------------------------------------------------ */
+  var pasteCount = 0;
+
+  function addFiles(files, nameFor) {
+    var list = Array.prototype.slice.call(files).filter(function (f) {
+      return f.type.indexOf('image/') === 0;
+    });
+    if (!list.length) return;
+    var pending = list.length;
+    list.forEach(function (f, i) {
+      var url = URL.createObjectURL(f);
+      var img = new Image();
+      img.onload = function () {
+        items.push({ id: nextId++, name: nameFor ? nameFor(f, i) : f.name, img: img, label: '' });
+        if (--pending === 0) { view.fitted = true; renderList(); render(); }
+      };
+      img.onerror = function () {
+        URL.revokeObjectURL(url);
+        if (--pending === 0) { renderList(); render(); }
+      };
+      img.src = url;   // kept alive for the lifetime of the item
+    });
+  }
+
+  /* ---- export ------------------------------------------------------- */
+  function compose() {
+    var o = opts();
+    var L = layout(o);
+    var c = document.createElement('canvas');
+    c.width = L.width; c.height = L.height;
+    draw(c.getContext('2d'), L, o, 1);
+    return c;
+  }
+
+  $('cgExport').addEventListener('click', function () {
+    if (!items.length) return;
+    compose().toBlob(function (blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'collage_' + items.length + 'x_' + opts().outW + 'px.png';
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+    }, 'image/png');
+  });
+
+  $('cgCopy').addEventListener('click', function () {
+    if (!items.length) return;
+    var btn = $('cgCopy'), old = btn.textContent;
+    compose().toBlob(function (blob) {
+      if (!window.ClipboardItem || !navigator.clipboard || !navigator.clipboard.write) {
+        btn.textContent = 'Clipboard unavailable';
+        setTimeout(function () { btn.textContent = old; }, 1600);
+        return;
+      }
+      navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(function () {
+        btn.textContent = 'Copied';
+        setTimeout(function () { btn.textContent = old; }, 1400);
+      }, function () {
+        btn.textContent = 'Copy failed';
+        setTimeout(function () { btn.textContent = old; }, 1600);
+      });
+    }, 'image/png');
+  });
+
+  $('cgClear').addEventListener('click', function () {
+    items = []; view.fitted = true; renderList(); render();
+  });
+
+  // Same job as Ctrl+V, but reachable with the mouse: read whatever image is
+  // on the clipboard right now. Needs the window focused, which a click gives.
+  $('cgPaste').addEventListener('click', function () {
+    var btn = $('cgPaste'), old = btn.textContent;
+    function say(msg) {
+      btn.textContent = msg;
+      setTimeout(function () { btn.textContent = old; }, 1500);
+    }
+    if (!navigator.clipboard || !navigator.clipboard.read) { say('Clipboard unavailable'); return; }
+
+    navigator.clipboard.read().then(function (entries) {
+      var jobs = [];
+      entries.forEach(function (entry) {
+        var type = entry.types.filter(function (t) { return t.indexOf('image/') === 0; })[0];
+        if (type) jobs.push(entry.getType(type).then(function (blob) {
+          return new File([blob], 'clipboard.png', { type: type });
+        }));
+      });
+      if (!jobs.length) { say('No image on clipboard'); return; }
+      Promise.all(jobs).then(function (files) {
+        addFiles(files, function () { return 'Pasted ' + (++pasteCount); });
+        say(files.length > 1 ? 'Added ' + files.length : 'Added');
+      });
+    }, function () {
+      say('Clipboard blocked');
+    });
+  });
+
+  /* ---- wiring ------------------------------------------------------- */
+  $('cgFiles').addEventListener('change', function (e) { addFiles(e.target.files); e.target.value = ''; });
+
+  var drop = $('cgDrop');
+  ['dragenter', 'dragover'].forEach(function (t) {
+    drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.add('drag-over'); });
+  });
+  ['dragleave', 'drop'].forEach(function (t) {
+    drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.remove('drag-over'); });
+  });
+  drop.addEventListener('drop', function (e) {
+    if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files);
+  });
+
+  // Dropping anywhere in collage mode is friendlier than hunting for the zone.
+  var page = $('modeCollage');
+  page.addEventListener('dragover', function (e) { e.preventDefault(); });
+  page.addEventListener('drop', function (e) {
+    if (e.target.closest && e.target.closest('#cgDrop')) return;  // already handled
+    e.preventDefault();
+    if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files);
+  });
+
+  // Screenshots usually arrive on the clipboard (Win+Shift+S), so pasting
+  // beats saving a file first. Ignored while a caption field has focus, where
+  // Ctrl+V should paste text as normal.
+  document.addEventListener('paste', function (e) {
+    if ($('modeCollage').hidden) return;
+    var t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
+    var dt = e.clipboardData;
+    if (!dt || !dt.items) return;
+    var files = [];
+    for (var i = 0; i < dt.items.length; i++) {
+      var it = dt.items[i];
+      if (it.kind === 'file' && it.type.indexOf('image/') === 0) {
+        var f = it.getAsFile();
+        if (f) files.push(f);
+      }
+    }
+    if (!files.length) return;
+    e.preventDefault();
+    addFiles(files, function () { return 'Pasted ' + (++pasteCount); });
+  });
+
+  // Settings survive a restart, so a layout you like is not re-tuned every time.
+  // Images are deliberately not persisted - they belong to one sitting.
+  var OPT_IDS = ['cgLayout', 'cgCols', 'cgSizing', 'cgFit', 'cgGap', 'cgPad', 'cgRadius',
+   'cgBorder', 'cgBorderColor', 'cgBg', 'cgTransparent', 'cgLabels',
+   'cgLabelPos', 'cgLabelColor', 'cgLabelSize', 'cgOutW'];
+  var OPT_KEY = 'vc-collage-opts';
+
+  function saveOpts() {
+    try {
+      var o = {};
+      OPT_IDS.forEach(function (id) {
+        var el = $(id);
+        o[id] = el.type === 'checkbox' ? el.checked : el.value;
+      });
+      localStorage.setItem(OPT_KEY, JSON.stringify(o));
+    } catch (e) { /* private mode or no quota: not worth failing over */ }
+  }
+
+  function loadOpts() {
+    try {
+      var raw = localStorage.getItem(OPT_KEY);
+      if (!raw) return;
+      var o = JSON.parse(raw);
+      OPT_IDS.forEach(function (id) {
+        if (!(id in o)) return;
+        var el = $(id);
+        if (el.type === 'checkbox') el.checked = !!o[id]; else el.value = o[id];
+        var v = $(id + 'V');
+        if (v) v.textContent = el.value;
+      });
+    } catch (e) { /* corrupt or absent: fall back to the defaults in the markup */ }
+  }
+
+  OPT_IDS.forEach(function (id) {
+    var el = $(id);
+    el.addEventListener('input', function () {
+      var v = $(id + 'V');
+      if (v) v.textContent = el.value;
+      render();
+      saveOpts();
+    });
+    el.addEventListener('change', function () { render(); saveOpts(); });
+  });
+
+  /* ---- mode switching ------------------------------------------------ */
+  var COMPARE_HINT = 'drag divider on canvas · zoom / pan / rotate / offset / speed per video';
+  var COLLAGE_HINT = 'paste with Ctrl+V or drop screenshots · drag the list to reorder';
+  var GRID_HINT    = 'drop several videos · they play together · offset and speed per clip';
+
+  function setMode(m) {
+    var collage = m === 'collage', grid = m === 'grid';
+    $('modeCompare').hidden = collage || grid;
+    $('modeCollage').hidden = !collage;
+    $('modeGrid').hidden    = !grid;
+    $('tabCompare').classList.toggle('on', !collage && !grid);
+    $('tabCollage').classList.toggle('on', collage);
+    $('tabGrid').classList.toggle('on', grid);
+    $('modeHint').textContent = grid ? GRID_HINT : (collage ? COLLAGE_HINT : COMPARE_HINT);
+    var sb = document.getElementById('status');
+    if (sb) sb.hidden = collage || grid;
+    /* La barra di avanzamento serve anche alla griglia: e' lo stesso
+       esportatore, e nasconderla lascerebbe l'export senza segnale. */
+    var pw = document.getElementById('progressWrap');
+    if (pw) pw.hidden = collage;
+    if (collage) render();
+    if (window.GRID) window.GRID.setActive(grid);
+  }
+  $('tabCompare').addEventListener('click', function () { setMode('compare'); });
+  $('tabCollage').addEventListener('click', function () { setMode('collage'); });
+  $('tabGrid').addEventListener('click', function () { setMode('grid'); });
+
+  loadOpts();
+  renderList();
+  render();
+})();
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Grid mode - several clips at once, in a grid.
+
+   Compare stays a two-video split screen: its playback and its exporter are
+   written around vidA and vidB and drive them by name. Rather than bend that
+   to any number of clips, this mode keeps its own list, its own canvas and
+   its own export loop, and shares only the small helpers at the top of the
+   file (seekTo, clamp, tick, setStatus, showProgress). The price is the
+   codec probing written twice; the gain is that nothing here can break the
+   comparison you use every day.
+   ══════════════════════════════════════════════════════════════════════════ */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+
+  var clips = [];            // { id, name, vid, url, offset, speed, zoom, rot, panX, panY }
+  var nextId = 1;
+  var selId = null;
+  var active = false;
+  var playing = false, exporting = false, recording = false;
+  var animId = null, recorder = null, chunks = [];
+
+  var stage = $('gvStage');
+  var cv = $('gvCanvas');
+  var cx = cv.getContext('2d');
+  var pool = $('gvVideos');
+
+  function newClip(file) {
+    var vid = document.createElement('video');
+    vid.preload = 'auto';
+    vid.muted = true;                       // a wall of sound from six clips helps nobody
+    vid.playsInline = true;
+    vid.src = URL.createObjectURL(file);
+    pool.appendChild(vid);
+    return { id: nextId++, name: file.name, vid: vid, url: vid.src,
+             offset: 0, speed: 1, zoom: 1, rot: 0, panX: 0, panY: 0 };
+  }
+
+  function sel() { return clips.filter(function (c) { return c.id === selId; })[0] || null; }
+
+  // ── options ───────────────────────────────────────────────────────────────
+  function opts() {
+    return {
+      cols:   parseInt($('gvCols').value, 10) || 0,
+      shape:  $('gvCellShape').value,
+      fit:    $('gvFit').value,
+      gap:    +$('gvGap').value,
+      pad:    +$('gvPad').value,
+      radius: +$('gvRadius').value,
+      border: +$('gvBorder').value,
+      borderColor: $('gvBorderColor').value,
+      bg:     $('gvBg').value,
+      labels: $('gvLabels').checked,
+      labelPos:  $('gvLabelPos').value,
+      labelSize: +$('gvLabelSize').value,
+      labelColor: $('gvLabelColor').value,
+      outW:   Math.max(64, Math.min(8192, parseInt($('gvOutW').value, 10) || 1920))
+    };
+  }
+
+  /* Colonne: "quadrata" vuol dire il piu' vicino possibile a un quadrato,
+     cioe' la radice arrotondata per eccesso. Con 5 clip fa 3x2, non 5x1. */
+  function gridOf(n, o) {
+    var cols = o.cols > 0 ? o.cols : Math.max(1, Math.ceil(Math.sqrt(n)));
+    cols = Math.min(cols, Math.max(1, n));
+    return { cols: cols, rows: Math.max(1, Math.ceil(n / cols)) };
+  }
+
+  function clipAspect(c) {
+    var w = c.vid.videoWidth, h = c.vid.videoHeight;
+    return (w && h) ? w / h : 16 / 9;
+  }
+
+  function medianAspect() {
+    var a = clips.map(clipAspect).sort(function (p, q) { return p - q; });
+    if (!a.length) return 16 / 9;
+    var m = Math.floor(a.length / 2);
+    return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+  }
+
+  function layout() {
+    var o = opts(), n = clips.length;
+    if (!n) return null;
+    var g = gridOf(n, o);
+    /* L'aspetto della cella: quadrato su richiesta, se no quello di mezzo fra
+       tutti i clip. Prendere quello del primo sembrava piu' semplice, ma
+       bastava togliere un clip perche' il primo diventasse un altro e la
+       grafica cambiasse forma di colpo: da 1920x722 a 1920x1920 solo perche'
+       il nuovo primo era quadrato. Quello di mezzo non si sposta per una
+       rimozione. */
+    var ar = o.shape === 'square' ? 1 : medianAspect();
+    var innerW = o.outW - o.pad * 2 - o.gap * (g.cols - 1);
+    var cellW = Math.max(1, innerW / g.cols);
+    var cellH = Math.max(1, cellW / ar);
+    var outH = Math.round(o.pad * 2 + cellH * g.rows + o.gap * (g.rows - 1));
+    var cells = clips.map(function (c, i) {
+      var r = Math.floor(i / g.cols), q = i % g.cols;
+      return { clip: c,
+               x: o.pad + q * (cellW + o.gap),
+               y: o.pad + r * (cellH + o.gap),
+               w: cellW, h: cellH };
+    });
+    return { o: o, g: g, w: o.outW, h: outH, cells: cells };
+  }
+
+  function roundRect(c, x, y, w, h, r) {
+    r = Math.max(0, Math.min(r, Math.min(w, h) / 2));
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+  }
+
+  function drawCell(c, cell, o) {
+    var v = cell.clip.vid, vw = v.videoWidth, vh = v.videoHeight;
+    c.save();
+    roundRect(c, cell.x, cell.y, cell.w, cell.h, o.radius);
+    c.clip();
+    c.fillStyle = '#000';
+    c.fillRect(cell.x, cell.y, cell.w, cell.h);
+    if (vw && vh) {
+      var fit = o.fit === 'contain'
+        ? Math.min(cell.w / vw, cell.h / vh)
+        : Math.max(cell.w / vw, cell.h / vh);
+      var s = fit * cell.clip.zoom;
+      c.translate(cell.x + cell.w / 2 + (cell.clip.panX / 100) * cell.w,
+                  cell.y + cell.h / 2 + (cell.clip.panY / 100) * cell.h);
+      c.rotate(cell.clip.rot * Math.PI / 180);
+      c.scale(s, s);
+      c.drawImage(v, -vw / 2, -vh / 2, vw, vh);
+    }
+    c.restore();
+
+    if (o.border > 0) {
+      c.save();
+      c.strokeStyle = o.borderColor;
+      c.lineWidth = o.border;
+      roundRect(c, cell.x + o.border / 2, cell.y + o.border / 2,
+                cell.w - o.border, cell.h - o.border, Math.max(0, o.radius - o.border / 2));
+      c.stroke();
+      c.restore();
+    }
+
+    if (o.labels) {
+      var name = cell.clip.name.replace(/\.[^.]+$/, '');
+      c.save();
+      roundRect(c, cell.x, cell.y, cell.w, cell.h, o.radius);
+      c.clip();
+      c.font = '600 ' + o.labelSize + 'px Segoe UI, system-ui, sans-serif';
+      c.textAlign = 'left';
+      c.textBaseline = o.labelPos === 'bottom' ? 'bottom' : 'top';
+      var ty = o.labelPos === 'bottom'
+        ? cell.y + cell.h - o.labelSize * 0.5
+        : cell.y + o.labelSize * 0.5;
+      var bandH = o.labelSize * 1.9;
+      c.fillStyle = 'rgba(0,0,0,0.45)';
+      c.fillRect(cell.x, o.labelPos === 'bottom' ? cell.y + cell.h - bandH : cell.y,
+                 cell.w, bandH);
+      c.fillStyle = o.labelColor;
+      c.fillText(name, cell.x + o.labelSize * 0.6, ty);
+      c.restore();
+    }
+  }
+
+  function paint(c, L) {
+    c.fillStyle = L.o.bg;
+    c.fillRect(0, 0, L.w, L.h);
+    L.cells.forEach(function (cell) { drawCell(c, cell, L.o); });
+  }
+
+  // ── stage view ────────────────────────────────────────────────────────────
+  var view = { zoom: 1, x: 0, y: 0, fitted: true };
+
+  function fitView(L) {
+    var sw = stage.clientWidth - 24, sh = stage.clientHeight - 24;
+    view.zoom = Math.min(sw / L.w, sh / L.h, 1);
+    view.x = 0; view.y = 0; view.fitted = true;
+  }
+
+  function place(L) {
+    cv.style.width  = Math.round(L.w * view.zoom) + 'px';
+    cv.style.height = Math.round(L.h * view.zoom) + 'px';
+    cv.style.left = '50%'; cv.style.top = '50%';
+    cv.style.position = 'absolute';
+    cv.style.transform = 'translate(-50%,-50%) translate(' +
+      Math.round(view.x) + 'px,' + Math.round(view.y) + 'px)';
+    $('gvZoomPct').textContent = Math.round(view.zoom * 100) + '%';
+  }
+
+  function render() {
+    var L = layout();
+    if (!L) {
+      cv.width = 16; cv.height = 9;
+      cx.fillStyle = '#0b0b0b'; cx.fillRect(0, 0, 16, 9);
+      $('gvOutH').textContent = '';
+      place({ w: 16, h: 9 });
+      return;
+    }
+    if (cv.width !== L.w || cv.height !== L.h) { cv.width = L.w; cv.height = L.h; }
+    paint(cx, L);
+    $('gvOutH').textContent = L.w + ' x ' + L.h + '  ' + L.g.cols + 'x' + L.g.rows;
+    if (view.fitted) fitView(L);
+    place(L);
+  }
+
+  function loop() {
+    render();
+    if (playing || recording) animId = requestAnimationFrame(loop);
+  }
+
+  $('gvZoomIn').addEventListener('click', function () {
+    view.zoom = Math.min(8, view.zoom * 1.25); view.fitted = false; render(); });
+  $('gvZoomOut').addEventListener('click', function () {
+    view.zoom = Math.max(0.02, view.zoom / 1.25); view.fitted = false; render(); });
+  $('gvFitView').addEventListener('click', function () { view.fitted = true; render(); });
+
+  var pan = null;
+  stage.addEventListener('pointerdown', function (e) {
+    if (e.target.closest('.cg-view')) return;
+    pan = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y };
+    stage.setPointerCapture(e.pointerId);
+    stage.style.cursor = 'grabbing';
+  });
+  stage.addEventListener('pointermove', function (e) {
+    if (!pan) return;
+    view.x = pan.vx + (e.clientX - pan.x);
+    view.y = pan.vy + (e.clientY - pan.y);
+    view.fitted = false;
+    render();
+  });
+  ['pointerup', 'pointercancel'].forEach(function (t) {
+    stage.addEventListener(t, function () { pan = null; stage.style.cursor = 'grab'; });
+  });
+  stage.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    view.zoom = Math.max(0.02, Math.min(8, view.zoom * (e.deltaY < 0 ? 1.12 : 1 / 1.12)));
+    view.fitted = false;
+    render();
+  }, { passive: false });
+
+  // ── list ──────────────────────────────────────────────────────────────────
+  function renderList() {
+    var box = $('gvList');
+    box.innerHTML = '';
+    clips.forEach(function (c, i) {
+      var row = document.createElement('div');
+      row.className = 'cg-item' + (c.id === selId ? ' on' : '');
+      var n = document.createElement('span');
+      n.className = 'cg-name';
+      n.textContent = (i + 1) + '. ' + c.name;
+      n.title = c.name;
+      row.appendChild(n);
+      var del = document.createElement('button');
+      del.className = 'cg-x';
+      del.textContent = '×';
+      del.title = 'Remove this clip';
+      del.addEventListener('click', function (e) { e.stopPropagation(); removeClip(c.id); });
+      row.appendChild(del);
+      row.addEventListener('click', function () { selId = c.id; renderList(); syncCell(); });
+      box.appendChild(row);
+    });
+    $('gvCount').textContent = clips.length
+      ? clips.length + (clips.length === 1 ? ' clip' : ' clips')
+      : '';
+    var any = clips.length > 0;
+    ['gvPlay', 'gvMP4', 'gvRecord'].forEach(function (id) { $(id).disabled = !any; });
+    $('gvInfo').textContent = any
+      ? clips.length + ' clips loaded.'
+      : 'No clips yet.';
+  }
+
+  function removeClip(id) {
+    var c = clips.filter(function (x) { return x.id === id; })[0];
+    if (!c) return;
+    stopAll();
+    try { c.vid.pause(); c.vid.removeAttribute('src'); c.vid.load(); } catch (_) {}
+    try { URL.revokeObjectURL(c.url); } catch (_) {}
+    if (c.vid.parentNode) c.vid.parentNode.removeChild(c.vid);
+    clips = clips.filter(function (x) { return x.id !== id; });
+    if (selId === id) selId = clips.length ? clips[0].id : null;
+    view.fitted = true;
+    renderList(); syncCell(); render();
+  }
+
+  // ── per-clip controls ─────────────────────────────────────────────────────
+  function syncCell() {
+    var c = sel();
+    $('gvCell').hidden = !c;
+    if (!c) return;
+    $('gvCellName').textContent = c.name;
+    $('gvOffset').value = c.offset;
+    $('gvSpeed').value = String(c.speed);
+    $('gvZoom').value = c.zoom;   $('gvZoomV').textContent = (+c.zoom).toFixed(1) + '×';
+    $('gvRot').value = c.rot;     $('gvRotV').textContent = c.rot + '°';
+    $('gvPanX').value = c.panX;   $('gvPanXv').textContent = c.panX;
+    $('gvPanY').value = c.panY;   $('gvPanYv').textContent = c.panY;
+  }
+
+  function bindCell(inputId, key, dispId, suffix, decimals) {
+    $(inputId).addEventListener('input', function () {
+      var c = sel(); if (!c) return;
+      c[key] = parseFloat(this.value) || (key === 'zoom' || key === 'speed' ? 1 : 0);
+      if (dispId) {
+        $(dispId).textContent = decimals !== undefined
+          ? (+c[key]).toFixed(decimals) + (suffix || '')
+          : c[key] + (suffix || '');
+      }
+      if (!playing && !exporting && !recording) render();
+    });
+  }
+  bindCell('gvZoom', 'zoom', 'gvZoomV', '×', 1);
+  bindCell('gvRot',  'rot',  'gvRotV',  '°');
+  bindCell('gvPanX', 'panX', 'gvPanXv', '');
+  bindCell('gvPanY', 'panY', 'gvPanYv', '');
+  $('gvOffset').addEventListener('input', function () {
+    var c = sel(); if (c) c.offset = parseFloat(this.value) || 0; });
+  $('gvSpeed').addEventListener('change', function () {
+    var c = sel(); if (c) c.speed = parseFloat(this.value) || 1; });
+  $('gvReset').addEventListener('click', function () {
+    var c = sel(); if (!c) return;
+    c.offset = 0; c.speed = 1; c.zoom = 1; c.rot = 0; c.panX = 0; c.panY = 0;
+    syncCell(); render();
+  });
+
+  // ── options wiring ────────────────────────────────────────────────────────
+  [['gvGap', 'gvGapV'], ['gvPad', 'gvPadV'], ['gvRadius', 'gvRadiusV'],
+   ['gvLabelSize', 'gvLabelSizeV']].forEach(function (p) {
+    $(p[0]).addEventListener('input', function () {
+      $(p[1]).textContent = this.value;
+      if (!playing && !exporting && !recording) render();
+    });
+  });
+  ['gvCols', 'gvCellShape', 'gvFit', 'gvBorder', 'gvBorderColor', 'gvBg',
+   'gvLabels', 'gvLabelPos', 'gvLabelColor', 'gvOutW'].forEach(function (id) {
+    $(id).addEventListener('input', function () {
+      view.fitted = true;
+      if (!playing && !exporting && !recording) render();
+    });
+  });
+
+  // ── loading ───────────────────────────────────────────────────────────────
+  function addFiles(files) {
+    var list = Array.prototype.slice.call(files).filter(function (f) {
+      return /^video\//.test(f.type) || /\.(mp4|webm|mov|mkv|avi)$/i.test(f.name);
+    });
+    if (!list.length) return;
+    var pending = list.length;
+    list.forEach(function (f) {
+      var c = newClip(f);
+      clips.push(c);
+      if (selId === null) selId = c.id;
+      /* si aspetta la prima immagine, se no il primo disegno non conosce le
+         proporzioni e la griglia nasce con la forma sbagliata */
+      c.vid.addEventListener('loadeddata', function () {
+        pending--;
+        if (pending <= 0) { view.fitted = true; render(); }
+        else render();
+      }, { once: true });
+      c.vid.addEventListener('error', function () { pending--; });
+    });
+    renderList(); syncCell();
+  }
+
+  $('gvFiles').addEventListener('change', function () { addFiles(this.files); this.value = ''; });
+  var drop = $('gvDrop');
+  ['dragenter', 'dragover'].forEach(function (t) {
+    drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.add('over'); });
+  });
+  ['dragleave', 'drop'].forEach(function (t) {
+    drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.remove('over'); });
+  });
+  drop.addEventListener('drop', function (e) {
+    if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files);
+  });
+  $('gvClear').addEventListener('click', function () {
+    clips.slice().forEach(function (c) { removeClip(c.id); });
+  });
+
+  // ── playback ──────────────────────────────────────────────────────────────
+  function startAll() {
+    clips.forEach(function (c) {
+      c.vid.currentTime = Math.max(0, c.offset);
+      c.vid.playbackRate = Math.max(0.1, Math.min(16, c.speed));
+      c.vid.play().catch(function () {});
+    });
+    playing = true;
+    $('gvPlay').textContent = '⏸ Pause';
+    $('gvStop').disabled = false;
+    animId = requestAnimationFrame(loop);
+  }
+
+  function pauseAll() {
+    clips.forEach(function (c) { c.vid.pause(); });
+    playing = false;
+    cancelAnimationFrame(animId);
+    $('gvPlay').textContent = '▶ Play';
+  }
+
+  function stopAll() {
+    clips.forEach(function (c) {
+      c.vid.pause();
+      try { c.vid.currentTime = Math.max(0, c.offset); } catch (_) {}
+      c.vid.playbackRate = 1;
+    });
+    playing = false;
+    cancelAnimationFrame(animId);
+    $('gvPlay').textContent = '▶ Play';
+    $('gvStop').disabled = true;
+    render();
+  }
+
+  $('gvPlay').addEventListener('click', function () {
+    if (!clips.length) return;
+    if (playing) pauseAll(); else startAll();
+  });
+  $('gvStop').addEventListener('click', stopAll);
+
+  // ── export ────────────────────────────────────────────────────────────────
+  function outDuration() {
+    var best = Infinity;
+    clips.forEach(function (c) {
+      var d = isFinite(c.vid.duration) ? c.vid.duration : 0;
+      var out = (d - Math.max(0, c.offset)) / Math.max(0.01, c.speed);
+      if (out < best) best = out;
+    });
+    return best === Infinity ? 0 : best;
+  }
+
+  async function pickEncoder(W, H, fps, bitrate) {
+    var tryCodecs = [
+      { enc: 'avc1.640028', mux: 'avc', hw: 'prefer-hardware' },
+      { enc: 'avc1.4d0028', mux: 'avc', hw: 'prefer-hardware' },
+      { enc: 'avc1.42001f', mux: 'avc', hw: 'prefer-hardware' },
+      { enc: 'avc1.42001f', mux: 'avc', hw: 'prefer-software' },
+      { enc: 'vp09.00.41.08', mux: 'vp9', hw: 'prefer-software' },
+      { enc: 'vp09.00.10.08', mux: 'vp9', hw: 'prefer-software' }
+    ];
+    for (var i = 0; i < tryCodecs.length; i++) {
+      try {
+        var r = await VideoEncoder.isConfigSupported({
+          codec: tryCodecs[i].enc, width: W, height: H,
+          bitrate: bitrate, framerate: fps, hardwareAcceleration: tryCodecs[i].hw });
+        if (r.supported) return tryCodecs[i];
+      } catch (_) {}
+    }
+    return null;
+  }
+
+  $('gvMP4').addEventListener('click', function () {
+    if (exporting) { exporting = false; return; }
+    exportMP4();
+  });
+
+  async function exportMP4() {
+    if (!clips.length) return;
+    exporting = true;
+    $('gvMP4').textContent = '⏹ Cancel';
+    $('gvMP4').classList.add('is-active');
+    try {
+      await runGridExport();
+    } catch (e) {
+      setStatus('Export failed: ' + e.message, 'error');
+      $('gvInfo').textContent = 'Export failed: ' + e.message;
+    } finally {
+      exporting = false;
+      $('gvMP4').textContent = '⬇ Export MP4';
+      $('gvMP4').classList.remove('is-active');
+      clips.forEach(function (c) { c.vid.playbackRate = 1; });
+      showProgress(false);
+    }
+  }
+
+  async function runGridExport() {
+    if (typeof VideoEncoder === 'undefined')
+      throw new Error('WebCodecs not available - requires Chrome 94+.');
+
+    var L = layout();
+    if (!L) throw new Error('No clips loaded.');
+    /* Un encoder vuole misure pari: una griglia dispari passa senza dire
+       niente e poi fallisce a meta' codifica. */
+    var W = L.w - (L.w % 2), H = L.h - (L.h % 2);
+
+    var mod;
+    try { mod = await import('./lib/mp4-muxer.mjs'); }
+    catch (localErr) { mod = await import('https://esm.sh/mp4-muxer@5'); }
+    var Muxer = mod.Muxer, ArrayBufferTarget = mod.ArrayBufferTarget;
+    if (typeof Muxer !== 'function') throw new Error('mp4-muxer: Muxer not exported.');
+
+    var fps = parseInt($('gvFps').value, 10) || 30;
+    var bitrate = parseInt($('gvBitrate').value, 10) || 8000000;
+    var dur = outDuration();
+    if (dur <= 0) throw new Error('Cannot work out the length. Check offset and speed.');
+    var totalFrames = Math.ceil(dur * fps);
+    var frameIndex = 0;
+    var frameDur_us = Math.round(1000000 / fps);
+
+    var chosen = await pickEncoder(W, H, fps, bitrate);
+    if (!chosen) throw new Error('No supported video encoder found. Try Record WebM.');
+
+    var target = new ArrayBufferTarget();
+    var muxer = new Muxer({ target: target,
+      video: { codec: chosen.mux, width: W, height: H }, fastStart: 'in-memory' });
+
+    var encErr = null;
+    var encoder = new VideoEncoder({
+      output: function (chunk, meta) { muxer.addVideoChunk(chunk, meta); },
+      error: function (e) { encErr = e; }
+    });
+    encoder.configure({ codec: chosen.enc, width: W, height: H,
+      bitrate: bitrate, framerate: fps, hardwareAcceleration: chosen.hw });
+
+    /* Si disegna su una tela di servizio delle misure pari, cosi' l'anteprima
+       sullo schermo resta quella che e' e non sfarfalla durante l'export. */
+    var off = document.createElement('canvas');
+    off.width = W; off.height = H;
+    var oc = off.getContext('2d');
+    var Lx = { o: L.o, g: L.g, w: W, h: H, cells: L.cells };
+
+    showProgress(true);
+    var bar = document.getElementById('progressBar');
+    if (bar) bar.classList.remove('anim');
+
+    function emit(i) {
+      var vf = new VideoFrame(off, { timestamp: i * frameDur_us, duration: frameDur_us });
+      encoder.encode(vf, { keyFrame: i % fps === 0 });
+      vf.close();
+    }
+    function progress(pct, txt) {
+      if (bar) bar.style.width = pct + '%';
+      $('gvInfo').textContent = txt;
+      setStatus(txt, 'exporting');
+    }
+
+    if ($('gvExportMode').value === 'accurate') {
+      for (var i = 0; i < totalFrames; i++) {
+        if (!exporting) { $('gvInfo').textContent = 'Cancelled.'; return; }
+        if (encErr) throw encErr;
+        var T = i / fps;
+        await Promise.all(clips.map(function (c) {
+          var d = isFinite(c.vid.duration) ? c.vid.duration : 0;
+          return seekTo(c.vid, clamp(T * c.speed + c.offset, 0, Math.max(0, d - 0.001)));
+        }));
+        paint(oc, Lx);
+        emit(i);
+        frameIndex++;
+        if (i % 5 === 0) {
+          progress(Math.round(i / totalFrames * 100),
+                   'Encoding (accurate): ' + Math.round(i / totalFrames * 100) + '%  (' + (i + 1) + '/' + totalFrames + ')');
+          while (encoder.encodeQueueSize > 12) await new Promise(function (r) { setTimeout(r, 16); });
+          await tick();
+        }
+      }
+    } else {
+      /* Veloce: si riproduce tutto insieme e si prende un fotogramma a ogni
+         giro di disegno, usando il primo clip come orologio.
+
+         L'orologio era requestVideoFrameCallback, come fa Compare. Su questi
+         video non scatta mai: stanno in un contenitore display:none e
+         Chromium, per un elemento che non viene disegnato, quel callback non
+         lo chiama. Misurato: zero chiamate in un secondo di riproduzione. Il
+         risultato era un export che finiva senza aver codificato niente, e il
+         muxer moriva su un campo vuoto invece di dire cosa mancava.
+         requestAnimationFrame scatta comunque, e i fotogrammi doppi non sono
+         un problema perche' il conteggio sotto va a tempo, non a chiamate. */
+      var clock = clips[0];
+      await Promise.all(clips.map(function (c) {
+        var d = isFinite(c.vid.duration) ? c.vid.duration : 0;
+        return seekTo(c.vid, clamp(c.offset, 0, Math.max(0, d - 0.001)));
+      }));
+      var captureRate = fps >= 60 ? 1 : 2;
+      clips.forEach(function (c) {
+        c.vid.playbackRate = clamp(c.speed * captureRate, 0.1, 16);
+      });
+
+      await new Promise(function (resolve) {
+        var done = false, raf = null;
+
+        function finish() {
+          if (done) return;
+          done = true;
+          if (raf) cancelAnimationFrame(raf);
+          clips.forEach(function (c) { c.vid.pause(); c.vid.onended = null; });
+          resolve();
+        }
+
+        function step() {
+          if (done || !exporting || encErr) { finish(); return; }
+          paint(oc, Lx);
+          var srcElapsed = Math.max(0, clock.vid.currentTime - clock.offset);
+          var outElapsed = srcElapsed / clock.speed;
+          var targetFrame = Math.min(Math.round(outElapsed * fps), totalFrames);
+          while (frameIndex < targetFrame) { emit(frameIndex); frameIndex++; }
+          if (frameIndex >= totalFrames) { finish(); return; }
+          if (frameIndex % 10 === 0) {
+            var pct = Math.min(98, Math.round(outElapsed / dur * 100));
+            progress(pct, 'Encoding (fast): ' + pct + '%  (' + frameIndex + '/' + totalFrames + ')');
+          }
+          if (encoder.encodeQueueSize > 20) {
+            clips.forEach(function (c) { c.vid.pause(); });
+            setTimeout(function () {
+              if (done || !exporting) { finish(); return; }
+              clips.forEach(function (c) { c.vid.play().catch(function () {}); });
+              raf = requestAnimationFrame(step);
+            }, 40);
+            return;
+          }
+          raf = requestAnimationFrame(step);
+        }
+
+        /* Quando il primo clip finisce si fa un ultimo giro: l'ultimo
+           fotogramma arriva insieme a 'ended' e senza questo si perde. */
+        clips.forEach(function (c) {
+          c.vid.onended = function () { if (!done) { step(); } finish(); };
+        });
+        clips.forEach(function (c) { c.vid.play().catch(function () {}); });
+        raf = requestAnimationFrame(step);
+      });
+      clips.forEach(function (c) { c.vid.playbackRate = 1; });
+    }
+
+    if (encErr) throw encErr;
+    if (!exporting) { $('gvInfo').textContent = 'Cancelled.'; return; }
+    if (frameIndex === 0)
+      throw new Error('No frames were captured. The clips may be too short, or one of them failed to play.');
+
+    progress(99, 'Finalizing...');
+    await tick();
+    await encoder.flush();
+    muxer.finalize();
+    if (bar) bar.style.width = '100%';
+
+    var blob = new Blob([target.buffer], { type: 'video/mp4' });
+    var url = URL.createObjectURL(blob);
+    var a = Object.assign(document.createElement('a'), { href: url, download: 'grid.mp4' });
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 6000);
+    $('gvInfo').textContent = 'Done - grid.mp4 downloaded.';
+    setStatus('Done - grid.mp4 downloaded!', 'done');
+    setTimeout(function () { showProgress(false); }, 2500);
+  }
+
+  // ── record webm ───────────────────────────────────────────────────────────
+  $('gvRecord').addEventListener('click', function () {
+    if (recording) { recorder.stop(); return; }
+    if (!clips.length) return;
+    chunks = [];
+    var stream = cv.captureStream(30);
+    var br = parseInt($('gvBitrate').value, 10) || 8000000;
+    var mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+      ? 'video/webm;codecs=vp9' : 'video/webm';
+    try { recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: br }); }
+    catch (_) { recorder = new MediaRecorder(stream); }
+    recorder.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+    recorder.onstop = function () {
+      recording = false;
+      $('gvRecord').textContent = '⏺ Record WebM';
+      $('gvRecord').classList.remove('is-active');
+      stopAll();
+      var blob = new Blob(chunks, { type: 'video/webm' });
+      var url = URL.createObjectURL(blob);
+      var a = Object.assign(document.createElement('a'), { href: url, download: 'grid.webm' });
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 6000);
+      $('gvInfo').textContent = 'Done - grid.webm downloaded.';
+    };
+    recording = true;
+    $('gvRecord').textContent = '⏹ Stop Recording';
+    $('gvRecord').classList.add('is-active');
+    recorder.start();
+    startAll();
+  });
+
+  // ── shown / hidden ────────────────────────────────────────────────────────
+  window.GRID = {
+    setActive: function (on) {
+      if (active === on) return;
+      active = on;
+      if (!on) { if (playing) pauseAll(); return; }
+      view.fitted = true;
+      render();
+    }
+  };
+
+  renderList();
+  syncCell();
+  render();
+})();
+
+</script>
+</body>
+</html>

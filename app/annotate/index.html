@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Annotate</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#2b2b31;border-radius:6px;border:2px solid #141416}
+body{background:#141416;color:#c8c8cc;font:13px/1.45 'Segoe UI',system-ui,sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;user-select:none}
+
+.bar{display:flex;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid #232326;flex:none;flex-wrap:wrap}
+.grow{flex:1}
+.sep{width:1px;height:20px;background:#2a2a2e;flex:none;margin:0 3px}
+
+button{background:#1e1e21;border:1px solid #313136;color:#bbb;border-radius:4px;padding:5px 10px;font-size:12px;cursor:pointer;white-space:nowrap;transition:background .1s,border-color .1s,color .1s}
+button:hover:not(:disabled){background:#27272b;border-color:#5a5a63;color:#fff}
+button:disabled{opacity:.3;cursor:not-allowed}
+button.primary{background:#3d1618;border-color:#e5484d;color:#ff9a9d;font-weight:600}
+button.primary:hover:not(:disabled){background:#4d1c1f;border-color:#f0666b}
+
+.tool{width:34px;height:30px;padding:0;display:inline-flex;align-items:center;justify-content:center;position:relative}
+.tool.on{background:#3d1618;border-color:#e5484d;color:#ff9a9d}
+.tool svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.tool .k{position:absolute;right:2px;bottom:0;font-size:8px;color:#5a5a63;font-family:ui-monospace,Consolas,monospace}
+.tool.on .k{color:#b8686b}
+
+.swatches{display:flex;gap:3px;align-items:center}
+.sw{width:19px;height:19px;border-radius:3px;border:1px solid #3a3a42;cursor:pointer;padding:0}
+.sw.on{outline:2px solid #fff;outline-offset:1px}
+input[type=color]{width:24px;height:22px;border:1px solid #313136;border-radius:3px;background:#1c1c1c;cursor:pointer;padding:2px}
+input[type=range]{width:82px;accent-color:#e5484d;cursor:pointer}
+label{font-size:11px;color:#5f5f68;white-space:nowrap}
+.val{font:11px ui-monospace,Consolas,monospace;color:#8a8a94;min-width:22px;text-align:right}
+
+.stage{flex:1;position:relative;background:#0c0c0e;overflow:hidden;min-height:0;touch-action:none}
+#cv{display:block;background-image:linear-gradient(45deg,#161619 25%,transparent 25%),linear-gradient(-45deg,#161619 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#161619 75%),linear-gradient(-45deg,transparent 75%,#161619 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0}
+.view{position:absolute;right:8px;top:8px;display:flex;gap:5px;align-items:center;background:rgba(12,12,14,.86);border:1px solid #262626;border-radius:4px;padding:3px 5px}
+.view span{font-size:11px;color:#777;min-width:44px;text-align:center}
+.view button{padding:2px 8px;font-size:11px}
+
+.empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#4a4a52;pointer-events:none;text-align:center}
+.empty b{color:#8a8a94;font-size:15px;font-weight:600}
+.empty kbd{font:11px ui-monospace,Consolas,monospace;background:#1c1c20;border:1px solid #2e2e34;border-radius:3px;padding:1px 5px;color:#a8a8b0}
+
+#textEdit{position:absolute;display:none;user-select:text;-webkit-user-select:text;background:rgba(20,20,22,.96);border:1px solid #e5484d;border-radius:3px;color:#fff;padding:3px 6px;font:600 14px 'Segoe UI',system-ui,sans-serif;outline:none;min-width:120px;z-index:5}
+
+.status{flex:none;padding:6px 12px;border-top:1px solid #232326;font-size:11px;color:#55555c;min-height:26px;display:flex;gap:14px;align-items:center}
+.status .hintkeys{color:#3e3e46}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <button id="paste" class="primary">Paste screenshot</button>
+  <button id="open">Open…</button>
+  <div class="sep"></div>
+
+  <button class="tool on" id="t_select" data-tool="select" title="Select and move  (V)">
+    <svg viewBox="0 0 24 24"><path d="M5 3l7 17 2.5-6.5L21 11z"/></svg><span class="k">V</span></button>
+  <button class="tool" id="t_arrow" data-tool="arrow" title="Arrow  (A)">
+    <svg viewBox="0 0 24 24"><path d="M4 20L20 4M20 4h-7M20 4v7"/></svg><span class="k">A</span></button>
+  <button class="tool" id="t_rect" data-tool="rect" title="Rectangle  (R)">
+    <svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="1.5"/></svg><span class="k">R</span></button>
+  <button class="tool" id="t_ellipse" data-tool="ellipse" title="Ellipse  (E)">
+    <svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="8.5" ry="6.5"/></svg><span class="k">E</span></button>
+  <button class="tool" id="t_highlight" data-tool="highlight" title="Highlight  (H)">
+    <svg viewBox="0 0 24 24"><path d="M4 15l6-6 5 5-6 6H4z"/><path d="M13 6l5 5"/></svg><span class="k">H</span></button>
+  <button class="tool" id="t_pen" data-tool="pen" title="Freehand  (P)">
+    <svg viewBox="0 0 24 24"><path d="M3 21c3-1 4-6 7-9s7-6 9-4-1 6-4 9-8 4-9 7"/></svg><span class="k">P</span></button>
+  <button class="tool" id="t_text" data-tool="text" title="Text  (T)">
+    <svg viewBox="0 0 24 24"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg><span class="k">T</span></button>
+  <button class="tool" id="t_number" data-tool="number" title="Numbered marker  (N)">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M11 8.5l1.6-1V16M10.4 16h4"/></svg><span class="k">N</span></button>
+  <button class="tool" id="t_blur" data-tool="blur" title="Pixelate  (B)">
+    <svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/></svg><span class="k">B</span></button>
+
+  <div class="sep"></div>
+  <div class="swatches" id="swatches"></div>
+  <input type="color" id="colorCustom" value="#e5484d" title="Custom colour">
+  <div class="sep"></div>
+  <label>Size</label>
+  <input type="range" id="weight" min="1" max="24" step="1" value="4">
+  <span class="val" id="weightV">4</span>
+
+  <div class="grow"></div>
+  <button id="undo" disabled title="Undo  (Ctrl+Z)">Undo</button>
+  <button id="redo" disabled title="Redo  (Ctrl+Y)">Redo</button>
+  <button id="clear" disabled title="Remove every annotation">Clear</button>
+  <div class="sep"></div>
+  <button id="copy" class="primary" disabled title="Copy the result  (Ctrl+C)">Copy</button>
+  <button id="save" disabled title="Save as PNG  (Ctrl+S)">Save PNG</button>
+</div>
+
+<div class="stage" id="stage">
+  <canvas id="cv" width="16" height="9"></canvas>
+  <div class="view">
+    <button id="zoomOut">&minus;</button>
+    <span id="zoomV">100%</span>
+    <button id="zoomIn">+</button>
+    <button id="fit">Fit</button>
+  </div>
+  <div class="empty" id="empty">
+    <b>Paste a screenshot</b>
+    <div><kbd>Ctrl</kbd> + <kbd>V</kbd> &middot; or drop an image here &middot; or use Open…</div>
+  </div>
+  <input id="textEdit" type="text" spellcheck="false">
+</div>
+
+<div class="status">
+  <span id="status">No image yet.</span>
+  <span class="grow"></span>
+  <span class="hintkeys" id="keys">middle-drag or space+drag to pan &middot; wheel to zoom &middot; Del removes the selection</span>
+</div>
+
+<input type="file" id="file" accept="image/*" hidden>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   Annotate - mark up a screenshot and get it onto the clipboard.
+
+   Annotations are objects, not pixels: everything stays movable, resizable and
+   removable until it is exported. The canvas shows the image and the shapes
+   through a pan/zoom transform, and all geometry is stored in image
+   coordinates so the result is independent of how you are looking at it.
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+
+  var stageEl = $('stage');
+  var cv = $('cv');
+  var ctx = cv.getContext('2d');
+  var textEdit = $('textEdit');
+
+  var img = null;            // the screenshot
+  var shapes = [];           // annotations, in image coordinates
+  var tool = 'select';
+  var color = '#e5484d';
+  var weight = 4;
+  var sel = -1;              // index of the selected shape
+  var nextNumber = 1;
+
+  var view = { zoom: 1, x: 0, y: 0, fitted: true };
+  var ZMIN = 0.05, ZMAX = 16;
+
+  var undoStack = [], redoStack = [];
+  var drawing = null;        // shape being created
+  var dragging = null;       // { mode:'move'|'handle', ... }
+  var panning = null;
+  var spaceDown = false;
+
+  var COLORS = ['#e5484d', '#f5a524', '#f5e14b', '#46c26a', '#4aa3f0', '#c76bf0', '#ffffff', '#111111'];
+
+  /* ---- history ---------------------------------------------------------- */
+  function snapshot() { return JSON.stringify(shapes); }
+  function pushUndo() {
+    undoStack.push(snapshot());
+    if (undoStack.length > 60) undoStack.shift();
+    redoStack.length = 0;
+    syncButtons();
+  }
+  function restore(json) {
+    shapes = JSON.parse(json);
+    sel = -1;
+    nextNumber = shapes.reduce(function (m, s) {
+      return s.type === 'number' ? Math.max(m, s.n + 1) : m;
+    }, 1);
+    render();
+    syncButtons();
+  }
+  function undo() {
+    if (!undoStack.length) return;
+    redoStack.push(snapshot());
+    restore(undoStack.pop());
+  }
+  function redo() {
+    if (!redoStack.length) return;
+    undoStack.push(snapshot());
+    restore(redoStack.pop());
+  }
+  function syncButtons() {
+    $('undo').disabled = !undoStack.length;
+    $('redo').disabled = !redoStack.length;
+    $('clear').disabled = !shapes.length;
+    $('copy').disabled = !img;
+    $('save').disabled = !img;
+  }
+
+  /* ---- coordinates ------------------------------------------------------ */
+  function toImage(clientX, clientY) {
+    var r = stageEl.getBoundingClientRect();
+    return {
+      x: (clientX - r.left - view.x) / view.zoom,
+      y: (clientY - r.top - view.y) / view.zoom
+    };
+  }
+  function toScreen(ix, iy) {
+    return { x: ix * view.zoom + view.x, y: iy * view.zoom + view.y };
+  }
+  function stageSize() {
+    return { w: Math.max(40, stageEl.clientWidth), h: Math.max(40, stageEl.clientHeight) };
+  }
+  function fitView() {
+    if (!img) return;
+    var s = stageSize(), pad = 20;
+    var z = Math.min((s.w - pad * 2) / img.width, (s.h - pad * 2) / img.height);
+    view.zoom = Math.max(ZMIN, Math.min(ZMAX, z));
+    view.x = (s.w - img.width * view.zoom) / 2;
+    view.y = (s.h - img.height * view.zoom) / 2;
+    view.fitted = true;
+  }
+
+  /* ---- shape geometry --------------------------------------------------- */
+  function boxOf(s) {
+    if (s.type === 'arrow') {
+      return { x: Math.min(s.x1, s.x2), y: Math.min(s.y1, s.y2),
+               w: Math.abs(s.x2 - s.x1), h: Math.abs(s.y2 - s.y1) };
+    }
+    if (s.type === 'pen') {
+      var xs = s.pts.map(function (p) { return p.x; });
+      var ys = s.pts.map(function (p) { return p.y; });
+      return { x: Math.min.apply(null, xs), y: Math.min.apply(null, ys),
+               w: Math.max.apply(null, xs) - Math.min.apply(null, xs),
+               h: Math.max.apply(null, ys) - Math.min.apply(null, ys) };
+    }
+    if (s.type === 'text') {
+      var w = Math.max(20, (s.text || '').length * s.size * 0.56);
+      return { x: s.x, y: s.y - s.size, w: w, h: s.size * 1.35 };
+    }
+    if (s.type === 'number') {
+      var r = s.size;
+      return { x: s.x - r, y: s.y - r, w: r * 2, h: r * 2 };
+    }
+    return { x: Math.min(s.x, s.x + s.w), y: Math.min(s.y, s.y + s.h),
+             w: Math.abs(s.w), h: Math.abs(s.h) };
+  }
+
+  function hit(s, p) {
+    var b = boxOf(s);
+    var m = Math.max(6 / view.zoom, (s.weight || 4));
+    if (s.type === 'arrow') {
+      return distToSegment(p, { x: s.x1, y: s.y1 }, { x: s.x2, y: s.y2 }) <= m + 4;
+    }
+    if (s.type === 'pen') {
+      for (var i = 1; i < s.pts.length; i++) {
+        if (distToSegment(p, s.pts[i - 1], s.pts[i]) <= m + 4) return true;
+      }
+      return false;
+    }
+    return p.x >= b.x - m && p.x <= b.x + b.w + m && p.y >= b.y - m && p.y <= b.y + b.h + m;
+  }
+
+  function distToSegment(p, a, b) {
+    var dx = b.x - a.x, dy = b.y - a.y;
+    var len2 = dx * dx + dy * dy;
+    var t = len2 ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2)) : 0;
+    var qx = a.x + t * dx, qy = a.y + t * dy;
+    return Math.hypot(p.x - qx, p.y - qy);
+  }
+
+  // Handles: arrows get their two ends, boxes get their four corners.
+  function handlesOf(s) {
+    if (s.type === 'arrow') return [{ id: 'p1', x: s.x1, y: s.y1 }, { id: 'p2', x: s.x2, y: s.y2 }];
+    if (s.type === 'pen' || s.type === 'text' || s.type === 'number') return [];
+    var b = boxOf(s);
+    return [
+      { id: 'nw', x: b.x, y: b.y },
+      { id: 'ne', x: b.x + b.w, y: b.y },
+      { id: 'sw', x: b.x, y: b.y + b.h },
+      { id: 'se', x: b.x + b.w, y: b.y + b.h }
+    ];
+  }
+
+  /* ---- drawing ---------------------------------------------------------- */
+  function drawShape(c, s) {
+    c.save();
+    c.lineCap = 'round';
+    c.lineJoin = 'round';
+    c.strokeStyle = s.color;
+    c.fillStyle = s.color;
+    c.lineWidth = s.weight;
+
+    if (s.type === 'rect') {
+      c.strokeRect(s.x, s.y, s.w, s.h);
+    } else if (s.type === 'ellipse') {
+      c.beginPath();
+      c.ellipse(s.x + s.w / 2, s.y + s.h / 2, Math.abs(s.w / 2), Math.abs(s.h / 2), 0, 0, Math.PI * 2);
+      c.stroke();
+    } else if (s.type === 'highlight') {
+      c.globalAlpha = 0.32;
+      c.fillRect(s.x, s.y, s.w, s.h);
+    } else if (s.type === 'arrow') {
+      var ang = Math.atan2(s.y2 - s.y1, s.x2 - s.x1);
+      var head = Math.max(10, s.weight * 3.4);
+      // stop the shaft short so the head has a clean point
+      var bx = s.x2 - Math.cos(ang) * head * 0.62;
+      var by = s.y2 - Math.sin(ang) * head * 0.62;
+      c.beginPath(); c.moveTo(s.x1, s.y1); c.lineTo(bx, by); c.stroke();
+      c.beginPath();
+      c.moveTo(s.x2, s.y2);
+      c.lineTo(s.x2 - Math.cos(ang - 0.42) * head, s.y2 - Math.sin(ang - 0.42) * head);
+      c.lineTo(s.x2 - Math.cos(ang + 0.42) * head, s.y2 - Math.sin(ang + 0.42) * head);
+      c.closePath(); c.fill();
+    } else if (s.type === 'pen') {
+      c.beginPath();
+      s.pts.forEach(function (p, i) { i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y); });
+      c.stroke();
+    } else if (s.type === 'text') {
+      c.font = '600 ' + s.size + "px 'Segoe UI', system-ui, sans-serif";
+      c.textBaseline = 'alphabetic';
+      // a dark rim keeps light text readable over a bright screenshot
+      c.strokeStyle = 'rgba(0,0,0,.55)';
+      c.lineWidth = Math.max(2, s.size / 7);
+      c.strokeText(s.text || '', s.x, s.y);
+      c.fillStyle = s.color;
+      c.fillText(s.text || '', s.x, s.y);
+    } else if (s.type === 'number') {
+      c.beginPath();
+      c.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = '#fff';
+      c.font = '700 ' + Math.round(s.size * 1.15) + "px 'Segoe UI', system-ui, sans-serif";
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.fillText(String(s.n), s.x, s.y + s.size * 0.04);
+    }
+    c.restore();
+  }
+
+  // Pixelate straight from the source image, so it cannot be undone by zooming.
+  function drawPixelate(c, s, source) {
+    var b = boxOf(s);
+    if (b.w < 2 || b.h < 2) return;
+    var cells = Math.max(3, Math.round(Math.max(b.w, b.h) / Math.max(4, s.weight * 2.2)));
+    var tw = Math.max(1, Math.round(cells * (b.w / Math.max(b.w, b.h))));
+    var th = Math.max(1, Math.round(cells * (b.h / Math.max(b.w, b.h))));
+    var tmp = document.createElement('canvas');
+    tmp.width = tw; tmp.height = th;
+    var tc = tmp.getContext('2d');
+    tc.imageSmoothingEnabled = true;
+    tc.drawImage(source, b.x, b.y, b.w, b.h, 0, 0, tw, th);
+    c.save();
+    c.imageSmoothingEnabled = false;
+    c.drawImage(tmp, 0, 0, tw, th, b.x, b.y, b.w, b.h);
+    c.restore();
+  }
+
+  function drawAll(c, withSelection) {
+    if (!img) return;
+    c.drawImage(img, 0, 0);
+    shapes.forEach(function (s) {
+      if (s.type === 'blur') drawPixelate(c, s, img);
+      else drawShape(c, s);
+    });
+    if (drawing) {
+      if (drawing.type === 'blur') drawPixelate(c, drawing, img);
+      else drawShape(c, drawing);
+    }
+    if (withSelection && sel >= 0 && shapes[sel]) {
+      var s = shapes[sel];
+      var b = boxOf(s);
+      c.save();
+      c.strokeStyle = '#ffffff';
+      c.lineWidth = 1 / view.zoom;
+      c.setLineDash([4 / view.zoom, 3 / view.zoom]);
+      c.strokeRect(b.x - 2 / view.zoom, b.y - 2 / view.zoom,
+                   b.w + 4 / view.zoom, b.h + 4 / view.zoom);
+      c.setLineDash([]);
+      var hs = 4 / view.zoom;
+      handlesOf(s).forEach(function (h) {
+        c.fillStyle = '#fff';
+        c.strokeStyle = '#111';
+        c.lineWidth = 1 / view.zoom;
+        c.fillRect(h.x - hs, h.y - hs, hs * 2, hs * 2);
+        c.strokeRect(h.x - hs, h.y - hs, hs * 2, hs * 2);
+      });
+      c.restore();
+    }
+  }
+
+  function render() {
+    var s = stageSize();
+    var dpr = window.devicePixelRatio || 1;
+    cv.width = Math.max(1, Math.round(s.w * dpr));
+    cv.height = Math.max(1, Math.round(s.h * dpr));
+    cv.style.width = s.w + 'px';
+    cv.style.height = s.h + 'px';
+
+    if (view.fitted) fitView();
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, s.w, s.h);
+    ctx.save();
+    ctx.translate(view.x, view.y);
+    ctx.scale(view.zoom, view.zoom);
+    drawAll(ctx, true);
+    ctx.restore();
+
+    $('zoomV').textContent = Math.round(view.zoom * 100) + '%';
+    $('empty').style.display = img ? 'none' : '';
+    $('status').textContent = img
+      ? img.width + '×' + img.height + ' · ' + shapes.length + ' annotation' + (shapes.length === 1 ? '' : 's')
+      : 'No image yet.';
+    positionTextEditor();
+  }
+
+  /* ---- loading ---------------------------------------------------------- */
+  function loadBlob(blob) {
+    var url = URL.createObjectURL(blob);
+    var im = new Image();
+    im.onload = function () {
+      img = im;
+      shapes = [];
+      undoStack.length = 0; redoStack.length = 0;
+      sel = -1; nextNumber = 1;
+      view.fitted = true;
+      syncButtons();
+      render();
+    };
+    im.onerror = function () {
+      URL.revokeObjectURL(url);
+      $('status').textContent = 'That image could not be read.';
+    };
+    im.src = url;
+  }
+
+  $('open').addEventListener('click', function () { $('file').click(); });
+  $('file').addEventListener('change', function (e) {
+    if (e.target.files && e.target.files[0]) loadBlob(e.target.files[0]);
+    e.target.value = '';
+  });
+
+  $('paste').addEventListener('click', function () {
+    var btn = $('paste'), old = btn.textContent;
+    function say(m) { btn.textContent = m; setTimeout(function () { btn.textContent = old; }, 1500); }
+    if (!navigator.clipboard || !navigator.clipboard.read) { say('Clipboard unavailable'); return; }
+    navigator.clipboard.read().then(function (items) {
+      for (var i = 0; i < items.length; i++) {
+        var type = items[i].types.filter(function (t) { return t.indexOf('image/') === 0; })[0];
+        if (type) { items[i].getType(type).then(loadBlob); return; }
+      }
+      say('No image on clipboard');
+    }, function () { say('Clipboard blocked'); });
+  });
+
+  document.addEventListener('paste', function (e) {
+    if (e.target === textEdit) return;
+    var dt = e.clipboardData;
+    if (!dt || !dt.items) return;
+    for (var i = 0; i < dt.items.length; i++) {
+      if (dt.items[i].kind === 'file' && dt.items[i].type.indexOf('image/') === 0) {
+        var f = dt.items[i].getAsFile();
+        if (f) { e.preventDefault(); loadBlob(f); return; }
+      }
+    }
+  });
+
+  ['dragenter', 'dragover'].forEach(function (t) {
+    document.addEventListener(t, function (e) { e.preventDefault(); });
+  });
+  document.addEventListener('drop', function (e) {
+    e.preventDefault();
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f && f.type.indexOf('image/') === 0) loadBlob(f);
+  });
+
+  /* ---- tools ------------------------------------------------------------ */
+  function setTool(t) {
+    tool = t;
+    Array.prototype.forEach.call(document.querySelectorAll('.tool'), function (b) {
+      b.classList.toggle('on', b.dataset.tool === t);
+    });
+    if (t !== 'select') { sel = -1; render(); }
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.tool'), function (b) {
+    b.addEventListener('click', function () { setTool(b.dataset.tool); });
+  });
+
+  (function buildSwatches() {
+    var box = $('swatches');
+    COLORS.forEach(function (c) {
+      var b = document.createElement('button');
+      b.className = 'sw' + (c === color ? ' on' : '');
+      b.style.background = c;
+      b.title = c;
+      b.addEventListener('click', function () { setColor(c); });
+      box.appendChild(b);
+    });
+  })();
+
+  function setColor(c) {
+    color = c;
+    $('colorCustom').value = /^#[0-9a-f]{6}$/i.test(c) ? c : '#e5484d';
+    Array.prototype.forEach.call(document.querySelectorAll('.sw'), function (b) {
+      b.classList.toggle('on', b.title === c);
+    });
+    // recolour the selection, which is what you expect after picking a swatch
+    if (sel >= 0 && shapes[sel] && shapes[sel].type !== 'blur') {
+      pushUndo();
+      shapes[sel].color = c;
+      render();
+    }
+  }
+  $('colorCustom').addEventListener('input', function () { setColor($('colorCustom').value); });
+
+  $('weight').addEventListener('input', function () {
+    weight = parseInt($('weight').value, 10) || 4;
+    $('weightV').textContent = weight;
+    if (sel >= 0 && shapes[sel]) {
+      shapes[sel].weight = weight;
+      if (shapes[sel].type === 'text' || shapes[sel].type === 'number') {
+        shapes[sel].size = textSize();
+      }
+      render();
+    }
+  });
+
+  function textSize() { return Math.max(12, weight * 5); }
+
+  /* ---- pointer ---------------------------------------------------------- */
+  stageEl.addEventListener('pointerdown', function (e) {
+    if (e.target === textEdit) return;
+    commitText();
+    if (!img) return;
+
+    // middle button, or space held: pan regardless of the active tool
+    if (e.button === 1 || spaceDown) {
+      panning = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y };
+      stageEl.setPointerCapture(e.pointerId);
+      e.preventDefault();
+      return;
+    }
+    if (e.button !== 0) return;
+
+    var p = toImage(e.clientX, e.clientY);
+
+    if (tool === 'text') {
+      // Focusing an input from inside pointerdown does not stick: once the
+      // event finishes the browser moves focus to the canvas, the editor
+      // blurs, and the empty text shape is discarded before anything can be
+      // typed. Suppressing the default focus change is half the fix; the
+      // other half is focusing on the next tick, in startText().
+      e.preventDefault();
+      startText(p);
+      return;
+    }
+
+    stageEl.setPointerCapture(e.pointerId);
+
+    if (tool === 'select') {
+      // a handle of the current selection wins over everything else
+      if (sel >= 0 && shapes[sel]) {
+        var hs = 6 / view.zoom;
+        var found = handlesOf(shapes[sel]).filter(function (h) {
+          return Math.abs(p.x - h.x) <= hs && Math.abs(p.y - h.y) <= hs;
+        })[0];
+        if (found) {
+          pushUndo();
+          dragging = { mode: 'handle', id: found.id, start: p, orig: JSON.parse(JSON.stringify(shapes[sel])) };
+          return;
+        }
+      }
+      var idx = -1;
+      for (var i = shapes.length - 1; i >= 0; i--) { if (hit(shapes[i], p)) { idx = i; break; } }
+      sel = idx;
+      if (idx >= 0) {
+        pushUndo();
+        dragging = { mode: 'move', start: p, orig: JSON.parse(JSON.stringify(shapes[idx])) };
+      } else {
+        // empty space: drag the picture around
+        panning = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y };
+      }
+      render();
+      return;
+    }
+
+    if (tool === 'number') {
+      pushUndo();
+      shapes.push({ type: 'number', x: p.x, y: p.y, n: nextNumber++, color: color, size: textSize(), weight: weight });
+      sel = -1;
+      render(); syncButtons();
+      return;
+    }
+
+    if (tool === 'pen') {
+      drawing = { type: 'pen', pts: [p], color: color, weight: weight };
+      return;
+    }
+
+    if (tool === 'arrow') {
+      drawing = { type: 'arrow', x1: p.x, y1: p.y, x2: p.x, y2: p.y, color: color, weight: weight };
+      return;
+    }
+
+    drawing = { type: tool, x: p.x, y: p.y, w: 0, h: 0, color: color, weight: weight };
+  });
+
+  stageEl.addEventListener('pointermove', function (e) {
+    if (panning) {
+      view.x = panning.vx + (e.clientX - panning.x);
+      view.y = panning.vy + (e.clientY - panning.y);
+      view.fitted = false;
+      render();
+      return;
+    }
+    if (!img) return;
+    var p = toImage(e.clientX, e.clientY);
+
+    if (dragging && sel >= 0) {
+      var s = shapes[sel], o = dragging.orig;
+      var dx = p.x - dragging.start.x, dy = p.y - dragging.start.y;
+      if (dragging.mode === 'move') {
+        if (s.type === 'arrow') { s.x1 = o.x1 + dx; s.y1 = o.y1 + dy; s.x2 = o.x2 + dx; s.y2 = o.y2 + dy; }
+        else if (s.type === 'pen') { s.pts = o.pts.map(function (q) { return { x: q.x + dx, y: q.y + dy }; }); }
+        else { s.x = o.x + dx; s.y = o.y + dy; }
+      } else {
+        if (s.type === 'arrow') {
+          if (dragging.id === 'p1') { s.x1 = o.x1 + dx; s.y1 = o.y1 + dy; }
+          else { s.x2 = o.x2 + dx; s.y2 = o.y2 + dy; }
+        } else {
+          var b = { x: Math.min(o.x, o.x + o.w), y: Math.min(o.y, o.y + o.h),
+                    w: Math.abs(o.w), h: Math.abs(o.h) };
+          var nx = b.x, ny = b.y, nw = b.w, nh = b.h;
+          if (dragging.id.indexOf('w') >= 0) { nx = b.x + dx; nw = b.w - dx; }
+          if (dragging.id.indexOf('e') >= 0) { nw = b.w + dx; }
+          if (dragging.id.indexOf('n') >= 0) { ny = b.y + dy; nh = b.h - dy; }
+          if (dragging.id.indexOf('s') >= 0) { nh = b.h + dy; }
+          s.x = nx; s.y = ny; s.w = nw; s.h = nh;
+        }
+      }
+      render();
+      return;
+    }
+
+    if (drawing) {
+      if (drawing.type === 'pen') {
+        var last = drawing.pts[drawing.pts.length - 1];
+        if (Math.hypot(p.x - last.x, p.y - last.y) > 1.2 / view.zoom) drawing.pts.push(p);
+      } else if (drawing.type === 'arrow') {
+        drawing.x2 = p.x; drawing.y2 = p.y;
+      } else {
+        drawing.w = p.x - drawing.x; drawing.h = p.y - drawing.y;
+      }
+      render();
+    }
+  });
+
+  function endPointer() {
+    panning = null;
+    if (dragging) { dragging = null; syncButtons(); }
+    if (drawing) {
+      var d = drawing;
+      drawing = null;
+      var b = boxOf(d);
+      var big = d.type === 'pen' ? d.pts.length > 2
+             : d.type === 'arrow' ? Math.hypot(d.x2 - d.x1, d.y2 - d.y1) > 6
+             : (Math.abs(b.w) > 4 && Math.abs(b.h) > 4);
+      if (big) {
+        pushUndo();
+        shapes.push(d);
+        syncButtons();
+      }
+      render();
+    }
+  }
+  ['pointerup', 'pointercancel'].forEach(function (t) {
+    stageEl.addEventListener(t, endPointer);
+  });
+
+  stageEl.addEventListener('wheel', function (e) {
+    if (!img) return;
+    e.preventDefault();
+    var r = stageEl.getBoundingClientRect();
+    var mx = e.clientX - r.left, my = e.clientY - r.top;
+    var f = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+    var nz = Math.max(ZMIN, Math.min(ZMAX, view.zoom * f));
+    if (nz === view.zoom) return;
+    view.x = mx - (mx - view.x) * (nz / view.zoom);
+    view.y = my - (my - view.y) * (nz / view.zoom);
+    view.zoom = nz;
+    view.fitted = false;
+    render();
+  }, { passive: false });
+
+  $('fit').addEventListener('click', function () { view.fitted = true; render(); });
+  $('zoomIn').addEventListener('click', function () {
+    view.zoom = Math.min(ZMAX, view.zoom * 1.25); view.fitted = false; render();
+  });
+  $('zoomOut').addEventListener('click', function () {
+    view.zoom = Math.max(ZMIN, view.zoom / 1.25); view.fitted = false; render();
+  });
+  window.addEventListener('resize', render);
+
+  /* ---- text ------------------------------------------------------------- */
+  var editing = -1;
+  function startText(p) {
+    pushUndo();
+    shapes.push({ type: 'text', x: p.x, y: p.y, text: '', color: color, size: textSize(), weight: weight });
+    editing = shapes.length - 1;
+    sel = editing;
+    textEdit.value = '';
+    textEdit.style.display = 'block';
+    positionTextEditor();
+    render();
+    setTimeout(function () { textEdit.focus(); }, 0);
+  }
+  function positionTextEditor() {
+    if (editing < 0 || !shapes[editing]) { textEdit.style.display = 'none'; return; }
+    var s = shapes[editing];
+    var sc = toScreen(s.x, s.y - s.size);
+    textEdit.style.left = Math.round(sc.x) + 'px';
+    textEdit.style.top = Math.round(sc.y) + 'px';
+    textEdit.style.fontSize = Math.max(12, Math.round(s.size * view.zoom)) + 'px';
+  }
+  function commitText() {
+    if (editing < 0) return;
+    var s = shapes[editing];
+    var i = editing;
+    editing = -1;
+    textEdit.style.display = 'none';
+    if (s && !(s.text || '').trim()) { shapes.splice(i, 1); sel = -1; }
+    syncButtons();
+    render();
+  }
+  textEdit.addEventListener('input', function () {
+    if (editing >= 0 && shapes[editing]) { shapes[editing].text = textEdit.value; render(); }
+  });
+  textEdit.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); commitText(); }
+    e.stopPropagation();
+  });
+  textEdit.addEventListener('blur', function () {
+    // A short delay lets the focus settle: clicking straight from the editor
+    // onto a toolbar button would otherwise commit before the click lands.
+    setTimeout(commitText, 60);
+  });
+
+  /* ---- output ----------------------------------------------------------- */
+  function compose() {
+    var c = document.createElement('canvas');
+    c.width = img.width; c.height = img.height;
+    var cc = c.getContext('2d');
+    var keep = sel; sel = -1;      // never bake the selection outline in
+    drawAll(cc, false);
+    sel = keep;
+    return c;
+  }
+
+  function copyOut() {
+    if (!img) return;
+    var btn = $('copy'), old = btn.textContent;
+    function say(m) { btn.textContent = m; setTimeout(function () { btn.textContent = old; }, 1400); }
+    compose().toBlob(function (blob) {
+      if (!window.ClipboardItem || !navigator.clipboard || !navigator.clipboard.write) { say('Unavailable'); return; }
+      navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+        .then(function () { say('Copied'); }, function () { say('Failed'); });
+    }, 'image/png');
+  }
+
+  function saveOut() {
+    if (!img) return;
+    compose().toBlob(function (blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'annotated.png';
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+    }, 'image/png');
+  }
+
+  $('copy').addEventListener('click', copyOut);
+  $('save').addEventListener('click', saveOut);
+  $('undo').addEventListener('click', undo);
+  $('redo').addEventListener('click', redo);
+  $('clear').addEventListener('click', function () {
+    if (!shapes.length) return;
+    pushUndo();
+    shapes = []; sel = -1; nextNumber = 1;
+    render(); syncButtons();
+  });
+
+  /* ---- keyboard --------------------------------------------------------- */
+  var KEYS = { v: 'select', a: 'arrow', r: 'rect', e: 'ellipse', h: 'highlight',
+               p: 'pen', t: 'text', n: 'number', b: 'blur' };
+
+  document.addEventListener('keydown', function (e) {
+    if (e.target === textEdit) return;
+    var k = (e.key || '').toLowerCase();
+
+    if (e.key === ' ') { spaceDown = true; e.preventDefault(); return; }
+
+    if (e.ctrlKey || e.metaKey) {
+      if (k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); return; }
+      if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); redo(); return; }
+      if (k === 'c') { e.preventDefault(); copyOut(); return; }
+      if (k === 's') { e.preventDefault(); saveOut(); return; }
+      return;      // leave Ctrl+V to the paste handler
+    }
+
+    if (k === 'delete' || k === 'backspace') {
+      if (sel >= 0) { e.preventDefault(); pushUndo(); shapes.splice(sel, 1); sel = -1; render(); syncButtons(); }
+      return;
+    }
+    if (k === 'escape') { sel = -1; render(); return; }
+    if (KEYS[k]) { e.preventDefault(); setTool(KEYS[k]); }
+  });
+
+  document.addEventListener('keyup', function (e) {
+    if (e.key === ' ') spaceDown = false;
+  });
+
+  syncButtons();
+  render();
+})();
+</script>
+</body>
+</html>

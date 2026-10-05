@@ -1,0 +1,78 @@
+{
+  "name": "toolbox",
+  "productName": "Toolbox",
+  "version": "1.6.0",
+  "description": "DAVFX tools: flipbooks, textures, video, graphics, Unity scene sync and clip joining",
+  "author": "DAVFX",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "node prepare-scene-sync.cjs && electron-builder",
+    "test:scene-sync": "node scene-sync/tests/engine-tests.cjs && node --test scene-sync/tests/audit-tests.cjs scene-sync/tests/api-cli-tests.cjs scene-sync/tests/open-projects-tests.cjs tests/scene-sync-host.test.cjs",
+    "prepare:scene-sync": "node prepare-scene-sync.cjs",
+    "test:ui": "node tests/toolbox-ui.cjs",
+    "test:workflow": "node tests/toolbox-ui.cjs --workflow"
+  },
+  "toolConfig": {
+    "width": 1700,
+    "height": 1000,
+    "minWidth": 900,
+    "minHeight": 620,
+    "background": "#141416"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.davfx.toolbox",
+    "productName": "Toolbox",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json",
+      "app/**/*",
+      "scene-sync-host.cjs"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Toolbox",
+      "artifactName": "Toolbox-${version}-setup.exe"
+    },
+    "compression": "maximum",
+    "extraResources": [
+      {
+        "from": "scene-sync",
+        "to": "scene-sync",
+        "filter": [
+          "backend/**",
+          "runtime/**",
+          "licenses/**",
+          "README.md",
+          "THIRD-PARTY.md",
+          "manifest.json"
+        ]
+      }
+    ]
+  }
+}

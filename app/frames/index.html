@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Frame Strip</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scrollbar-gutter:stable;color-scheme:dark}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#2b2b31;border-radius:6px;border:2px solid #101013}
+::-webkit-scrollbar-thumb:hover{background:#3b3b43}
+body{background:#101013;color:#c8c8cc;font:13px/1.45 'Segoe UI',system-ui,sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+header{display:flex;align-items:baseline;gap:12px;padding:10px 14px;border-bottom:1px solid #232326;flex:none}
+header h1{font-size:12px;font-weight:600;color:#fff;letter-spacing:.08em;text-transform:uppercase}
+header span{font-size:11px;color:#55555c}
+
+.bar{display:flex;align-items:center;gap:7px;padding:9px 14px;border-bottom:1px solid #232326;flex:none;flex-wrap:wrap}
+.grow{flex:1}
+.sep{width:1px;height:18px;background:#2a2a2e;flex:none}
+.meta{font-size:11px;color:#5f5f68}
+
+button{background:#1e1e21;border:1px solid #313136;color:#bbb;border-radius:4px;padding:5px 12px;font-size:12px;cursor:pointer;white-space:nowrap;transition:background .1s,border-color .1s,color .1s}
+button:hover:not(:disabled){background:#27272b;border-color:#5a5a63;color:#fff}
+button:disabled{opacity:.3;cursor:not-allowed}
+button.primary{background:#3d2f10;border-color:#e0a33e;color:#f0c375;font-weight:600}
+button.primary:hover:not(:disabled){background:#4d3b14;border-color:#f0b855}
+
+label{font-size:11px;color:#5f5f68;white-space:nowrap}
+input[type=text],select{background:#1a1a1d;border:1px solid #2b2b30;color:#c8c8cc;border-radius:3px;padding:4px 7px;font-size:12px}
+input[type=number]{background:#1a1a1d;border:1px solid #2b2b30;color:#c8c8cc;border-radius:3px;padding:4px 6px;font-size:12px;width:62px;text-align:center}
+input:focus,select:focus{outline:none;border-color:#e0a33e}
+input[type=range]{accent-color:#e0a33e;cursor:pointer}
+input[type=color]{width:26px;height:24px;border:1px solid #2e2e2e;border-radius:3px;background:#1c1c1c;cursor:pointer;padding:2px}
+select{cursor:pointer}
+.val{font:11px ui-monospace,Consolas,monospace;color:#8a8a94;min-width:40px;text-align:right}
+
+.cols{flex:1;display:grid;grid-template-columns:316px 1fr;min-height:0}
+.opts{border-right:1px solid #232326;overflow-y:auto;padding:12px}
+.opts h2{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#4d4d55;margin:15px 0 7px}
+.opts h2:first-child{margin-top:0}
+.row{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.row>label{min-width:74px;flex:none}
+.row>select,.row>input[type=range]{flex:1;min-width:0}
+.hint{font-size:11px;color:#45454c;margin:3px 0 2px;line-height:1.5}
+
+.main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.stage{position:relative;flex:1;background:#0a0a0c;border-bottom:1px solid #1e1e21;overflow:hidden;cursor:grab;touch-action:none;min-height:180px}
+.stage.panning{cursor:grabbing}
+#sheet{display:block;background-image:linear-gradient(45deg,#171719 25%,transparent 25%),linear-gradient(-45deg,#171719 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#171719 75%),linear-gradient(-45deg,transparent 75%,#171719 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0}
+.view{position:absolute;right:8px;top:8px;display:flex;gap:5px;align-items:center;background:rgba(12,12,14,.86);border:1px solid #262626;border-radius:4px;padding:3px 5px}
+.view span{font-size:11px;color:#777;min-width:44px;text-align:center}
+.view button{padding:2px 8px;font-size:11px}
+
+.trim{flex:none;padding:10px 14px;display:grid;grid-template-columns:196px 1fr;gap:14px;align-items:center}
+#scrub{width:196px;height:110px;background:#000;border:1px solid #26262a;border-radius:4px;object-fit:contain}
+.trim-ctl{display:flex;flex-direction:column;gap:7px;min-width:0}
+.trim-row{display:flex;align-items:center;gap:9px}
+.trim-row>label{min-width:40px}
+.trim-row>input[type=range]{flex:1;min-width:0}
+.drop{border:1px dashed #34343a;border-radius:6px;padding:26px 14px;text-align:center;color:#5f5f68;cursor:pointer;position:relative;grid-column:1 / -1}
+.drop:hover,.drop.over{border-color:#e0a33e;color:#a8a8b0;background:#16161a}
+.drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+
+.status{flex:none;padding:7px 14px;border-top:1px solid #232326;font-size:11px;color:#55555c;min-height:28px}
+.status.warn{color:#c9a84a}
+.status.err{color:#e06c6c}
+.status.ok{color:#6fc48a}
+.status.busy{color:#e0a33e}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Frame Strip</h1>
+  <span>drop a capture &middot; pick the stretch that matters &middot; get the whole effect as one image</span>
+</header>
+
+<div class="bar">
+  <button id="pick">Choose video…</button>
+  <span class="meta" id="vidMeta">no video</span>
+  <div class="sep"></div>
+  <button id="regrab" disabled>Re-extract</button>
+  <div class="grow"></div>
+  <button id="copy" disabled>Copy to clipboard</button>
+  <button id="export" class="primary" disabled>Export PNG</button>
+</div>
+
+<div class="cols">
+  <aside class="opts">
+
+    <h2>Frames</h2>
+    <div class="row">
+      <label>Count</label>
+      <input type="range" id="count" min="2" max="48" step="1" value="9">
+      <span class="val" id="countV">9</span>
+    </div>
+    <div class="row">
+      <label>Sampling</label>
+      <select id="sampling">
+        <option value="ends" selected>include first and last</option>
+        <option value="centres">even intervals</option>
+      </select>
+    </div>
+    <div class="hint">“Even intervals” takes the middle of each slice, which avoids a black first frame on captures that fade in.</div>
+
+    <h2>Layout</h2>
+    <div class="row">
+      <label>Arrange</label>
+      <select id="layout">
+        <option value="grid" selected>Grid</option>
+        <option value="row">Single row</option>
+        <option value="col">Single column</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>Columns</label>
+      <input type="range" id="cols" min="1" max="12" step="1" value="3">
+      <span class="val" id="colsV">3</span>
+    </div>
+    <div class="row">
+      <label>Width</label>
+      <input type="number" id="outW" min="128" max="8192" step="16" value="1920">
+      <span class="val" id="outH">&nbsp;</span>
+    </div>
+    <div class="row">
+      <label>Gap</label>
+      <input type="range" id="gap" min="0" max="60" step="1" value="8">
+      <span class="val" id="gapV">8</span>
+    </div>
+    <div class="row">
+      <label>Margin</label>
+      <input type="range" id="pad" min="0" max="120" step="1" value="8">
+      <span class="val" id="padV">8</span>
+    </div>
+    <div class="row">
+      <label>Corners</label>
+      <input type="range" id="radius" min="0" max="40" step="1" value="0">
+      <span class="val" id="radiusV">0</span>
+    </div>
+    <div class="row">
+      <label>Border</label>
+      <input type="range" id="border" min="0" max="12" step="1" value="0">
+      <input type="color" id="borderColor" value="#2a2a2e">
+    </div>
+    <div class="row">
+      <label>Background</label>
+      <input type="color" id="bg" value="#101013">
+      <label style="min-width:0"><input type="checkbox" id="transparent"> none</label>
+    </div>
+
+    <h2>Labels</h2>
+    <div class="row">
+      <label>Show</label>
+      <select id="labelMode">
+        <option value="none">nothing</option>
+        <option value="time" selected>timestamp</option>
+        <option value="number">frame number</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>Place</label>
+      <select id="labelPos">
+        <option value="above" selected>above the frame</option>
+        <option value="top">over the top</option>
+        <option value="bottom">over the bottom</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>Size</label>
+      <input type="range" id="labelSize" min="9" max="56" step="1" value="18">
+      <span class="val" id="labelSizeV">18</span>
+      <input type="color" id="labelColor" value="#e8e8ea">
+    </div>
+
+  </aside>
+
+  <div class="main">
+    <div class="stage" id="stage">
+      <canvas id="sheet" width="16" height="9"></canvas>
+      <div class="view">
+        <button id="zoomOut" title="Zoom out">&minus;</button>
+        <span id="zoomV">100%</span>
+        <button id="zoomIn" title="Zoom in">+</button>
+        <button id="fit" title="Fit to view">Fit</button>
+      </div>
+    </div>
+
+    <div class="trim" id="trim">
+      <div class="drop" id="drop">
+        <div>Drop a video here &middot; or click to choose</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="status" id="status">Load a capture to begin.</div>
+
+<input type="file" id="file" accept="video/*" hidden>
+<video id="scrub" muted playsinline preload="auto" style="display:none"></video>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   Frame Strip - lay the frames of a capture out as one contact sheet.
+
+   Frames are pulled out of the video once and kept as canvases. Everything
+   after that (layout, spacing, labels, zoom) redraws from that cache, so the
+   slow part happens only when the clip, the range or the frame count changes.
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+
+  var video = $('scrub');
+  var stageEl = $('stage');
+  var sheet = $('sheet');
+  var ctx = sheet.getContext('2d');
+
+  var frames = [];        // { t, canvas }
+  var srcName = '';
+  var srcUrl = '';
+  var aspect = 16 / 9;
+  var duration = 0;
+  var grabbing = false;
+  var pendingGrab = null;
+
+  // A full-resolution cache of 48 frames would run to hundreds of megabytes,
+  // and a contact sheet never needs that much per cell.
+  var MAX_FRAME_W = 1280;
+
+  /* ---- options ---------------------------------------------------------- */
+  function opts() {
+    return {
+      count: parseInt($('count').value, 10) || 9,
+      sampling: $('sampling').value,
+      layout: $('layout').value,
+      cols: parseInt($('cols').value, 10) || 3,
+      outW: Math.max(128, Math.min(8192, parseInt($('outW').value, 10) || 1920)),
+      gap: parseInt($('gap').value, 10) || 0,
+      pad: parseInt($('pad').value, 10) || 0,
+      radius: parseInt($('radius').value, 10) || 0,
+      border: parseInt($('border').value, 10) || 0,
+      borderColor: $('borderColor').value,
+      bg: $('bg').value,
+      transparent: $('transparent').checked,
+      labelMode: $('labelMode').value,
+      labelPos: $('labelPos').value,
+      labelSize: parseInt($('labelSize').value, 10) || 18,
+      labelColor: $('labelColor').value
+    };
+  }
+
+  function trimRange() {
+    var a = $('start'), b = $('end');
+    if (!a || !b) return { start: 0, end: duration };
+    var s = parseFloat(a.value), e = parseFloat(b.value);
+    if (e < s) { var t = s; s = e; e = t; }
+    return { start: s, end: e };
+  }
+
+  function fmtTime(t) {
+    var m = Math.floor(t / 60);
+    var s = t - m * 60;
+    return m + ':' + (s < 10 ? '0' : '') + s.toFixed(2);
+  }
+
+  /* ---- layout ----------------------------------------------------------- */
+  function layout(o) {
+    var n = frames.length;
+    if (!n) return { width: o.outW, height: Math.round(o.outW * 9 / 16), cells: [], cols: 0, rows: 0 };
+
+    var cols = o.layout === 'row' ? n
+             : o.layout === 'col' ? 1
+             : Math.max(1, Math.min(o.cols, n));
+    var rows = Math.ceil(n / cols);
+
+    var inner = Math.max(1, o.outW - o.pad * 2);
+    var cellW = (inner - (cols - 1) * o.gap) / cols;
+    var cellH = Math.max(1, cellW / aspect);
+    var capH = (o.labelMode !== 'none' && o.labelPos === 'above')
+      ? Math.round(o.labelSize * 1.75) : 0;
+
+    var cells = [];
+    for (var i = 0; i < n; i++) {
+      var r = Math.floor(i / cols), c = i % cols;
+      cells.push({
+        x: o.pad + c * (cellW + o.gap),
+        y: o.pad + r * (cellH + capH + o.gap) + capH,
+        w: cellW, h: cellH, cap: capH, frame: frames[i], index: i
+      });
+    }
+    var height = Math.round(o.pad * 2 + rows * (cellH + capH) + (rows - 1) * o.gap);
+    return { width: o.outW, height: height, cells: cells, cols: cols, rows: rows };
+  }
+
+  function roundRect(c, x, y, w, h, r) {
+    r = Math.max(0, Math.min(r, w / 2, h / 2));
+    c.beginPath();
+    if (!r) { c.rect(x, y, w, h); return; }
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+  }
+
+  function labelFor(cell, o) {
+    if (o.labelMode === 'time') return fmtTime(cell.frame.t);
+    if (o.labelMode === 'number') return String(cell.index + 1);
+    return '';
+  }
+
+  function draw(c, L, o, scale) {
+    c.save();
+    c.scale(scale, scale);
+    c.clearRect(0, 0, L.width, L.height);
+    if (!o.transparent) { c.fillStyle = o.bg; c.fillRect(0, 0, L.width, L.height); }
+
+    L.cells.forEach(function (cell) {
+      c.save();
+      roundRect(c, cell.x, cell.y, cell.w, cell.h, o.radius);
+      c.clip();
+      c.drawImage(cell.frame.canvas, cell.x, cell.y, cell.w, cell.h);
+
+      var txt = labelFor(cell, o);
+      if (txt && o.labelPos !== 'above') {
+        var fs = o.labelSize, barH = fs * 1.9;
+        var barY = o.labelPos === 'top' ? cell.y : cell.y + cell.h - barH;
+        c.fillStyle = 'rgba(0,0,0,.6)';
+        c.fillRect(cell.x, barY, cell.w, barH);
+        c.fillStyle = o.labelColor;
+        c.font = '600 ' + fs + "px 'Segoe UI', system-ui, sans-serif";
+        c.textBaseline = 'middle';
+        c.textAlign = 'center';
+        c.fillText(txt, cell.x + cell.w / 2, barY + barH / 2, cell.w - fs);
+      }
+      c.restore();
+
+      if (txt && o.labelPos === 'above' && cell.cap) {
+        c.save();
+        c.fillStyle = o.labelColor;
+        c.font = '600 ' + o.labelSize + "px 'Segoe UI', system-ui, sans-serif";
+        c.textBaseline = 'alphabetic';
+        c.textAlign = 'center';
+        c.fillText(txt, cell.x + cell.w / 2, cell.y - cell.cap * 0.32, cell.w);
+        c.restore();
+      }
+
+      if (o.border > 0) {
+        c.save();
+        roundRect(c, cell.x + o.border / 2, cell.y + o.border / 2,
+                  Math.max(1, cell.w - o.border), Math.max(1, cell.h - o.border), o.radius);
+        c.lineWidth = o.border;
+        c.strokeStyle = o.borderColor;
+        c.stroke();
+        c.restore();
+      }
+    });
+
+    c.restore();
+  }
+
+  /* ---- viewport --------------------------------------------------------- */
+  var view = { zoom: 1, x: 0, y: 0, fitted: true };
+  var ZMIN = 0.02, ZMAX = 16;
+
+  function stageSize() {
+    return { w: Math.max(40, stageEl.clientWidth), h: Math.max(40, stageEl.clientHeight) };
+  }
+  function fitView(L) {
+    var s = stageSize(), pad = 16;
+    var z = Math.min((s.w - pad * 2) / L.width, (s.h - pad * 2) / L.height);
+    view.zoom = Math.max(ZMIN, Math.min(ZMAX, z));
+    view.x = (s.w - L.width * view.zoom) / 2;
+    view.y = (s.h - L.height * view.zoom) / 2;
+    view.fitted = true;
+  }
+
+  function render() {
+    var o = opts();
+    var L = layout(o);
+    var s = stageSize();
+    var dpr = window.devicePixelRatio || 1;
+
+    sheet.width = Math.max(1, Math.round(s.w * dpr));
+    sheet.height = Math.max(1, Math.round(s.h * dpr));
+    sheet.style.width = s.w + 'px';
+    sheet.style.height = s.h + 'px';
+
+    if (view.fitted) fitView(L);
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, s.w, s.h);
+    ctx.save();
+    ctx.translate(view.x, view.y);
+    draw(ctx, L, o, view.zoom);
+    ctx.restore();
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,.10)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(view.x + 0.5, view.y + 0.5, L.width * view.zoom, L.height * view.zoom);
+    ctx.restore();
+
+    $('zoomV').textContent = Math.round(view.zoom * 100) + '%';
+    $('outH').textContent = frames.length ? '× ' + L.height : '';
+    $('export').disabled = !frames.length;
+    $('copy').disabled = !frames.length;
+    $('regrab').disabled = !srcUrl || grabbing;
+
+    // An error has to survive the redraw that follows it, or the user never
+    // sees why nothing happened.
+    if (!grabbing && !statusIsError) {
+      setStatus(frames.length
+        ? frames.length + ' frames · ' + L.cols + '×' + L.rows + ' · ' + L.width + '×' + L.height
+        : 'Load a capture to begin.');
+    }
+  }
+
+  var statusIsError = false;
+  function setStatus(msg, cls) {
+    var s = $('status');
+    s.textContent = msg;
+    s.className = 'status' + (cls ? ' ' + cls : '');
+    statusIsError = cls === 'err';
+  }
+
+  function zoomAt(mx, my, factor) {
+    var nz = Math.max(ZMIN, Math.min(ZMAX, view.zoom * factor));
+    if (nz === view.zoom) return;
+    view.x = mx - (mx - view.x) * (nz / view.zoom);
+    view.y = my - (my - view.y) * (nz / view.zoom);
+    view.zoom = nz;
+    view.fitted = false;
+    render();
+  }
+
+  stageEl.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    var r = stageEl.getBoundingClientRect();
+    zoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1.12 : 1 / 1.12);
+  }, { passive: false });
+
+  var pan = null;
+  stageEl.addEventListener('pointerdown', function (e) {
+    if (e.target.closest && e.target.closest('.view')) return;
+    pan = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y };
+    stageEl.classList.add('panning');
+    stageEl.setPointerCapture(e.pointerId);
+  });
+  stageEl.addEventListener('pointermove', function (e) {
+    if (!pan) return;
+    view.x = pan.vx + (e.clientX - pan.x);
+    view.y = pan.vy + (e.clientY - pan.y);
+    view.fitted = false;
+    render();
+  });
+  ['pointerup', 'pointercancel'].forEach(function (t) {
+    stageEl.addEventListener(t, function () { pan = null; stageEl.classList.remove('panning'); });
+  });
+  stageEl.addEventListener('dblclick', function () { view.fitted = true; render(); });
+  $('fit').addEventListener('click', function () { view.fitted = true; render(); });
+  $('zoomIn').addEventListener('click', function () { var s = stageSize(); zoomAt(s.w / 2, s.h / 2, 1.25); });
+  $('zoomOut').addEventListener('click', function () { var s = stageSize(); zoomAt(s.w / 2, s.h / 2, 1 / 1.25); });
+  window.addEventListener('resize', render);
+
+  /* ---- loading a video -------------------------------------------------- */
+  function loadFile(file) {
+    if (!file || file.type.indexOf('video/') !== 0) {
+      setStatus('That is not a video file.', 'err');
+      return;
+    }
+    if (srcUrl) URL.revokeObjectURL(srcUrl);
+    srcUrl = URL.createObjectURL(file);
+    srcName = file.name;
+    frames = [];
+    statusIsError = false;
+    setStatus('Reading ' + srcName + '…', 'busy');
+
+    video.onloadedmetadata = function () {
+      duration = video.duration && isFinite(video.duration) ? video.duration : 0;
+      aspect = (video.videoWidth && video.videoHeight)
+        ? video.videoWidth / video.videoHeight : 16 / 9;
+      $('vidMeta').textContent = srcName + ' · ' + video.videoWidth + '×' + video.videoHeight +
+                                 ' · ' + fmtTime(duration);
+      buildTrim();
+      video.style.display = '';
+      grabFrames();
+    };
+    video.onerror = function () {
+      setStatus('Could not decode that video. H.264 MP4 and WebM work; some codecs do not.', 'err');
+    };
+    video.src = srcUrl;
+  }
+
+  // The trim controls only make sense once a duration is known.
+  function buildTrim() {
+    var box = $('trim');
+    box.innerHTML = '';
+    box.appendChild(video);
+
+    var ctl = document.createElement('div');
+    ctl.className = 'trim-ctl';
+    ctl.innerHTML =
+      '<div class="trim-row"><label>Start</label>' +
+      '<input type="range" id="start" min="0" max="' + duration + '" step="0.01" value="0">' +
+      '<span class="val" id="startV">0:00.00</span></div>' +
+      '<div class="trim-row"><label>End</label>' +
+      '<input type="range" id="end" min="0" max="' + duration + '" step="0.01" value="' + duration + '">' +
+      '<span class="val" id="endV">' + fmtTime(duration) + '</span></div>' +
+      '<div class="trim-row"><button id="whole">Whole clip</button>' +
+      '<span class="hint" id="trimInfo" style="margin:0"></span></div>';
+    box.appendChild(ctl);
+
+    var t = null;
+    function onTrim(which) {
+      var r = trimRange();
+      $('startV').textContent = fmtTime(r.start);
+      $('endV').textContent = fmtTime(r.end);
+      $('trimInfo').textContent = 'covering ' + (r.end - r.start).toFixed(2) + 's';
+      // scrub the preview to whichever handle is moving
+      seek(which === 'end' ? r.end : r.start);
+      clearTimeout(t);
+      t = setTimeout(grabFrames, 320);
+    }
+    $('start').addEventListener('input', function () { onTrim('start'); });
+    $('end').addEventListener('input', function () { onTrim('end'); });
+    $('whole').addEventListener('click', function () {
+      $('start').value = 0; $('end').value = duration; onTrim('start');
+    });
+    $('trimInfo').textContent = 'covering ' + duration.toFixed(2) + 's';
+  }
+
+  function seek(t) {
+    return new Promise(function (resolve) {
+      if (!isFinite(t)) { resolve(); return; }
+      var target = Math.max(0, Math.min(t, Math.max(0, duration - 0.001)));
+      var settled = false;
+      // Some containers refuse to seek to a particular spot and simply never
+      // fire 'seeked'. Without a deadline the extraction would hang for good.
+      var timer = setTimeout(finish, 4000);
+      function finish() {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        video.removeEventListener('seeked', finish);
+        resolve();
+      }
+      video.addEventListener('seeked', finish);
+      video.currentTime = target;
+    });
+  }
+
+  /* ---- pulling the frames out ------------------------------------------- */
+  async function grabFrames() {
+    if (!srcUrl || !duration) return;
+    if (grabbing) { pendingGrab = true; return; }
+    grabbing = true;
+    $('regrab').disabled = true;
+
+    var o = opts();
+    var r = trimRange();
+    var n = o.count;
+    var span = Math.max(0, r.end - r.start);
+
+    var times = [];
+    for (var i = 0; i < n; i++) {
+      var f = (o.sampling === 'centres')
+        ? (i + 0.5) / n
+        : (n === 1 ? 0 : i / (n - 1));
+      times.push(r.start + span * f);
+    }
+
+    var scale = Math.min(1, MAX_FRAME_W / (video.videoWidth || MAX_FRAME_W));
+    var fw = Math.max(1, Math.round((video.videoWidth || 1280) * scale));
+    var fh = Math.max(1, Math.round((video.videoHeight || 720) * scale));
+
+    var out = [];
+    try {
+      for (var k = 0; k < times.length; k++) {
+        setStatus('Extracting frame ' + (k + 1) + ' of ' + times.length + '…', 'busy');
+        await seek(times[k]);
+        var c = document.createElement('canvas');
+        c.width = fw; c.height = fh;
+        c.getContext('2d').drawImage(video, 0, 0, fw, fh);
+        out.push({ t: times[k], canvas: c });
+      }
+      frames = out;
+      view.fitted = true;
+      setStatus('');
+    } catch (err) {
+      setStatus('Extraction failed: ' + err.message, 'err');
+    }
+
+    grabbing = false;
+    render();
+
+    if (pendingGrab) { pendingGrab = false; grabFrames(); }
+  }
+
+  $('regrab').addEventListener('click', grabFrames);
+
+  /* ---- input ------------------------------------------------------------ */
+  $('file').addEventListener('change', function (e) {
+    if (e.target.files && e.target.files[0]) loadFile(e.target.files[0]);
+    e.target.value = '';   // otherwise re-picking the same file fires nothing
+  });
+  $('pick').addEventListener('click', function () { $('file').click(); });
+  var dropZone = $('drop');
+  if (dropZone) dropZone.addEventListener('click', function () { $('file').click(); });
+
+  ['dragenter', 'dragover'].forEach(function (t) {
+    document.addEventListener(t, function (e) { e.preventDefault(); });
+  });
+  document.addEventListener('drop', function (e) {
+    e.preventDefault();
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+      loadFile(e.dataTransfer.files[0]);
+    }
+  });
+
+  /* ---- export ----------------------------------------------------------- */
+  function compose() {
+    var o = opts();
+    var L = layout(o);
+    var c = document.createElement('canvas');
+    c.width = L.width; c.height = L.height;
+    draw(c.getContext('2d'), L, o, 1);
+    return c;
+  }
+
+  $('export').addEventListener('click', function () {
+    if (!frames.length) return;
+    compose().toBlob(function (blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      var base = srcName.replace(/\.[^.]+$/, '') || 'frames';
+      a.href = url;
+      a.download = base + '_' + frames.length + 'frames.png';
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+    }, 'image/png');
+  });
+
+  $('copy').addEventListener('click', function () {
+    if (!frames.length) return;
+    var btn = $('copy'), old = btn.textContent;
+    compose().toBlob(function (blob) {
+      if (!window.ClipboardItem || !navigator.clipboard || !navigator.clipboard.write) {
+        btn.textContent = 'Clipboard unavailable';
+        setTimeout(function () { btn.textContent = old; }, 1600);
+        return;
+      }
+      navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(function () {
+        btn.textContent = 'Copied';
+        setTimeout(function () { btn.textContent = old; }, 1400);
+      }, function () {
+        btn.textContent = 'Copy failed';
+        setTimeout(function () { btn.textContent = old; }, 1600);
+      });
+    }, 'image/png');
+  });
+
+  /* ---- wiring ----------------------------------------------------------- */
+  // Count and sampling change which frames are needed, so they re-extract.
+  ['count', 'sampling'].forEach(function (id) {
+    var el = $(id);
+    var t = null;
+    el.addEventListener('input', function () {
+      var v = $(id + 'V');
+      if (v) v.textContent = el.value;
+      clearTimeout(t);
+      t = setTimeout(grabFrames, 300);
+    });
+  });
+
+  // Everything else is pure layout, so it redraws from the cached frames.
+  ['layout', 'cols', 'outW', 'gap', 'pad', 'radius', 'border', 'borderColor',
+   'bg', 'transparent', 'labelMode', 'labelPos', 'labelSize', 'labelColor'].forEach(function (id) {
+    var el = $(id);
+    el.addEventListener('input', function () {
+      var v = $(id + 'V');
+      if (v) v.textContent = el.value;
+      render();
+    });
+    el.addEventListener('change', render);
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
