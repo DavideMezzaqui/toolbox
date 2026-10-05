@@ -52,6 +52,8 @@ Electron remains **33.4.11**, locked by `package-lock.json`; electron-builder re
 
 The repository is this folder, `Tools/apps/Toolbox`: everything needed to rebuild the app is here, nothing else. Ignored: `node_modules`, `dist`, test output, `scene-sync/manifest.json` (generated) and `scene-sync/runtime/node.exe` (93 MB; `prepare-scene-sync.cjs` copies in the Node that runs the build - byte-identical to the bundled one, checked). Line endings: LF everywhere, CRLF for `.ps1`.
 
+Remote since 5 October 2026: `origin` = https://github.com/DavideMezzaqui/toolbox (Davide created it; credentials are already stored in Git Credential Manager, the first push needed no login). Push after each commit once the tests pass.
+
 Davide does not use Git himself. **Claude commits** at the end of each piece of work he asked for, after the tests pass, with a plain message saying what changed and why. Rules: never force-push, never rewrite history, `git pull --ff-only` before pushing, stop and tell him if anything would need merging. Check `git status` before starting work: changes not made in this session are his or another tool's, and must not be swept into a commit without saying so.
 
 `npm run test:scene-sync` runs engine tests **before** the audit suite, since the latter consumes `test-results.json` fixtures. Do not parallelize that dependency.

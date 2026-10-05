@@ -1,6 +1,6 @@
 # Revision in progress (started 2026-10-04)
 
-Three documents from Davide, all approved ("Applica tutto"): Store Graphics revision (13 points), Store Graphics images panel (second prompt), Toolbox changes (tab bar, startup, last tool, Git). Status 2026-10-05: Store Graphics points 2-11 and the second prompt are done (see CLAUDE.md, "Store Graphics revision"); the Toolbox shell, start-up and Git points are done. All three documents and the overlay pass are done (overlay pass and Looks removal on 2026-10-05, see the end of this file); the repository is on GitHub (github.com/DavideMezzaqui/toolbox, private).
+Three documents from Davide, all approved ("Applica tutto"): Store Graphics revision (13 points), Store Graphics images panel (second prompt), Toolbox changes (tab bar, startup, last tool, Git). Status 2026-10-05: Store Graphics points 2-11 and the second prompt are done (see CLAUDE.md, "Store Graphics revision"); the Toolbox shell, start-up and Git points are done. All three documents and the overlay pass are done (overlay pass and Looks removal on 2026-10-05, see the end of this file); the repository is on GitHub (github.com/DavideMezzaqui/toolbox).
 
 ## Findings so far (Store Graphics, `app/store/index.html`)
 
