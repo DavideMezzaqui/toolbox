@@ -1075,6 +1075,8 @@ function pannelloAttivo(S){
 function migraPannelli(L){
   const S = L && L.shot;
   if(!S) return L;
+  /* un file con un numero di pannelli enorme o non numerico bloccava il disegno */
+  if(S.panels !== undefined) S.panels = Math.min(PANNELLI_MAX, Math.max(1, Math.round(+S.panels) || 1));
   Object.keys(PANNELLO_ZERO).forEach(k=>{
     if(!Array.isArray(S[k])) S[k] = [];
     for(let i=0;i<PANNELLI_MAX;i++) if(S[k][i]===undefined) S[k][i] = PANNELLO_ZERO[k];
@@ -2351,7 +2353,9 @@ function drawRow(c, W, H, r, pack, maxR){
     titleLines(title).forEach(l=>{ wTitle = Math.max(wTitle, c.measureText(l).width); });
     const need = Math.max(x+wTitle, x2+wBrand) - Math.min(x,x2);
     if(need > avail){
-      const k = avail/need; tPx *= k; iPx *= k;
+      /* lo scarto fra marchio e titolo non si restringe: si scalano solo le larghezze dei testi */
+      const left0 = Math.min(x,x2);
+      const k = Math.max(0.1, Math.min(avail/need, wTitle>0 ? (avail-(x-left0))/wTitle : 1e9, wBrand>0 ? (avail-(x2-left0))/wBrand : 1e9)); tPx *= k; iPx *= k;
       setFont(c, iFont(r), r.titleWeight, iPx, iTrack(r)); wBrand = c.measureText(brand).width;
       setFont(c, tFont(r), '500', tPx, tTrack(r));
       wTitle = 0; titleLines(title).forEach(l=>{ wTitle = Math.max(wTitle, c.measureText(l).width); });
@@ -4025,11 +4029,11 @@ let undoStack = [], redoStack = [];
 function snapState(){
   return JSON.stringify({pack:state.pack, theme:state.theme, naming:state.naming,
                          layouts:state.layouts,
-                         variants:state.variants, ui:state.ui, export:state.export});
+                         variants:state.variants, current:state.currentVariant, ui:state.ui, export:state.export});
 }
 function applySnap(s){
   const d = JSON.parse(s);
-  state.pack = d.pack;
+  if(d.pack && typeof d.pack === 'object') state.pack = d.pack;   /* un salvataggio senza testi lascia quelli che ci sono */
   state.layouts = d.layouts || {};
   migraTuttiIPannelli(state.layouts);
   /* Nessun formato puo' restare senza layout: un salvataggio piu' vecchio,
@@ -4048,7 +4052,8 @@ function applySnap(s){
   if(d.theme)  state.theme  = d.theme;
   if(d.naming) state.naming = d.naming;
   if(d.export) state.export = Object.assign(state.export, d.export);
-  if(Array.isArray(d.variants)) state.variants = d.variants;
+  if(Array.isArray(d.variants)) state.variants = d.variants.filter(v=> v && typeof v === 'object');
+  if(d.current !== undefined) state.currentVariant = (d.current < state.variants.length) ? d.current : null;
   if(d.ui){
     if(d.ui.thumb !== undefined) state.ui.thumb = d.ui.thumb;
     if(d.ui.margin !== undefined) state.ui.margin = d.ui.margin;
@@ -4272,13 +4277,15 @@ function migraOpacitaTesto(got){
 let ripristinoRotto = false;
 function autoRestore(){
   ripristinoRotto = false;
-  let raw = null;
+  let raw = null, prima = null;
   try{ raw = localStorage.getItem(AUTOKEY); }catch(err){ return false; }
   if(!raw) return false;
   try{
     const d = JSON.parse(raw);
     if(!d || !d.snap) return false;
     const got = JSON.parse(d.snap);
+    if(!got || typeof got !== 'object') throw new Error('empty');
+    prima = snapState();
     /* i salvataggi di una versione vecchia non hanno i campi nuovi:
        li riempio dai default, come per i preset */
     if(got.layouts) FORMATS.forEach(fm=>{
@@ -4300,7 +4307,12 @@ function autoRestore(){
     undoStack.length = 0; redoStack.length = 0;
     undoShots.length = 0; redoShots.length = 0; updateHistBtns();
     return true;
-  }catch(err){ ripristinoRotto = true; return false; }
+  }catch(err){
+    ripristinoRotto = true;
+    /* a meta applicato e rotto: si torna a com'era, se no resta uno stato che non si disegna */
+    if(prima){ try{ applySnap(prima); }catch(e2){} }
+    return false;
+  }
 }
 
 const GLOBAL_GROUPS = ['pack','theme','naming','snap','export','auto','ui'];
@@ -4416,7 +4428,8 @@ function sizeOf(f){
   return {w:hit[0], h:hit[1], label:hit[2]};
 }
 function outSize(f){
-  const k = state.export.scale, b = sizeOf(f);
+  /* una scala a 0, negativa o non numerica (da un file progetto) dava un export di 1 px o rotto */
+  const k = state.export.scale > 0 && isFinite(state.export.scale) ? +state.export.scale : 1, b = sizeOf(f);
   return {w: Math.max(1, Math.round(b.w*k)), h: Math.max(1, Math.round(b.h*k))};
 }
 function fileNameFor(f, pk, index){
@@ -4553,6 +4566,10 @@ function buildControls(){
      un cursore a meta' sezione ti ritrovavi all'inizio. La posizione si
      rimette dov'era. */
   const scorri = box.scrollTop;
+  /* il controllo che aveva il fuoco: ricostruendo finirebbe sulla pagina e il
+     Tab dopo cambierebbe formato invece di passare al controllo seguente */
+  const aF = document.activeElement;
+  const fuoco = (aF && box.contains(aF)) ? aF.getAttribute('data-path') : null;
   box.innerHTML = '';
   box.appendChild(stripImmagini());
 
@@ -4620,6 +4637,10 @@ function buildControls(){
   paintIcons(box);
   applyFilter();
   if(scorri) box.scrollTop = scorri;
+  if(fuoco && document.activeElement === document.body){
+    const nuovo = [...box.querySelectorAll('[data-path]')].find(e=> e.getAttribute('data-path')===fuoco);
+    if(nuovo) nuovo.focus({preventScroll:true});
+  }
   if(scrollTo){
     const el = [...box.querySelectorAll('.sec')].find(e=> e.dataset.title===scrollTo);
     if(el) el.scrollIntoView({block:'nearest'});
@@ -5949,7 +5970,7 @@ function aggiungiComandiColore(row, p){
 }
 
 /* ============================================== TRASCINAMENTO SUL CANVAS */
-let dragging=false, mode='move', dragStart=null;
+let dragging=false, mode='move', dragStart=null, dragRedo=null;
 let GUIDES = {x:null, y:null};
 
 /* punti a cui gli elementi si agganciano: margini, centro, altri elementi */
@@ -5990,7 +6011,7 @@ function drawGuides(c, W, H){
 }
 function canvasPos(e){
   const r = cv.getBoundingClientRect();
-  const t = e.touches ? e.touches[0] : e;
+  const t = e.touches ? (e.touches[0] || e.changedTouches[0]) : e;
   return {x:(t.clientX-r.left)/r.width, y:(t.clientY-r.top)/r.height};
 }
 function elOf(k){
@@ -6030,6 +6051,9 @@ function pannelloSotto(x, y){
 
 function startDrag(e){
   if(compareMode) return;
+  /* trascina solo il tasto sinistro: col destro o centrale il mouseup non
+     torna quando si apre un menu, e il trascinamento restava appeso */
+  if(e.button) return;
   const p = canvasPos(e);
   const px = p.x*PW, py = p.y*PH;
   const hr = handleRect(PW, PH);
@@ -6058,6 +6082,8 @@ function startDrag(e){
       selectEl(k);
     }
   }
+  /* il ripeti si salva: un clic che non sposta niente lo deve lasciare com'era */
+  dragRedo = {r: redoStack.slice(), s: redoShots.slice()};
   pushUndo();
   /* con la tela divisa si prende il pannello su cui si e' cliccato */
   if(state.sel === 'shot' && !onHandle){
@@ -6094,6 +6120,9 @@ function startDrag(e){
   render(); e.preventDefault();
 }
 function moveDrag(e){
+  /* tasto rilasciato fuori dalla finestra: il mouseup non arriva, quindi il
+     gesto finisce qui invece di seguire il cursore senza tasti premuti */
+  if(e.type==='mousemove' && e.buttons===0 && (dragging || boxSel)){ endDrag(); return; }
   if(boxSel){
     const q = canvasPos(e);
     boxSel.x1 = q.x; boxSel.y1 = q.y;
@@ -6207,7 +6236,10 @@ function endDrag(){
   /* un clic senza spostare niente non e' una mossa: se restasse nella pila,
      Ctrl+Z dopo un clic sembrerebbe non fare nulla */
   if(undoStack.length && undoStack[undoStack.length-1] === snapState()){
-    undoStack.pop(); undoShots.pop(); updateHistBtns();
+    undoStack.pop(); undoShots.pop();
+    if(dragRedo){ redoStack = dragRedo.r; redoShots = dragRedo.s; }
+    dragRedo = null;
+    updateHistBtns();
   }
   syncControls(); render();
 }
@@ -6233,6 +6265,7 @@ window.addEventListener('mouseup', endDrag);
 cv.addEventListener('touchstart', startDrag, {passive:false});
 window.addEventListener('touchmove', moveDrag, {passive:false});
 window.addEventListener('touchend', endDrag);
+window.addEventListener('touchcancel', endDrag);
 window.addEventListener('keydown', e=>{
   const t = e.target.tagName;
   const inCampo = (t==='INPUT'||t==='TEXTAREA'||t==='SELECT');
@@ -6597,7 +6630,10 @@ function addShots(files, done){
            spariva in silenzio, pur contato fra quelli caricati. */
         const stesso = (a, b)=> a.name === b.name && a.path === b.path &&
           !!a.blob && !!b.blob && a.blob.size === b.blob.size && a.blob.lastModified === b.blob.lastModified;
-        const fresh = loaded.filter(Boolean).filter(sh=> !SHOTS.some(x=> stesso(x, sh)));
+        const fresh = [];
+        loaded.filter(Boolean).forEach(sh=>{
+          if(!SHOTS.some(x=> stesso(x, sh)) && !fresh.some(x=> stesso(x, sh))) fresh.push(sh);
+        });
         /* aggiungere immagini si annulla da solo, non insieme alla mossa prima */
         if(fresh.length) pushUndo();
         fresh.forEach(sh=> SHOTS.push(sh));
@@ -7193,6 +7229,13 @@ function aggiornaMisure(f, L, def){
     if(uguale) L[k][q] = def[k][q];
   });
 }
+/* Numeri che guidano un ciclo di disegno: un file con 1e9 segmenti bloccava la
+   pagina, e il salvataggio automatico lo riportava a ogni avvio. */
+function limitaConteggi(L){
+  const lim = (o, k, a, b, d)=>{ if(o && o[k] !== undefined) o[k] = Math.min(b, Math.max(a, Math.round(+o[k]) || d)); };
+  lim(L.accent, 'segments', 1, 24, 1); lim(L.row, 'sepCount', 1, 6, 1);
+  layersOf(L).forEach(l=>{ lim(l, 'count', 1, 40, 1); lim(l, 'cols', 1, 8, 3); lim(l, 'rows', 1, 8, 3); });
+}
 function mergeLayout(f, got){
   const def = defLayout(f), out = {};
   Object.keys(def).forEach(k=>{
@@ -7202,7 +7245,7 @@ function mergeLayout(f, got){
       : (got[k]!==undefined ? got[k] : def[k]);
   });
   out.layers = Array.isArray(got.layers) ? got.layers.map(fixLayer) : [];
-  migraPannelli(out);
+  migraPannelli(out); limitaConteggi(out);
   /* Una volta sola per layout: senza il segno, un valore rimesso a mano
      uguale a quello vecchio di serie (la fascia all'80%, per dire) tornava
      al nuovo a ogni riapertura. */
@@ -7251,7 +7294,7 @@ function caricaPresetFile(f, handle){
     if(d.pack) state.pack = Object.assign({}, state.pack, d.pack);
     if(d.theme) state.theme = Object.assign({}, state.theme, d.theme);
     if(d.naming) state.naming = Object.assign({}, state.naming, d.naming);
-    if(Array.isArray(d.variants)) state.variants = d.variants;
+    if(Array.isArray(d.variants)) state.variants = d.variants.filter(v=> v && typeof v === 'object');
     if(d.layouts) FORMATS.forEach(fm=>{
       if(d.layouts[fm.id]) state.layouts[fm.id] = mergeLayout(fm, d.layouts[fm.id]);
     });
@@ -7654,13 +7697,26 @@ function variantSnap(name){
           theme:JSON.parse(JSON.stringify(state.theme)),
           layouts:JSON.parse(JSON.stringify(state.layouts))};
 }
+/* Una variante di un progetto vecchio puo' non avere gruppi o formati interi
+   aggiunti dopo: si riempiono dai default come per un file progetto, se no
+   disegnarla da' errore. Le misure restano le sue (niente aggiornaMisure):
+   una variante e' una copia del lavoro com'era. */
+function variantLayouts(v){
+  const out = {};
+  FORMATS.forEach(fm=>{
+    const got = Object.assign({}, (v.layouts && v.layouts[fm.id]) || {});
+    if(got.misure === undefined) got.misure = 2;
+    out[fm.id] = mergeLayout(fm, got);
+  });
+  return out;
+}
 function variantLoad(i){
   const v = state.variants[i];
   if(!v) return;
   pushUndo();
   state.pack = JSON.parse(JSON.stringify(v.pack));
   state.theme = JSON.parse(JSON.stringify(v.theme||state.theme));
-  state.layouts = JSON.parse(JSON.stringify(v.layouts));
+  state.layouts = variantLayouts({layouts: JSON.parse(JSON.stringify(v.layouts || {}))});
   migraTuttiIPannelli(state.layouts);
   state.currentVariant = i;
   buildFormats(); buildControls(); render();
@@ -7685,6 +7741,7 @@ function variantDelete(i){
   pushUndo();
   state.variants.splice(i,1);
   if(state.currentVariant===i) state.currentVariant = null;
+  else if(state.currentVariant > i) state.currentVariant--;
   buildControls(); toast('Variant deleted');
 }
 function variantRename(i){
@@ -7714,8 +7771,11 @@ function compareSheet(){
   g.fillStyle = '#141418'; g.fillRect(0,0,out.width,out.height);
 
   const savePack = state.pack, saveTheme = state.theme, saveLayouts = state.layouts;
+  /* si rimette a posto anche se una variante non si disegna: i suoi testi e
+     layout non devono restare al posto di quelli veri */
+  try{
   list.forEach((v,i)=>{
-    state.pack = v.pack; state.theme = v.theme||saveTheme; state.layouts = v.layouts;
+    state.pack = v.pack; state.theme = v.theme||saveTheme; state.layouts = variantLayouts(v);
     const c = document.createElement('canvas'); c.width=f.w; c.height=f.h;
     renderTo(c.getContext('2d'), f, state.layouts[f.id], false);
     const x = pad + (i%cols)*(cw+pad);
@@ -7726,7 +7786,7 @@ function compareSheet(){
     g.textBaseline = 'alphabetic'; g.textAlign = 'left';
     g.fillText(v.name, x, y+lab*0.78);
   });
-  state.pack = savePack; state.theme = saveTheme; state.layouts = saveLayouts;
+  } finally { state.pack = savePack; state.theme = saveTheme; state.layouts = saveLayouts; }
   return out;
 }
 
@@ -8408,7 +8468,12 @@ Promise.all([...document.fonts].map(f=> f.load().catch(()=>{})))
         'with Font, or the text comes out in the system font'), 3200);
   });
 /* chiudendo la scheda scrivo subito, senza aspettare il timer */
-window.addEventListener('beforeunload', ()=>{ autoSaveNow(); });
+window.addEventListener('beforeunload', ()=>{
+  autoSaveNow();
+  /* le immagini hanno un timer di 400 ms: chiudendo prima, tornerebbero
+     i pannelli ma non le immagini */
+  if(dbTimer){ clearTimeout(dbTimer); dbSalvaOra(); }
+});
 
 /* Due schede aperte sullo stesso file scrivono nello stesso salvataggio
    automatico: l'ultima che chiude cancella il lavoro dell'altra, e in

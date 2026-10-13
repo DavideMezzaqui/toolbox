@@ -106,6 +106,25 @@ module.exports = async function storeCheck({ command, evaluate, until, contexts,
     return [m.accent.thick === d.accent.thick, m.accent.x1 === 1, m.row.x === 0.5, again.band.opacity === 0.8]; })()`);
   assert.deepEqual(mig, [true, true, true, true]);
   checks.push('Store Graphics: saved layouts take the new overlay measures, hand-made changes stay');
+
+  /* stress-test regressions: damaged files, huge counts, variants, duplicates */
+  const hard = await ev(`(async()=>{ const r = {};
+    const f = FORMATS.find(x => x.id === 'unity_cover'), d = defLayout(f);
+    const big = JSON.parse(JSON.stringify(d)); big.shot.panels = 1e6; big.accent.segments = 1e9; big.row.sepCount = 1e9;
+    const m = mergeLayout(f, big); r.counts = [m.shot.panels <= PANNELLI_MAX, m.accent.segments, m.row.sepCount];
+    const sc = state.export.scale; state.export.scale = 0; r.scale = outSize(f).w === sizeOf(f).w; state.export.scale = sc;
+    const live = state.pack;
+    state.variants = [{name:'old', pack:{title:'V'}, layouts:{unity_cover:{shot:{panels:2}}}}, {name:'B', pack:live, theme:state.theme, layouts:state.layouts}, {name:'C', pack:live, theme:state.theme, layouts:state.layouts}];
+    compareSheet(); r.compare = state.pack === live;
+    state.currentVariant = 2; variantDelete(0); r.cur = state.currentVariant;
+    variantLoad(0); render(); r.loaded = !!state.layouts.fab_gallery; undo(); undo();
+    r.bad = (()=>{ const before = snapState(); try{ applySnap(JSON.stringify({variants:[null, 3]})); }catch(e){ return 'throws'; } const ok = state.variants.length === 0 && !!state.pack; applySnap(before); return ok; })();
+    const n0 = SHOTS.length, c = document.createElement('canvas'); c.width = 64; c.height = 64;
+    const file = new File([await new Promise(q => c.toBlob(q, 'image/png'))], 'dup.png', {type:'image/png', lastModified:7});
+    await new Promise(q => addShots([file, file, file], q)); r.dup = SHOTS.length - n0; undo();
+    return r; })()`);
+  assert.deepEqual(hard, {counts:[true, 24, 6], scale:true, compare:true, cur:1, loaded:true, bad:true, dup:1});
+  checks.push('Store Graphics: damaged or huge values in files, old variants, compare view and duplicate files are handled');
   assert.deepEqual(await ev('qaErrors'), []);
   await evaluate('show("scene-sync")');
 };

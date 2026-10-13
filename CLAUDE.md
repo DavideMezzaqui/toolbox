@@ -1,4 +1,4 @@
-# Toolbox — working notes (last updated 2026-10-05, version 1.6.2)
+# Toolbox — working notes (last updated 2026-10-13, version 1.6.3)
 
 Davide asked to integrate **the complete Scene Sync interface inside Toolbox**, not an external launcher.
 
@@ -44,7 +44,7 @@ npm run test:workflow
 
 **Since 1.6.0 Toolbox runs from an unpacked folder, `Tools/_app/Toolbox`, not from a portable .exe.** Davide asked for a much faster start. Measured: the portable .exe took 3.3 to 5.0 s to show its window, because it unpacks the whole app to a temporary folder at every start; the unpacked copy shows it in 0.5 to 0.6 s (1.4 s on a cold first start). The folder is about 360 MB. User data stays in `%APPDATA%\Toolbox` either way, so nothing was lost in the switch. There is no portable target any more.
 
-Electron remains **33.4.11**, locked by `package-lock.json`; electron-builder remains 25.1.8. Do not upgrade them as part of routine feature work. Build caches remain in `Tools/_cache`. Current version: **1.6.2**.
+Electron remains **33.4.11**, locked by `package-lock.json`; electron-builder remains 25.1.8. Do not upgrade them as part of routine feature work. Build caches remain in `Tools/_cache`. Current version: **1.6.3**.
 
 **A running Toolbox cannot be replaced.** `build.ps1` checks for it and stops with "Toolbox is open" instead of letting electron-builder hang.
 
@@ -119,6 +119,16 @@ Fixed after an adversarial review on 5 October 2026 - keep these behaviours:
 - Shell: per-file controls (offset, speed, zoom, rotation, pan of video A/B and grid cells, Frame Strip trim, Annotate text box) are NOT restored (`NOT_KEPT`), or a new video opened shifted like the last one.
 - `desktop:rename-many` refuses two files with the same source or target name, and rolls back a half-done first pass of a swap.
 - Store Graphics: undo across Open also restores which file Save writes to; the autosave records whether the work differs from the project file (`sporco`), so the * survives a restart; a project file moved away makes Save ask where; exports are queued (`codaExport`) so a double click cannot reuse a number; a vanished export folder is forgotten; a failed write removes its empty file; a click that moves nothing is dropped from undo; adding images is its own undo step; same-named images from different folders are both kept; images are rewritten in IndexedDB only when the list changes; `aggiornaMisure` runs once per layout (`misure: 2`).
+
+## Stress test (1.6.3)
+
+On 13 October 2026 five agents stress-tested Store Graphics in the real app (undo, persistence, images, rendering/export, controls), each on its own copy, then the fixes were merged here. Keep these behaviours:
+- A damaged autosave or project can never leave the page dead: `applySnap` keeps the pack unless the file has one, drops non-object variants, and `autoRestore` rolls back if applying throws. Counts that drive draw loops are clamped to the slider ranges (`limitaConteggi`, panels in `migraPannelli`), and a bad export scale falls back to 1.
+- Variants from older projects are filled from the defaults when loaded or compared (`variantLayouts`, which keeps their own measures), and `compareSheet` always restores the live state.
+- Undo carries the selected variant, deleting an earlier variant keeps the right one selected, and a click that moves nothing keeps Redo.
+- Closing within 400 ms of an image change still writes the images (`beforeunload` flushes `dbTimer`); the same file twice in one batch enters once.
+- Canvas drags end when the button is released outside the window, ignore right/middle presses, and end on `touchcancel`; rebuilding the controls keeps keyboard focus on the control.
+- Long brand text on Card/Icon stack mode fits. Default renders of all formats were checked pixel-identical before and after.
 
 ## User requirements / limits to preserve
 
