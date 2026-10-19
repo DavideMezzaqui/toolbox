@@ -25,3 +25,4 @@ desktop.ini
 tests/stress/**/shots/
 tests/stress/**/*.out
 tests/stress/**/*-out.json
+tests/stress/**/*-last.txt
