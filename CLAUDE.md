@@ -1,4 +1,4 @@
-# Toolbox — working notes (last updated 2026-10-13, version 1.6.3)
+# Toolbox — working notes (last updated 2026-10-19, version 1.7.0)
 
 Davide asked to integrate **the complete Scene Sync interface inside Toolbox**, not an external launcher.
 
@@ -44,7 +44,7 @@ npm run test:workflow
 
 **Since 1.6.0 Toolbox runs from an unpacked folder, `Tools/_app/Toolbox`, not from a portable .exe.** Davide asked for a much faster start. Measured: the portable .exe took 3.3 to 5.0 s to show its window, because it unpacks the whole app to a temporary folder at every start; the unpacked copy shows it in 0.5 to 0.6 s (1.4 s on a cold first start). The folder is about 360 MB. User data stays in `%APPDATA%\Toolbox` either way, so nothing was lost in the switch. There is no portable target any more.
 
-Electron remains **33.4.11**, locked by `package-lock.json`; electron-builder remains 25.1.8. Do not upgrade them as part of routine feature work. Build caches remain in `Tools/_cache`. Current version: **1.6.3**.
+Electron remains **33.4.11**, locked by `package-lock.json`; electron-builder remains 25.1.8. Do not upgrade them as part of routine feature work. Build caches remain in `Tools/_cache`. Current version: **1.7.0**.
 
 **A running Toolbox cannot be replaced.** `build.ps1` checks for it and stops with "Toolbox is open" instead of letting electron-builder hang.
 
@@ -129,6 +129,18 @@ On 13 October 2026 five agents stress-tested Store Graphics in the real app (und
 - Closing within 400 ms of an image change still writes the images (`beforeunload` flushes `dbTimer`); the same file twice in one batch enters once.
 - Canvas drags end when the button is released outside the window, ignore right/middle presses, and end on `touchcancel`; rebuilding the controls keeps keyboard focus on the control.
 - Long brand text on Card/Icon stack mode fits. Default renders of all formats were checked pixel-identical before and after.
+
+## Store Graphics 1.7.0 (19 October 2026)
+
+Fluidity, interface and features, planned by one Opus agent from three measured audits and built by Sonnet agents in three waves (plan and reports were in the session scratchpad; the decisions are summarised here). Keep these behaviours:
+- **Pixels are a hard gate.** `tests/stress/render-hash.cjs` (renderTo, default and busy layouts) and `tests/stress/export-hash.cjs` (the real export path, cold and after heavy preview use) must stay identical. No preview pyramid or downscaled working copy: speed came from async decode and caches, never from changing what is drawn.
+- **Images:** thumbnails (`preparaImmagini`, `creaThumb`, 128x72 via createImageBitmap) and the transparency check (`controllaTrasparenza`: PNG header first, small bitmap otherwise) run off the main thread; `scaldaImmagini` decodes the images in use before drawing; the strip element is reused (`aggiornaStrip`) and keeps its scroll; the panel picker never decodes full images. `imgRidotta` is a pure cache keyed by its resize steps, multi-entry, capped at 24e6 px. One ~250 ms task remains at startup (first 4K downscale chain for the format thumbnails), accepted.
+- **Projects stream:** `pezziProgetto` writes piece by piece (bytes identical to the old single JSON.stringify), `leggiProgetto`/`trovaImmagini` scan the file and read one image at a time; 100 x 4K (808 MB) save and reopen. Files under 400 MB fall back to a full parse if the scanner fails.
+- **Names:** `nomeFormato` - YouTube and Fab thumbnails export as `YouTube_Thumbnail` / `Fab_Thumbnail` (`{platform}_{format}` patterns unchanged). Inline rename (`rinominaInLinea`) because `prompt()` returns null in Electron.
+- **Layout:** one-line header; left aside = Pack card (title, version, category, accent, logo, Font) + formats + "Whole layout to all..." (asks first); right panel = sticky head (strip, tabs, search), only the active tab is built, tab and open sections remembered in localStorage `davfx-store-graphics-ui` (never in the project or undo), sections keyed by title. Tabs: Design, Image, Content, Variants (id `test`), Output (Export, File naming, Session). CSS is organised in `/* [v17-xxx] */` blocks.
+- **Feedback:** `toast(m, {kind, action, undo, ms})`, `dialogo({...})` for every new dialog, shortcuts popover (`?`), Ctrl+O, `/` focuses search, size check in a dialog. Double-click any colour code to type one.
+- **Features:** Image > Screenshot > Copy to other formats (same shape / all; copies shot, fx, grad only); Ctrl+click a library image swaps it everywhere the selected one is used; dropping a file on a library card replaces that image everywhere; "Unused N" removes images no layout or variant shows; Output: "Export all as" Zip file (default) or Separate files into the `{title}` subfolder, Last export line, Fab checks (WebP refused, over 3 MB warned); "Export one file per image..." (same framing, one numbered file per ticked image); New offers "New from this pack" (keeps layouts, variants, logo, brand, badges); Save warns when the file holds a pack with another title (`titoloFile`).
+- Fixed on the way: the unsaved `*` and the autosave's `sporco` survive a restart again.
 
 ## User requirements / limits to preserve
 

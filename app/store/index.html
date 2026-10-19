@@ -427,6 +427,8 @@
     .lib{display:flex;gap:4px;max-height:60px;overflow-x:auto;overflow-y:hidden;padding:2px 2px 6px}
     .lib .card{flex:none;width:68px}
   }
+  #imgs .ih button[hidden]{display:none}
+  #imgs .ih .rmu{color:var(--txt2)}
   /* [/v17-strip] */
 
   /* ==========================================================================
@@ -491,6 +493,13 @@
   .imgpick .it .tick{position:absolute;top:4px;right:4px;width:16px;height:16px;border-radius:4px;
            background:rgba(0,0,0,.6);border:1px solid #6a6a74}
   .imgpick .it.on .tick{background:#e6e6e8;border-color:#e6e6e8}
+  .imgpick .it.on .tick::after{content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;
+           border:solid #101012;border-width:0 2px 2px 0;transform:rotate(45deg)}
+  .imgpick .it .num{position:absolute;left:4px;bottom:4px;padding:0 5px;border-radius:3px;
+           background:rgba(0,0,0,.65);font-size:var(--fs-xs);color:#e6e6e8}
+  .pibar{display:flex;align-items:center;gap:8px;margin:10px 0 8px}
+  .pibar button{padding:3px 10px;font-size:var(--fs)}
+  .pibar .cnt{margin-left:auto;color:var(--dim);font-size:var(--fs)}
   /* [/v17-perimage] */
 
   @media(max-width:900px){
@@ -518,7 +527,7 @@
   <span id="projInfo" class="projinfo"></span>
   <div class="grow"></div>
   <button id="bExp" title="Export the format you are on. Ctrl+E" data-ic="down">Export current</button>
-  <button class="acc" id="bZip" title="Export every ticked format as a zip. Ctrl+Shift+E" data-ic="zip">Export all</button>
+  <button class="acc" id="bZip" title="Export every ticked format, as a zip or as separate files (see Export). Ctrl+Shift+E" data-ic="zip">Export all</button>
   <div class="sep"></div>
   <button id="bKeys" title="List of keyboard shortcuts" data-ic="key">Shortcuts</button>
 </header>
@@ -794,7 +803,8 @@ const SHORTCUTS = [
     ['Ctrl+Shift+Z',  'Redo'],
     ['Ctrl+Y',        'Redo'],
     ['Alt+click',     'A control back to its default'],
-    ['Alt+click image', 'Use that image in the selected panel of every format']
+    ['Alt+click image', 'Use that image in the selected panel of every format'],
+    ['Ctrl+click image', 'Swap the image in the selected panel for that one, in every format']
   ]],
   ['Canvas', [
     ['Drag',          'Move on canvas, the screenshot included'],
@@ -826,7 +836,8 @@ const SHORTCUTS = [
     ['Ctrl+S',        'Save the project (Shift: save as)'],
     ['Ctrl+E',        'Export current'],
     ['Ctrl+Shift+E',  'Export all'],
-    ['Drop / Ctrl+V', 'Add images, or open a project']
+    ['Drop / Ctrl+V', 'Add images, or open a project'],
+    ['Drop on an image', 'Replace that image with the dropped file']
   ]],
   ['View', [
     ['/',             'Search the settings'],
@@ -1664,6 +1675,9 @@ const PARTS = [
     {type:'button', text:'Even panels', act:'panelsEven'},
     {type:'button', text:'Big left, small right', act:'panelsHero'},
     {type:'button', text:'Fan out the cuts', act:'panelsFan'},
+    {type:'group', l:'Copy to other formats'},
+    {type:'button', text:'Same shape formats', act:'shotToSimilar'},
+    {type:'button', text:'All other formats', act:'shotToAll'},
     {type:'group', l:'Images in the panels'},
     {type:'panels'},
   ], note:'With more than one panel the image is split by slanted cuts, like the diagonal masks in your PSD. Each panel has its own screenshot, its own width and its own cut angle, so the masks can be as regular or as irregular as you like.'},
@@ -3317,7 +3331,7 @@ const state = {
   snap:{on:true},
   naming:{pattern:'{format}', case:'as is', sep:'_',
           folder:'{title}'},
-  export:{format:'PNG (lossless)', quality:0.92, scale:1},
+  export:{format:'PNG (lossless)', quality:0.92, scale:1, bundle:'Zip file'},
   auto:{on:true},
   /* larghezza del pannello destro: la tengo nello stato cosi' il
      salvataggio automatico se la ricorda */
@@ -4227,10 +4241,12 @@ const NAMING_SECTION = {t:'File naming', rows:[
   {p:'naming.case',    l:'Case',      type:'select', opts:['as is','lower','UPPER','snake_case','kebab-case','PascalCase']},
   {p:'naming.sep',     l:'Separator', type:'text'},
   {type:'button', text:'Show an example name', act:'previewName'},
-], note:'Tokens: {title} {category} {brand} {version} {platform} {format} {w} {h} {index} {date}. Every export gets a number after the name (Asset_page_1, Asset_page_2...), the next one free in the export folder, so nothing is ever overwritten. Folder only applies inside the zip; leave it empty for a flat zip.'};
+], note:'Tokens: {title} {category} {brand} {version} {platform} {format} {w} {h} {index} {date}. Every export gets a number after the name (Asset_page_1, Asset_page_2...), the next one free in the export folder, so nothing is ever overwritten. Folder is the one inside the zip, or the one the files go into with Separate files; leave it empty for a flat zip.'};
 
 const EXPORT_SECTION = {t:'Export', open:true, rows:[
+  {type:'lastexport'},
   {type:'exportdir'},
+  {p:'export.bundle', l:'Export all as', type:'select', opts:['Zip file','Separate files']},
   {p:'export.format',  l:'File type', type:'select', opts:['PNG (lossless)','WebP','JPEG']},
   {p:'export.quality', l:'Quality',   type:'range', min:0.4, max:1, step:0.01,
    when:L=> !/PNG/.test(state.export.format)},
@@ -4238,7 +4254,9 @@ const EXPORT_SECTION = {t:'Export', open:true, rows:[
   {type:'button', text:'Check before exporting', act:'preflight', wide:true},
   {type:'preflight'},
   {type:'button', text:'Check size of every format', act:'sizeCheck'},
-], note:'PNG is lossless and is the default. WebP at 0.9 looks the same and weighs a fraction. Quality only applies to WebP and JPEG. Scale changes the pixel size, so leave it at 1 for the store formats that require exact dimensions.'};
+  {type:'button', text:'Export one file per image...', act:'perImage', wide:true,
+   tip:'Export the format you are on once for every image, using its layout. Each file shows one image'},
+], note:'Export all as: Zip file makes one zip, Separate files writes every image into a folder named by the Folder setting under Naming. PNG is lossless and is the default. WebP at 0.9 looks the same and weighs a fraction. Quality only applies to WebP and JPEG. Fab accepts PNG or JPEG, under 3 MB. Scale changes the pixel size, so leave it at 1 for the store formats that require exact dimensions.'};
 
 /* le righe di controllo del livello selezionato, diverse per forma e testo */
 /* aiutanti per le condizioni delle righe di un livello: lavorano sul
@@ -4442,7 +4460,7 @@ function applySnap(s){
   fixSelection();
   if(d.theme)  state.theme  = d.theme;
   if(d.naming) state.naming = d.naming;
-  if(d.export) state.export = Object.assign(state.export, d.export);
+  if(d.export) state.export = Object.assign(state.export, {bundle:'Zip file'}, d.export);
   if(Array.isArray(d.variants)) state.variants = d.variants.filter(v=> v && typeof v === 'object');
   if(d.current !== undefined) state.currentVariant = (d.current < state.variants.length) ? d.current : null;
   if(d.ui){
@@ -4462,7 +4480,7 @@ let undoShots = [], redoShots = [];
    sbaglio e tornati indietro con Ctrl+Z, Save deve scrivere nel file di
    prima, non sopra quello appena aperto con il lavoro vecchio. */
 function shotsSnap(){ return {list: SHOTS.slice(), main: imgShot, logo: imgLogo, logoBlob: logoBlob,
-  progetto: {h: fileProgetto, n: nomeProgetto, f: firmaSalvata}}; }
+  progetto: {h: fileProgetto, n: nomeProgetto, f: firmaSalvata, t: titoloFile}}; }
 function shotsBack(s){
   if(!s) return;
   SHOTS = s.list.slice();
@@ -4471,6 +4489,7 @@ function shotsBack(s){
   if(s.logoBlob !== undefined) logoBlob = s.logoBlob;
   if(s.progetto && s.progetto.h !== fileProgetto){
     fileProgetto = s.progetto.h; nomeProgetto = s.progetto.n; firmaSalvata = s.progetto.f;
+    titoloFile = s.progetto.t || '';
     if(fileProgetto) ricordaFileProgetto(fileProgetto);
     else dbApri().then(d=>{ if(!d) return; try{ d.transaction('meta','readwrite').objectStore('meta').delete('progetto'); }catch(e){} });
   }
@@ -4543,18 +4562,23 @@ function autoSaveNow(){
   const stato = snapState();
   /* se il lavoro e' diverso dal file di progetto lo si scrive qui: alla
      riapertura il nome deve tornare con l'asterisco, non sembrare salvato */
-  const sporco = !!nomeProgetto && firmaProgetto(stato) !== firmaSalvata;
+  /* All'avvio il file di progetto non e' ancora stato ripreso: finche' non
+     lo e', si riscrivono i valori letti dal salvataggio, se no il primo
+     autosalvataggio li azzererebbe prima che riprendiFileProgetto li legga. */
+  const sporco = autoPrima ? autoPrima.sporco : (!!nomeProgetto && firmaProgetto(stato) !== firmaSalvata);
+  const titFile = autoPrima ? autoPrima.titoloFile : titoloFile;
   const pacco = (snap)=> JSON.stringify({
-    v:APP.version, at:ora, active:state.active, snap:snap, colori:COLORI_USATI, sporco:sporco
+    v:APP.version, at:ora, active:state.active, snap:snap, colori:COLORI_USATI, sporco:sporco,
+    titoloFile:titFile
   });
   /* niente da scrivere se non e' cambiato niente: il disegno chiama qui a
      ogni movimento, e l'avviso deve dire "salvato" solo quando lo e' */
-  if(stato + state.active + sporco === ultimoAuto) return;
+  if(stato + state.active + sporco + '|' + titFile === ultimoAuto) return;
   try{
     localStorage.setItem(AUTOKEY, pacco(stato));
     autoAvvisato = false;
     oraNostra = ora;
-    ultimoAuto = stato + state.active + sporco;
+    ultimoAuto = stato + state.active + sporco + '|' + titFile;
     segnaAutosave();
     return;
   }catch(err){ /* spazio finito o memoria negata: provo a stringere */ }
@@ -4666,6 +4690,10 @@ function migraOpacitaTesto(got){
 /* dopo un tentativo di ripristino dice se il salvataggio c'era ma era
    illeggibile: "Nothing saved yet" in quel caso era una bugia */
 let ripristinoRotto = false;
+/* cosa diceva l'ultimo salvataggio letto sul file di progetto (sporco, titolo che
+   il file contiene). All'avvio passa in autoPrima, che vale finche'
+   riprendiFileProgetto non l'ha usato. */
+let autoLetto = null, autoPrima = null;
 function autoRestore(){
   ripristinoRotto = false;
   let raw = null, prima = null;
@@ -4674,6 +4702,7 @@ function autoRestore(){
   try{
     const d = JSON.parse(raw);
     if(!d || !d.snap) return false;
+    autoLetto = {sporco: !!d.sporco, titoloFile: typeof d.titoloFile === 'string' ? d.titoloFile : ''};
     const got = JSON.parse(d.snap);
     if(!got || typeof got !== 'object') throw new Error('empty');
     prima = snapState();
@@ -5443,7 +5472,35 @@ function spostaImmagine(da, verso){
   rimappaImmagini(v=> nuovo[v] !== undefined ? nuovo[v] : v);
   dbSalva(); buildControls(); render();
 }
+/* Dove si vede ogni immagine: per ogni formato vivo, i pannelli (da 1) che la
+   mostrano. Un solo giro per tutte le immagini, per la barra e per i testi. */
+function mappaUsi(){
+  const m = new Map();
+  FORMATS.forEach(f=>{
+    const L = state.layouts[f.id], S = L && L.shot;
+    if(!S) return;
+    const n = Math.max(1, Math.round(S.panels||1)), per = new Map();
+    for(let p=0;p<n;p++){
+      const im = shotByIndex(panelSrc(S, p));
+      if(!im) continue;
+      if(!per.has(im)) per.set(im, []);
+      per.get(im).push(p+1);
+    }
+    per.forEach((pann, im)=>{
+      if(!m.has(im)) m.set(im, []);
+      m.get(im).push({f:f, pann:pann, np:n});
+    });
+  });
+  return m;
+}
+/* [{f, pann:[1,2], np}] per i formati vivi che mostrano l'immagine */
+function usiImmagine(img){ return mappaUsi().get(img) || []; }
+/* "Cover, Asset page P2": con piu' pannelli si dice quali */
+function testoUsi(usi){
+  return usi.map(u=> nomeFormato(u.f) + (u.np > 1 ? ' P' + u.pann.join(' P') : '')).join(', ');
+}
 function togliImmagine(i){
+  const usi = usiImmagine(SHOTS[i].img);
   pushUndo();
   fissaPrincipale();
   const via = SHOTS[i].img;
@@ -5451,7 +5508,103 @@ function togliImmagine(i){
   if(imgShot === via) imgShot = SHOTS.length ? SHOTS[0].img : null;
   rimappaImmagini(v=> v === i ? -1 : (v > i ? v - 1 : v));
   dbSalva(); buildControls(); render();
-  toast(SHOTS.length ? 'Removed. ' + SHOTS.length + ' left' : 'No images left', {undo:true});
+  const dove = usi.length ? 'Removed. It was in ' + testoUsi(usi) + ': those panels now show the main image'
+                          : 'Removed. ' + SHOTS.length + ' left';
+  toast(SHOTS.length ? dove : 'No images left', {undo:true});
+}
+/* Ctrl+clic su una scheda: l'immagine che il pannello scelto mostra adesso
+   viene cambiata con questa in ogni formato vivo e ogni pannello che la
+   mostrava (anche con la scelta implicita, -1). Le varianti non si toccano. */
+function sostituisciUso(i){
+  const sh = SHOTS[i];
+  if(!sh) return;
+  const SA = state.layouts[state.active].shot;
+  const X = shotByIndex(panelSrc(SA, pannelloAttivo(SA)));
+  if(!X){ toast('Put an image in the selected panel first: Ctrl+click then swaps it for another one in every format'); return; }
+  if(X === sh.img){ toast('That image is already the one in the selected panel'); return; }
+  const tocchi = []; let tot = 0;
+  FORMATS.forEach(f=>{
+    const S = state.layouts[f.id] && state.layouts[f.id].shot;
+    if(!S) return;
+    const n = Math.max(1, Math.round(S.panels||1)), dove = [];
+    for(let p=0;p<n;p++) if(shotByIndex(panelSrc(S, p)) === X) dove.push(p);
+    if(dove.length){ tocchi.push({f:f, S:S, n:n, dove:dove}); tot += dove.length; }
+  });
+  if(!tot) return;
+  pushUndo();
+  tocchi.forEach(t=>{
+    if(!Array.isArray(t.S.src)) t.S.src = [];
+    for(let k=0;k<t.n;k++) if(t.S.src[k] === undefined) t.S.src[k] = panelSrc(t.S, k);
+    t.dove.forEach(p=> t.S.src[p] = i);
+  });
+  const pronta = (typeof sh.img.decode === 'function' && !(sh.img instanceof HTMLCanvasElement))
+    ? Promise.race([sh.img.decode().catch(()=>{}), new Promise(r=> setTimeout(r, 2000))]) : Promise.resolve();
+  dbSalva(); buildControls();
+  pronta.then(()=> render());
+  toast(tot + (tot === 1 ? ' panel on ' : ' panels on ') + tocchi.map(t=> nomeFormato(t.f)).join(', ') +
+        (tot === 1 ? ' now shows image ' : ' now show image ') + (i+1), {undo:true});
+}
+/* Le immagini che nessun pannello mostra, in nessun layout vivo e in nessuna
+   variante (solo i pannelli che esistono: p < panels). Come shotByIndex, una
+   scelta implicita (-1) o fuori elenco vale l'immagine principale. */
+function indiciNonUsati(){
+  const usati = new Set();
+  const principale = SHOTS.findIndex(x=> x.img === imgShot);
+  const vedi = S=>{
+    const n = Math.max(1, Math.round(S.panels||1));
+    for(let p=0;p<n;p++){
+      const v = panelSrc(S, p);
+      usati.add(v >= 0 && SHOTS[v] ? v : principale);
+    }
+  };
+  FORMATS.forEach(f=>{ const L = state.layouts[f.id]; if(L && L.shot) vedi(L.shot); });
+  (state.variants||[]).forEach(v=>{
+    FORMATS.forEach(f=>{
+      const L = v.layouts && v.layouts[f.id], S = L && L.shot;
+      /* un layout che manca nella variante si riempie coi valori di serie (variantLayouts) */
+      if(S && S.panels !== undefined && Array.isArray(S.src)) vedi(S);
+      else vedi(Object.assign({}, defLayout(f).shot, S || {}));
+    });
+  });
+  const fuori = [];
+  SHOTS.forEach((_, i)=>{ if(!usati.has(i)) fuori.push(i); });
+  return fuori;
+}
+function togliNonUsate(){
+  const via = indiciNonUsati();
+  if(!via.length){ toast('Every image is in use'); return; }
+  pushUndo();
+  fissaPrincipale();
+  const fuori = new Set(via), nuovo = {};
+  let n = 0;
+  SHOTS.forEach((_, i)=>{ if(!fuori.has(i)) nuovo[i] = n++; });
+  const viaImg = new Set(via.map(i=> SHOTS[i].img));
+  SHOTS = SHOTS.filter((_, i)=> !fuori.has(i));
+  if(viaImg.has(imgShot)) imgShot = SHOTS.length ? SHOTS[0].img : null;
+  rimappaImmagini(v=> nuovo[v] !== undefined ? nuovo[v] : -1);
+  dbSalva(); buildControls(); render();
+  toast(via.length + (via.length === 1 ? ' unused image removed, ' : ' unused images removed, ') +
+        (SHOTS.length ? SHOTS.length + ' left' : 'none left'), {undo:true});
+}
+/* Un file lasciato su una scheda prende il posto di quell'immagine: i
+   pannelli la usano ancora, dove stavano. Si fa quando il file e' letto. */
+function sostituisciImmagine(i, file){
+  const vecchio = SHOTS[i];
+  if(!vecchio) return;
+  loadImage(file, (im, motivo)=>{
+    /* nel frattempo l'elenco puo' essere cambiato: si cerca di nuovo la stessa scheda */
+    const k = SHOTS.indexOf(vecchio);
+    if(k < 0) return;
+    if(!im){ toast('Could not replace image ' + (k+1) + ': ' + (motivo || 'the file cannot be opened')); return; }
+    pushUndo();
+    const nuova = {name:file.name, img:im, path:file.webkitRelativePath || file.name, blob:file};
+    SHOTS[k] = nuova;
+    if(imgShot === vecchio.img) imgShot = im;
+    preparaImmagini([nuova]);
+    dbSalva();
+    toast('Image ' + (k+1) + ' replaced by ' + file.name, {undo:true});
+    scaldaImmagini().then(()=>{ buildControls(); render(); });
+  });
 }
 function usaImmagine(i, ovunque){
   pushUndo();
@@ -5479,14 +5632,51 @@ let _trascinoImg = null;
    aggiornano solo le etichette di uso. Cosi' le miniature restano disegnate e
    l'elenco non torna in cima a ogni clic. */
 let _strip = null;     /* {chiave, el, scroll} */
+/* il testo al passaggio del mouse: dove si usa (o che non si usa) e i gesti della scheda */
+function titoloCard(sh, usi){
+  return (sh.path || sh.name) + '\n' + (usi.length ? 'Used in: ' + testoUsi(usi) : 'Not used') +
+    '\nClick: put it in the selected panel.  Alt+click: on every format.' +
+    '\nCtrl+click: swap the image in the selected panel for this one, everywhere.' +
+    '\nDrag: reorder.  Drop a file on it: replace it';
+}
+/* il numero in basso a destra: in quanti formati si vede */
+function segnaUsi(card, usi){
+  let u = card.querySelector('.uses');
+  if(usi.length){
+    if(!u){
+      u = document.createElement('span'); u.className = 'uses';
+      card.insertBefore(u, card.querySelector('.del'));
+    }
+    const t = String(usi.length);
+    if(u.textContent !== t) u.textContent = t;
+  }else if(u) u.remove();
+}
+/* il bottone "Unused" sta nella fascia solo quando c'e' qualcosa da togliere */
+function aggiornaNonUsate(el){
+  const b = el.querySelector('.ih .rmu');
+  if(!b) return;
+  const n = indiciNonUsati().length;
+  b.hidden = n === 0;
+  if(n){
+    const sp = b.querySelector('span');
+    if(sp && sp.textContent !== 'Unused ' + n) sp.textContent = 'Unused ' + n;
+    b.title = 'Remove the ' + n + (n === 1 ? ' image' : ' images') + ' no panel shows, in any format or variant. Ctrl+Z brings them back';
+  }
+}
 function aggiornaStrip(el){
   const S = state.layouts[state.active].shot, np = Math.max(1, Math.round(S.panels||1));
   const nelPannello = shotByIndex(panelSrc(S, pannelloAttivo(S)));
   const tit = el.querySelector('.ih b');
   if(tit) tit.textContent = SHOTS.length ? 'Images ' + SHOTS.length : 'Images';
+  const usiTutti = mappaUsi();
+  aggiornaNonUsate(el);
   el.querySelectorAll('.lib .card').forEach((card, i)=>{
     const sh = SHOTS[i];
     if(!sh) return;
+    const usi = usiTutti.get(sh.img) || [];
+    const tt = titoloCard(sh, usi);
+    if(card.title !== tt) card.title = tt;
+    segnaUsi(card, usi);
     const pannelli = [];
     for(let p=0;p<np;p++) if(shotByIndex(panelSrc(S, p)) === sh.img) pannelli.push(p+1);
     card.classList.toggle('usata', pannelli.length > 0);
@@ -5529,7 +5719,11 @@ function stripImmagini(){
   };
   bt('image', 'Add', 'Add images. Dropping files on the window does the same', ()=> document.getElementById('fImg').click());
   bt('folder', 'Folder', 'Add every image in a folder, subfolders included', ()=> document.getElementById('fFolder').click());
-  if(SHOTS.length) bt('trash', '', 'Remove every image. Ctrl+Z brings them back', ()=> runAction('shotsClear'));
+  if(SHOTS.length){
+    const rm = bt('trash', 'Unused', 'Remove the images no panel shows', togliNonUsate);
+    rm.classList.add('rmu'); rm.hidden = true;
+    bt('trash', '', 'Remove every image. Ctrl+Z brings them back', ()=> runAction('shotsClear'));
+  }
   box.appendChild(hd);
   if(!SHOTS.length){
     const v = document.createElement('div'); v.className = 'vuoto';
@@ -5541,6 +5735,7 @@ function stripImmagini(){
   }
   const S = state.layouts[state.active].shot, np = Math.max(1, Math.round(S.panels||1));
   const nelPannello = shotByIndex(panelSrc(S, pannelloAttivo(S)));
+  const usiTutti = mappaUsi();
   const grid = document.createElement('div'); grid.className = 'lib';
   const pulisci = ()=> grid.querySelectorAll('.prima,.dopo').forEach(x=> x.classList.remove('prima','dopo'));
   /* la posizione di scorrimento si ricorda: l'elemento staccato durante la ricostruzione la perde */
@@ -5550,7 +5745,8 @@ function stripImmagini(){
     const pannelli = [];
     for(let p=0;p<np;p++) if(shotByIndex(panelSrc(S, p)) === sh.img) pannelli.push(p+1);
     card.className = 'card' + (pannelli.length ? ' usata' : '') + (sh.img === nelPannello ? ' on' : '');
-    card.title = (sh.path || sh.name) + '\nClick: put it in the selected panel.  Alt+click: on every format.  Drag: reorder';
+    const usi = usiTutti.get(sh.img) || [];
+    card.title = titoloCard(sh, usi);
     card.draggable = true;
     /* la miniatura la prepara preparaImmagini fuori dal thread principale: se
        non e' ancora pronta il riquadro resta scuro e si disegna appena arriva */
@@ -5570,7 +5766,8 @@ function stripImmagini(){
     del.appendChild(icon('trash'));
     del.onclick = e=>{ e.stopPropagation(); togliImmagine(i); };
     card.appendChild(del);
-    card.onclick = e=> usaImmagine(i, e.altKey);
+    segnaUsi(card, usi);
+    card.onclick = e=> (e.ctrlKey || e.metaKey) ? sostituisciUso(i) : usaImmagine(i, e.altKey);
     card.ondragstart = e=>{
       _trascinoImg = i; card.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
@@ -5584,7 +5781,19 @@ function stripImmagini(){
       pulisci(); card.classList.add(dopo ? 'dopo' : 'prima');
     };
     card.ondrop = e=>{
-      if(_trascinoImg === null) return;
+      if(_trascinoImg === null){
+        /* un file dal desktop: prende il posto di questa immagine; gli altri file seguono la strada di sempre */
+        if(!haFile(e)) return;
+        const files = [...e.dataTransfer.files];
+        const imgs = files.filter(f=> /^image\//.test(f.type) || /\.(png|jpe?g|webp|gif|bmp)$/i.test(f.name));
+        if(!imgs.length) return;
+        e.preventDefault(); e.stopPropagation();
+        dropProfondita = 0; mostraDrop(false); segnaCarta(null);
+        sostituisciImmagine(i, imgs[0]);
+        const resto = files.filter(f=> f !== imgs[0]);
+        if(resto.length) smistaFile(resto, false);
+        return;
+      }
       e.preventDefault(); e.stopPropagation();
       const r = card.getBoundingClientRect(), dopo = e.clientX > r.left + r.width/2;
       const da = _trascinoImg; _trascinoImg = null; pulisci();
@@ -5593,6 +5802,7 @@ function stripImmagini(){
     grid.appendChild(card);
   });
   box.appendChild(grid);
+  aggiornaNonUsate(box);
   paintIcons(box);
   _strip = {chiave:chiave, el:box, scroll:scrollPrima};
   /* immagini che nessuno ha ancora preparato (progetti aperti, annulla): le miniature mancanti si fanno ora */
@@ -5973,11 +6183,12 @@ const TIP_PATH = {
   'theme.scope':'This format only, or all of them',
 
   'naming.pattern':'Tokens like {title} {w} {h}',
-  'naming.folder':'Leave empty for a flat zip',
+  'naming.folder':'Folder inside the zip, or for Separate files. Empty: flat zip',
 
   'export.format':'PNG is lossless and is the default',
   'export.quality':'Only used by WebP and JPEG',
   'export.scale':'Leave at 1 for the store sizes',
+  'export.bundle':'Zip file: one zip. Separate files: one file per format in a folder, no zip to unpack',
 
   'snap.on':'Snap to margins, centre and other elements. Key: G',
   'auto.on':'Keep the work in this browser between sessions',
@@ -6103,6 +6314,7 @@ const ACT_TIP = {
   resetAccent:'Put the orange from your PSD back',
   previewName:'Show what the exported file will be called',
   sizeCheck:'Weigh every ticked format with the current settings',
+  perImage:'Export the current format once for every image you pick, changing only the image of the active panel',
   centerRow:'Centre the title row up and down inside the band, on this format only',
   centerRowAll:'Centre the title row up and down inside the band, on every format',
   variantAdd:'Store the whole design as a variant you can come back to',
@@ -6113,6 +6325,8 @@ const ACT_TIP = {
   panelsEven:'All panels the same width, cuts parallel',
   panelsHero:'One wide panel on the left, the rest narrow',
   panelsFan:'Give each cut a different angle',
+  shotToSimilar:'Copy the screenshot setup of this format (images, panels, position, scale, adjustments, gradient) to the formats with the same shape. The overlay is not touched',
+  shotToAll:'Copy the screenshot setup of this format (images, panels, position, scale, adjustments, gradient) to every other format. The overlay is not touched',
   shotsClear:'Empty the screenshot library',
   autoRestore:'Load the work saved in this browser',
   autoClear:'Forget the work saved in this browser',
@@ -6522,6 +6736,12 @@ function makeRow(r){
       }
       wrap.appendChild(d);
     });
+    return wrap;
+  }
+  if(r.type==='lastexport'){
+    const wrap = document.createElement('div');
+    wrap.className = 'lastexp';
+    riempiUltimoExport(wrap);
     return wrap;
   }
   if(r.type==='variants'){
@@ -7774,6 +7994,23 @@ function sopraIlLogo(e){
   return x >= b.x && x <= b.x+b.w && y >= b.y && y <= b.y+b.h;
 }
 let dropProfondita = 0;
+/* indice della scheda della barra su cui passa un file (lo sostituirebbe), o null */
+let _sopraCarta = null;
+function segnaCarta(k){
+  if(k === _sopraCarta) return;
+  _sopraCarta = k;
+  document.querySelectorAll('#imgs .lib .card.replace-target').forEach(c=> c.classList.remove('replace-target'));
+  if(k !== null){
+    const c = document.querySelectorAll('#imgs .lib .card')[k];
+    if(c) c.classList.add('replace-target');
+  }
+}
+/* nel drag si vede il tipo, non il nome: un json o un font non sostituisce un'immagine */
+function trascinaImmagini(e){
+  const it = e.dataTransfer && e.dataTransfer.items;
+  if(!it || !it.length) return true;
+  return [...it].some(x=> x.kind === 'file' && (x.type === '' || /^image\//.test(x.type)));
+}
 window.addEventListener('dragenter', e=>{
   if(!haFile(e)) return;
   e.preventDefault(); dropProfondita++;
@@ -7783,17 +8020,20 @@ window.addEventListener('dragover', e=>{
   if(!haFile(e)) return;
   e.preventDefault();
   e.dataTransfer.dropEffect = 'copy';
+  const sc = e.target && e.target.closest ? e.target.closest('#imgs .lib .card') : null;
+  segnaCarta(sc && trascinaImmagini(e) ? Array.prototype.indexOf.call(sc.parentNode.children, sc) : null);
   mostraDrop(true, sopraIlLogo(e) ? 'Drop here to replace the logo'
-                                  : 'Drop images, or a project file (.json)');
+                  : _sopraCarta !== null ? 'Drop to replace image ' + (_sopraCarta + 1)
+                  : 'Drop images, or a project file (.json)');
 });
 window.addEventListener('dragleave', e=>{
   if(!haFile(e)) return;
-  if(--dropProfondita <= 0){ dropProfondita = 0; mostraDrop(false); }
+  if(--dropProfondita <= 0){ dropProfondita = 0; mostraDrop(false); segnaCarta(null); }
 });
 window.addEventListener('drop', e=>{
   if(!haFile(e)) return;
   e.preventDefault();
-  dropProfondita = 0; mostraDrop(false);
+  dropProfondita = 0; mostraDrop(false); segnaCarta(null);
   const files = [...e.dataTransfer.files];
   if(!files.length) return;
   smistaFile(files, sopraIlLogo(e));
@@ -7930,13 +8170,42 @@ document.getElementById('fFont').onchange = e=>{
   }).catch(()=> toast('Invalid font file'));
 };
 
+/* Copia solo l'impostazione dello screenshot (shot, fx, grad) dal formato
+   attivo agli altri: o a quelli con la stessa forma (rapporto entro il 5%),
+   o a tutti. Non tocca mai on, res, banda, linea, logo, riga, versione,
+   badge, cornice, livelli, misure. Un solo passo di annulla. */
+function copiaImpostazioneImmagine(tutti){
+  const fa = FORMATS.find(x=> x.id===state.active);
+  if(!fa) return;
+  const sa = sizeOf(fa), ar0 = sa.w / sa.h;
+  const dest = FORMATS.filter(f=>{
+    if(f.id===fa.id || !state.layouts[f.id]) return false;
+    if(tutti) return true;
+    const sf = sizeOf(f);
+    return Math.abs((sf.w / sf.h) / ar0 - 1) <= 0.05;
+  });
+  if(!dest.length){
+    toast("No other format has the same shape. Use 'All other formats'"); return;
+  }
+  pushUndo();
+  const src = state.layouts[fa.id];
+  dest.forEach(f=>{
+    const L = state.layouts[f.id];
+    ['shot','fx','grad'].forEach(k=>{ if(src[k] !== undefined) L[k] = JSON.parse(JSON.stringify(src[k])); });
+  });
+  buildFormats(); buildControls(); render();
+  const nomi = dest.map(nomeFormato);
+  toast('Image setup copied to ' + (nomi.length > 3 ? nomi.length + ' formats' : nomi.join(', ')), {undo:true});
+}
+
 document.getElementById('bAll').onclick = ()=>{
   /* sovrascrive gli overlay di altri sette formati: si chiede prima */
   const fa = FORMATS.find(x=> x.id===state.active);
   if(!window.confirm('Copy the whole layout of ' + (fa ? nomeFormato(fa) : 'this format') +
       ' to the other ' + (FORMATS.length-1) + ' formats?\n\n' +
       'This replaces their overlay too (band, accent line, logo, text row, badges) ' +
-      'and their screenshot setup. Ctrl+Z brings it back.')) return;
+      'and their screenshot setup. Ctrl+Z brings it back.\n\n' +
+      'To copy only the screenshot setup use Image > Screenshot > Copy to other formats.')) return;
   pushUndo();
   const src = JSON.parse(JSON.stringify(state.layouts[state.active]));
   FORMATS.forEach(f=>{
@@ -7960,23 +8229,42 @@ document.getElementById('bAll').onclick = ()=>{
    tema: sono tuoi, non del pacchetto. Restano anche il brand e i badge,
    che su ogni pacchetto sono gli stessi e riscriverli ogni volta sarebbe
    solo una scocciatura. E comunque un passo di annulla riporta tutto. */
-document.getElementById('bNew').onclick = ()=>{
-  if(!window.confirm('Start a new pack?\n\n' +
-      'Title, category, version, every layout, the variants and the screenshot ' +
-      'library go back to the start.\n' +
-      'Your logo, font, accent colour, brand name and badges stay.\n\n' +
-      'Ctrl+Z brings this back.')) return;
-  pushUndo();
-  state.pack = Object.assign({}, state.pack, {title:'', category:'', version:'v1.0'});
-  state.variants = [];
-  FORMATS.forEach(f=>{ state.layouts[f.id] = defLayout(f); });
-  state.active = FORMATS[0].id;
-  SHOTS = []; imgShot = null;
-  dbSvuota();
-  dimenticaFileProgetto();
-  centerRowInBand(true, true);
-  buildFormats(); buildControls(); render();
-  toast('New pack');
+document.getElementById('bNew').onclick = async ()=>{
+  const r = await dialogo({
+    title: 'New pack',
+    text: 'Blank new pack: title, category, version, every layout, the variants and the ' +
+          'screenshot library go back to the start. Your logo, font, accent colour, brand ' +
+          'name and badges stay.\n\n' +
+          'New from this pack: keeps every layout and the variants, so the next pack starts ' +
+          'with the same look. Title and category are emptied, the version goes back to v1.0, ' +
+          'and the screenshot library and the project file are cleared.\n\n' +
+          'Ctrl+Z brings the previous pack back.',
+    buttons: [{id:'blank', label:'Blank new pack', primary:true},
+              {id:'copy', label:'New from this pack'},
+              {id:'cancel', label:'Cancel'}]
+  });
+  if(r === 'blank'){
+    pushUndo();
+    state.pack = Object.assign({}, state.pack, {title:'', category:'', version:'v1.0'});
+    state.variants = [];
+    FORMATS.forEach(f=>{ state.layouts[f.id] = defLayout(f); });
+    state.active = FORMATS[0].id;
+    SHOTS = []; imgShot = null;
+    dbSvuota();
+    dimenticaFileProgetto();
+    centerRowInBand(true, true);
+    buildFormats(); buildControls(); render();
+    toast('New pack', {undo:true});
+  }else if(r === 'copy'){
+    pushUndo();
+    state.pack = Object.assign({}, state.pack, {title:'', category:'', version:'v1.0'});
+    SHOTS = []; imgShot = null;
+    rimappaImmagini(()=> -1);
+    dbSvuota();
+    dimenticaFileProgetto();
+    buildFormats(); buildControls(); render();
+    toast('New pack from this one: same layouts, no title, no images', {undo:true});
+  }
 };
 
 /* ==========================================================================
@@ -7994,6 +8282,10 @@ document.getElementById('bNew').onclick = ()=>{
    si ricorda anche dopo aver chiuso il programma.
    ========================================================================== */
 let fileProgetto = null, nomeProgetto = '', firmaSalvata = '', salvando = false;
+/* il titolo del pacchetto che il file di progetto contiene (quello di quando
+   e' stato aperto o salvato l'ultima volta): serve a non scriverci sopra un
+   pacchetto con un altro titolo senza chiederlo */
+let titoloFile = '';
 function blobInBase64(blob){
   return new Promise((ris, rif)=>{
     const r = new FileReader();
@@ -8102,11 +8394,15 @@ function ricordaFileProgetto(h){
   dbApri().then(d=>{ if(!d) return; try{ d.transaction('meta','readwrite').objectStore('meta').put(h, 'progetto'); }catch(e){} });
 }
 function dimenticaFileProgetto(){
-  fileProgetto = null; nomeProgetto = ''; firmaSalvata = '';
+  fileProgetto = null; nomeProgetto = ''; firmaSalvata = ''; titoloFile = ''; autoPrima = null;
   dbApri().then(d=>{ if(!d) return; try{ d.transaction('meta','readwrite').objectStore('meta').delete('progetto'); }catch(e){} });
   aggiornaInfoProgetto();
 }
 async function riprendiFileProgetto(){
+  try{ await riprendiFileProgettoPasso(); }
+  finally{ autoPrima = null; }
+}
+async function riprendiFileProgettoPasso(){
   const d = await dbApri(); if(!d) return;
   const h = await new Promise(ris=>{
     try{ const r = d.transaction('meta').objectStore('meta').get('progetto');
@@ -8115,13 +8411,23 @@ async function riprendiFileProgetto(){
   });
   if(!h || !h.name) return;
   fileProgetto = h; nomeProgetto = h.name;
+  titoloFile = autoPrima ? autoPrima.titoloFile : '';
   /* Lo stato appena ripreso e' quello di quando si e' chiuso. Coincide con
      il file solo se l'ultimo salvataggio automatico lo diceva: altrimenti
      c'erano modifiche non salvate nel file, e il nome torna con l'asterisco. */
   let sporco = false;
-  try{ sporco = !!JSON.parse(localStorage.getItem(AUTOKEY) || '{}').sporco; }catch(e){}
+  if(autoPrima) sporco = autoPrima.sporco;
+  else{
+    try{
+      const a = JSON.parse(localStorage.getItem(AUTOKEY) || '{}');
+      sporco = !!a.sporco;
+      titoloFile = typeof a.titoloFile === 'string' ? a.titoloFile : '';
+    }catch(e){}
+  }
   firmaSalvata = sporco ? '' : firmaProgetto();
-  aggiornaInfoProgetto(firmaSalvata);
+  /* la firma di adesso, non quella salvata: se c'erano modifiche il nome
+     deve tornare con l'asterisco subito */
+  aggiornaInfoProgetto(firmaProgetto());
 }
 async function salvaProgetto(nuovo){
   if(salvando) return;
@@ -8129,6 +8435,22 @@ async function salvaProgetto(nuovo){
   try{
     let h = nuovo ? null : fileProgetto;
     if(h && !(await permessoScrittura(h))) h = null;
+    /* Il file ha dentro un pacchetto con un altro titolo: scriverci sopra il
+       pacchetto di adesso lo cancella. Si chiede, e si puo' salvare altrove. */
+    if(h){
+      const dentro = String(titoloFile || '').trim(), adesso = String(state.pack.title || '').trim();
+      if(dentro && adesso && dentro !== adesso){
+        const r = await dialogo({
+          title: 'Overwrite this project file?',
+          text: 'This file holds “' + dentro + '\u201d. Save \u201c' + adesso + '\u201d over it?',
+          buttons: [{id:'nuovo', label:'Save as new file', primary:true},
+                    {id:'sovrascrivi', label:'Overwrite', danger:true},
+                    {id:'annulla', label:'Cancel'}]
+        });
+        if(r === 'nuovo') h = null;
+        else if(r !== 'sovrascrivi') return;
+      }
+    }
     if(!h){
       /* il selettore va aperto subito, finche' il clic e' ancora fresco */
       if(typeof window.showSaveFilePicker !== 'function'){
@@ -8144,6 +8466,7 @@ async function salvaProgetto(nuovo){
       }catch(e){ if(e && e.name === 'AbortError') return; throw e; }
     }
     const stato = snapState();
+    const titoloSalvato = String(state.pack.title || '');
     const pezzi = pezziProgetto((k, n)=>{ if(n > 10) avanzamentoInfo('Saving ' + k + '/' + n); });
     const w = await h.createWritable();
     /* il file vero cambia solo alla close(): se qualcosa va storto si
@@ -8154,6 +8477,7 @@ async function salvaProgetto(nuovo){
     }catch(e){ try{ await w.abort(); }catch(_){} throw e; }
     avanzamentoInfo('');
     fileProgetto = h; nomeProgetto = h.name;
+    titoloFile = titoloSalvato; autoPrima = null;
     firmaSalvata = firmaProgetto(stato);
     ricordaFileProgetto(h);
     aggiornaInfoProgetto(firmaProgetto());
@@ -8344,7 +8668,7 @@ function caricaPresetFile(f, handle){
         if(im){ imgLogo = trimAlpha(im).img; logoBlob = new File([blob], d.logo.name || 'logo.png', {type: blob.type}); }
       }catch(e){}
     }
-    if(d.export) state.export = Object.assign({}, state.export, d.export);
+    if(d.export) state.export = Object.assign({}, state.export, {bundle:'Zip file'}, d.export);
     if(d.pack) state.pack = Object.assign({}, state.pack, d.pack);
     if(d.theme) state.theme = Object.assign({}, state.theme, d.theme);
     if(d.naming) state.naming = Object.assign({}, state.naming, d.naming);
@@ -8360,6 +8684,8 @@ function caricaPresetFile(f, handle){
     dbSalva();
     fileProgetto = handle || null; nomeProgetto = handle ? handle.name : '';
     if(handle) ricordaFileProgetto(handle); else dimenticaFileProgetto();
+    titoloFile = handle ? String(state.pack.title || '') : '';
+    autoPrima = null;
     firmaSalvata = firmaProgetto();
     aggiornaInfoProgetto(firmaSalvata);
     buildFormats(); buildControls(); render();
@@ -8383,7 +8709,7 @@ function caricaPresetFile(f, handle){
 }
 document.getElementById('fPreset').onchange = e=>{ caricaPresetFile(e.target.files[0]); };
 
-function renderFormatToBlob(f, cb){
+function renderFormatToBlob(f, cb, L){
   const o = outSize(f);
   /* Un export a piena risoluzione alloca tele da decine di megabyte. Se la
      memoria delle schermate e' piena di anteprime il browser se le contende
@@ -8397,10 +8723,134 @@ function renderFormatToBlob(f, cb){
      ricalcolarla porterebbe a disegnare alla risoluzione sbagliata */
   const shim = {id:f.id, group:f.group, name:f.name, note:f.note, profile:f.profile,
                 w:o.w, h:o.h};
-  renderTo(c.getContext('2d'), shim, state.layouts[f.id], false);
+  renderTo(c.getContext('2d'), shim, L || state.layouts[f.id], false);
   const mime = exportMime();
   if(mime === 'image/png') c.toBlob(cb, mime);          /* PNG: nessuna perdita */
   else c.toBlob(cb, mime, state.export.quality);
+}
+/* Esporta il formato attivo una volta per ogni immagine scelta. Il layout,
+   lo zoom e la posizione sono quelli del formato com'e': cambia solo
+   l'immagine del pannello attivo. Niente passa dallo stato (nessun annulla,
+   snapState uguale prima e dopo): ogni disegno usa una copia del layout. */
+let _perImmagineInCorso = false;
+async function esportaPerImmagine(){
+  if(_perImmagineInCorso) return;
+  if(SHOTS.length < 2){ toast('Add at least 2 images to export one file per image'); return; }
+  const f = FORMATS.find(x=> x.id === state.active);
+  if(!f) return;
+  /* tutto quello che serve si fissa adesso: se durante l'export si cambia
+     qualcosa, i file escono comunque dalla stessa impostazione */
+  const base = JSON.parse(JSON.stringify(state.layouts[f.id]));
+  const k = pannelloAttivo(base.shot);
+  const nomeF = nomeFormato(f);
+  const scelte = new Set(SHOTS.map((_, i)=> i));
+  const body = document.createElement('div');
+  const nota = document.createElement('div');
+  nota.textContent = "Uses this format's layout, zoom and position for every image. Only the image of panel " + (k+1) + ' changes.';
+  body.appendChild(nota);
+  const barra = document.createElement('div'); barra.className = 'pibar';
+  const bTutte = document.createElement('button'); bTutte.type = 'button'; bTutte.textContent = 'All';
+  const bNessuna = document.createElement('button'); bNessuna.type = 'button'; bNessuna.textContent = 'None';
+  const cnt = document.createElement('span'); cnt.className = 'cnt';
+  barra.append(bTutte, bNessuna, cnt);
+  body.appendChild(barra);
+  const griglia = document.createElement('div'); griglia.className = 'imgpick';
+  body.appendChild(griglia);
+  let bEsporta = null;
+  const aggiorna = ()=>{
+    const n = scelte.size;
+    cnt.textContent = n + ' of ' + SHOTS.length + ' selected';
+    if(bEsporta){ bEsporta.textContent = 'Export ' + n + ' file' + (n===1 ? '' : 's'); bEsporta.disabled = !n; }
+  };
+  const voci = SHOTS.map((sh, i)=>{
+    const it = document.createElement('div');
+    it.className = 'it on'; it.title = sh.name || ('Image ' + (i+1));
+    it.setAttribute('role', 'checkbox'); it.setAttribute('aria-checked', 'true');
+    const cv2 = document.createElement('canvas'); cv2.width = 128; cv2.height = 72;
+    try{ previewShot(cv2.getContext('2d'), 128, 72, i); }catch(e){}
+    const tick = document.createElement('span'); tick.className = 'tick';
+    const num = document.createElement('span'); num.className = 'num'; num.textContent = String(i+1);
+    it.append(cv2, tick, num);
+    const metti = on=>{
+      if(on) scelte.add(i); else scelte.delete(i);
+      it.classList.toggle('on', on); it.setAttribute('aria-checked', on ? 'true' : 'false');
+    };
+    it.onclick = ()=>{ metti(!scelte.has(i)); aggiorna(); };
+    griglia.appendChild(it);
+    return metti;
+  });
+  bTutte.onclick = ()=>{ voci.forEach(m=> m(true)); aggiorna(); };
+  bNessuna.onclick = ()=>{ voci.forEach(m=> m(false)); aggiorna(); };
+  const scelta = dialogo({title: nomeF + ' once per image', body,
+    buttons:[{id:'cancel', label:'Cancel'}, {id:'go', label:'Export', primary:true}]});
+  bEsporta = document.querySelector('#dlg .dlg-btns button.primary');
+  aggiorna();
+  if(await scelta !== 'go' || !scelte.size) return;
+  /* l'ordine e' quello della libreria; si tengono gli oggetti, non gli indici */
+  const lista = SHOTS.filter((_, i)=> scelte.has(i));
+  _perImmagineInCorso = true;
+  try{
+    avvisaToken();
+    /* la cartella prima del disegno: il selettore va aperto finche' il clic e' fresco */
+    let dir = null, dove = '';
+    try{
+      dir = await cartellaPronta();
+      if(dir && state.export.bundle === 'Separate files'){
+        const sub = folderFor(f, state.pack, 1).replace(/\/$/, '');
+        if(sub){
+          try{ dir = await dir.getDirectoryHandle(sub, {create:true}); }
+          catch(e){
+            if(e && e.name === 'NotFoundError'){
+              cartellaExport = null;
+              dbApri().then(d=>{ if(!d) return; try{ d.transaction('meta','readwrite').objectStore('meta').delete('cartellaExport'); }catch(x){} });
+              buildControls();
+              throw new Error('the export folder is no longer there. Export again to choose a folder');
+            }
+            throw e;
+          }
+          dove = (cartellaExport ? cartellaExport.name + '/' : '') + sub;
+        }
+      }
+      if(!dove && dir) dove = dir.name;
+    }catch(e){
+      if(!e || e.name !== 'AbortError') toast('Export failed: ' + (e && e.message || e));
+      return;
+    }
+    let fermo = false;
+    const nomi = [], avvisi = [];
+    try{
+      for(let j = 0; j < lista.length && !fermo; j++){
+        const sh = lista[j], i = SHOTS.indexOf(sh);
+        if(i < 0) continue;                       /* tolta nel frattempo */
+        toast('Exporting ' + (j+1) + '/' + lista.length, {ms:60000, action:{label:'Stop', fn:()=>{ fermo = true; }}});
+        await new Promise(r=> setTimeout(r, 0));
+        const L2 = JSON.parse(JSON.stringify(base));
+        const S2 = L2.shot;
+        if(!Array.isArray(S2.src)) S2.src = Array.from({length:PANNELLI_MAX}, (_, p)=> panelSrc(S2, p));
+        S2.src[k] = i;
+        const im = sh.img;
+        if(im && typeof im.decode === 'function' && !(im instanceof HTMLCanvasElement)) await im.decode().catch(()=>{});
+        const blob = await new Promise(res=> renderFormatToBlob(f, res, L2));
+        const nome = await esportaNumerato(blob, fileNameFor(f, state.pack, j+1), dir);
+        nomi.push(nome);
+        if(f.group === 'Fab' && blob.size > FAB_MAX_BYTE) avvisi.push(nome + ' is over 3 MB');
+      }
+    }catch(e){
+      if(!e || e.name !== 'AbortError') toast('Export failed after ' + nomi.length + ' file' + (nomi.length===1 ? '' : 's') + ': ' + (e && e.message || e));
+      else toast('Export cancelled after ' + nomi.length + ' file' + (nomi.length===1 ? '' : 's'));
+      return;
+    }
+    if(typeof segnaExport === 'function'){
+      try{ segnaExport({n:nomi.length, dove, nomi, avvisi}); }catch(e){ console.error(e); }
+    }
+    const resto = lista.length - nomi.length;
+    toast(nomi.length + ' file' + (nomi.length===1 ? '' : 's') + ' exported' + (dove ? ' to ' + dove : '') +
+      (nomi.length ? ': ' + nomi.slice(0, 3).join(', ') + (nomi.length > 3 ? ', ...' : '') : '') +
+      (fermo && resto > 0 ? '.  Stopped, ' + resto + ' left out' : '') +
+      (avvisi.length ? '.  ' + avvisi[0] + ' (Fab asks under 3 MB)' : ''), {ms:9000});
+  }finally{
+    _perImmagineInCorso = false;
+  }
 }
 /* ==========================================================================
    EXPORT NUMERATO IN UNA CARTELLA
@@ -8484,40 +8934,165 @@ async function esportaNumerato(blobOPromessa, nome, dirGia){
   codaExport = lavoro.catch(()=>{});
   return lavoro;
 }
+/* ==========================================================================
+   EXPORT ALL: ZIP O FILE SEPARATI, CONTROLLI, ULTIMO EXPORT
+   state.export.bundle: 'Zip file' (di serie, come sempre) oppure
+   'Separate files': un file per formato, dentro una sottocartella della
+   cartella di export con il nome di naming.folder ({title} di serie).
+   ========================================================================== */
+const esportaSeparati = ()=> state.export.bundle === 'Separate files';
+
+/* Il formato scelto e' fuori dai formati spuntati: lo si dice nell'avviso,
+   cosi' un Card dimenticato si nota subito. Oltre quattro si abbrevia. */
+function nonSpuntati(list){
+  const nomi = FORMATS.filter(f=> list.indexOf(f) < 0).map(nomeFormato);
+  if(!nomi.length) return '';
+  const t = nomi.length > 4 ? nomi.slice(0, 4).join(', ') + ' and ' + (nomi.length - 4) + ' more' : nomi.join(', ');
+  return ' (' + t + ' not ticked)';
+}
+/* Fab chiede meno di 3 MB per immagine */
+function avvisoFab(f, blob){
+  if(!f || f.group !== 'Fab' || !blob || !(blob.size > FAB_MAX_BYTE)) return '';
+  return nomeFormato(f) + ' is ' + (blob.size / 1048576).toFixed(1) + ' MB: Fab asks for under 3 MB';
+}
+/* La sottocartella di un formato in modalita' file separati. Se la cartella
+   di export e' sparita nel frattempo si dimentica, come fa esportaNumerato. */
+async function sottoCartellaExport(dir, f){
+  if(!dir || !esportaSeparati()) return {dir, sub:''};
+  const sub = folderFor(f, state.pack, 1).replace(/\/+$/, '');
+  if(!sub) return {dir, sub:''};
+  try{ return {dir: await dir.getDirectoryHandle(sub, {create:true}), sub}; }
+  catch(e){
+    if(e && e.name === 'NotFoundError'){
+      cartellaExport = null;
+      dbApri().then(d=>{ if(!d) return; try{ d.transaction('meta','readwrite').objectStore('meta').delete('cartellaExport'); }catch(x){} });
+      buildControls();
+      throw new Error('the export folder ' + dir.name + ' is no longer there. Export again to choose a folder');
+    }
+    throw e;
+  }
+}
+/* Ultimo export della sessione: solo in memoria, non entra in annulla, nel
+   progetto ne' nel salvataggio automatico. */
+let ULTIMO_EXPORT = null;
+function riempiUltimoExport(el){
+  el.textContent = '';
+  const u = ULTIMO_EXPORT;
+  if(!u){ el.style.display = 'none'; return; }
+  el.style.display = '';
+  const d = new Date(u.quando), z = n=> (n < 10 ? '0' : '') + n;
+  const l1 = document.createElement('div');
+  const b = document.createElement('b'); b.textContent = 'Last export ' + z(d.getHours()) + ':' + z(d.getMinutes());
+  l1.appendChild(b);
+  l1.appendChild(document.createTextNode(' · ' + u.n + ' image' + (u.n === 1 ? '' : 's') +
+                                         (u.dove ? ' · ' + u.dove : '')));
+  el.appendChild(l1);
+  u.avvisi.forEach(t=>{
+    const w = document.createElement('div'); w.className = 'warn'; w.textContent = t;
+    el.appendChild(w);
+  });
+  el.title = u.nomi.length ? u.nomi.join('\n') : '';
+}
+/* segnaExport({n, dove, nomi, avvisi}): chiamata da ogni export riuscito
+   (anche da "una per immagine", sotto typeof) */
+function segnaExport(o){
+  o = o || {};
+  ULTIMO_EXPORT = {quando: Date.now(), n: Math.max(0, +o.n || 0), dove: String(o.dove || ''),
+                   nomi: Array.isArray(o.nomi) ? o.nomi.slice(0, 60).map(String) : [],
+                   avvisi: Array.isArray(o.avvisi) ? o.avvisi.slice(0, 12).map(String) : []};
+  document.querySelectorAll('.lastexp').forEach(riempiUltimoExport);
+}
+
 document.getElementById('bExp').onclick = async ()=>{
   avvisaToken();
   const f = FORMATS.find(x=>x.id===state.active);
   try{
-    const nome = await esportaNumerato(new Promise(res=> renderFormatToBlob(f, res)), fileNameFor(f, state.pack, 1));
-    toast('Exported ' + nome + (cartellaExport ? ' to ' + cartellaExport.name : ''));
+    /* la cartella prima del disegno: il selettore va aperto finche' il clic
+       e' ancora fresco */
+    const base = await cartellaPronta();
+    const r = await sottoCartellaExport(base, f);
+    const blob = await new Promise(res=> renderFormatToBlob(f, res));
+    const nome = await esportaNumerato(blob, fileNameFor(f, state.pack, 1), r.dir);
+    const dove = base ? base.name + (r.sub ? '/' + r.sub : '') : '';
+    const av = avvisoFab(f, blob);
+    toast('Exported ' + nome + (dove ? ' to ' + dove : '') + (av ? '.  ' + av : ''), av ? {kind:'warn'} : undefined);
+    segnaExport({n:1, dove: dove || 'downloads', nomi:[nome], avvisi: av ? [av] : []});
   }catch(e){ if(!e || e.name !== 'AbortError') toast('Export failed: ' + (e && e.message || e)); }
 };
 document.getElementById('bZip').onclick = async ()=>{
   const list = FORMATS.filter(f=> state.layouts[f.id].on);
   if(!list.length){ toast('No format selected'); return; }
+  const separati = esportaSeparati();
   /* la cartella prima del disegno di tutti i formati, che richiede tempo */
   let dirZip = null;
   try{ dirZip = await cartellaPronta(); }
   catch(e){ if(!e || e.name !== 'AbortError') toast(e.message); return; }
   const guai = preflight().filter(x=> x.tipo==='errore');
   if(guai.length) buildControls();
+  const fuori = nonSpuntati(list);
+  const avvisi = [];
   toast('Rendering '+list.length+' image'+(list.length===1?'':'s')+'...');
-  const files = [];
-  for(const f of list){
-    const blob = await new Promise(res=> renderFormatToBlob(f, res));
-    files.push({name: folderFor(f, state.pack, 1)+fileNameFor(f, state.pack, 1),
-                data: new Uint8Array(await blob.arrayBuffer())});
-  }
-  const nomeZip = safe(applyCase(tokenize('{title}', FORMATS[0], state.pack, 1) || 'store',
-                                 state.naming.case, state.naming.sep||'_'))+'.zip';
-  let scritto;
-  try{ scritto = await esportaNumerato(new Blob([makeZip(files)],{type:'application/zip'}), nomeZip, dirZip); }
-  catch(e){ if(!e || e.name !== 'AbortError') toast('Export failed: ' + (e && e.message || e)); return; }
   /* l'avviso del controllo va detto alla fine, se no l'ultimo messaggio lo
      copre e si esporta credendo che fosse tutto a posto */
-  toast(list.length+' image'+(list.length===1?'':'s')+' exported in ' + scritto +
-    (guai.length ? '.  ' + guai.length + ' problem' + (guai.length===1?'':'s') +
-      ' found: ' + guai[0].testo + (guai.length>1 ? ' (full list under Export)' : '') : ''));
+  const coda = ()=>{
+    const tutti = [];
+    if(guai.length) tutti.push(guai.length + ' problem' + (guai.length===1?'':'s') +
+      ' found: ' + guai[0].testo + (guai.length>1 ? ' (full list under Export)' : ''));
+    avvisi.forEach(t=> tutti.push(t));
+    return tutti;
+  };
+  const dillo = (msg, n, nomi, dove)=>{
+    const tutti = coda();
+    toast(msg + fuori + (tutti.length ? '.  ' + tutti.join('.  ') : ''), tutti.length ? {kind:'warn'} : undefined);
+    segnaExport({n, dove, nomi, avvisi: tutti});
+  };
+  if(!separati){
+    const files = [];
+    try{
+      for(const f of list){
+        const blob = await new Promise(res=> renderFormatToBlob(f, res));
+        if(!blob) throw new Error('the image could not be rendered, probably out of memory. Try a smaller Scale');
+        const av = avvisoFab(f, blob); if(av) avvisi.push(av);
+        files.push({name: folderFor(f, state.pack, 1)+fileNameFor(f, state.pack, 1),
+                    data: new Uint8Array(await blob.arrayBuffer())});
+      }
+    }catch(e){ toast('Export failed: ' + (e && e.message || e)); return; }
+    const nomeZip = safe(applyCase(tokenize('{title}', FORMATS[0], state.pack, 1) || 'store',
+                                   state.naming.case, state.naming.sep||'_'))+'.zip';
+    let scritto;
+    try{ scritto = await esportaNumerato(new Blob([makeZip(files)],{type:'application/zip'}), nomeZip, dirZip); }
+    catch(e){ if(!e || e.name !== 'AbortError') toast('Export failed: ' + (e && e.message || e)); return; }
+    dillo(list.length+' image'+(list.length===1?'':'s')+' exported in ' + scritto, list.length, [scritto],
+          (dirZip ? dirZip.name + '/' : '') + scritto);
+    return;
+  }
+  /* file separati: ogni formato si scrive appena e' pronto, senza tenere
+     in memoria tutte le immagini */
+  const nomi = [], sottoc = [], maniglie = {};
+  try{
+    for(let k = 0; k < list.length; k++){
+      const f = list[k];
+      if(list.length > 1) toast('Exporting ' + (k+1) + '/' + list.length + '...', {ms:4000});
+      const blob = await new Promise(res=> renderFormatToBlob(f, res));
+      if(!blob) throw new Error('the image could not be rendered, probably out of memory. Try a smaller Scale');
+      const av = avvisoFab(f, blob); if(av) avvisi.push(av);
+      const chiave = folderFor(f, state.pack, 1);
+      if(!maniglie[chiave]) maniglie[chiave] = await sottoCartellaExport(dirZip, f);
+      const m = maniglie[chiave];
+      if(m.sub && sottoc.indexOf(m.sub) < 0) sottoc.push(m.sub);
+      nomi.push(await esportaNumerato(blob, fileNameFor(f, state.pack, 1), m.dir));
+    }
+  }catch(e){
+    if(e && e.name === 'AbortError') return;
+    toast('Export failed: ' + (e && e.message || e) +
+          (nomi.length ? '.  ' + nomi.length + ' of ' + list.length + ' files were written' : ''));
+    if(nomi.length) segnaExport({n:nomi.length, dove: dirZip ? dirZip.name : 'downloads', nomi,
+                                 avvisi:['Stopped after ' + nomi.length + ' of ' + list.length + ': ' + (e && e.message || e)]});
+    return;
+  }
+  const dove = !dirZip ? 'downloads' : dirZip.name + (sottoc.length === 1 ? '/' + sottoc[0] :
+               (sottoc.length > 1 ? ' (' + sottoc.length + ' folders)' : ''));
+  dillo(list.length+' image'+(list.length===1?'':'s')+' exported to ' + dove, list.length, nomi, dove);
 };
 
 /* riquadro dell'inchiostro della riga, in frazioni di tela */
@@ -9018,6 +9593,7 @@ function runAction(act){
     for(let i=0;i<=n;i++) S.slants[i] = (i-n/2) * 0.16;
     buildControls(); render(); toast('Cuts fanned out'); return;
   }
+  if(act==='shotToSimilar' || act==='shotToAll'){ copiaImpostazioneImmagine(act==='shotToAll'); return; }
   if(act==='shotsClear'){
     pushUndo();
     SHOTS = []; imgShot = null;
@@ -9040,6 +9616,7 @@ function runAction(act){
     return;
   }
   if(act==='sizeCheck'){ sizeCheck(); return; }
+  if(act==='perImage'){ esportaPerImmagine(); return; }
   if(act==='preflight'){ preflightRun(); return; }
   if(act==='centerRow'){ pushUndo(); centerRowInBand(false); return; }
   if(act==='centerRowAll'){ pushUndo(); centerRowInBand(true); return; }
@@ -9379,6 +9956,13 @@ function preflight(){
     }
   });
 
+  /* Fab accetta PNG o JPEG: un WebP viene rifiutato al caricamento */
+  if(exportMime() === 'image/webp')
+    attivi.forEach(f=>{
+      if(f.group === 'Fab')
+        agg(f, 'errore', 'Fab accepts PNG or JPEG only: change the File type');
+    });
+
   /* nomi dei file: doppioni e segnaposto sbagliati */
   const fuori = tokenIgnoti(state.naming.pattern).concat(tokenIgnoti(state.naming.folder));
   if(fuori.length)
@@ -9576,6 +10160,7 @@ Promise.all([...document.fonts].map(f=> f.load().catch(()=>{})))
     /* prima riprendo il lavoro salvato, poi centro: se ho ripreso qualcosa
        non tocco le posizioni, sono gia' quelle che aveva lasciato l'utente */
     const back = autoRestore();
+    autoPrima = back ? autoLetto : null;
     if(!back) centerRowInBand(true, true, true);
     if(!back && ripristinoRotto)
       setTimeout(()=> toast('The saved work was damaged: starting from the default design'), 900);
@@ -9594,6 +10179,7 @@ Promise.all([...document.fonts].map(f=> f.load().catch(()=>{})))
                        : 'Last session restored, load the images again');
       else if(n) toast(n+' screenshot'+(n>1?'s':'')+' back from last time');
     }).catch(()=>{
+      autoPrima = null;
       if(back) toast('Last session restored, load the images again');
     });
     /* Il file del font non sta nel salvataggio automatico piu' di quanto

@@ -73,11 +73,13 @@ module.exports = async ({ ev, delay }) => {
       const r = await openWait(new File([t], 'pristine.json', { type: 'application/json' }), null); r.d = await digest(); r.again = await testoProgetto(); r.t = t; return r; })()`);
     chk('pristine file opens', pr.ok && /^Project opened/.test(pr.toast), pr.toast);
     const canonN = o => Array.isArray(o) ? o.map(canonN) : (o && typeof o === 'object') ? Object.fromEntries(Object.keys(o).sort().map(k => [k, canonN(o[k])])) : o;
-    chk('pristine snapState equal (sorted keys)', pr.d.snap === JSON.stringify(canonN(JSON.parse(meta.snap))), 'differs');
+    /* settings added after the pristine file was written (1.7.0: export.bundle) get their default on open: leave them out */
+    const senzaNuovi = o => { o = JSON.parse(JSON.stringify(o)); if (o && o.export) delete o.export.bundle; return o; };
+    chk('pristine snapState equal (sorted keys)', JSON.stringify(canonN(senzaNuovi(JSON.parse(pr.d.snap)))) === JSON.stringify(canonN(senzaNuovi(JSON.parse(meta.snap)))), 'differs');
     chk('pristine images (name,path,size,type)', JSON.stringify(pr.d.shots.map(s => s.slice(0, 4))) === JSON.stringify(meta.shots), pr.d.shots.map(s => s.slice(0, 4)));
     chk('pristine logo', pr.d.logo && pr.d.logo[1] === meta.logo);
     chk('pristine active', pr.d.active === meta.active, pr.d.active);
-    chk('pristine: reopen then save gives the same project (sorted keys)', JSON.stringify(canonN(JSON.parse(pr.again))) === JSON.stringify(canonN(JSON.parse(pr.t))));
+    chk('pristine: reopen then save gives the same project (sorted keys)', JSON.stringify(canonN(senzaNuovi(JSON.parse(pr.again)))) === JSON.stringify(canonN(senzaNuovi(JSON.parse(pr.t)))));
     res.pristineBytes = ptxt.length;
   } else res.pristine = 'SKIPPED (t7-pristine.json missing)';
 
