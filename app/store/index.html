@@ -4694,7 +4694,7 @@ let ripristinoRotto = false;
    il file contiene). All'avvio passa in autoPrima, che vale finche'
    riprendiFileProgetto non l'ha usato. */
 let autoLetto = null, autoPrima = null;
-function autoRestore(){
+function autoRestore(daBottone){
   ripristinoRotto = false;
   let raw = null, prima = null;
   try{ raw = localStorage.getItem(AUTOKEY); }catch(err){ return false; }
@@ -4724,8 +4724,13 @@ function autoRestore(){
     applySnap(JSON.stringify(got));
     if(Array.isArray(d.colori)) COLORI_USATI = d.colori.slice(0,8);
     if(d.active && FORMATS.some(f=>f.id === d.active)){ state.active = d.active; buildFormats(); }
-    undoStack.length = 0; redoStack.length = 0;
-    undoShots.length = 0; redoShots.length = 0; updateHistBtns();
+    /* all'avvio la storia riparte da zero; dal bottone "Restore last save"
+       resta, cosi' Ctrl+Z torna a prima del ripristino */
+    if(!daBottone){
+      undoStack.length = 0; redoStack.length = 0;
+      undoShots.length = 0; redoShots.length = 0;
+    }
+    updateHistBtns();
     return true;
   }catch(err){
     ripristinoRotto = true;
@@ -7874,11 +7879,35 @@ function blobInImmagine(blob){
     const url = URL.createObjectURL(blob);
     const im = new Image();
     im.onload  = ()=>{ URL.revokeObjectURL(url); ris(segnaImmagine(im)); };
-    im.onerror = ()=>{ URL.revokeObjectURL(url); ris(null); };
+    /* come loadImage: certi PNG (16 bit, profili strani) che <img> rifiuta
+       passano da createImageBitmap. Senza, entravano la prima volta e
+       sparivano al riavvio o riaprendo il progetto */
+    im.onerror = ()=>{
+      URL.revokeObjectURL(url);
+      if(typeof createImageBitmap !== 'function'){ ris(null); return; }
+      createImageBitmap(blob).then(bm=>{
+        const c = document.createElement('canvas');
+        c.width = bm.width; c.height = bm.height;
+        c.getContext('2d').drawImage(bm, 0, 0);
+        if(bm.close) bm.close();
+        ris(segnaImmagine(c));
+      }).catch(()=> ris(null));
+    };
     im.src = url;
   });
 }
+/* Immagini che non si leggono piu': i pannelli puntano per posizione,
+   quindi quelle dopo scalano di uno. mappa[k] = nuova posizione o -1. */
+function mappaSenzaRotte(presenti){
+  const mappa = []; let n = 0;
+  presenti.forEach((ok, k)=>{ mappa[k] = ok ? n++ : -1; });
+  return v=> (v >= 0 && v < mappa.length) ? mappa[v] : v;
+}
 async function dbCarica(){
+  /* mentre si legge, l'utente puo' gia' aver aperto un progetto o messo
+     immagini: in quel caso la libreria di ieri non deve passarci sopra */
+  const prima = SHOTS, n0 = SHOTS.length;
+  const toccato = ()=> SHOTS !== prima || SHOTS.length !== n0;
   const d = await dbApri();
   if(!d) return 0;
   let righe = [], principale = -1, logo = null;
@@ -7906,6 +7935,12 @@ async function dbCarica(){
   righe.forEach((r, k)=>{
     if(immagini[k]) dentro.push({name:r.nome, img:immagini[k], path:r.path, blob:r.blob});
   });
+  if(toccato()) return -1;
+  if(dentro.length < righe.length){
+    const m = mappaSenzaRotte(immagini.map(Boolean));
+    rimappaImmagini(m);
+    if(principale >= 0) principale = m(principale);
+  }
   if(dentro.length){
     SHOTS = dentro;
     imgShot = (principale >= 0 && SHOTS[principale]) ? SHOTS[principale].img : SHOTS[0].img;
@@ -8246,7 +8281,7 @@ document.getElementById('bNew').onclick = async ()=>{
   if(r === 'blank'){
     pushUndo();
     state.pack = Object.assign({}, state.pack, {title:'', category:'', version:'v1.0'});
-    state.variants = [];
+    state.variants = []; state.currentVariant = null;
     FORMATS.forEach(f=>{ state.layouts[f.id] = defLayout(f); });
     state.active = FORMATS[0].id;
     SHOTS = []; imgShot = null;
@@ -8640,7 +8675,7 @@ function caricaPresetFile(f, handle){
     pushUndo();
     /* le immagini del progetto prendono il posto di quelle aperte: gli
        indici dei pannelli parlano di quell'elenco, non di un altro */
-    let immagini = 0, rotte = 0;
+    let immagini = 0, rotte = 0, presenti = [];
     if(lista){
       const nuove = [];
       for(let k=0; k<lista.n; k++){
@@ -8653,7 +8688,8 @@ function caricaPresetFile(f, handle){
           /* buchi: lo calcola preparaImmagini */
           if(im) nuove.push({name:file.name, img:im, path:x.path || file.name, blob:file});
           else rotte++;
-        }catch(e){ rotte++; }
+          presenti[k] = !!im;
+        }catch(e){ rotte++; presenti[k] = false; }
         /* si lascia respirare la pagina fra un'immagine e l'altra */
         await new Promise(r=> setTimeout(r, 0));
       }
@@ -8673,12 +8709,16 @@ function caricaPresetFile(f, handle){
     if(d.theme) state.theme = Object.assign({}, state.theme, d.theme);
     if(d.naming) state.naming = Object.assign({}, state.naming, d.naming);
     if(Array.isArray(d.variants)) state.variants = d.variants.filter(v=> v && typeof v === 'object');
+    /* la variante scelta era del progetto di prima */
+    state.currentVariant = null;
     if(d.layouts) FORMATS.forEach(fm=>{
       if(d.layouts[fm.id]) state.layouts[fm.id] = mergeLayout(fm, d.layouts[fm.id]);
     });
     /* un preset salvato mesi fa porta dentro le misure di allora, come il
        salvataggio automatico */
     migraSalvataggio({theme:state.theme, layouts:state.layouts});
+    /* un'immagine illeggibile non deve spostare le altre di pannello */
+    if(presenti.some(x=> x === false)) rimappaImmagini(mappaSenzaRotte(presenti));
     if(d.active && FORMATS.some(fm=> fm.id === d.active)) state.active = d.active;
     await scaldaImmagini();
     dbSalva();
@@ -9610,7 +9650,7 @@ function runAction(act){
   if(act==='autoClear'){ autoClear(); return; }
   if(act==='autoRestore'){
     pushUndo();
-    toast(autoRestore() ? 'Last save restored'
+    toast(autoRestore(true) ? 'Last save restored'
           : (ripristinoRotto ? 'The saved work is damaged and could not be read'
                              : 'Nothing saved yet'));
     return;
@@ -9950,6 +9990,11 @@ function preflight(){
           if(o[k] === FONT_MIO && chiedono.indexOf(g) < 0) chiedono.push(g);
         });
       });
+      /* anche i livelli di testo possono chiederlo */
+      (L.layers||[]).forEach(l=>{
+        if(l && l.on !== false && ['font','titleFont','itemFont'].some(k=> l[k] === FONT_MIO) &&
+           chiedono.indexOf('layers') < 0) chiedono.push('layers');
+      });
       if(chiedono.length)
         agg(f, 'errore', 'asks for the loaded font but no font file is loaded: ' +
             'the text comes out in the system font');
@@ -10017,6 +10062,8 @@ async function sizeCheck(){
   for(const f of list){
     await new Promise(r=> setTimeout(r, 0));
     const blob = await new Promise(res=> renderFormatToBlob(f, res));
+    /* senza memoria il disegno non riesce: lo si dice invece di fermarsi */
+    if(!blob){ toast('Could not weigh ' + nomeFormato(f) + ': the image could not be rendered, probably out of memory', {kind:'err'}); return lines; }
     total += blob.size;
     const o = outSize(f);
     const kb = Math.round(blob.size/1024);
@@ -10171,6 +10218,8 @@ Promise.all([...document.fonts].map(f=> f.load().catch(()=>{})))
     autoSaveNow();
     /* le immagini tornano dal loro archivio, che e' piu' lento ad aprirsi */
     dbCarica().then(async n=>{
+      /* -1: nel frattempo si e' aperto o aggiunto altro, quello resta */
+      if(n < 0){ autoPrima = null; riprendiCartellaExport().then(()=> buildControls()); return; }
       if(n){ await scaldaImmagini(); buildControls(); render(); }
       /* il file del progetto si riprende dopo le immagini: la firma le conta */
       riprendiFileProgetto();

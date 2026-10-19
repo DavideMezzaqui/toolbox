@@ -20,7 +20,7 @@ module.exports = async ({ ev, delay }) => {
     window.openWait = async (file, handle) => { toast(''); const u0 = undoStack.length; caricaPresetFile(file, handle); await new Promise(r => setTimeout(r, 0));
       const ok = await untilTrue(() => aprendoProgetto === false, 120000); return { ok, toast: document.getElementById('toast').textContent, undoGrew: undoStack.length - u0 }; };
     window.canon = o => Array.isArray(o) ? o.map(canon) : (o && typeof o === 'object') ? Object.fromEntries(Object.keys(o).sort().map(k => [k, canon(o[k])])) : o;
-    window.digest = async () => ({ snap: JSON.stringify(canon(JSON.parse(snapState()))), active: state.active, title: state.pack.title, nSh: SHOTS.length,
+    window.digest = async () => ({ snap: JSON.stringify(canon(Object.assign(JSON.parse(snapState()), {current: null}))), active: state.active, title: state.pack.title, nSh: SHOTS.length,
       shots: await Promise.all(SHOTS.map(async s => [s.name, s.path, s.blob.size, s.blob.type, await sha(s.blob)])),
       logo: logoBlob ? [logoBlob.name, logoBlob.size, await sha(logoBlob)] : null,
       src: JSON.stringify(FORMATS.map(f => state.layouts[f.id].shot.src)) });
@@ -73,8 +73,8 @@ module.exports = async ({ ev, delay }) => {
       const r = await openWait(new File([t], 'pristine.json', { type: 'application/json' }), null); r.d = await digest(); r.again = await testoProgetto(); r.t = t; return r; })()`);
     chk('pristine file opens', pr.ok && /^Project opened/.test(pr.toast), pr.toast);
     const canonN = o => Array.isArray(o) ? o.map(canonN) : (o && typeof o === 'object') ? Object.fromEntries(Object.keys(o).sort().map(k => [k, canonN(o[k])])) : o;
-    /* settings added after the pristine file was written (1.7.0: export.bundle) get their default on open: leave them out */
-    const senzaNuovi = o => { o = JSON.parse(JSON.stringify(o)); if (o && o.export) delete o.export.bundle; return o; };
+    /* settings added after the pristine file was written (1.7.0: export.bundle) get their default on open, and the selected variant is not part of a project: leave them out */
+    const senzaNuovi = o => { o = JSON.parse(JSON.stringify(o)); if (o && o.export) delete o.export.bundle; if (o) delete o.current; return o; };
     chk('pristine snapState equal (sorted keys)', JSON.stringify(canonN(senzaNuovi(JSON.parse(pr.d.snap)))) === JSON.stringify(canonN(senzaNuovi(JSON.parse(meta.snap)))), 'differs');
     chk('pristine images (name,path,size,type)', JSON.stringify(pr.d.shots.map(s => s.slice(0, 4))) === JSON.stringify(meta.shots), pr.d.shots.map(s => s.slice(0, 4)));
     chk('pristine logo', pr.d.logo && pr.d.logo[1] === meta.logo);
