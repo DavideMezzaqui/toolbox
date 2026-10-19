@@ -26,5 +26,7 @@ contextBridge.exposeInMainWorld('desktop', {
   pickFolder:  ()             => ipcRenderer.invoke('desktop:pick-folder'),
   listFiles:   (dir)          => ipcRenderer.invoke('desktop:list-files', dir),
   renameMany:  (dir, ops)     => ipcRenderer.invoke('desktop:rename-many', dir, ops),
-  openFolder:  (dir)          => ipcRenderer.invoke('desktop:open-folder', dir)
+  openFolder:  (dir)          => ipcRenderer.invoke('desktop:open-folder', dir),
+  saveToDesktop: (name, bytes) => ipcRenderer.invoke('desktop:save-to-desktop', {name, bytes}),
+  showOnDesktop: (filePath)   => ipcRenderer.invoke('desktop:show-item', filePath)
 });

@@ -1,4 +1,4 @@
-# Toolbox — working notes (last updated 2026-10-19, version 1.7.0)
+# Toolbox — working notes (last updated 2026-10-19, version 1.7.1)
 
 Davide asked to integrate **the complete Scene Sync interface inside Toolbox**, not an external launcher.
 
@@ -44,7 +44,7 @@ npm run test:workflow
 
 **Since 1.6.0 Toolbox runs from an unpacked folder, `Tools/_app/Toolbox`, not from a portable .exe.** Davide asked for a much faster start. Measured: the portable .exe took 3.3 to 5.0 s to show its window, because it unpacks the whole app to a temporary folder at every start; the unpacked copy shows it in 0.5 to 0.6 s (1.4 s on a cold first start). The folder is about 360 MB. User data stays in `%APPDATA%\Toolbox` either way, so nothing was lost in the switch. There is no portable target any more.
 
-Electron remains **33.4.11**, locked by `package-lock.json`; electron-builder remains 25.1.8. Do not upgrade them as part of routine feature work. Build caches remain in `Tools/_cache`. Current version: **1.7.0**.
+Electron remains **33.4.11**, locked by `package-lock.json`; electron-builder remains 25.1.8. Do not upgrade them as part of routine feature work. Build caches remain in `Tools/_cache`. Current version: **1.7.1**.
 
 **A running Toolbox cannot be replaced.** `build.ps1` checks for it and stops with "Toolbox is open" instead of letting electron-builder hang.
 
@@ -141,6 +141,18 @@ Fluidity, interface and features, planned by one Opus agent from three measured 
 - **Feedback:** `toast(m, {kind, action, undo, ms})`, `dialogo({...})` for every new dialog, shortcuts popover (`?`), Ctrl+O, `/` focuses search, size check in a dialog. Double-click any colour code to type one.
 - **Features:** Image > Screenshot > Copy to other formats (same shape / all; copies shot, fx, grad only); Ctrl+click a library image swaps it everywhere the selected one is used; dropping a file on a library card replaces that image everywhere; "Unused N" removes images no layout or variant shows; Output: "Export all as" Zip file (default) or Separate files into the `{title}` subfolder, Last export line, Fab checks (WebP refused, over 3 MB warned); "Export one file per image..." (same framing, one numbered file per ticked image); New offers "New from this pack" (keeps layouts, variants, logo, brand, badges); Save warns when the file holds a pack with another title (`titoloFile`).
 - Fixed on the way: the unsaved `*` and the autosave's `sporco` survive a restart again.
+
+## Store Graphics 1.7.1 (19 October 2026)
+
+After a read-only code audit (no full rewrite needed; render core left alone) and Davide's feedback:
+- Conditional rows: every row with `when` lives in a `.cslot` placeholder and `aggiornaRighe()` shows/hides it after any change (no more regex on `String(r.when)`); layer and part shadow rows, grid autoRows work.
+- Per-panel sliders use `makeRow` with paths `shot.sc#i` etc. (`rigaPannello` removed), so they follow canvas drags, arrows and Alt+wheel.
+- Right panel has 3 tabs: Design, Image, "Pack & export" (id `pack`; old ids content/test/out are aliases). Tab icons, muted per-section tint on icon/background; no coloured left bars anywhere (Davide dislikes "AI-style" touches).
+- Side panels and the image strip are resizable (handles `#rzL`, `#rzR`, `.rzh`; sizes in localStorage `davfx-store-graphics-panels`).
+- Grid overlay rewritten: exact divisions / pixel step in export px / thirds, centre lines, margin, colour, opacity; settings popover on right-click or caret (localStorage `davfx-store-graphics-grid`); snaps when on. Preview only.
+- Pickers go through `selettoreUnico`: one in-flight picker, cancel is silent ("File picker already active" fixed).
+- "Desktop" button / Ctrl+Alt+E writes the current format to the Desktop through IPC `desktop:save-to-desktop` (main.js validates name and extension, never overwrites) and `desktop:show-item`.
+- Undo no longer restores `ui` (preview size); format checkbox is undoable; back layers hit-test in draw order; logo recolour cache keyed per logo; layer ids never collide after reload; Restore last save undoable; unreadable images no longer shift panels; startup library load does not overwrite work added meanwhile.
 
 ## User requirements / limits to preserve
 

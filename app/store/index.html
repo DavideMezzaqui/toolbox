@@ -204,10 +204,8 @@
   .grp2::after{content:'';flex:1;height:1px;background:var(--line)}
   .btnrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
   .btnrow button{flex:1 1 auto;min-width:0;padding:6px 8px;font-size:var(--fs-s)}
-  .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px}
-  .pgrid button{padding:6px 4px;font-size:var(--fs-s)}
 
-  /* sezioni: intestazione piatta, quella aperta ha una barra chiara a sinistra */
+  /* sezioni: intestazione piatta; quella aperta ha lo sfondo piu' chiaro e la freccia girata */
   .sec{border:1px solid var(--line);border-radius:8px;margin-bottom:6px;overflow:hidden;
        scroll-margin-top:var(--phead-h,0px)}
   .sec>.hd{display:flex;align-items:center;gap:8px;padding:0 11px;height:34px;background:var(--panel2);
@@ -219,7 +217,7 @@
            background:var(--bg);border-radius:8px;font-variant-numeric:tabular-nums}
   .sec>.bd{padding:10px 11px 6px;display:none}
   .sec.open>.bd{display:block}
-  .sec.open>.hd{background:var(--panel3);box-shadow:inset 2px 0 0 #dcdce2}
+  .sec.open>.hd{background:var(--panel3)}
   .sec>.hd>svg.ic{opacity:.6}
   .sec.open>.hd>svg.ic{opacity:1}
   .sec>.hd:hover>svg.ic{opacity:.9}
@@ -247,6 +245,39 @@
   .phead{padding-bottom:7px}
   @media(min-height:801px){ .phead .lib{max-height:min(150px,15vh)} }
   .sec>.bd .row:hover label{color:var(--txt)}
+  @media(max-width:900px){ .rz{display:none} }
+  #bDesk[hidden]{display:none}
+  /* tinta discreta per sezione: solo l'icona e uno sfondo appena percettibile */
+  .sec>.hd{background:color-mix(in srgb,var(--sc,#888) 5%,var(--panel2))}
+  .sec>.hd:hover{background:color-mix(in srgb,var(--sc,#888) 8%,#25252b)}
+  .sec.open>.hd{background:color-mix(in srgb,var(--sc,#888) 9%,var(--panel3))}
+  .sec>.hd>svg.ic{color:var(--sc,var(--txt2));opacity:.9}
+  .sec[data-title="Colours"]{--sc:hsl(28,42%,66%)}
+  .sec[data-title="Bottom band"]{--sc:hsl(212,42%,66%)}
+  .sec[data-title="Accent line"]{--sc:hsl(45,42%,66%)}
+  .sec[data-title="Logo"]{--sc:hsl(275,42%,66%)}
+  .sec[data-title="Text row"]{--sc:hsl(168,42%,66%)}
+  .sec[data-title="Version"]{--sc:hsl(330,42%,66%)}
+  .sec[data-title="Badges"]{--sc:hsl(60,42%,66%)}
+  .sec[data-title="Frame"]{--sc:hsl(192,42%,66%)}
+  .sec[data-title="Layers"]{--sc:hsl(100,42%,66%)}
+  .sec[data-title="Screenshot"]{--sc:hsl(205,42%,66%)}
+  .sec[data-title="Image adjustments"]{--sc:hsl(255,42%,66%)}
+  .sec[data-title="Blur effects"]{--sc:hsl(182,42%,66%)}
+  .sec[data-title="Tint / blend"]{--sc:hsl(315,42%,66%)}
+  .sec[data-title="Dark gradient"]{--sc:hsl(228,42%,66%)}
+  .sec[data-title="Pack data"]{--sc:hsl(85,42%,66%)}
+  .sec[data-title="Variants"]{--sc:hsl(12,42%,66%)}
+  .sec[data-title="Export"]{--sc:hsl(150,42%,66%)}
+  .sec[data-title="File naming"]{--sc:hsl(42,42%,66%)}
+  .sec[data-title="Session"]{--sc:hsl(220,42%,66%)}
+  .tabs button{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
+  .tabs button svg.ic{width:14px;height:14px;opacity:.8}
+  .cslot{display:none !important}
+  /* testo mai tagliato: altezza minima, non fissa, cosi' la riga cresce con il carattere */
+  .row select{height:auto;min-height:25px;line-height:1.3;padding-top:3px;padding-bottom:3px}
+  .row button,.sec .btnrow button{line-height:1.3;min-height:24px}
+  .row input.val{min-height:20px;box-sizing:border-box}
   /* [/v17-right] */
 
   /* --- griglia di ancoraggio dei livelli --- */
@@ -334,7 +365,7 @@
   .fmt{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;cursor:pointer;
        border:1px solid transparent;transition:background .12s}
   .fmt:hover{background:var(--panel2)}
-  .fmt.on{background:var(--panel3);border-color:#4a4a54;box-shadow:inset 2px 0 0 #dcdce2}
+  .fmt.on{background:var(--panel3);border-color:#5a5a64}
   .fmt canvas.th{flex:none;background:#000;border:1px solid var(--line);
      border-radius:3px;image-rendering:auto}
   /* sopra una certa misura l'anteprima va sopra il nome, non di fianco:
@@ -362,6 +393,9 @@
   .fmt:not(.big):has(canvas.th)>.nm{grid-column:3}
   .fmt:not(.big):has(canvas.th)>select.res,.fmt:not(.big):has(canvas.th)>.seg{grid-column:3;justify-self:start;margin-top:4px}
   .fmt.big .seg{align-self:flex-start}
+  /* maniglia per ridimensionare la colonna: sul bordo interno, fra colonna e tela */
+  .rz{flex:none;width:6px;margin:0 -3px;position:relative;z-index:6;cursor:col-resize;touch-action:none;background:transparent;transition:background .12s}
+  .rz:hover,.rz.on{background:rgba(160,160,170,.35)}
   /* [/v17-left] */
 
   /* ==========================================================================
@@ -383,6 +417,16 @@
      destra, lontano dai comandi che si toccano di continuo */
   #tools{align-self:stretch}
   .toolbar .tgrow{flex:1 1 0;min-width:0}
+  .toolbar button.gridBtn::after{content:'';display:inline-block;margin-left:6px;vertical-align:middle;
+           border:4px solid transparent;border-top-color:currentColor;border-bottom:0;opacity:.6}
+  #gridPop{position:fixed;z-index:60;width:230px;padding:10px 12px;background:var(--panel2);
+           border:1px solid #4a4a52;border-radius:10px;box-shadow:0 14px 40px rgba(0,0,0,.6);
+           display:flex;flex-direction:column;gap:7px;font-size:var(--fs);color:var(--txt2)}
+  #gridPop .gpRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  #gridPop .gpRow[hidden]{display:none}
+  #gridPop input[type=number],#gridPop select{width:96px;font-size:var(--fs);background:var(--panel3,#1c1c22);color:var(--txt);border:1px solid var(--line2);border-radius:4px;padding:2px 6px;color-scheme:dark}
+  #gridPop input[type=range]{width:96px}
+  #gridPop input[type=color]{width:96px;height:22px;padding:0;background:none;border:1px solid var(--line2)}
   /* [/v17-toolbar] */
 
   /* ==========================================================================
@@ -429,6 +473,11 @@
   }
   #imgs .ih button[hidden]{display:none}
   #imgs .ih .rmu{color:var(--txt2)}
+  /* altezza scelta trascinando la maniglia sotto le immagini: vale su ogni altezza di finestra */
+  .rzh{height:7px;margin:1px 0 -2px;cursor:row-resize;touch-action:none;border-radius:3px;background:transparent;transition:background .12s}
+  .rzh:hover,.rzh.on{background:rgba(160,160,170,.35)}
+  body.lib-custom .lib{display:grid;grid-template-columns:repeat(4,1fr);max-height:var(--lib-h);overflow-x:hidden;overflow-y:auto;padding:2px}
+  body.lib-custom .lib .card{flex:none;width:auto}
   /* [/v17-strip] */
 
   /* ==========================================================================
@@ -527,6 +576,7 @@
   <span id="projInfo" class="projinfo"></span>
   <div class="grow"></div>
   <button id="bExp" title="Export the format you are on. Ctrl+E" data-ic="down">Export current</button>
+  <button id="bDesk" title="Export this format to the Desktop (Ctrl+Alt+E)" data-ic="desktop" hidden>Desktop</button>
   <button class="acc" id="bZip" title="Export every ticked format, as a zip or as separate files (see Export). Ctrl+Shift+E" data-ic="zip">Export all</button>
   <div class="sep"></div>
   <button id="bKeys" title="List of keyboard shortcuts" data-ic="key">Shortcuts</button>
@@ -549,6 +599,7 @@
       <button id="bAll" title="Copy this format layout onto every other format" data-ic="copy">Whole layout to all...</button>
     </div>
   </aside>
+  <div class="rz" id="rzL" role="separator" aria-orientation="vertical" title="Drag to resize the left column. Double-click: default width"></div>
   <section id="stage">
     <div class="toolbar" id="tools"></div>
     <div id="cvwrap"><canvas id="cv"></canvas><div id="dropzone"><span></span></div>
@@ -563,6 +614,7 @@
     </div>
     <div class="stagebar"><span id="dims"></span><span id="selinfo"></span></div>
   </section>
+  <div class="rz" id="rzR" role="separator" aria-orientation="vertical" title="Drag to resize the right column. Double-click: default width"></div>
   <aside class="right" id="controls"></aside>
 </main>
 
@@ -720,6 +772,7 @@ const ICONS = {
   open:   'M8 10.5V3 M5.5 5.5L8 3l2.5 2.5 M2.5 10.5V13h11v-2.5',
   save:   'M8 3v7.5 M5.5 8L8 10.5 10.5 8 M2.5 13h11',
   copy:   'M5.5 2.5h8v8h-8z M2.5 5.5v8h8',
+  desktop:'M2 3h12v8H2z M6 13.5h4 M8 11v2.5',
   down:   'M8 2.5v7 M5.5 7L8 9.5 10.5 7 M2.5 13.5h11',
   zip:    'M2.5 4.5h11v9h-11z M2.5 4.5L4 2.5h8l1.5 2 M8 6.5v3 M6.5 8h3',
   key:    'M2.5 8h5.5 M8 5.5h5.5v5H8z M10.5 8h1.5',
@@ -835,6 +888,7 @@ const SHORTCUTS = [
     ['Ctrl+O',        'Open a project'],
     ['Ctrl+S',        'Save the project (Shift: save as)'],
     ['Ctrl+E',        'Export current'],
+    ['Ctrl+Alt+E',    'Export current to the Desktop (desktop app only)'],
     ['Ctrl+Shift+E',  'Export all'],
     ['Drop / Ctrl+V', 'Add images, or open a project'],
     ['Drop on an image', 'Replace that image with the dropped file']
@@ -886,7 +940,6 @@ function gradPaint(c, o, x, y, w, h){
   g.addColorStop(1, ends[1]);
   return g;
 }
-function accentPaint(c, a, x, y, w, t){ return gradPaint(c, a, x, y, w, t); }
 /* Il bordo del logo prende il colore da cui parte il gradiente del tema:
    nel PSD e' lo stesso arancione con cui comincia la barra accento, e
    tenerli legati vuol dire non doverli piu' rincorrere a mano. */
@@ -1136,6 +1189,13 @@ function shadowOff(c, was){ if(was) c.restore(); }
 
 /* righe di controllo dell'ombra, uguali per tutti gli elementi */
 function shadowRows(g){
+  /* l'oggetto che porta l'ombra: una parte del formato (L.band) o un livello
+     ('lay:12'). La condizione si legge da qui, non da L[g], che per i
+     livelli non esiste */
+  const acceso = L=>{
+    const o = isLay(g) ? layOfKey(g) : (L && L[g]);
+    return !!(o && o.shadowOn);
+  };
   return [
     {type:'group', l:'Shadow'},
     /* Colore e opacita' portano il nome per esteso: quasi ogni sezione ha
@@ -1145,16 +1205,15 @@ function shadowRows(g){
     /* con l'ombra spenta le sue cinque regolazioni non fanno niente: si
        vedono solo quando c'e' qualcosa da regolare */
     {p:g+'.shadowOn',      l:'Drop shadow',   type:'check'},
-    {p:g+'.shadowColor',   l:'Shadow colour', type:'color',
-     when:L=> L[g] && L[g].shadowOn},
+    {p:g+'.shadowColor',   l:'Shadow colour', type:'color', when:acceso},
     {p:g+'.shadowOpacity', l:'Shadow opacity',type:'range', min:0, max:1, step:0.02,
-     when:L=> L[g] && L[g].shadowOn},
+     when:acceso},
     {p:g+'.shadowBlur',    l:'Blur',        type:'range', min:0, max:0.2, step:0.002,
-     when:L=> L[g] && L[g].shadowOn},
+     when:acceso},
     {p:g+'.shadowX',       l:'Offset X',    type:'range', min:-0.1, max:0.1, step:0.002,
-     when:L=> L[g] && L[g].shadowOn},
+     when:acceso},
     {p:g+'.shadowY',       l:'Offset Y',    type:'range', min:-0.1, max:0.1, step:0.002,
-     when:L=> L[g] && L[g].shadowOn},
+     when:acceso},
   ];
 }
 function shadowDefaults(){
@@ -1555,10 +1614,16 @@ function shotChiave(W, H, cfg, fx){
   const n = Math.max(1, Math.round(cfg.panels||1));
   const usate = [];
   for(let i=0;i<n;i++){
-    const im = shotByIndex(Array.isArray(cfg.src) ? cfg.src[i] : -1);
+    const im = shotByIndex(panelSrc(cfg, i));
     usate.push(im ? im.__uid : 0);
   }
-  return W + 'x' + H + '|' + JSON.stringify(cfg) + '|' + JSON.stringify(fx) + '|' +
+  /* solo quello che paintShot usa davvero: vignettatura e tinta si
+     disegnano dopo (_post) e il pannello attivo non cambia un pixel */
+  const f = fx;
+  const fxUsato = [f.bright, f.expo, f.contrast, f.sat, f.hue, f.blur, f.zoomBlur, f.spinBlur,
+                   f.cx, f.cy, f.edgeBlur, f.edgeStart, f.edgeSoft];
+  return W + 'x' + H + '|' + JSON.stringify(cfg, (k, v)=> k === 'active' ? undefined : v) + '|' +
+         JSON.stringify(fxUsato) + '|' +
          (imgShot ? imgShot.__uid : 0) + '|' + usate.join(',');
 }
 function paintShot(c, W, H, cfg, fx){
@@ -1876,7 +1941,7 @@ const PARTS = [
     if(!a.on) return null;
     const t = Math.max(1, a.thick*H);
     const x = a.x0*W, w = (a.x1-a.x0)*W, y = a.y*H - t/2;
-    const paint = accentPaint(c, a, x, y, w, t);
+    const paint = gradPaint(c, a, x, y, w, t);
     if(a.glow>0){
       /* L'alone e' una sfumatura morbida: non ha dettagli da perdere. Con la
          barra spessa del PSD, a 4K, sfocare a piena risoluzione costava mezzo
@@ -1902,7 +1967,7 @@ const PARTS = [
         const rx = x*k + marg;
         const ry = (y - t - regY)*k + marg;        /* l'alone e' alto tre volte la barra */
         g2.filter = 'blur(' + (raggio*k).toFixed(2) + 'px)';
-        g2.fillStyle = accentPaint(g2, a, rx, (y-regY)*k + marg, w*k, t*k);
+        g2.fillStyle = gradPaint(g2, a, rx, (y-regY)*k + marg, w*k, t*k);
         g2.fillRect(rx, ry, w*k, t*3*k);
         g2.filter = 'none';
         /* si rimette al suo posto tenendo conto del bordo aggiunto */
@@ -2102,7 +2167,10 @@ const PARTS = [
    morbidi perche' i pixel intermedi vengono mescolati fra i due colori.
    Il risultato e' tenuto da parte: rifarlo a ogni fotogramma sarebbe uno
    spreco, il logo cambia di rado. */
-let _logoMapCache = null;
+/* un piccolo LRU di misure per ogni logo: cambiando logo la cache non resta
+   attaccata a quello vecchio (la WeakMap lo lascia andare con il logo) */
+const _logoMapCache = new WeakMap();
+const LOGO_MAP_LRU = 4;
 /* Quanto logo e' scuro e quanto e' chiaro. Serve per dire subito che su un
    logo bianco su trasparente la voce "ricolora la parte scura" non ha
    niente su cui lavorare: se no si girano i cursori aspettando che cambi
@@ -2140,9 +2208,14 @@ function avvisaZonaLogo(path, val){
 
 function logoMapped(w, h, l){
   const W = Math.max(1, Math.round(w)), H = Math.max(1, Math.round(h));
-  const chiave = [W, H, l.mapMode, l.darkColor, l.lightColor, l.mapCut,
-                  imgLogo && (imgLogo.width+'x'+imgLogo.height)].join('|');
-  if(_logoMapCache && _logoMapCache.k === chiave) return _logoMapCache.c;
+  const chiave = [W, H, l.mapMode, l.darkColor, l.lightColor, l.mapCut].join('|');
+  let lru = null;
+  if(imgLogo){
+    lru = _logoMapCache.get(imgLogo);
+    if(!lru){ lru = new Map(); _logoMapCache.set(imgLogo, lru); }
+    const hit = lru.get(chiave);
+    if(hit){ lru.delete(chiave); lru.set(chiave, hit); return hit; }
+  }
 
   const t = document.createElement('canvas');
   t.width = W; t.height = H;
@@ -2179,7 +2252,8 @@ function logoMapped(w, h, l){
     px[i+2] = db + (lb-db)*f;
   }
   c.putImageData(d, 0, 0);
-  _logoMapCache = {k:chiave, c:t};
+  lru.set(chiave, t);
+  while(lru.size > LOGO_MAP_LRU) lru.delete(lru.keys().next().value);
   return t;
 }
 function hex2rgbArr(hex){
@@ -2568,8 +2642,6 @@ function rowWidths(c, r, tPx, iPx, gap, title, cat, brand){
   const lines = titleLines(title);
   let w = 0;
   lines.forEach(l=>{ w = Math.max(w, c.measureText(l).width); });
-  const lastW = lines.length ? c.measureText(lines[lines.length-1]).width : 0;
-  w = Math.max(w, lastW);
   const sepW = Math.max(1, r.sepW*iPx) * sepFattore(r.sepShape);
   const nSep = Math.max(1, Math.round(r.sepCount||1));
   const sepStep = sepW*(1 + (r.sepSpace!==undefined ? r.sepSpace : 0.9));
@@ -2794,6 +2866,12 @@ function fixLayer(l){
   const d = layerDefaults(t, l.name);
   const out = Object.assign(d, l);
   if(!out.id) out.id = newLayerId();
+  else{
+    /* il contatore riparte da zero a ogni sessione: sopra gli id letti, se no
+       un livello nuovo potrebbe prendere l'id di uno caricato */
+    const m = /^ly(\d+)-/.exec(String(out.id));
+    if(m && +m[1] > LAYER_SEQ) LAYER_SEQ = +m[1];
+  }
   return out;
 }
 
@@ -3129,8 +3207,7 @@ function migrateShapes(L){
 
 /* ====================================================== STATO E COSTRUZIONE */
 const DRAW_ALL = PARTS.filter(p=>p.draw);
-function ordOf(p, L){ return typeof p.order==='function' ? p.order(L) : p.order; }
-function drawOrder(L){ return DRAW_ALL.slice().sort((a,b)=> ordOf(a,L)-ordOf(b,L)); }
+function drawOrder(L){ return DRAW_ALL.slice().sort((a,b)=> a.order-b.order); }
 let DRAW_PARTS = DRAW_ALL;
 const SEL_PARTS  = PARTS.filter(p=>p.select);
 const SEL_LABEL  = {}, SEL_SECTION = {}, SIZE_KEY = {}, SIZE_MAX = {}, POS_KEYS = {};
@@ -3432,9 +3509,12 @@ function buildTools(){
   mk('magnet2','Snap','Snap to the margins, the middle of the canvas and the other elements, by their edge or by their centre. Hold Alt while dragging to skip it once. Key: G', ()=>{
     state.snap.on = !state.snap.on; buildTools(); syncControls();
   }, state.snap.on);
-  mk('grid','Grid','Show a grid over the canvas. Key: none', ()=>{
+  const gb = mk('grid','Grid','Show a grid over the canvas. Click the small arrow, or right-click the button, for its settings. Key: none', (e)=>{
+    if(e && e.offsetX > e.currentTarget.offsetWidth - 16){ gridPopApri(e.currentTarget); return; }
     showGrid = !showGrid; buildTools(); render();
   }, showGrid);
+  gb.classList.add('gridBtn');
+  gb.oncontextmenu = (e)=>{ e.preventDefault(); gridPopApri(gb); };
   mk('wheel','Wheel resizes','On: the mouse wheel resizes the selection instead of zooming the canvas. Off: the wheel zooms. Key: hold Alt while turning the wheel', ()=>{
     wheelResize = !wheelResize; buildTools();
   }, wheelResize);
@@ -3464,8 +3544,11 @@ function buildTools(){
     toast(nomeFormato(f) + ' back to its default layout', {undo:true});
   });
   updateHistBtns();
-  /* la barra e' stata rifatta da zero: le classi di risparmio sono cadute
-     con lei, la prossima misura le rimette se servono */
+  /* la barra e' stata rifatta da zero: il bottone dello zoom e' tornato a
+     "100%" e senza classe "on". Si riscrive subito */
+  applyView();
+  /* le classi di risparmio sono cadute con lei, la prossima misura le
+     rimette se servono */
   _largoBarra = -1;
 }
 
@@ -3645,12 +3728,15 @@ let wheelTimer = null;
   if(e.altKey || wheelResize){
     const k = state.sel, sk = sizeKeyOf(k);
     if(!sk) return;
+    const el = elOf(k);
+    const nuovo = clamp(el[sk] * (e.deltaY>0?0.96:1.04), 0.002, sizeMaxOf(k));
+    /* al limite il valore non cambia: niente passo di undo a vuoto */
+    if(nuovo === el[sk]){ e.preventDefault(); return; }
     /* un solo passo di undo per gesto continuo di rotellina */
     if(wheelTimer===null) pushUndo();
     clearTimeout(wheelTimer);
     wheelTimer = setTimeout(()=>{ wheelTimer = null; }, 450);
-    const el = elOf(k);
-    el[sk] = clamp(el[sk] * (e.deltaY>0?0.96:1.04), 0.002, sizeMaxOf(k));
+    el[sk] = nuovo;
     syncControls(); render(); e.preventDefault();
     return;
   }
@@ -3678,20 +3764,162 @@ window.addEventListener('mouseup', ()=>{
   panFrom = null; cvwrap.classList.remove('panning');
 });
 
-/* griglia di controllo sopra la tela, solo in anteprima */
+/* griglia di controllo sopra la tela, solo in anteprima (mai nell'export).
+   Le righe stanno a frazioni esatte della tela e vengono arrotondate al
+   pixel dell'anteprima, cosi' restano nitide e non si spostano di un pixel
+   da una divisione all'altra. */
 let showGrid = false;
+const GRID_KEY = 'davfx-store-graphics-grid';
+const GRID_DEF = {mode:'div', cols:12, rows:8, square:false, step:100, centre:true,
+                  margin:0, color:'#ffffff', opacity:0.2};
+let GRID = Object.assign({}, GRID_DEF);
+function gridPulisci(g){
+  const n = (v, a, b, d)=>{ v = (v===null || v===undefined || v==='' || v===false) ? NaN : Number(v); return isFinite(v) ? Math.min(b, Math.max(a, v)) : d; };
+  const o = {};
+  o.mode = (g && (g.mode==='px' || g.mode==='thirds')) ? g.mode : 'div';
+  o.cols = Math.round(n(g && g.cols, 1, 64, GRID_DEF.cols));
+  o.rows = Math.round(n(g && g.rows, 1, 64, GRID_DEF.rows));
+  o.square = !!(g && g.square);
+  o.step = Math.round(n(g && g.step, 4, 100000, GRID_DEF.step));
+  o.centre = g && typeof g.centre==='boolean' ? g.centre : GRID_DEF.centre;
+  o.margin = n(g && g.margin, 0, 45, 0);
+  o.color = (g && /^#[0-9a-fA-F]{6}$/.test(g.color)) ? g.color : GRID_DEF.color;
+  o.opacity = n(g && g.opacity, 0.05, 1, GRID_DEF.opacity);
+  return o;
+}
+function gridLeggi(){
+  try{ GRID = gridPulisci(JSON.parse(localStorage.getItem(GRID_KEY) || 'null')); }
+  catch(e){ GRID = gridPulisci(null); }
+}
+function gridSalva(){ try{ localStorage.setItem(GRID_KEY, JSON.stringify(GRID)); }catch(e){} }
+gridLeggi();
+/* frazioni (0..1) delle righe interne, per asse; vw,vh = misura reale in pixel */
+function gridFrazioni(axis, vw, vh){
+  const g = GRID, len = axis==='x' ? vw : vh, out = [];
+  let n;
+  if(g.mode==='px'){
+    for(let k=1; k*g.step < len && out.length < 400; k++) out.push(k*g.step/len);
+    return out;
+  }
+  if(g.mode==='thirds') n = 3;
+  else if(g.square && axis==='y') n = Math.max(1, Math.round(g.cols * vh / vw));
+  else n = axis==='x' ? g.cols : g.rows;
+  for(let i=1; i<n; i++) out.push(i/n);
+  return out;
+}
+/* tutte le righe in pixel dell'anteprima: {xs, ys, cx, cy, m, t} */
+function gridLines(W, H, vw, vh, thick){
+  const t = Math.max(1, thick|0), g = GRID;
+  if(!vw || !vh){ const f = FORMATS.find(x=>x.id===state.active), z = f ? sizeOf(f) : {w:W, h:H}; vw = z.w; vh = z.h; }
+  const px = (fr, len)=> Math.min(len - t, Math.max(0, Math.round(fr*len)));
+  const xs = gridFrazioni('x', vw, vh).map(fr=>px(fr, W));
+  const ys = gridFrazioni('y', vw, vh).map(fr=>px(fr, H));
+  let m = null;
+  if(g.margin > 0){
+    m = {x0:px(g.margin/100, W), x1:px(1-g.margin/100, W), y0:px(g.margin/100, H), y1:px(1-g.margin/100, H)};
+  }
+  return {xs:xs, ys:ys, cx:g.centre ? px(0.5, W) : null, cy:g.centre ? px(0.5, H) : null, m:m, t:t};
+}
 function drawGrid(c, W, H){
   if(!showGrid) return;
-  const step = Math.round(Math.min(W,H)/12);
+  /* spessore: un pixel dello schermo, espresso in pixel dell'anteprima */
+  let thick = 1;
+  try{ const r = cv.getBoundingClientRect(); if(r.width > 0) thick = Math.max(1, Math.round(W / r.width)); }catch(e){}
+  const f = FORMATS.find(x=>x.id===state.active), z = f ? sizeOf(f) : {w:W, h:H};
+  const L = gridLines(W, H, z.w, z.h, thick), g = GRID, rgb = g.color.slice(1);
+  const col = a => 'rgba('+parseInt(rgb.slice(0,2),16)+','+parseInt(rgb.slice(2,4),16)+','+parseInt(rgb.slice(4,6),16)+','+a+')';
   c.save();
-  c.strokeStyle = 'rgba(255,255,255,0.13)';
-  c.lineWidth = 1;
-  for(let x=step; x<W; x+=step){ c.beginPath(); c.moveTo(x+0.5,0); c.lineTo(x+0.5,H); c.stroke(); }
-  for(let y=step; y<H; y+=step){ c.beginPath(); c.moveTo(0,y+0.5); c.lineTo(W,y+0.5); c.stroke(); }
-  c.strokeStyle = 'rgba(255,255,255,0.3)';
-  c.beginPath(); c.moveTo(W/2,0); c.lineTo(W/2,H); c.stroke();
-  c.beginPath(); c.moveTo(0,H/2); c.lineTo(W,H/2); c.stroke();
+  c.fillStyle = col(g.opacity);
+  L.xs.forEach(x=> c.fillRect(x, 0, L.t, H));
+  L.ys.forEach(y=> c.fillRect(0, y, W, L.t));
+  c.fillStyle = col(Math.min(1, g.opacity*2));
+  if(L.cx!==null){ c.fillRect(L.cx, 0, L.t, H); c.fillRect(0, L.cy, W, L.t); }
+  if(L.m){
+    const m = L.m;
+    c.fillRect(m.x0, m.y0, m.x1-m.x0+L.t, L.t);
+    c.fillRect(m.x0, m.y1, m.x1-m.x0+L.t, L.t);
+    c.fillRect(m.x0, m.y0, L.t, m.y1-m.y0+L.t);
+    c.fillRect(m.x1, m.y0, L.t, m.y1-m.y0+L.t);
+  }
   c.restore();
+}
+/* righe visibili come frazioni, per l'aggancio (solo con la griglia accesa e
+   non troppo fitta, altrimenti ogni punto sarebbe un aggancio) */
+function gridSnapTargets(axis){
+  if(!showGrid) return [];
+  const f = FORMATS.find(x=>x.id===state.active); if(!f) return [];
+  const z = sizeOf(f), t = gridFrazioni(axis, z.w, z.h);
+  if(t.length > 24) return [];
+  if(GRID.centre) t.push(0.5);
+  if(GRID.margin > 0){ t.push(GRID.margin/100); t.push(1-GRID.margin/100); }
+  return t;
+}
+/* piccola finestra delle impostazioni, si apre dal bottone Grid */
+let _gridPop = null;
+function gridPopChiudi(){
+  if(!_gridPop) return;
+  _gridPop.remove(); _gridPop = null;
+  document.removeEventListener('mousedown', _gridFuori, true);
+  document.removeEventListener('keydown', _gridEsc, true);
+}
+function _gridFuori(e){
+  if(_gridPop && !_gridPop.contains(e.target) && !(e.target.closest && e.target.closest('#tools .gridBtn'))) gridPopChiudi();
+}
+function _gridEsc(e){ if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); gridPopChiudi(); } }
+function gridPopApri(anchor){
+  if(_gridPop){ gridPopChiudi(); return; }
+  const pop = document.createElement('div');
+  pop.id = 'gridPop'; pop.setAttribute('role','dialog'); pop.setAttribute('aria-label','Grid settings');
+  const row = (label, el, id)=>{
+    const r = document.createElement('label'); r.className = 'gpRow'; r.dataset.k = id;
+    const sp = document.createElement('span'); sp.textContent = label;
+    r.appendChild(sp); r.appendChild(el); pop.appendChild(r); return r;
+  };
+  const set = (k, v)=>{ GRID = gridPulisci(Object.assign({}, GRID, {[k]: v})); gridSalva(); render(); };
+  const num = (k, min, max, st)=>{
+    const i = document.createElement('input'); i.type = 'number'; i.min = min; i.max = max; i.step = st||1;
+    i.dataset.g = k; i.value = GRID[k];
+    i.oninput = ()=>{ if(i.value!=='') set(k, i.value); };
+    i.onchange = ()=>{ i.value = GRID[k]; };
+    return i;
+  };
+  const chk = k=>{
+    const i = document.createElement('input'); i.type = 'checkbox'; i.dataset.g = k; i.checked = !!GRID[k];
+    i.onchange = ()=>{ set(k, i.checked); mostra(); };
+    return i;
+  };
+  const sel = document.createElement('select'); sel.dataset.g = 'mode';
+  [['div','Divisions'],['px','Pixel step'],['thirds','Thirds']].forEach(([v,l])=>{
+    const o = document.createElement('option'); o.value = v; o.textContent = l; sel.appendChild(o); });
+  sel.value = GRID.mode;
+  row('Mode', sel, 'mode');
+  const cols = row('Columns', num('cols', 1, 64), 'cols');
+  const rows = row('Rows', num('rows', 1, 64), 'rows');
+  const sq = row('Square cells', chk('square'), 'square');
+  const st = row('Step (export px)', num('step', 4, 100000), 'step');
+  row('Centre lines', chk('centre'), 'centre');
+  row('Margin %', num('margin', 0, 45, 0.5), 'margin');
+  const col = document.createElement('input'); col.type = 'color'; col.dataset.g = 'color'; col.value = GRID.color;
+  col.oninput = ()=> set('color', col.value);
+  row('Colour', col, 'color');
+  const op = document.createElement('input'); op.type = 'range'; op.min = 0.05; op.max = 1; op.step = 0.05;
+  op.dataset.g = 'opacity'; op.value = GRID.opacity;
+  op.oninput = ()=> set('opacity', op.value);
+  row('Opacity', op, 'opacity');
+  function mostra(){
+    const d = GRID.mode === 'div';
+    cols.hidden = !d; sq.hidden = !d; rows.hidden = !d || GRID.square;
+    st.hidden = GRID.mode !== 'px';
+  }
+  sel.onchange = ()=>{ set('mode', sel.value); mostra(); };
+  mostra();
+  document.body.appendChild(pop);
+  const r = anchor.getBoundingClientRect();
+  pop.style.left = Math.max(8, Math.min(window.innerWidth - pop.offsetWidth - 8, r.left)) + 'px';
+  pop.style.top = (r.bottom + 6) + 'px';
+  _gridPop = pop;
+  document.addEventListener('mousedown', _gridFuori, true);
+  document.addEventListener('keydown', _gridEsc, true);
 }
 
 /* ------------------------------------------------------------- selezione */
@@ -3826,16 +4054,20 @@ function hitTest(px, py){
   const inside = b => b && px>=b.x && px<=b.x+b.w && py>=b.y && py<=b.y+b.h;
   const lay = layersOf(state.layouts[state.active]).filter(l=>l.on);
   const front = lay.filter(l=>l.front), back = lay.filter(l=>!l.front);
-  for(let i=front.length-1;i>=0;i--){
-    if(inside(BOXES['lay:'+front[i].id])) return 'lay:'+front[i].id;
-  }
+  const dentro = arr=>{
+    for(let i=arr.length-1;i>=0;i--){
+      if(inside(BOXES['lay:'+arr[i].id])) return 'lay:'+arr[i].id;
+    }
+    return null;
+  };
+  /* l'ordine e' quello vero del disegno (DRAW_PARTS): i livelli "dietro"
+     stanno nel loro posto fra le parti, quelli "davanti" in cima a tutto */
   for(let i=DRAW_PARTS.length-1;i>=0;i--){
     const p = DRAW_PARTS[i];
+    if(p.key==='layersFront'){ const h = dentro(front); if(h) return h; continue; }
+    if(p.key==='layersBack'){ const h = dentro(back); if(h) return h; continue; }
     if(!p.select || p.key==='shot') continue;
     if(inside(BOXES[p.key])) return p.key;
-  }
-  for(let i=back.length-1;i>=0;i--){
-    if(inside(BOXES['lay:'+back[i].id])) return 'lay:'+back[i].id;
   }
   return 'shot';
 }
@@ -3859,7 +4091,7 @@ function render(){
   fixSelection();
   /* cambiando formato la tela cambia misura: uno zoom pensato per l'altra
      lascerebbe l'occhio in un punto che non vuol dire piu' niente */
-  if(typeof view !== 'undefined' && vistaFormato !== state.active){
+  if(vistaFormato !== state.active){
     vistaFormato = state.active;
     if(view.z !== 1) viewFit();
   }
@@ -3963,6 +4195,82 @@ function strettoIlPannello(st){
 }
 window.addEventListener('resize', ()=>{ aggiornaVista(); });
 
+/* Le due colonne laterali si allargano trascinando la maniglia sul bordo.
+   La misura vive solo nel browser (mai nel progetto ne' nell'annulla) e
+   scavalca i clamp() di serie tramite le variabili --lw / --rw. */
+const PANEL_KEY = 'davfx-store-graphics-panels';
+const PANEL_LIM = {l:[200,520], r:[300,720]};
+const PANEL_STAGE_MIN = 400;
+function larghezzaColonna(lato){
+  const el = document.querySelector(lato==='l' ? 'aside.left' : 'aside.right');
+  return el ? el.getBoundingClientRect().width : 0;
+}
+function salvaPannello(k, v){
+  try{
+    const o = JSON.parse(localStorage.getItem(PANEL_KEY) || '{}') || {};
+    if(v === null) delete o[k]; else o[k] = v;
+    localStorage.setItem(PANEL_KEY, JSON.stringify(o));
+  }catch(e){}
+}
+function impostaColonna(lato, px, salva){
+  const altra = larghezzaColonna(lato==='l' ? 'r' : 'l');
+  const mx = Math.max(PANEL_LIM[lato][0], Math.min(PANEL_LIM[lato][1], window.innerWidth - altra - PANEL_STAGE_MIN));
+  const v = Math.round(clamp(px, PANEL_LIM[lato][0], mx));
+  document.documentElement.style.setProperty(lato==='l' ? '--lw' : '--rw', v + 'px');
+  if(salva){
+    try{
+      const o = JSON.parse(localStorage.getItem(PANEL_KEY) || '{}') || {};
+      o[lato] = v; localStorage.setItem(PANEL_KEY, JSON.stringify(o));
+    }catch(e){}
+  }
+  return v;
+}
+function ripristinaColonna(lato){
+  document.documentElement.style.removeProperty(lato==='l' ? '--lw' : '--rw');
+  try{
+    const o = JSON.parse(localStorage.getItem(PANEL_KEY) || '{}') || {};
+    delete o[lato]; localStorage.setItem(PANEL_KEY, JSON.stringify(o));
+  }catch(e){}
+}
+function iniziaManigliaColonne(){
+  let salvato = {};
+  try{ salvato = JSON.parse(localStorage.getItem(PANEL_KEY) || '{}') || {}; }catch(e){}
+  if(typeof salvato.lib === 'number'){
+    document.documentElement.style.setProperty('--lib-h', salvato.lib + 'px');
+    document.body.classList.add('lib-custom');
+  }
+  ['l','r'].forEach(lato=>{
+    const h = document.getElementById(lato==='l' ? 'rzL' : 'rzR');
+    if(!h) return;
+    if(typeof salvato[lato] === 'number') impostaColonna(lato, salvato[lato], false);
+    h.addEventListener('pointerdown', e=>{
+      if(e.button) return;
+      e.preventDefault();
+      const x0 = e.clientX, w0 = larghezzaColonna(lato);
+      h.classList.add('on');
+      try{ h.setPointerCapture(e.pointerId); }catch(err){}
+      const muovi = ev=>{
+        const dx = ev.clientX - x0;
+        impostaColonna(lato, w0 + (lato==='l' ? dx : -dx), false);
+        aggiornaVista();
+      };
+      const fine = ev=>{
+        h.classList.remove('on');
+        h.removeEventListener('pointermove', muovi);
+        h.removeEventListener('pointerup', fine);
+        h.removeEventListener('pointercancel', fine);
+        impostaColonna(lato, larghezzaColonna(lato), true);
+        aggiornaVista();
+      };
+      h.addEventListener('pointermove', muovi);
+      h.addEventListener('pointerup', fine);
+      h.addEventListener('pointercancel', fine);
+    });
+    h.addEventListener('dblclick', ()=>{ ripristinaColonna(lato); aggiornaVista(); });
+  });
+}
+iniziaManigliaColonne();
+
 /* ------------------------------------------------------ lista dei formati */
 const THUMB_STEPS = [0, 44, 72, 110, 168];
 function thumbSize(dir){
@@ -4016,7 +4324,7 @@ function buildPack(){
        campo gemello nel pannello Content si allinea: stesso dato, due posti */
     ['input', 'change'].forEach(t=> box.addEventListener(t, ()=> syncControls()));
   }
-  if(typeof syncControls === 'function') syncControls();
+  syncControls();
   syncPack();
   aggiornaLogoPack();
 }
@@ -4087,7 +4395,7 @@ function buildFormats(){
     row.className = 'fmt'+(f.id===state.active?' on':'');
     const cb = document.createElement('input');
     cb.type='checkbox'; cb.checked = state.layouts[f.id].on;
-    cb.onclick = e=>{ e.stopPropagation(); state.layouts[f.id].on = cb.checked; drawThumbs(true); };
+    cb.onclick = e=>{ e.stopPropagation(); pushUndo(); state.layouts[f.id].on = cb.checked; drawThumbs(true); autoSave(); };
     /* anteprima: la stessa immagine che uscirebbe, in piccolo.
        Si ridisegna da sola dopo ogni modifica, con un ritardo, cosi' non
        pesa mentre si trascina un elemento sulla tela. */
@@ -4419,7 +4727,7 @@ const SESSION_SECTION = {t:'Session', rows:[
   {type:'button', text:'Clear saved work',  act:'autoClear'},
 ], note:'The work is kept in this browser and comes back by itself when you reopen the page, screenshots and logo included: the images live in their own store, so the library is still there next time. A font you loaded yourself is the one thing that does not come back, here or in a project file: load the font again and the text is exactly as you left it. Save writes a project file with the images inside, that opens the same on any computer.'};
 
-const VARIANTS_SECTION = {t:'Variants', open:true, rows:[
+const VARIANTS_SECTION = {t:'Variants', rows:[
   {type:'variants'},
   {type:'button', text:'Save current as new variant', act:'variantAdd'},
   {type:'button', text:'Update selected variant',     act:'variantUpdate'},
@@ -4430,15 +4738,18 @@ const VARIANTS_SECTION = {t:'Variants', open:true, rows:[
 const SECTIONS = [PACK_SECTION, THEME_SECTION].concat(
   PARTS.filter(p=>p.section && p.rows).map(p=>({t:p.section, rows:p.rows, note:p.note,
                                                 open: p.section==='Screenshot'}))
-).concat([LAYERS_SECTION, VARIANTS_SECTION, EXPORT_SECTION, NAMING_SECTION, SESSION_SECTION]);
+).concat([LAYERS_SECTION, EXPORT_SECTION, NAMING_SECTION, VARIANTS_SECTION, SESSION_SECTION]);
 const EL_SECTIONS = SEL_PARTS.map(p=>p.section);
 
 /* --------------------------------------------------------------- annulla */
 let undoStack = [], redoStack = [];
-function snapState(){
+/* senzaUi: la pila dell'annulla non tocca la misura delle anteprime e il
+   margine di vista, che non sono lavoro; autosalvataggio e progetto li tengono */
+function snapState(senzaUi){
   return JSON.stringify({pack:state.pack, theme:state.theme, naming:state.naming,
                          layouts:state.layouts,
-                         variants:state.variants, current:state.currentVariant, ui:state.ui, export:state.export});
+                         variants:state.variants, current:state.currentVariant,
+                         ui:senzaUi ? undefined : state.ui, export:state.export});
 }
 function applySnap(s){
   const d = JSON.parse(s);
@@ -4497,7 +4808,7 @@ function shotsBack(s){
   if(!imgShot && SHOTS.length) imgShot = SHOTS[0].img;
 }
 function pushUndo(){
-  undoStack.push(snapState());
+  undoStack.push(snapState(true));
   undoShots.push(shotsSnap());
   if(undoStack.length>60){ undoStack.shift(); undoShots.shift(); }
   redoStack.length = 0; redoShots.length = 0;
@@ -4506,7 +4817,7 @@ function pushUndo(){
 function undo(){
   const s = undoStack.pop();
   if(!s){ toast('Nothing to undo'); return; }
-  redoStack.push(snapState());
+  redoStack.push(snapState(true));
   redoShots.push(shotsSnap());
   if(redoStack.length>60){ redoStack.shift(); redoShots.shift(); }
   shotsBack(undoShots.pop());
@@ -4516,7 +4827,7 @@ function undo(){
 function redo(){
   const s = redoStack.pop();
   if(!s){ toast('Nothing to redo'); return; }
-  undoStack.push(snapState());
+  undoStack.push(snapState(true));
   undoShots.push(shotsSnap());
   shotsBack(redoShots.pop());
   dbSalva();
@@ -4765,6 +5076,15 @@ function getVal(path){
 /* Il valore di serie di un controllo, da qualunque parte venga: livello,
    parte del formato o impostazione generale. Serve all'Alt+clic. */
 function defaultVal(path){
+  /* 'shot.sc#2': il valore di serie di una casella dei pannelli */
+  const ix = idxOf(path);
+  if(ix){
+    const k = ix.base.slice(ix.base.lastIndexOf('.')+1);
+    if(Object.prototype.hasOwnProperty.call(PANNELLO_ZERO, k)) return PANNELLO_ZERO[k];
+    if(k === 'weights') return 1;
+    if(k === 'slants') return 0;
+    return undefined;
+  }
   const q = splitPath(path);
   if(isLay(q[0])){
     const l = layOfKey(q[0]);
@@ -4895,7 +5215,8 @@ function leggiUI(){
   try{
     const d = JSON.parse(localStorage.getItem(UI_KEY) || 'null');
     if(!d || typeof d !== 'object') return;
-    if(typeof d.tab === 'string' && TABS.some(t=> t.id===d.tab)) activeTab = d.tab;
+    const tab = SCHEDA_ALIAS[d.tab] || d.tab;
+    if(typeof tab === 'string' && TABS.some(t=> t.id===tab)) activeTab = tab;
     if(d.open && typeof d.open === 'object')
       Object.keys(d.open).forEach(k=>{ if(typeof d.open[k] === 'boolean') openSecs[k] = d.open[k]; });
   }catch(e){}
@@ -5006,15 +5327,16 @@ function selectEl(k){
 /* le sezioni sono divise in schede: cosi' invece di un muro lungo si
    vedono solo le sei o sette che servono in quel momento */
 const TABS = [
-  {id:'design',  label:'Design',
+  {id:'design',  label:'Design', ic:'sliders',
    has:['Colours','Bottom band','Accent line','Logo','Text row',
         'Version','Badges','Frame','Layers']},
-  {id:'image',   label:'Image',
+  {id:'image',   label:'Image', ic:'image',
    has:['Screenshot','Image adjustments','Blur effects','Tint / blend','Dark gradient']},
-  {id:'content', label:'Content', has:['Pack data']},
-  {id:'test',    label:'Variants', has:['Variants']},
-  {id:'out',     label:'Output',  has:['Export','File naming','Session']}
+  {id:'pack',    label:'Pack & export', ic:'down',
+   has:['Pack data','Export','File naming','Variants','Session']}
 ];
+/* i vecchi nomi delle schede (salvati o usati altrove) portano alla scheda unita */
+const SCHEDA_ALIAS = {content:'pack', test:'pack', out:'pack'};
 let activeTab = 'design';
 function tabOf(title){
   const t = TABS.find(x=> x.has.indexOf(title)>=0);
@@ -5034,7 +5356,7 @@ function riempiSezione(sec){
      seconda linea quando il testo e' su una riga sola, il colore di
      arrivo quando il gradiente e' spento, lo spazio fra i segmenti
      quando il segmento e' uno. Quelle non si mostrano. */
-  s.rows.forEach(r=>{ if(rigaServe(r)) bd.appendChild(makeRow(r)); });
+  s.rows.forEach(r=> aggiungiRiga(bd, r));
   paintIcons(bd);
 }
 function riempiTutte(){
@@ -5055,6 +5377,7 @@ function portaInVista(sec){
 /* cambio di scheda senza ricostruire: le sezioni di quella scheda si
    costruiscono la prima volta e poi restano */
 function vaiScheda(id){
+  id = SCHEDA_ALIAS[id] || id;
   activeTab = id;
   secFilter = '';
   const box = document.getElementById('controls');
@@ -5069,6 +5392,9 @@ function vaiScheda(id){
 
 function buildControls(){
   const box = document.getElementById('controls');
+  /* un selettore aperto resta legato a una riga che sta per sparire */
+  closePop();
+  activeTab = SCHEDA_ALIAS[activeTab] || activeTab;
   if(!_uiLetta){ _uiLetta = true; leggiUI(); }
   /* Ricostruire il pannello riportava l'elenco in cima: se stavi regolando
      un cursore a meta' sezione ti ritrovavi all'inizio. La posizione si
@@ -5092,6 +5418,7 @@ function buildControls(){
     const b = document.createElement('button');
     b.textContent = t.label;
     b.dataset.tab = t.id;
+    b.setAttribute('data-ic', t.ic);
     b.title = t.has.join(', ');
     if(t.id===activeTab) b.classList.add('on');
     b.onclick = ()=> vaiScheda(t.id);
@@ -5228,30 +5555,7 @@ function syncControls(){
       }
     }
   });
-}
-
-/* Un cursore di un pannello: un passo di annulla per gesto, il valore
-   scrivibile a mano accanto, Alt+clic lo rimette al valore di serie. */
-function rigaPannello(etichetta, mn, mx, st, leggi, scrivi, tip){
-  const rw = document.createElement('div'); rw.className = 'row'; rw.title = tip || '';
-  const lb = document.createElement('label'); lb.textContent = etichetta;
-  const inp = document.createElement('input');
-  inp.type = 'range'; inp.min = mn; inp.max = mx; inp.step = st; inp.value = leggi();
-  const val = document.createElement('input'); val.className = 'val'; val.type = 'number'; val.step = st;
-  const dec = st < 0.01 ? 3 : (st < 1 ? 2 : 0);
-  val.value = Number(leggi()).toFixed(dec);
-  let preso = false;
-  const metti = v=>{ v = Math.min(mx, Math.max(mn, v)); scrivi(v); inp.value = v; val.value = Number(v).toFixed(dec); render(); };
-  inp.oninput = ()=>{ if(!preso){ pushUndo(); preso = true; } metti(parseFloat(inp.value)); };
-  inp.onchange = ()=>{ preso = false; };
-  val.onchange = ()=>{ const v = parseFloat(val.value); if(isNaN(v)) return; pushUndo(); metti(v); };
-  inp.addEventListener('mousedown', e=>{
-    if(!e.altKey) return;
-    e.preventDefault(); pushUndo();
-    metti(etichetta==='Zoom' ? 1 : (etichetta==='X' || etichetta==='Y' ? 0.5 : (etichetta==='Width' ? 1 : 0)));
-  });
-  rw.appendChild(lb); rw.appendChild(inp); rw.appendChild(val);
-  return rw;
+  aggiornaRighe();
 }
 
 /* ==========================================================================
@@ -5698,6 +6002,47 @@ function aggiornaStrip(el){
     }else if(pn) pn.remove();
   });
 }
+/* altezza dell'area immagini: si trascina il bordo in basso, doppio clic = di serie */
+function impostaAltezzaStrip(px, salva){
+  const box = document.getElementById('controls');
+  const mx = Math.max(60, (box ? box.clientHeight : 600) * 0.6);
+  const v = Math.round(clamp(px, 48, mx));
+  document.documentElement.style.setProperty('--lib-h', v + 'px');
+  document.body.classList.add('lib-custom');
+  if(salva) salvaPannello('lib', v);
+  aggiornaAltezzaTesta();
+  return v;
+}
+function manigliaStrip(grid){
+  const h = document.createElement('div');
+  h.className = 'rzh'; h.title = 'Drag to change the height of the images area. Double-click: default height';
+  h.addEventListener('pointerdown', e=>{
+    if(e.button) return;
+    e.preventDefault();
+    const y0 = e.clientY, h0 = grid.getBoundingClientRect().height;
+    h.classList.add('on');
+    try{ h.setPointerCapture(e.pointerId); }catch(err){}
+    let ultimo = h0;
+    const muovi = ev=>{ ultimo = impostaAltezzaStrip(h0 + ev.clientY - y0, false); };
+    const fine = ()=>{
+      h.classList.remove('on');
+      h.removeEventListener('pointermove', muovi);
+      h.removeEventListener('pointerup', fine);
+      h.removeEventListener('pointercancel', fine);
+      salvaPannello('lib', ultimo);
+    };
+    h.addEventListener('pointermove', muovi);
+    h.addEventListener('pointerup', fine);
+    h.addEventListener('pointercancel', fine);
+  });
+  h.addEventListener('dblclick', ()=>{
+    document.documentElement.style.removeProperty('--lib-h');
+    document.body.classList.remove('lib-custom');
+    salvaPannello('lib', null);
+    aggiornaAltezzaTesta();
+  });
+  return h;
+}
 function stripImmagini(){
   document.body.classList.toggle('no-images', !SHOTS.length);
   const chiave = SHOTS.map(s=> s.img.__uid).join(',');
@@ -5807,6 +6152,7 @@ function stripImmagini(){
     grid.appendChild(card);
   });
   box.appendChild(grid);
+  box.appendChild(manigliaStrip(grid));
   aggiornaNonUsate(box);
   paintIcons(box);
   _strip = {chiave:chiave, el:box, scroll:scrollPrima};
@@ -6056,7 +6402,8 @@ function pickerRow(r){
         setVal(r.p, val);
         closePop(); paint(); render();
         /* cambiando forma cambiano anche le regolazioni che hanno senso */
-        if(r.rebuild || guidaAltreRighe(r.p)) buildControls();
+        aggiornaRighe();
+        if(r.rebuild) buildControls();
       };
       pop.appendChild(cell);
     });
@@ -6171,7 +6518,6 @@ const TIP_PATH = {
   'row.sepOn':'Marks between title, category and brand',
   'row.sepCount':'How many marks in a row',
   'row.lineGap':'Space between lines of the title',
-  'row.centre':'Centre the row across the canvas',
 
   'shot.fit':'Cover fills the frame and crops what overflows, contain shows the whole image',
   'shot.panels':'Split the image into slanted panels',
@@ -6192,10 +6538,8 @@ const TIP_PATH = {
 
   'export.format':'PNG is lossless and is the default',
   'export.quality':'Only used by WebP and JPEG',
-  'export.scale':'Leave at 1 for the store sizes',
   'export.bundle':'Zip file: one zip. Separate files: one file per format in a folder, no zip to unpack',
 
-  'snap.on':'Snap to margins, centre and other elements. Key: G',
   'auto.on':'Keep the work in this browser between sessions',
 
   'shot.edgeColor':'Colour of the line along each cut',
@@ -6291,7 +6635,6 @@ const TIP_KEY = {
   shadowColor:'Shadow colour', shadowOpacity:'How dark the shadow is',
   shadowBlur:'How soft the shadow is',
   shadowX:'Shadow offset, sideways', shadowY:'Shadow offset, up or down',
-  visible:'Show or hide this layer',
   armX:'Length of the horizontal arm',
   armY:'Length of the vertical arm',
   text:'What this layer says. Enter for a new line',
@@ -6347,40 +6690,43 @@ function tipFor(r){
   return TIP_KEY[k] || '';
 }
 
-/* I comandi che accendono o spengono altre righe: quando cambiano, il
-   pannello va rifatto, se no la riga comparsa o sparita si vede solo al
-   giro dopo. L'elenco si ricava da solo leggendo le condizioni. */
-let _guide = null;
-function percorsiGuida(){
-  if(_guide) return _guide;
-  _guide = {};
-  SECTIONS.forEach(s=> (s.rows||[]).forEach(r=>{
-    if(!r.when) return;
-    String(r.when).replace(/L\.([A-Za-z0-9_]+)\.([A-Za-z0-9_]+)/g,
-      (tutto, a, b)=>{ _guide[a+'.'+b] = true; return tutto; });
-  }));
-  return _guide;
-}
-function guidaAltreRighe(path){
-  if(percorsiGuida()[path]) return true;
-  /* il tipo di file decide se la riga Quality serve */
-  if(path==='export.format') return true;
-  /* i livelli hanno percorsi tipo 'lay:12.gradOn': qui conta il campo, e
-     questi quattro accendono e spengono altre righe */
-  if(isLay(path)){
-    const campo = path.slice(path.lastIndexOf('.')+1);
-    return campo==='gradOn' || campo==='boxOn' || campo==='boxStrokeOn' ||
-           campo==='kind' || campo==='mode';
-  }
-  return false;
-}
-
-/* condizione di una riga: se c'e' e non e' soddisfatta, la riga non compare */
+/* Condizione di una riga: se c'e' e non e' soddisfatta, la riga non compare.
+   Ogni riga con una condizione si costruisce dentro un "posto" (.cslot) che
+   si porta dietro la riga: aggiornaRighe() rivaluta tutte le condizioni dopo
+   ogni cambiamento e costruisce o toglie le righe, senza rifare il pannello. */
 function rigaServe(r){
   if(!r.when) return true;
   const L = state.layouts[state.active];
   if(!L) return true;
   try{ return !!r.when(L); }catch(e){ return true; }
+}
+/* mette in un contenitore una riga del pannello; se ha una condizione la
+   riga e' costruita solo quando serve e il suo posto resta ad aspettarla */
+function aggiungiRiga(dove, r){
+  if(!r.when){ dove.appendChild(makeRow(r)); return; }
+  const slot = document.createElement('div');
+  slot.className = 'cslot';
+  slot._r = r; slot._el = null;
+  dove.appendChild(slot);
+  riallineaRiga(slot);
+}
+function riallineaRiga(slot){
+  if(!slot.parentNode) return;
+  const serve = rigaServe(slot._r);
+  if(serve && !slot._el){
+    const el = makeRow(slot._r);
+    slot.parentNode.insertBefore(el, slot);
+    slot._el = el;
+    paintIcons(el);
+  }else if(!serve && slot._el){
+    if(slot._el.parentNode) slot._el.parentNode.removeChild(slot._el);
+    slot._el = null;
+  }
+}
+/* un solo punto per tutti i cambiamenti: rivede quali righe condizionate
+   servono adesso (livelli, parti, ombre, griglia...) */
+function aggiornaRighe(){
+  document.querySelectorAll('#controls .cslot').forEach(riallineaRiga);
 }
 
 /* quante cifre dopo la virgola merita un cursore: un conteggio a passo uno
@@ -6585,7 +6931,7 @@ function makeRow(r){
       }
       /* anche qui valgono le condizioni: le regolazioni che questa forma
          non usa non si mostrano */
-      layerRows(sel).forEach(rr=>{ if(rigaServe(rr)) wrap.appendChild(makeRow(rr)); });
+      layerRows(sel).forEach(rr=> aggiungiRiga(wrap, rr));
     }
     return wrap;
   }
@@ -6631,21 +6977,29 @@ function makeRow(r){
         label:v => { const k = parseInt(v,10);
                      return (k>=0 && SHOTS[k]) ? (k+1)+'. '+SHOTS[k].name : '(main image)'; }
       }));
+      /* le righe usano percorsi con indice ('shot.sc#2'), come il selettore
+         dell'immagine: syncControls le rilegge quando la tela cambia i valori.
+         Scrivere in un pannello lo rende quello scelto. */
+      const scegli = ()=>{ S.active = i; };
+      const vuoti = {weights:1, slants:0};
       if(n>1){
         [['weights','Width',0.2,3,0.05],['slants','Right cut angle',-1.5,1.5,0.01]].forEach(sp=>{
           const key=sp[0], idx = key==='slants' ? i+1 : i;
           if(!Array.isArray(S[key])) S[key] = key==='weights' ? [1,1,1,1,1,1] : [0,0,0,0,0,0,0];
-          if(S[key][idx]===undefined) S[key][idx] = key==='weights' ? 1 : 0;
-          blk.appendChild(rigaPannello(sp[1], sp[2], sp[3], sp[4], ()=> S[key][idx], v=>{ S[key][idx] = v; },
-            key==='weights' ? 'How wide this panel is next to the others' : 'Angle of the cut on the right of this panel'));
+          if(S[key][idx]===undefined) S[key][idx] = vuoti[key];
+          blk.appendChild(makeRow({p:'shot.'+key+'#'+idx, l:sp[1], type:'range',
+            min:sp[2], max:sp[3], step:sp[4],
+            tip:key==='weights' ? 'How wide this panel is next to the others' : 'Angle of the cut on the right of this panel'}));
         });
       }
       [['sc','Zoom',0.2,4,0.01,'Zoom of this image only'],
        ['px','X',-0.5,1.5,0.002,'Move this image sideways'],
        ['py','Y',-0.5,1.5,0.002,'Move this image up or down'],
        ['rot','Rotation',-30,30,0.5,'Rotate this image only']].forEach(sp=>{
-        blk.appendChild(rigaPannello(sp[1], sp[2], sp[3], sp[4], ()=> panelVal(S, i, sp[0]),
-          v=>{ S[sp[0]][i] = v; S.active = i; }, sp[5]));
+        if(!Array.isArray(S[sp[0]])) S[sp[0]] = [];
+        if(S[sp[0]][i] === undefined) S[sp[0]][i] = PANNELLO_ZERO[sp[0]];
+        blk.appendChild(makeRow({p:'shot.'+sp[0]+'#'+i, l:sp[1], type:'range',
+          min:sp[2], max:sp[3], step:sp[4], tip:sp[5], onSet:scegli}));
       });
       const fl = document.createElement('div'); fl.className = 'row';
       const lb = document.createElement('label'); lb.textContent = 'Flip';
@@ -6654,7 +7008,8 @@ function makeRow(r){
         const w = document.createElement('label');
         w.style.cssText = 'width:auto;display:flex;align-items:center;gap:5px;margin-right:8px;color:var(--txt)';
         const c = document.createElement('input'); c.type = 'checkbox'; c.checked = !!panelVal(S, i, k);
-        c.onchange = ()=>{ pushUndo(); S[k][i] = c.checked; S.active = i; render(); };
+        c.setAttribute('data-path', 'shot.'+k+'#'+i);
+        c.onchange = ()=>{ pushUndo(); if(!Array.isArray(S[k])) S[k] = []; S[k][i] = c.checked; S.active = i; render(); };
         w.appendChild(c); w.appendChild(document.createTextNode(t));
         fl.appendChild(w);
       });
@@ -6793,6 +7148,7 @@ function makeRow(r){
     e.preventDefault(); e.stopPropagation();
     pushUndo();
     setVal(r.p, def);
+    if(r.onSet) r.onSet(def);
     syncControls(); buildControls(); render();
     toast((r.l || r.p) + ' back to ' +
       (typeof def === 'number' ? Math.round(def*1000)/1000 : (def === '' ? 'empty' : def)));
@@ -6833,13 +7189,15 @@ function makeRow(r){
     const hi = r.max * 2;
     inp.oninput = ()=>{
       if(!gesture){ pushUndo(); gesture=true; }
-      setVal(r.p, parseFloat(inp.value)); valEl.value = fmt(inp.value); render(); };
+      setVal(r.p, parseFloat(inp.value)); if(r.onSet) r.onSet(parseFloat(inp.value));
+      valEl.value = fmt(inp.value); render(); };
     inp.onchange = ()=>{
       gesture=false;
       /* un cursore puo' far comparire o sparire altre righe (i pannelli, il
          numero di separatori): si rifa' il pannello a trascinamento finito,
          non durante, se no il cursore scappa da sotto il dito */
-      if(r.p==='shot.panels' || guidaAltreRighe(r.p)) buildControls();
+      aggiornaRighe();
+      if(r.p==='shot.panels') buildControls();
     };
     valEl.onchange = ()=>{
       let v = parseFloat(valEl.value);
@@ -6849,8 +7207,10 @@ function makeRow(r){
       setVal(r.p, v);
       valEl.value = fmt(v);
       inp.value = v;                 /* lo slider si ferma al suo limite */
+      if(r.onSet) r.onSet(v);
       render();
-      if(r.p==='shot.panels' || guidaAltreRighe(r.p)) buildControls();
+      aggiornaRighe();
+      if(r.p==='shot.panels') buildControls();
     };
     valEl.onkeydown = e=>{ if(e.key==='Enter') valEl.blur(); e.stopPropagation(); };
   } else if(r.type==='check'){
@@ -6858,8 +7218,9 @@ function makeRow(r){
     inp.checked = !!getVal(r.p);
     inp.onchange = ()=>{
       pushUndo(); setVal(r.p, inp.checked);
+      if(r.onSet) r.onSet(inp.checked);
       render();
-      if(guidaAltreRighe(r.p)) buildControls();
+      aggiornaRighe();
     };
   } else if(r.type==='color'){
     inp = document.createElement('input'); inp.type='color'; inp.value = getVal(r.p);
@@ -6887,7 +7248,7 @@ function makeRow(r){
     inp.value = getVal(r.p);
     inp.onchange = ()=>{ pushUndo(); setVal(r.p, inp.value); render();
                          avvisaZonaLogo(r.p, inp.value);
-                         if(guidaAltreRighe(r.p)) buildControls(); };
+                         aggiornaRighe(); };
     } else if(r.type==='area'){
     inp = document.createElement('textarea');
     inp.value = getVal(r.p) || '';
@@ -6999,6 +7360,7 @@ function snapTargets(axis){
     t.push(axis==='x' ? l.x : l.y);
   });
   if(axis==='y' && L.band.on) t.push(L.band.top);
+  gridSnapTargets(axis).forEach(v=>t.push(v));
   return t;
 }
 function snapTo(v, axis, tol){
@@ -7245,7 +7607,7 @@ function endDrag(){
   GUIDES = {x:null, y:null};
   /* un clic senza spostare niente non e' una mossa: se restasse nella pila,
      Ctrl+Z dopo un clic sembrerebbe non fare nulla */
-  if(undoStack.length && undoStack[undoStack.length-1] === snapState()){
+  if(undoStack.length && undoStack[undoStack.length-1] === snapState(true)){
     undoStack.pop(); undoShots.pop();
     if(dragRedo){ redoStack = dragRedo.r; redoShots = dragRedo.s; }
     dragRedo = null;
@@ -7310,6 +7672,8 @@ window.addEventListener('keydown', e=>{
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='y'){ e.preventDefault(); redo(); return; }
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='s'){
     e.preventDefault(); document.getElementById(e.shiftKey ? 'bSaveAs' : 'bSave').click(); return; }
+  if((e.ctrlKey||e.metaKey) && e.altKey && (e.code==='KeyE' || e.key.toLowerCase()==='e')){
+    e.preventDefault(); const bd = document.getElementById('bDesk'); if(bd && !bd.hidden) bd.click(); return; }
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='e'){
     e.preventDefault();
     document.getElementById(e.shiftKey ? 'bZip' : 'bExp').click(); return; }
@@ -7710,7 +8074,7 @@ const TIPO_PROGETTO = [{description:'Store Graphics project', accept:{'applicati
 document.getElementById('bLoad').onclick = async ()=>{
   if(typeof window.showOpenFilePicker !== 'function'){ document.getElementById('fPreset').click(); return; }
   let h;
-  try{ [h] = await window.showOpenFilePicker({types:TIPO_PROGETTO}); }
+  try{ [h] = await selettoreUnico('apri', ()=> window.showOpenFilePicker({types:TIPO_PROGETTO})); }
   catch(e){ if(e && e.name !== 'AbortError') toast('Could not open: ' + e.message); return; }
   caricaPresetFile(await h.getFile(), h);
 };
@@ -8176,6 +8540,7 @@ function trimAlpha(im, thr){
   const o = document.createElement('canvas');
   o.width = tw; o.height = th;
   o.getContext('2d').drawImage(c, x0, y0, tw, th, 0, 0, tw, th);
+  segnaImmagine(o);          /* senza __uid firmaProgetto non vede il cambio di logo */
   return {img:o, trimmed:true, before:[w,h], after:[tw,th]};
 }
 
@@ -8233,14 +8598,18 @@ function copiaImpostazioneImmagine(tutti){
   toast('Image setup copied to ' + (nomi.length > 3 ? nomi.length + ' formats' : nomi.join(', ')), {undo:true});
 }
 
-document.getElementById('bAll').onclick = ()=>{
+document.getElementById('bAll').onclick = async ()=>{
   /* sovrascrive gli overlay di altri sette formati: si chiede prima */
   const fa = FORMATS.find(x=> x.id===state.active);
-  if(!window.confirm('Copy the whole layout of ' + (fa ? nomeFormato(fa) : 'this format') +
-      ' to the other ' + (FORMATS.length-1) + ' formats?\n\n' +
-      'This replaces their overlay too (band, accent line, logo, text row, badges) ' +
-      'and their screenshot setup. Ctrl+Z brings it back.\n\n' +
-      'To copy only the screenshot setup use Image > Screenshot > Copy to other formats.')) return;
+  const ris = await dialogo({
+    title: 'Copy the whole layout of ' + (fa ? nomeFormato(fa) : 'this format') +
+           ' to the other ' + (FORMATS.length-1) + ' formats?',
+    text: 'This replaces their overlay too (band, accent line, logo, text row, badges) ' +
+          'and their screenshot setup. Ctrl+Z brings it back.\n\n' +
+          'To copy only the screenshot setup use Image > Screenshot > Copy to other formats.',
+    buttons: [{id:'no', label:'Cancel'}, {id:'si', label:'Copy to all', primary:true}]
+  });
+  if(ris !== 'si') return;
   pushUndo();
   const src = JSON.parse(JSON.stringify(state.layouts[state.active]));
   FORMATS.forEach(f=>{
@@ -8496,8 +8865,10 @@ async function salvaProgetto(nuovo){
         a.download = slug(state.pack.title) + '.json'; a.click();
         toast('Project saved'); return;
       }
+      /* un secondo Save mentre il selettore e' aperto non ne apre un altro */
+      if(_selettori.salva) return;
       try{
-        h = await window.showSaveFilePicker({suggestedName: slug(state.pack.title) + '.json', types:TIPO_PROGETTO});
+        h = await selettoreUnico('salva', ()=> window.showSaveFilePicker({suggestedName: slug(state.pack.title) + '.json', types:TIPO_PROGETTO}));
       }catch(e){ if(e && e.name === 'AbortError') return; throw e; }
     }
     const stato = snapState();
@@ -8880,9 +9251,7 @@ async function esportaPerImmagine(){
       else toast('Export cancelled after ' + nomi.length + ' file' + (nomi.length===1 ? '' : 's'));
       return;
     }
-    if(typeof segnaExport === 'function'){
-      try{ segnaExport({n:nomi.length, dove, nomi, avvisi}); }catch(e){ console.error(e); }
-    }
+    try{ segnaExport({n:nomi.length, dove, nomi, avvisi}); }catch(e){ console.error(e); }
     const resto = lista.length - nomi.length;
     toast(nomi.length + ' file' + (nomi.length===1 ? '' : 's') + ' exported' + (dove ? ' to ' + dove : '') +
       (nomi.length ? ': ' + nomi.slice(0, 3).join(', ') + (nomi.length > 3 ? ', ...' : '') : '') +
@@ -8901,13 +9270,28 @@ async function esportaPerImmagine(){
    file aggiunti a mano. Niente piu' finestra "salva come" a ogni export.
    ========================================================================== */
 let cartellaExport = null;
-async function scegliCartellaExport(){
-  const h = await window.showDirectoryPicker({id:'sg-export', mode:'readwrite'});
-  cartellaExport = h;
-  dbApri().then(d=>{ if(!d) return; try{ d.transaction('meta','readwrite').objectStore('meta').put(h, 'cartellaExport'); }catch(e){} });
-  buildControls();
-  toast('Exports go to ' + h.name);
-  return h;
+/* Un selettore di file/cartelle alla volta: chi lo chiede mentre e' gia'
+   aperto (doppio clic, Ctrl+E e bottone, due export di fila) aspetta la
+   stessa promessa invece di aprirne un altro, che il browser rifiuta con
+   "File picker already active". */
+const _selettori = {};
+function selettoreUnico(chiave, fn){
+  if(_selettori[chiave]) return _selettori[chiave];
+  let p;
+  try{ p = Promise.resolve(fn()); }catch(e){ p = Promise.reject(e); }
+  const q = p.finally(()=>{ if(_selettori[chiave] === q) delete _selettori[chiave]; });
+  _selettori[chiave] = q;
+  return q;
+}
+function scegliCartellaExport(){
+  return selettoreUnico('cartella', async ()=>{
+    const h = await window.showDirectoryPicker({id:'sg-export', mode:'readwrite'});
+    cartellaExport = h;
+    dbApri().then(d=>{ if(!d) return; try{ d.transaction('meta','readwrite').objectStore('meta').put(h, 'cartellaExport'); }catch(e){} });
+    buildControls();
+    toast('Exports go to ' + h.name);
+    return h;
+  });
 }
 async function riprendiCartellaExport(){
   const d = await dbApri(); if(!d) return;
@@ -8927,11 +9311,15 @@ const _numeriSenzaCartella = {};
    la cartella insieme, trovavano lo stesso numero libero e il secondo file
    sovrascriveva il primo. Il conteggio e la scrittura vanno in fila. */
 let codaExport = Promise.resolve();
-async function cartellaPronta(){
-  if(typeof window.showDirectoryPicker !== 'function') return null;
-  let dir = cartellaExport;
-  if(dir && !(await permessoScrittura(dir))) dir = null;
-  return dir || await scegliCartellaExport();
+function cartellaPronta(){
+  if(typeof window.showDirectoryPicker !== 'function') return Promise.resolve(null);
+  /* anche il controllo del permesso e' condiviso: due chiamate insieme
+     vedevano entrambe "nessuna cartella" e aprivano due selettori */
+  return selettoreUnico('cartellaPronta', async ()=>{
+    let dir = cartellaExport;
+    if(dir && !(await permessoScrittura(dir))) dir = null;
+    return dir || await scegliCartellaExport();
+  });
 }
 async function esportaNumerato(blobOPromessa, nome, dirGia){
   const p = nome.lastIndexOf('.');
@@ -9058,6 +9446,31 @@ document.getElementById('bExp').onclick = async ()=>{
     toast('Exported ' + nome + (dove ? ' to ' + dove : '') + (av ? '.  ' + av : ''), av ? {kind:'warn'} : undefined);
     segnaExport({n:1, dove: dove || 'downloads', nomi:[nome], avvisi: av ? [av] : []});
   }catch(e){ if(!e || e.name !== 'AbortError') toast('Export failed: ' + (e && e.message || e)); }
+};
+/* Esporta il formato attuale sul Desktop con un clic: il ponte del guscio
+   Electron scrive il file (nome controllato, numero libero, mai sovrascritto) */
+const haPonteDesktop = ()=> !!(window.desktop && typeof window.desktop.saveToDesktop === 'function');
+function mostraBottoneDesktop(){ const b = document.getElementById('bDesk'); if(b) b.hidden = !haPonteDesktop(); }
+mostraBottoneDesktop();
+window.addEventListener('load', ()=>{ mostraBottoneDesktop(); setTimeout(mostraBottoneDesktop, 400); setTimeout(mostraBottoneDesktop, 1500); });
+let _esportoDesktop = false;
+document.getElementById('bDesk').onclick = async ()=>{
+  if(!haPonteDesktop()){ toast('Export to the Desktop needs the desktop app'); return; }
+  if(_esportoDesktop) return;
+  _esportoDesktop = true;
+  const f = FORMATS.find(x=>x.id===state.active);
+  try{
+    const blob = await new Promise(res=> renderFormatToBlob(f, res));
+    if(!blob) throw new Error('the image could not be rendered, probably out of memory. Try a smaller Scale');
+    const nome = fileNameFor(f, state.pack, 1).split('/').pop();
+    const r = await window.desktop.saveToDesktop(nome, new Uint8Array(await blob.arrayBuffer()));
+    if(!r || r.error) throw new Error(r && r.error || 'no answer from the app');
+    const av = avvisoFab(f, blob);
+    toast('Saved ' + r.name + ' to the Desktop' + (av ? '.  ' + av : ''),
+          {kind: av ? 'warn' : undefined, action:{label:'Show', fn:()=>{ try{ window.desktop.showOnDesktop(r.path); }catch(e){} }}});
+    segnaExport({n:1, dove:'Desktop', nomi:[r.name], avvisi: av ? [av] : []});
+  }catch(e){ toast('Export failed: ' + (e && e.message || e)); }
+  finally{ _esportoDesktop = false; }
 };
 document.getElementById('bZip').onclick = async ()=>{
   const list = FORMATS.filter(f=> state.layouts[f.id].on);

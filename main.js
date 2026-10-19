@@ -446,6 +446,39 @@ if (!app.requestSingleInstanceLock()) {
       return shell.openPath(folderPath);
     });
 
+    // One-click export of a finished image to the Desktop. The page only sends
+    // a plain file name and the bytes: the folder is fixed here, the name is
+    // checked, the next free number is picked and nothing is ever overwritten.
+    const DESKTOP_EXT = /\.(png|jpe?g|webp|zip)$/i;
+    ipcMain.handle('desktop:save-to-desktop', async (_event, req) => {
+      try {
+        const name = req && req.name, bytes = req && req.bytes;
+        if (!isPlainName(name) || !/^[\w .()\-]+$/.test(name) || !DESKTOP_EXT.test(name)) return { error: 'bad file name' };
+        if (!bytes || !(bytes.byteLength > 0) || bytes.byteLength > 512 * 1024 * 1024) return { error: 'bad data' };
+        const dir = app.getPath('desktop');
+        const ext = path.extname(name), base = name.slice(0, name.length - ext.length);
+        const esc = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const re = new RegExp('^' + esc(base) + '_(\\d+)' + esc(ext) + '$', 'i');
+        let max = 0;
+        for (const f of fs.readdirSync(dir)) { const m = re.exec(f); if (m) max = Math.max(max, +m[1]); }
+        const buf = Buffer.from(bytes.buffer ? new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength) : new Uint8Array(bytes));
+        for (let n = max + 1; n < max + 50; n++) {
+          const final = path.join(dir, base + '_' + n + ext);
+          try { fs.writeFileSync(final, buf, { flag: 'wx' }); return { path: final, name: path.basename(final) }; }
+          catch (e) { if (!e || e.code !== 'EEXIST') throw e; }
+        }
+        return { error: 'no free number' };
+      } catch (e) { return { error: String(e && e.message || e) }; }
+    });
+    ipcMain.handle('desktop:show-item', async (_event, filePath) => {
+      try {
+        const dir = path.resolve(app.getPath('desktop'));
+        const full = path.resolve(String(filePath || ''));
+        if (path.dirname(full) !== dir || !fs.existsSync(full)) return false;
+        shell.showItemInFolder(full); return true;
+      } catch { return false; }
+    });
+
     sceneSyncHost = require('./scene-sync-host.cjs').registerSceneSync({app,ipcMain,dialog,BrowserWindow,shell});
     registerProtocol();
     registerDownloadHandler();

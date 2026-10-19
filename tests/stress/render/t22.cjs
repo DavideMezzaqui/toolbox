@@ -100,7 +100,7 @@ module.exports = async ({ev}) => {
   for (const id of ['unity_cover', 'unity_card', 'unity_icon', 'unity_social']) if (await ev(img(id)) !== before4[id]) fail('16x9Touched_' + id);
 
   // ---- 5. bAll confirm text points to the new buttons
-  const txt = await ev(`(()=>{ let m=''; const c=window.confirm; window.confirm=t=>{m=t; return false;}; document.getElementById('bAll').onclick(); window.confirm=c; return m; })()`);
+  const txt = await ev(`(async()=>{ const p = document.getElementById('bAll').onclick(); await new Promise(r=>setTimeout(r,100)); const m = (document.getElementById('dlg')||document.body).textContent; document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true})); await p; return m; })()`);
   if (!/Image > Screenshot > Copy to other formats/.test(txt)) fail('bAllText', txt);
   const errs = await ev(`window.qaErrors`);
   if (errs.length) fail('pageErrors', errs);
