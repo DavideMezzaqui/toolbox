@@ -36,7 +36,7 @@ module.exports = async function storeCheck({ command, evaluate, until, contexts,
     return 1; })()`);
   assert.equal(await ev('document.querySelectorAll("#imgs .card").length'), 3, 'three images in the strip');
   assert.equal(await ev('typeof LOOKS + SECTIONS.map(s => s.t).join()').then(x => /Looks|^object/.test(x)), false, 'the Looks panel is gone');
-  assert(await ev('getComputedStyle(document.getElementById("imgs")).position === "sticky"'), 'the strip stays at the top');
+  assert(await ev('getComputedStyle(document.getElementById("imgs").closest(".phead") || document.getElementById("imgs")).position === "sticky"'), 'the strip stays at the top');
   /* the images are kept for next time, and still there after a click that
      only changes which panel shows what */
   const kept = await ev(`(async()=>{ const count = ()=> new Promise(r=>{ dbApri().then(d=>{ const q = d.transaction('shots').objectStore('shots').count(); q.onsuccess = ()=> r(q.result); }); });
@@ -51,7 +51,7 @@ module.exports = async function storeCheck({ command, evaluate, until, contexts,
     return {px:S.px.slice(0,3), sc:S.sc.slice(0,3), rot:S.rot.slice(0,3)}; })()`);
   assert.deepEqual(moved.px, [0.5, 0.5, 0.3]); assert.deepEqual(moved.sc, [1, 1, 1.4]); assert.deepEqual(moved.rot, [0, 0, 5]);
   checks.push('Store Graphics: moving, scaling and rotating one panel leaves the others alone');
-  await ev('activeTab = "image"; openSecs[SECTIONS.findIndex(x => x.t === "Screenshot")] = true; buildControls(); render(); 1');
+  await ev('activeTab = "image"; openSecs["Screenshot"] = true; buildControls(); render(); 1');
   await new Promise(r => setTimeout(r, 400));
   await capture('store-images');
 
@@ -86,7 +86,7 @@ module.exports = async function storeCheck({ command, evaluate, until, contexts,
 
   /* colour swap and the empty canvas */
   const sw = await ev(`(()=>{ const L = state.layouts.unity_cover; L.accent.gradLink = false;
-    activeTab = 'design'; openSecs[SECTIONS.findIndex(x => x.t === 'Accent line')] = true; buildControls();
+    activeTab = 'design'; openSecs['Accent line'] = true; buildControls();
     const a = L.accent.color, b = L.accent.color2;
     document.querySelector('[data-hexof="accent.color2"]').parentNode.querySelector('.swapc').click();
     SHOTS = []; imgShot = null; render();

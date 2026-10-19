@@ -1,6 +1,6 @@
 module.exports=async({ev,log})=>{
  log(JSON.stringify(await ev(`(()=>{const o={};
- SECTIONS.forEach((s,i)=>openSecs[i]=true);activeTab='design';buildControls();
+ SECTIONS.forEach(s=>openSecs[s.t]=true);activeTab='design';buildControls();
  const box=document.getElementById('controls');
  // find rows whose change triggers buildControls
  const els=[...box.querySelectorAll('[data-path]')].filter(e=>e.type==='checkbox'||e.tagName==='SELECT'||e.classList.contains('val')||e.type==='range');

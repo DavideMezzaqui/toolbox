@@ -237,6 +237,16 @@
   .phead>.row{margin-bottom:0}
   #secFilter{height:28px}
   #secClose{padding:4px 9px;font-size:var(--fs-s);color:var(--txt2)}
+  /* il segno aperto/chiuso e' una freccia disegnata, che gira quando si apre */
+  .sec>.hd>span.sg{flex:none;width:7px;height:7px;margin:0 3px 3px 0;border:solid var(--dim);
+        border-width:0 1.5px 1.5px 0;transform:rotate(-45deg);transition:transform .12s}
+  .sec.open>.hd>span.sg{transform:rotate(45deg);margin-top:2px;border-color:var(--txt2)}
+  /* testata piu' compatta, e la fascia delle immagini non si mangia lo schermo */
+  .phead .tabs{margin-bottom:6px}
+  .phead #imgs .ih{margin-bottom:5px}
+  .phead{padding-bottom:7px}
+  @media(min-height:801px){ .phead .lib{max-height:min(150px,15vh)} }
+  .sec>.bd .row:hover label{color:var(--txt)}
   /* [/v17-right] */
 
   /* --- griglia di ancoraggio dei livelli --- */
@@ -369,6 +379,10 @@
   #tools.strettissima{gap:2px;padding:4px}
   #tools.strettissima button{padding:5px 6px}
   #tools.strettissima .tsep{display:none}
+  /* la barra occupa tutta la larghezza: "Reset format" resta in fondo a
+     destra, lontano dai comandi che si toccano di continuo */
+  #tools{align-self:stretch}
+  .toolbar .tgrow{flex:1 1 0;min-width:0}
   /* [/v17-toolbar] */
 
   /* ==========================================================================
@@ -450,6 +464,8 @@
   .dlg-btns button{padding:7px 16px;font-size:var(--fs-l)}
   .dlg-btns button.primary{background:#e6e6e8;border-color:#e6e6e8;color:#101012;font-weight:600}
   .dlg-btns button.danger{border-color:var(--err);color:var(--err)}
+  #toast:not(.on) button{pointer-events:none}
+  #keysPop .kgrid>div span{min-width:0}
   /* [/v17-feedback] */
 
   /* ==========================================================================
@@ -645,7 +661,7 @@ const CORNERS = ['none','all','top-left + bottom-right','top-right + bottom-left
                  'top only','bottom only','left only','right only'];
 
 /* Coppie pronte per il gradiente del tema: si scelgono con un clic e
-   ridipingono tutto quello che ha "Follow theme" acceso. Sono per provare
+   ridipingono tutto quello che ha "Use theme gradient" acceso. Sono per provare
    in fretta, non una tavolozza da rispettare: la prima e' quella del PSD. */
 const GRADIENTI = [
   ['PSD orange', '#f5af00', '#ff6c00'], ['Amber',     '#ffc400', '#ff8a00'],
@@ -770,43 +786,71 @@ function paintIcons(root){
    SCORCIATOIE
    ========================================================================== */
 window.addEventListener('keyup', e=>{ if(e.key===' ') spazio = false; });
+/* Le scorciatoie stanno in gruppi: il popover #keysPop (tasto ? o il bottone
+   Shortcuts) le mostra a due colonne. Ogni tasto vero del programma e' qui. */
 const SHORTCUTS = [
-  ['Ctrl+Z',        'Undo'],
-  ['Ctrl+Shift+Z',  'Redo'],
-  ['Ctrl+Y',        'Redo'],
-  ['Arrows',        'Move by one pixel of the export'],
-  ['Shift+Arrows',  'Move by five pixels'],
-  ['Alt+Wheel',     'Resize selection instead of zooming'],
-  ['Drag',          'Move on canvas, the screenshot included'],
-  ['Shift+drag',    'Box select the layers instead'],
-  ['Corner drag',   'Resize on canvas'],
-  ['Ctrl+E',        'Export current'],
-  ['Ctrl+Shift+E',  'Export all'],
-  ['Ctrl+S',        'Save the project (Shift: save as)'],
-  ['Ctrl+D',        'Duplicate layer'],
-  ['Delete',        'Delete the chosen layers'],
-  ['Ctrl+A',        'Take every layer'],
-  ['Esc',           'Back to editing, or drop the multiple selection'],
-  ['Tab',           'Next format'],
-  ['G',             'Snapping on/off'],
-  ['L',             'Lock the selection'],
-  ['Alt+click',     'A control back to its default'],
-  ['C',             'Comparison view on/off'],
-  ['Wheel',         'Zoom the canvas'],
-  ['+  -  0',       'Zoom in, out, back to fit'],
-  ['Space+drag',    'Move the zoomed canvas'],
-  ['Drop / Ctrl+V', 'Add images, or open a project'],
-  ['Ctrl+click',    'Add a layer to the selection'],
-  ['Shift+click',   'Take a range of layers'],
-  ['Drag on empty', 'Box select: take every layer the box touches'],
-  ['L then drag',   'With the selection locked, drag from anywhere to move it']
+  ['Edit', [
+    ['Ctrl+Z',        'Undo'],
+    ['Ctrl+Shift+Z',  'Redo'],
+    ['Ctrl+Y',        'Redo'],
+    ['Alt+click',     'A control back to its default'],
+    ['Alt+click image', 'Use that image in the selected panel of every format']
+  ]],
+  ['Canvas', [
+    ['Drag',          'Move on canvas, the screenshot included'],
+    ['Corner drag',   'Resize on canvas'],
+    ['Arrows',        'Move by one pixel of the export'],
+    ['Shift+Arrows',  'Move by five pixels'],
+    ['Alt+Wheel',     'Resize selection instead of zooming'],
+    ['Wheel',         'Zoom the canvas'],
+    ['+  -  0',       'Zoom in, out, back to fit'],
+    ['Space+drag',    'Move the zoomed canvas'],
+    ['G',             'Snapping on/off'],
+    ['L',             'Lock the selection'],
+    ['L then drag',   'With the selection locked, drag from anywhere to move it'],
+    ['C',             'Comparison view on/off'],
+    ['Tab',           'Next format (Shift+Tab: previous)'],
+    ['Esc',           'Back to editing, or drop the multiple selection']
+  ]],
+  ['Layers', [
+    ['Ctrl+D',        'Duplicate layer'],
+    ['Delete',        'Delete the chosen layers'],
+    ['Ctrl+A',        'Take every layer'],
+    ['Ctrl+click',    'Add a layer to the selection'],
+    ['Shift+click',   'Take a range of layers'],
+    ['Shift+drag',    'Box select the layers instead of moving'],
+    ['Drag on empty', 'Box select: take every layer the box touches']
+  ]],
+  ['File', [
+    ['Ctrl+O',        'Open a project'],
+    ['Ctrl+S',        'Save the project (Shift: save as)'],
+    ['Ctrl+E',        'Export current'],
+    ['Ctrl+Shift+E',  'Export all'],
+    ['Drop / Ctrl+V', 'Add images, or open a project']
+  ]],
+  ['View', [
+    ['/',             'Search the settings'],
+    ['?',             'Show or hide this list'],
+    ['Esc',           'Close this list']
+  ]]
 ];
-function keysPanel(){
-  const d = document.createElement('div');
-  d.className = 'keys';
-  d.innerHTML = '<div style="letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px">Shortcuts</div>' +
-    SHORTCUTS.map(k=> '<div><b>'+k[0]+'</b> &nbsp;'+k[1]+'</div>').join('');
-  return d;
+/* Il contenuto del popover: un titolo per gruppo e, sotto, la griglia dei tasti */
+function keysHtml(){
+  const esc = t=> String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  return SHORTCUTS.map(g=>
+    '<h4>' + esc(g[0]) + '</h4><div class="kgrid">' +
+    g[1].map(k=> '<div><span>' + esc(k[1]) + '</span><b>' + esc(k[0]) + '</b></div>').join('') +
+    '</div>').join('');
+}
+/* Apre o chiude il popover. Si chiude con Esc, con ? e con un clic fuori. */
+function keysToggle(on){
+  const p = document.getElementById('keysPop');
+  if(!p) return;
+  const apri = on === undefined ? p.hidden : !!on;
+  if(apri){ p.innerHTML = keysHtml(); p.hidden = false; }
+  else p.hidden = true;
+  const b = document.getElementById('bKeys');
+  if(b) b.setAttribute('aria-expanded', apri ? 'true' : 'false');
 }
 
 /* ------------------------------------------------------------ UTILITA' */
@@ -1602,9 +1646,9 @@ const PARTS = [
     {p:'shot.fit',    l:'Fit',      type:'select', opts:['cover','contain']},
     {type:'group', l:'Split into panels'},
     {p:'shot.panels', l:'Panels',   type:'range', min:1, max:6, step:1},
-    {p:'shot.slant',  l:'Cut slant', type:'range', min:-1.5, max:1.5, step:0.01,
+    {p:'shot.slant',  l:'Cut angle (all)', type:'range', min:-1.5, max:1.5, step:0.01,
      when:L=> L.shot.panels > 1},
-    {p:'shot.gap',    l:'Cut gap',  type:'range', min:0, max:0.15, step:0.002,
+    {p:'shot.gap',    l:'Gap between panels', type:'range', min:0, max:0.15, step:0.002,
      when:L=> L.shot.panels > 1},
     /* la linea di divisione esiste solo se ci sono piu' pannelli, e i suoi
        colori solo se la linea e' accesa */
@@ -1889,7 +1933,7 @@ const PARTS = [
        arrivare a 0.3 rendeva lo slider inutilizzabile nella parte bassa */
     {p:'accent.thick', l:'Thickness', type:'range', min:0.0005, max:0.14, step:0.0005},
     {type:'group', l:'Colour'},
-    {p:'accent.gradLink', l:'Follow theme', type:'check'},
+    {p:'accent.gradLink', l:'Use theme gradient', type:'check'},
     {p:'accent.color', l:'Colour',     type:'color', when:L=> !L.accent.gradLink},
     {p:'accent.gradOn',   l:'Gradient',    type:'check'},
     {p:'accent.color2',   l:'Colour right', type:'color',
@@ -2198,29 +2242,29 @@ PARTS.push(
     {p:'row.mode',        l:'Mode',        type:'select', opts:['inline','stack']},
     {type:'group', l:'Type'},
     {p:'row.titleFont',   l:'Title font',  type:'select', opts:FONTS},
-    {p:'row.itemFont',    l:'Item font',   type:'select', opts:FONTS},
+    {p:'row.itemFont',    l:'Category/brand font', type:'select', opts:FONTS},
     {type:'group', l:'Placement'},
     {p:'row.x',           l:'X',      type:'range', min:0, max:1, step:0.002},
     {p:'row.y',           l:'Baseline Y',  type:'range', min:0, max:1, step:0.002},
-    {p:'row.y2',          l:'2nd line Y',  type:'range', min:0, max:1, step:0.002,
+    {p:'row.y2',          l:'Line 2 Y',  type:'range', min:0, max:1, step:0.002,
      when:L=> L.row.mode==='stack'},
-    {p:'row.x2',          l:'2nd line X',  type:'range', min:0, max:1, step:0.002,
+    {p:'row.x2',          l:'Line 2 X',  type:'range', min:0, max:1, step:0.002,
      when:L=> L.row.mode==='stack'},
     {p:'row.titleSize',   l:'Title size',  type:'range', min:0.005, max:0.25, step:0.001},
     {p:'row.titleWeight', l:'Title weight',type:'select', opts:WEIGHTS},
-    {p:'row.itemSize',    l:'Item size',   type:'range', min:0.005, max:0.25, step:0.001},
-    {p:'row.itemWeight',  l:'Item weight', type:'select', opts:WEIGHTS},
+    {p:'row.itemSize',    l:'Category/brand size', type:'range', min:0.005, max:0.25, step:0.001},
+    {p:'row.itemWeight',  l:'Category/brand weight', type:'select', opts:WEIGHTS},
     {p:'row.titleTrack',  l:'Title track', type:'range', min:-0.05, max:0.3, step:0.005},
-    {p:'row.itemTrack',   l:'Item track',  type:'range', min:-0.05, max:0.3, step:0.005},
+    {p:'row.itemTrack',   l:'Category/brand track', type:'range', min:-0.05, max:0.3, step:0.005},
     {p:'row.gap',         l:'Gap',         type:'range', min:0, max:3, step:0.05},
     {p:'row.fitW',        l:'Max width',   type:'range', min:0.1, max:1, step:0.01},
     {type:'group', l:'Colour'},
     {p:'row.color',       l:'Title colour', type:'color'},
-    {p:'row.itemColor',   l:'Item colour',  type:'color'},
+    {p:'row.itemColor',   l:'Category/brand colour', type:'color'},
     /* la seconda riga esiste solo nella modalita' impilata */
-    {p:'row.brandColor',  l:'2nd line',type:'color', when:L=> L.row.mode==='stack'},
+    {p:'row.brandColor',  l:'Line 2 colour', type:'color', when:L=> L.row.mode==='stack'},
     {p:'row.titleOp',     l:'Title opacity',type:'range', min:0, max:1, step:0.02},
-    {p:'row.itemOp',      l:'Item opacity',type:'range', min:0, max:1, step:0.02},
+    {p:'row.itemOp',      l:'Category/brand opacity', type:'range', min:0, max:1, step:0.02},
     {type:'group', l:'Separators'},
     {p:'row.sepOn',       l:'Separators',  type:'check'},
     {p:'row.sepOp',       l:'Sep opacity', type:'range', min:0, max:1, step:0.02},
@@ -2442,7 +2486,7 @@ PARTS.push(
      when:L=> L.badges.strokeOn},
     {p:'badges.strokeOp',    l:'Stroke opacity', type:'range', min:0, max:1, step:0.02,
      when:L=> L.badges.strokeOn},
-    {p:'badges.gradLink',    l:'Follow theme', type:'check', when:L=> L.badges.strokeOn},
+    {p:'badges.gradLink',    l:'Use theme gradient', type:'check', when:L=> L.badges.strokeOn},
     {p:'badges.color',       l:'Stroke colour', type:'color',
      when:L=> L.badges.strokeOn && !L.badges.gradLink},
     {p:'badges.gradOn',      l:'Gradient',     type:'check', when:L=> L.badges.strokeOn},
@@ -3004,7 +3048,7 @@ function layerDelete(id){
   multiClear();
   if(via.indexOf(state.sel.slice(4)) >= 0) state.sel = list.length ? 'lay:'+list[0].id : 'row';
   buildControls(); render();
-  if(via.length > 1) toast(via.length+' layers deleted');
+  toast(via.length > 1 ? via.length+' layers deleted' : 'Layer deleted', {undo:true});
 }
 function layerDup(id){
   pushUndo();
@@ -3265,7 +3309,7 @@ const state = {
         version:'v1.0', badges:'URP, HDRP'},
   theme:{accent:C.accentA2, accentRef:C.accentA2,
          /* i due capi del gradiente stanno qui una volta sola: ogni parte
-            con "Follow theme" acceso li legge da qui, cosi' cambiarli
+            con "Use theme gradient" acceso li legge da qui, cosi' cambiarli
             ridipinge barra, badge e bordo del logo insieme */
          gradA:C.accentA2, gradB:C.accentB2,
          scope:'all formats'},
@@ -3354,30 +3398,48 @@ function buildTools(){
   };
   const sep = ()=>{ const d = document.createElement('div'); d.className='tsep'; bar.appendChild(d); };
 
-  const u = mk('undo','Undo','Undo the last change. Ctrl+Z', undo);
-  const r = mk('redo','Redo','Redo what you just undid. Ctrl+Shift+Z, or Ctrl+Y', redo);
+  /* Ordine: cosa si annulla | lo screenshot | cosa aiuta a posizionare |
+     blocco | zoom | confronto | (spazio) | azione che butta via il lavoro,
+     lontana da tutto il resto. Ogni suggerimento finisce con il suo tasto. */
+  const u = mk('undo','Undo','Undo the last change. Key: Ctrl+Z', undo);
+  const r = mk('redo','Redo','Redo what you just undid. Key: Ctrl+Shift+Z (or Ctrl+Y)', redo);
   u.id = 'bUndo'; r.id = 'bRedo';
-  sep();
-  mk('magnet2','Snap','Snap to the margins, the middle of the canvas and the other elements, by their edge or by their centre. Hold Alt while dragging to skip it once. Key: G', ()=>{
-    state.snap.on = !state.snap.on; buildTools(); syncControls();
-  }, state.snap.on);
-  mk('grid','Grid','Show a grid over the canvas', ()=>{
-    showGrid = !showGrid; buildTools(); render();
-  }, showGrid);
-  mk('wheel','Wheel','Mouse wheel resizes the selection instead of zooming the canvas', ()=>{
-    wheelResize = !wheelResize; buildTools();
-  }, wheelResize);
   sep();
   /* "Fit" qui accanto ai comandi dello zoom si leggeva come "adatta la tela
      alla finestra", che e' un'altra cosa: questo rimette a posto lo
      screenshot dentro la grafica */
-  mk('fit','Recentre','Put the selected image back: zoom 1, centred, no rotation or flip. Other panels are left alone', ()=>{
+  mk('fit','Recentre image','Put the selected screenshot back in the graphic: zoom 1, centred, no rotation or flip. Other panels are left alone. Key: none', ()=>{
     pushUndo();
     const S = state.layouts[state.active].shot, i = pannelloAttivo(S);
     Object.keys(PANNELLO_ZERO).forEach(k=>{ S[k][i] = PANNELLO_ZERO[k]; });
     buildControls(); render();
   });
-  mk('reset','Reset','Reset this format to its default layout, screenshot panels included. Ctrl+Z brings it back', ()=>{
+  sep();
+  mk('magnet2','Snap','Snap to the margins, the middle of the canvas and the other elements, by their edge or by their centre. Hold Alt while dragging to skip it once. Key: G', ()=>{
+    state.snap.on = !state.snap.on; buildTools(); syncControls();
+  }, state.snap.on);
+  mk('grid','Grid','Show a grid over the canvas. Key: none', ()=>{
+    showGrid = !showGrid; buildTools(); render();
+  }, showGrid);
+  mk('wheel','Wheel resizes','On: the mouse wheel resizes the selection instead of zooming the canvas. Off: the wheel zooms. Key: hold Alt while turning the wheel', ()=>{
+    wheelResize = !wheelResize; buildTools();
+  }, wheelResize);
+  sep();
+  mk(selLocked ? 'lock' : 'unlock','Lock','Lock the selection: clicking will not switch element. Key: L',
+     ()=>{ selLocked = !selLocked; HOVER = null; buildTools(); render();
+           toast(selLocked ? 'Selection locked on ' + selLabel(state.sel)
+                           : 'Selection unlocked'); }, selLocked);
+  sep();
+  mk('zout','','Zoom out of the canvas. Key: - (or the mouse wheel)', ()=> zoomStep(-1));
+  mk('','100%','Fit the whole canvas in the window. The number is the real scale you are looking at: 100% means one canvas pixel on one screen pixel. Key: 0',
+     ()=>{ viewFit(); }).id = 'bZoom';
+  mk('zin','','Zoom into the canvas to work on small details. Key: + (or the mouse wheel)',
+     ()=> zoomStep(1));
+  sep();
+  mk('compare','Compare','Show all variants side by side. Key: C',
+     ()=> runAction('compareShow'), compareMode);
+  const grow = document.createElement('div'); grow.className = 'tgrow'; bar.appendChild(grow);
+  mk('reset','Reset format','Put this format back to its default layout, screenshot panels included. The message that follows has an Undo button (or Ctrl+Z). Key: none', ()=>{
     pushUndo();
     const f = FORMATS.find(x=>x.id===state.active);
     const keep = state.layouts[f.id].on;
@@ -3385,21 +3447,8 @@ function buildTools(){
     state.layouts[f.id].on = keep;
     centerRowInBand(false, true);
     buildControls(); render();
+    toast(nomeFormato(f) + ' back to its default layout', {undo:true});
   });
-  sep();
-  mk(selLocked ? 'lock' : 'unlock','Lock','Lock the selection: clicking will not switch element. Key: L',
-     ()=>{ selLocked = !selLocked; HOVER = null; buildTools(); render();
-           toast(selLocked ? 'Selection locked on ' + selLabel(state.sel)
-                           : 'Selection unlocked'); }, selLocked);
-  sep();
-  mk('zout','','Zoom out of the canvas. The mouse wheel does the same', ()=> zoomStep(-1));
-  mk('','100%','Fit the whole canvas in the window. Key: 0. The number is the real scale you are looking at: 100% means one canvas pixel on one screen pixel',
-     ()=>{ viewFit(); }).id = 'bZoom';
-  mk('zin','','Zoom into the canvas to work on small details. Mouse wheel, or key +',
-     ()=> zoomStep(1));
-  sep();
-  mk('compare','Compare','Show all variants side by side. Key: C',
-     ()=> runAction('compareShow'), compareMode);
   updateHistBtns();
   /* la barra e' stata rifatta da zero: le classi di risparmio sono cadute
      con lei, la prossima misura le rimette se servono */
@@ -3932,8 +3981,68 @@ function fixSelection(){
   }
 }
 
+/* ------------------------------------------------------- scheda Pack
+   In cima alla colonna sinistra: titolo, versione, categoria e colore
+   accento, le quattro cose che si cambiano a ogni pacchetto. Le righe sono
+   le stesse del pannello (makeRow) e si costruiscono una volta sola: le
+   chiamate dopo la prima rileggono soltanto i valori, cosi' un annulla o un
+   cambio di formato non fa perdere il fuoco. */
+const PACK_CARD_ROWS = [
+  {p:'pack.title',   l:'Title',    type:'area'},
+  {p:'pack.version', l:'Version',  type:'text'},
+  {p:'pack.category',l:'Category', type:'text'},
+  {p:'theme.accent', l:'Accent',   type:'color'},
+];
+function buildPack(){
+  const box = document.getElementById('packrows');
+  if(!box) return;
+  if(!box.firstChild){
+    PACK_CARD_ROWS.forEach(r=> box.appendChild(makeRow(r)));
+    /* dopo il gestore della riga (che scrive nello stato e ridisegna), il
+       campo gemello nel pannello Content si allinea: stesso dato, due posti */
+    ['input', 'change'].forEach(t=> box.addEventListener(t, ()=> syncControls()));
+  }
+  if(typeof syncControls === 'function') syncControls();
+  syncPack();
+  aggiornaLogoPack();
+}
+/* Rilegge i valori delle righe della scheda (annulla, ripeti, apri, modifiche
+   fatte nella scheda Content o nel pannello del colore). Stessa logica di
+   syncControls ma sulla sola scheda: i campi gia' uguali non si toccano, cosi'
+   il cursore di chi sta scrivendo resta dov'e'. */
+function syncPack(){
+  document.querySelectorAll('#packrows [data-path]').forEach(el=>{
+    let v;
+    try { v = getVal(el.getAttribute('data-path')); } catch(e){ return; }
+    if(v === undefined) return;
+    if(String(el.value) !== String(v === null ? '' : v)) el.value = (v === null ? '' : v);
+    if(el.type === 'color'){
+      const h = el.parentNode && el.parentNode.querySelector('[data-hexof]');
+      if(h) h.textContent = String(v || '').toUpperCase();
+    }
+  });
+}
+/* Il logo in piccolo, adattato dentro il riquadro 96x48. Si ridisegna solo
+   quando l'immagine del logo cambia davvero (nuovo file, Default, annulla). */
+let _pcLogoVisto = null;
+function aggiornaLogoPack(){
+  const cv2 = document.getElementById('pcLogo');
+  if(!cv2) return;
+  if(_pcLogoVisto === imgLogo && cv2._ok) return;
+  _pcLogoVisto = imgLogo; cv2._ok = true;
+  const g = cv2.getContext('2d');
+  g.setTransform(1,0,0,1,0,0);
+  g.clearRect(0, 0, cv2.width, cv2.height);
+  if(!imgLogo) return;
+  const k = Math.min((cv2.width-8)/imgLogo.width, (cv2.height-8)/imgLogo.height);
+  const w = Math.max(1, Math.round(imgLogo.width*k)), h = Math.max(1, Math.round(imgLogo.height*k));
+  g.imageSmoothingQuality = 'high';
+  try{ g.drawImage(imgLogo, Math.round((cv2.width-w)/2), Math.round((cv2.height-h)/2), w, h); }catch(e){}
+}
+
 function buildFormats(){
   fixSelection();
+  buildPack();
   const box = document.getElementById('formats');
   box.innerHTML = '';
 
@@ -4000,22 +4109,27 @@ function buildFormats(){
     /* stesso impaginato, due risoluzioni: la scelta sta qui, sotto il nome,
        non in un secondo formato che raddoppierebbe la lista */
     if(f.sizes){
-      const sel = document.createElement('select');
-      sel.className = 'res';
+      const seg = document.createElement('div');
+      seg.className = 'seg';
+      const cur = state.layouts[f.id].res || f.sizes[0][2];
       f.sizes.forEach(sz=>{
-        const o = document.createElement('option');
-        o.value = sz[2]; o.textContent = sz[2];
-        sel.appendChild(o);
+        const bt = document.createElement('button');
+        bt.type = 'button';
+        bt.textContent = sz[2]; bt.dataset.res = sz[2];
+        bt.title = sz[2] + ' = ' + sz[0] + 'x' + sz[1];
+        if(sz[2] === cur) bt.classList.add('on');
+        bt.setAttribute('aria-pressed', sz[2] === cur ? 'true' : 'false');
+        bt.onclick = e=>{
+          e.stopPropagation();
+          if(sz[2] === (state.layouts[f.id].res || f.sizes[0][2])) return;
+          pushUndo();
+          state.layouts[f.id].res = sz[2];
+          buildFormats(); render();
+          toast(f.name+': '+sz[2]);
+        };
+        seg.appendChild(bt);
       });
-      sel.value = state.layouts[f.id].res || f.sizes[0][2];
-      sel.onclick = e=> e.stopPropagation();
-      sel.onchange = ()=>{
-        pushUndo();
-        state.layouts[f.id].res = sel.value;
-        buildFormats(); render();
-        toast(f.name+': '+sel.value);
-      };
-      row.appendChild(sel);
+      row.appendChild(seg);
     }
     row.title = f.group + ' ' + f.name + ', ' + b.w + 'x' + b.h +
                 (f.note ? ' - ' + f.note : '');
@@ -4033,30 +4147,54 @@ function buildFormats(){
    Disegnate a bassa risoluzione dentro il canvas della riga. Il conto e'
    leggero perche' renderTo lavora gia' alla misura finale, ma lo faccio
    comunque in differita: mentre si trascina conta solo la tela grande. */
-let thumbTimer = null;
+let thumbTimer = null, thumbPasso = null;
 function drawThumbs(now){
   if(thumbTimer){ clearTimeout(thumbTimer); thumbTimer = null; }
+  if(thumbPasso){ clearTimeout(thumbPasso); thumbPasso = null; }
+  /* Un formato per volta, ognuno in un turno suo: il primo disegno delle
+     otto anteprime in un colpo solo inchiodava la pagina per oltre due
+     decimi di secondo (con le immagini che si ridimensionano a cascata).
+     Cosi' tra una anteprima e l'altra la pagina risponde. Cosa si disegna
+     non cambia. Una nuova chiamata interrompe il giro in corso e riparte. */
+  const una = cv2=>{
+    const f = FORMATS.find(x=> x.id===cv2.dataset.fmt);
+    if(!f) return;
+    const g = cv2.getContext('2d');
+    g.setTransform(1,0,0,1,0,0);
+    g.clearRect(0,0,cv2.width,cv2.height);
+    const b = sizeOf(f);
+    /* la tela ha gia' le proporzioni del formato: riempio tutto */
+    const k = Math.min(cv2.width/b.w, cv2.height/b.h);
+    const w = Math.max(2, Math.round(b.w*k)), h = Math.max(2, Math.round(b.h*k));
+    const off = scratch(90, w, h);
+    try{
+      renderTo(off, {id:f.id, group:f.group, name:f.name, note:f.note,
+                     profile:f.profile, w:w, h:h},
+               state.layouts[f.id], false);
+    }catch(err){ return; }
+    g.drawImage(off.canvas, Math.round((cv2.width-w)/2), Math.round((cv2.height-h)/2));
+    cv2.style.opacity = state.layouts[f.id].on ? '1' : '0.4';
+  };
   const run = ()=>{
     thumbTimer = null;
-    document.querySelectorAll('#formats canvas.th').forEach(cv2=>{
-      const f = FORMATS.find(x=> x.id===cv2.dataset.fmt);
-      if(!f) return;
-      const g = cv2.getContext('2d');
-      g.setTransform(1,0,0,1,0,0);
-      g.clearRect(0,0,cv2.width,cv2.height);
-      const b = sizeOf(f);
-      /* la tela ha gia' le proporzioni del formato: riempio tutto */
-      const k = Math.min(cv2.width/b.w, cv2.height/b.h);
-      const w = Math.max(2, Math.round(b.w*k)), h = Math.max(2, Math.round(b.h*k));
-      const off = scratch(90, w, h);
-      try{
-        renderTo(off, {id:f.id, group:f.group, name:f.name, note:f.note,
-                       profile:f.profile, w:w, h:h},
-                 state.layouts[f.id], false);
-      }catch(err){ return; }
-      g.drawImage(off.canvas, Math.round((cv2.width-w)/2), Math.round((cv2.height-h)/2));
-      cv2.style.opacity = state.layouts[f.id].on ? '1' : '0.4';
-    });
+    /* la scheda Pack segue lo stato (valori, logo): costa niente */
+    syncPack(); aggiornaLogoPack();
+    giroDisegno();
+  };
+  const giroDisegno = ()=>{
+    const lista = Array.from(document.querySelectorAll('#formats canvas.th'));
+    let i = 0;
+    const passo = ()=>{
+      thumbPasso = null;
+      while(i < lista.length){
+        const c = lista[i++];
+        if(!c.isConnected) continue;      /* la lista e' stata rifatta nel frattempo */
+        una(c);
+        break;
+      }
+      if(i < lista.length) thumbPasso = setTimeout(passo, 0);
+    };
+    passo();
   };
   if(now) run(); else thumbTimer = setTimeout(run, 180);
 }
@@ -4071,7 +4209,7 @@ const PACK_SECTION = {t:'Pack data', open:true, rows:[
   {p:'pack.badges',  l:'Badges',   type:'text'},
 ], note:'Valid for every format. Badges: comma separated, e.g. URP, HDRP.'};
 
-const THEME_SECTION = {t:'Colours', rows:[
+const THEME_SECTION = {t:'Colours', open:true, rows:[
   {p:'theme.accent', l:'Accent',   type:'color', act:'applyAccent'},
   {type:'swatches'},
   {type:'group', l:'Gradient'},
@@ -4079,8 +4217,8 @@ const THEME_SECTION = {t:'Colours', rows:[
   {p:'theme.gradB',  l:'To',       type:'color'},
   {type:'gradsets'},
   {p:'theme.scope',  l:'Recolour', type:'select', opts:['all formats','this format']},
-  {type:'button', text:'Repaint now', act:'applyAccent'},
-  {type:'button', text:'Back to the PSD orange', act:'resetAccent'},
+  {type:'button', text:'Apply colour again', act:'applyAccent'},
+  {type:'button', text:'Back to default orange', act:'resetAccent'},
 ], note:'One picker for the whole design. Moving it repaints every colour that is not a grey, on every element, every layer and every format. Gradients keep their two tones: the second colour is rotated by the same amount instead of being flattened onto the first.'};
 
 const NAMING_SECTION = {t:'File naming', rows:[
@@ -4091,10 +4229,11 @@ const NAMING_SECTION = {t:'File naming', rows:[
   {type:'button', text:'Show an example name', act:'previewName'},
 ], note:'Tokens: {title} {category} {brand} {version} {platform} {format} {w} {h} {index} {date}. Every export gets a number after the name (Asset_page_1, Asset_page_2...), the next one free in the export folder, so nothing is ever overwritten. Folder only applies inside the zip; leave it empty for a flat zip.'};
 
-const EXPORT_SECTION = {t:'Export', rows:[
+const EXPORT_SECTION = {t:'Export', open:true, rows:[
   {type:'exportdir'},
   {p:'export.format',  l:'File type', type:'select', opts:['PNG (lossless)','WebP','JPEG']},
-  {p:'export.quality', l:'Quality',   type:'range', min:0.4, max:1, step:0.01},
+  {p:'export.quality', l:'Quality',   type:'range', min:0.4, max:1, step:0.01,
+   when:L=> !/PNG/.test(state.export.format)},
   {p:'export.scale',   l:'Scale',     type:'range', min:0.25, max:1, step:0.05},
   {type:'button', text:'Check before exporting', act:'preflight', wide:true},
   {type:'preflight'},
@@ -4253,7 +4392,7 @@ function layerRows(l){
   ]).concat(shadowRows(g));
 }
 
-const LAYERS_SECTION = {t:'Layers', open:true, rows:[{type:'layerlist'}],
+const LAYERS_SECTION = {t:'Layers', rows:[{type:'layerlist'}],
   note:'Add as many shapes and texts as you want. The list is the stacking order, the topmost row is drawn last. "Above text" lifts a layer over the title row. Everything here can also be dragged straight on the canvas.'};
 
 const SESSION_SECTION = {t:'Session', rows:[
@@ -4262,7 +4401,7 @@ const SESSION_SECTION = {t:'Session', rows:[
   {type:'button', text:'Clear saved work',  act:'autoClear'},
 ], note:'The work is kept in this browser and comes back by itself when you reopen the page, screenshots and logo included: the images live in their own store, so the library is still there next time. A font you loaded yourself is the one thing that does not come back, here or in a project file: load the font again and the text is exactly as you left it. Save writes a project file with the images inside, that opens the same on any computer.'};
 
-const VARIANTS_SECTION = {t:'Variants', rows:[
+const VARIANTS_SECTION = {t:'Variants', open:true, rows:[
   {type:'variants'},
   {type:'button', text:'Save current as new variant', act:'variantAdd'},
   {type:'button', text:'Update selected variant',     act:'variantUpdate'},
@@ -4270,10 +4409,10 @@ const VARIANTS_SECTION = {t:'Variants', rows:[
   {type:'button', text:'Export comparison sheet',     act:'compareExport'},
 ], note:'A variant is a full snapshot of the design. Save a few, click to switch, compare them side by side. They travel inside the project file.'};
 
-const SECTIONS = [PACK_SECTION, LAYERS_SECTION, VARIANTS_SECTION,
-                  THEME_SECTION].concat(
-  PARTS.filter(p=>p.section && p.rows).map(p=>({t:p.section, rows:p.rows, note:p.note}))
-).concat([NAMING_SECTION, EXPORT_SECTION, SESSION_SECTION]);
+const SECTIONS = [PACK_SECTION, THEME_SECTION].concat(
+  PARTS.filter(p=>p.section && p.rows).map(p=>({t:p.section, rows:p.rows, note:p.note,
+                                                open: p.section==='Screenshot'}))
+).concat([LAYERS_SECTION, VARIANTS_SECTION, EXPORT_SECTION, NAMING_SECTION, SESSION_SECTION]);
 const EL_SECTIONS = SEL_PARTS.map(p=>p.section);
 
 /* --------------------------------------------------------------- annulla */
@@ -4710,8 +4849,29 @@ function folderFor(f, pk, index){
   return safe(applyCase(raw, state.naming.case, state.naming.sep || '_'))+'/';
 }
 
-const openSecs = {};
+const openSecs = {};      /* per titolo di sezione: true aperta, false chiusa */
 let secFilter = '';
+
+/* Scheda scelta e sezioni aperte si ricordano da una volta all'altra, ma in
+   una chiave tutta loro: non e' lavoro, quindi non entra in annulla, nel
+   progetto ne' nel salvataggio automatico. */
+const UI_KEY = 'davfx-store-graphics-ui';
+let _uiLetta = false, _uiTimer = 0;
+function leggiUI(){
+  try{
+    const d = JSON.parse(localStorage.getItem(UI_KEY) || 'null');
+    if(!d || typeof d !== 'object') return;
+    if(typeof d.tab === 'string' && TABS.some(t=> t.id===d.tab)) activeTab = d.tab;
+    if(d.open && typeof d.open === 'object')
+      Object.keys(d.open).forEach(k=>{ if(typeof d.open[k] === 'boolean') openSecs[k] = d.open[k]; });
+  }catch(e){}
+}
+function salvaUI(){
+  clearTimeout(_uiTimer);
+  _uiTimer = setTimeout(()=>{
+    try{ localStorage.setItem(UI_KEY, JSON.stringify({tab:activeTab, open:openSecs})); }catch(e){}
+  }, 400);
+}
 
 function applyFilter(){
   const q = secFilter.trim().toLowerCase();
@@ -4727,15 +4887,17 @@ function applyFilter(){
          si chiudeva e riapriva la sezione. */
       const bd0 = el.querySelector('.bd');
       if(bd0) [...bd0.children].forEach(ch=> ch.style.display = '');
-      const idx = parseInt(el.dataset.idx, 10);
-      if(!isNaN(idx)) el.classList.toggle('open', !!openSecs[idx]);
+      el.classList.toggle('open', !!openSecs[el.dataset.title]);
       return;
     }
     /* con la ricerca si guarda dappertutto, titoli e nomi dei controlli */
     let hit = t.indexOf(q)>=0;
     if(!hit){
-      el.querySelectorAll('label').forEach(lb=>{
-        if(lb.textContent.toLowerCase().indexOf(q)>=0) hit = true;
+      /* il nome del controllo, e anche il suo suggerimento: cosi' le parole
+         vecchie di un'etichetta rinominata trovano ancora la riga */
+      el.querySelectorAll('label, .row[title]').forEach(lb=>{
+        const x = lb.tagName === 'LABEL' ? lb.textContent : lb.title;
+        if(x.toLowerCase().indexOf(q)>=0) hit = true;
       });
     }
     el.style.display = hit ? '' : 'none';
@@ -4758,7 +4920,7 @@ function applyFilter(){
           ultimoGruppo = ch; gruppoUsato = false; return;
         }
         if(ch.classList.contains('hint')){ ch.style.display = 'none'; return; }
-        const dentro = ch.textContent.toLowerCase().indexOf(q) >= 0;
+        const dentro = (ch.textContent + ' ' + (ch.title || '')).toLowerCase().indexOf(q) >= 0;
         ch.style.display = dentro ? '' : 'none';
         if(dentro) gruppoUsato = true;
       });
@@ -4777,9 +4939,9 @@ function applyFilter(){
 function selectEl(k){
   state.sel = k;
   const want = isLay(k) ? 'Layers' : SEL_SECTION[k];
-  SECTIONS.forEach((s,i)=>{
-    if(s.t===want) openSecs[i]=true;
-    else if(EL_SECTIONS.indexOf(s.t)>=0) openSecs[i]=false;
+  SECTIONS.forEach(s=>{
+    if(s.t===want) openSecs[s.t]=true;
+    else if(EL_SECTIONS.indexOf(s.t)>=0) openSecs[s.t]=false;
   });
   /* se l'elemento vive in un'altra scheda ci porto l'utente,
      altrimenti clicca sulla tela e non succede niente di visibile */
@@ -4800,22 +4962,24 @@ function selectEl(k){
       secFilter = '';
       const tb = tabOf(want);
       if(tb !== activeTab) activeTab = tb;
+      scrollTo = want;
       buildControls();
     }
   }
+  salvaUI();
 }
 
 /* le sezioni sono divise in schede: cosi' invece di un muro lungo si
    vedono solo le sei o sette che servono in quel momento */
 const TABS = [
   {id:'design',  label:'Design',
-   has:['Layers','Colours','Bottom band','Accent line','Logo','Text row',
-        'Version','Badges','Frame']},
+   has:['Colours','Bottom band','Accent line','Logo','Text row',
+        'Version','Badges','Frame','Layers']},
   {id:'image',   label:'Image',
    has:['Screenshot','Image adjustments','Blur effects','Tint / blend','Dark gradient']},
-  {id:'content', label:'Content', has:['Pack data','File naming']},
-  {id:'test',    label:'Test',    has:['Variants']},
-  {id:'out',     label:'Output',  has:['Export','Session']}
+  {id:'content', label:'Content', has:['Pack data']},
+  {id:'test',    label:'Variants', has:['Variants']},
+  {id:'out',     label:'Output',  has:['Export','File naming','Session']}
 ];
 let activeTab = 'design';
 function tabOf(title){
@@ -4823,8 +4987,55 @@ function tabOf(title){
   return t ? t.id : 'design';
 }
 
+/* Il corpo di una sezione si costruisce solo quando serve: la scheda in vista,
+   o tutte quando c'e' una ricerca. Le altre restano un'intestazione vuota e il
+   pannello si rifa' in una frazione del tempo. */
+function riempiSezione(sec){
+  if(sec._pieno) return;
+  sec._pieno = true;
+  const s = SECTIONS.find(x=> x.t === sec.dataset.title);
+  const bd = sec.querySelector('.bd');
+  if(!s || !bd) return;
+  /* Una riga che in questo momento non fa niente confonde e basta: la
+     seconda linea quando il testo e' su una riga sola, il colore di
+     arrivo quando il gradiente e' spento, lo spazio fra i segmenti
+     quando il segmento e' uno. Quelle non si mostrano. */
+  s.rows.forEach(r=>{ if(rigaServe(r)) bd.appendChild(makeRow(r)); });
+  paintIcons(bd);
+}
+function riempiTutte(){
+  document.querySelectorAll('#controls .sec').forEach(riempiSezione);
+}
+/* porta in vista l'intestazione di una sezione se e' fuori dall'area che si
+   vede sotto la testata fissa del pannello */
+function portaInVista(sec){
+  const box = document.getElementById('controls');
+  const head = box.querySelector('.phead');
+  const hd = sec.querySelector('.hd');
+  if(!hd || sec.style.display === 'none') return;
+  const cr = box.getBoundingClientRect();
+  const alto = head ? head.getBoundingClientRect().bottom : cr.top;
+  const r = hd.getBoundingClientRect();
+  if(r.top < alto || r.bottom > cr.bottom) box.scrollTop += r.top - alto - 6;
+}
+/* cambio di scheda senza ricostruire: le sezioni di quella scheda si
+   costruiscono la prima volta e poi restano */
+function vaiScheda(id){
+  activeTab = id;
+  secFilter = '';
+  const box = document.getElementById('controls');
+  const fi = box.querySelector('#secFilter');
+  if(fi) fi.value = '';
+  box.querySelectorAll('.phead .tabs button').forEach(b=> b.classList.toggle('on', b.dataset.tab === id));
+  box.querySelectorAll('.sec').forEach(sec=>{ if(sec.dataset.tab === id) riempiSezione(sec); });
+  applyFilter();
+  box.scrollTop = 0;
+  salvaUI();
+}
+
 function buildControls(){
   const box = document.getElementById('controls');
+  if(!_uiLetta){ _uiLetta = true; leggiUI(); }
   /* Ricostruire il pannello riportava l'elenco in cima: se stavi regolando
      un cursore a meta' sezione ti ritrovavi all'inizio. La posizione si
      rimette dov'era. */
@@ -4833,89 +5044,139 @@ function buildControls(){
      Tab dopo cambierebbe formato invece di passare al controllo seguente */
   const aF = document.activeElement;
   const fuoco = (aF && box.contains(aF)) ? aF.getAttribute('data-path') : null;
+  const fuocoFiltro = !!(aF && aF.id === 'secFilter');
   box.innerHTML = '';
-  box.appendChild(stripImmagini());
+
+  /* testata fissa: immagini, schede e ricerca restano in vista mentre si scorre */
+  const head = document.createElement('div');
+  head.className = 'phead';
+  head.appendChild(stripImmagini());
 
   const tb = document.createElement('div');
   tb.className = 'tabs';
   TABS.forEach(t=>{
     const b = document.createElement('button');
     b.textContent = t.label;
+    b.dataset.tab = t.id;
     b.title = t.has.join(', ');
     if(t.id===activeTab) b.classList.add('on');
-    b.onclick = ()=>{ activeTab = t.id; buildControls(); };
+    b.onclick = ()=> vaiScheda(t.id);
     tb.appendChild(b);
   });
-  box.appendChild(tb);
+  head.appendChild(tb);
 
   /* filtro: scrivere due lettere e' piu' veloce che scorrere.
      Con il filtro attivo si cerca in tutte le schede, non solo in questa. */
   const fr = document.createElement('div');
   fr.className = 'row';
   fr.innerHTML = '<input type="text" id="secFilter" placeholder="Search all settings..." ' +
-                 'title="Searches every tab, not just this one" style="flex:1">' +
-                 '<button id="secClose" style="flex:none" title="Collapse every section">close</button>';
-  box.appendChild(fr);
+                 'title="Searches every tab, not just this one. Esc clears it" style="flex:1">' +
+                 '<button id="secClose" style="flex:none" title="Collapse every section">Collapse all</button>';
+  head.appendChild(fr);
+  box.appendChild(head);
+
   const vuoto = document.createElement('div');
   vuoto.id = 'secVuoto'; vuoto.className = 'hint';
   vuoto.style.display = 'none';
   box.appendChild(vuoto);
   const fi = fr.querySelector('#secFilter');
   fi.value = secFilter;
-  fi.oninput = ()=>{ secFilter = fi.value; applyFilter(); };
+  fi.oninput = ()=>{
+    secFilter = fi.value;
+    if(secFilter.trim()) riempiTutte();
+    applyFilter();
+  };
+  fi.onkeydown = e=>{
+    if(e.key === 'Escape' && fi.value){
+      e.stopPropagation(); fi.value = ''; secFilter = ''; applyFilter();
+    }
+  };
   fr.querySelector('#secClose').onclick = ()=>{
-    SECTIONS.forEach((s,i)=> openSecs[i] = false);
-    buildControls();
+    SECTIONS.forEach(s=> openSecs[s.t] = false);
+    box.querySelectorAll('.sec').forEach(sec=> sec.classList.remove('open'));
+    applyFilter();
+    salvaUI();
     document.getElementById('secFilter').focus();
   };
 
-  SECTIONS.forEach((s,i)=>{
-    if(openSecs[i]===undefined) openSecs[i] = !!s.open;
+  const cerca = !!secFilter.trim();
+  const nLivelli = state.layouts[state.active] ? layersOf(state.layouts[state.active]).length : 0;
+  SECTIONS.forEach(s=>{
+    if(openSecs[s.t]===undefined) openSecs[s.t] = !!s.open;
     const sec = document.createElement('div');
-    sec.className = 'sec'+(openSecs[i]?' open':'');
+    sec.className = 'sec'+(openSecs[s.t]?' open':'');
     const hd = document.createElement('div');
     hd.className='hd';
     if(SEC_ICONS[s.t]) hd.setAttribute('data-ic', SEC_ICONS[s.t]);
     const tit = document.createElement('b'); tit.textContent = s.t;
-    const sgn = document.createElement('span'); sgn.innerHTML = openSecs[i]?'&minus;':'+';
-    hd.appendChild(tit); hd.appendChild(sgn);
+    hd.appendChild(tit);
+    if(s.t === 'Layers'){
+      const cnt = document.createElement('span'); cnt.className = 'cnt'; cnt.textContent = nLivelli;
+      hd.appendChild(cnt);
+    }
+    const sgn = document.createElement('span'); sgn.className = 'sg';
+    hd.appendChild(sgn);
     /* il testo lungo della sezione diventa anche il suggerimento del titolo */
     if(s.note) hd.title = s.note.length > 150 ? s.note.slice(0,147)+'...' : s.note;
-    hd.onclick = ()=>{ openSecs[i] = !openSecs[i]; buildControls(); };
+    hd.onclick = ()=>{
+      const apre = !sec.classList.contains('open');
+      openSecs[s.t] = apre;
+      sec.classList.toggle('open', apre);
+      if(apre) portaInVista(sec);
+      salvaUI();
+    };
     sec.appendChild(hd);
     const bd = document.createElement('div'); bd.className='bd';
-    /* Una riga che in questo momento non fa niente confonde e basta: la
-       seconda linea quando il testo e' su una riga sola, il colore di
-       arrivo quando il gradiente e' spento, lo spazio fra i segmenti
-       quando il segmento e' uno. Quelle non si mostrano. */
-    s.rows.forEach(r=>{ if(rigaServe(r)) bd.appendChild(makeRow(r)); });
     sec.appendChild(bd);
     sec.dataset.title = s.t;
     sec.dataset.tab = tabOf(s.t);
-    /* serve al filtro per rimettere aperta o chiusa la sezione com'era */
-    sec.dataset.idx = i;
     box.appendChild(sec);
+    if(cerca || sec.dataset.tab === activeTab) riempiSezione(sec);
   });
-  box.appendChild(keysPanel());
   paintIcons(box);
   applyFilter();
+  /* misurare la testata obbliga il browser a rifare la pagina qui e subito: si fa un attimo dopo */
+  aggiornaAltezzaTesta();
   if(scorri) box.scrollTop = scorri;
-  if(fuoco && document.activeElement === document.body){
+  if(fuocoFiltro) fi.focus({preventScroll:true});
+  else if(fuoco && document.activeElement === document.body){
     const nuovo = [...box.querySelectorAll('[data-path]')].find(e=> e.getAttribute('data-path')===fuoco);
     if(nuovo) nuovo.focus({preventScroll:true});
   }
   if(scrollTo){
-    const el = [...box.querySelectorAll('.sec')].find(e=> e.dataset.title===scrollTo);
-    if(el) el.scrollIntoView({block:'nearest'});
+    /* misurare le posizioni obbliga a rifare la pagina: si fa un attimo dopo */
+    const titolo = scrollTo;
     scrollTo = null;
+    setTimeout(()=>{
+      const el = [...box.querySelectorAll('.sec')].find(e=> e.dataset.title===titolo);
+      if(el && el.isConnected) portaInVista(el);
+    }, 0);
   }
 }
 let scrollTo = null;
+let _phTimer = 0;
+function aggiornaAltezzaTesta(){
+  clearTimeout(_phTimer);
+  _phTimer = setTimeout(()=>{
+    const box = document.getElementById('controls'), h = box && box.querySelector('.phead');
+    if(h) box.style.setProperty('--phead-h', h.offsetHeight + 'px');
+  }, 0);
+}
+/* "/" porta il cursore nella ricerca, come nei pannelli di impostazioni di tutti i giorni */
+window.addEventListener('keydown', e=>{
+  if(e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+  const t = e.target;
+  if(t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable)) return;
+  const fi = document.getElementById('secFilter');
+  if(!fi) return;
+  e.preventDefault(); fi.focus(); fi.select();
+});
+window.addEventListener('resize', aggiornaAltezzaTesta);
 
 /* aggiorna solo i valori dei controlli gia' presenti: 20 volte piu' leggero
    della ricostruzione completa del pannello */
 function syncControls(){
-  document.querySelectorAll('#controls [data-path]').forEach(el=>{
+  document.querySelectorAll('#controls [data-path], #packcard [data-path]').forEach(el=>{
     const path = el.getAttribute('data-path');
     let v;
     try { v = getVal(path); } catch(e){ return; }
@@ -5190,7 +5451,7 @@ function togliImmagine(i){
   if(imgShot === via) imgShot = SHOTS.length ? SHOTS[0].img : null;
   rimappaImmagini(v=> v === i ? -1 : (v > i ? v - 1 : v));
   dbSalva(); buildControls(); render();
-  toast(SHOTS.length ? 'Removed. ' + SHOTS.length + ' left. Ctrl+Z brings it back' : 'No images left. Ctrl+Z brings it back');
+  toast(SHOTS.length ? 'Removed. ' + SHOTS.length + ' left' : 'No images left', {undo:true});
 }
 function usaImmagine(i, ovunque){
   pushUndo();
@@ -5664,18 +5925,19 @@ const TIP_PATH = {
 
   'band.on':'The dark band the title sits on',
   'band.top':'Where the band starts, top edge',
-  'band.feather':'Soft fade on the top edge',
+  'band.feather':'Soft gradient above the top edge, so the band melts into the image instead of starting with a hard line',
   'band.x0':'Left edge of the band',
   'band.x1':'Right edge of the band',
-  'band.sideFeather':'Fade on the left, like in your PSD',
-  'band.slant':'Tilt the band',
+  'band.sideFeather':'Soft gradient on the left edge of the band, like in your PSD',
+  'band.slant':'Tilts the top edge of the band, one side higher than the other',
 
   'accent.thick':'Thickness of the coloured bar',
   'accent.glow':'Soft halo behind the bar',
-  'accent.segments':'Break the bar into pieces',
-  'accent.segGap':'Space between the pieces',
-  'accent.endCut':'Angle the two ends',
+  'accent.segments':'Break the line into this many pieces',
+  'accent.segGap':'Empty space between the pieces of the line',
+  'accent.endCut':'Cuts the two ends of the line on a slant instead of straight across',
   'accent.y':'Height of the bar on the canvas',
+  'accent.gradLink':'Use the two colours of the theme gradient (Theme section) instead of a colour of its own',
 
   'logo.pad':'Space between the logo and its box',
   'logo.outOn':'Coloured outline following the logo shape',
@@ -5683,23 +5945,23 @@ const TIP_PATH = {
   'logo.outMode':'scale is the enlarged duplicate of the PSD and is the default, sharp keeps corners crisp, round softens them',
   'logo.glow':'Soft light around the logo',
 
-  'logo.outLink':'Same colour the accent line starts from, on the left',
+  'logo.outLink':'The outline takes the colour the accent line starts from, on the left',
   'badges.uniform':'All badges as wide as the longest label',
   'badges.pad':'Space left and right of the label',
   'badges.gap':'Space between one badge and the next',
   'badges.h':'Height of one badge',
 
   'row.mode':'inline is one line, stack puts the brand above the title',
-  'row.fitW':'Shrink the title if it gets wider than this',
+  'row.fitW':'Widest the row may get, as a share of the canvas; the title shrinks to stay inside it',
   'row.sepOn':'Marks between title, category and brand',
   'row.sepCount':'How many marks in a row',
   'row.lineGap':'Space between lines of the title',
   'row.centre':'Centre the row across the canvas',
 
-  'shot.fit':'cover fills the frame, contain shows the whole image',
+  'shot.fit':'Cover fills the frame and crops what overflows, contain shows the whole image',
   'shot.panels':'Split the image into slanted panels',
-  'shot.slant':'Angle of the cuts between panels',
-  'shot.gap':'Space between panels',
+  'shot.slant':'Angle of every cut between panels at once; each panel can also have its own',
+  'shot.gap':'Empty space left along each cut',
   'shot.edgeOn':'Draw a line along each cut',
 
   'fx.expo':'Exposure, like a camera stop',
@@ -5738,7 +6000,7 @@ const TIP_PATH = {
   'fx.cy':'Centre of the radial blur, up or down',
   'fx.tintOn':'Wash the screenshot with one colour',
   'fx.tintColor':'Colour of the wash',
-  'fx.tintMode':'How the colour mixes with the image',
+  'fx.tintMode':'How the colour mixes with the image (overlay and soft-light are gentle, multiply darkens, screen lightens)',
   'fx.tintAmt':'How much of it shows',
 
   'grad.side':'Which edge the dark fade comes from',
@@ -5748,7 +6010,7 @@ const TIP_PATH = {
   'logo.glowColor':'Colour of the glow',
   'logo.tintOn':'Repaint the logo itself',
   'logo.tintColor':'Colour the logo is repainted with',
-  'logo.fill':'Filled square behind the logo',
+  'logo.fill':'A solid square under the logo, in the colour below',
 
   'row.titleFont':'Typeface of the title',
   'row.itemFont':'Typeface of category and brand',
@@ -5760,7 +6022,7 @@ const TIP_PATH = {
   'row.itemWeight':'How heavy category and brand are',
   'row.titleTrack':'Space between letters of the title',
   'row.itemTrack':'Space between letters of category and brand',
-  'row.gap':'Space around each separator',
+  'row.gap':'Space around each separator, between title, category and brand',
   'row.itemColor':'Colour of category and brand',
   'row.brandColor':'Colour of the second line',
   'row.titleOp':'How solid the title is',
@@ -5770,7 +6032,8 @@ const TIP_PATH = {
   'row.sepW':'Width of a separator',
   'row.sepSpace':'Space between repeated separators',
   'row.sepSkew':'Slant of the separator',
-  'row.hCenter':'Centre the row across the canvas',
+  'row.y':'Height of the line the title letters sit on (the baseline)',
+  'row.hCenter':'Keeps the row centred left to right, even when the text changes',
 
   'version.op':'How solid the version text is',
 
@@ -5840,8 +6103,8 @@ const ACT_TIP = {
   resetAccent:'Put the orange from your PSD back',
   previewName:'Show what the exported file will be called',
   sizeCheck:'Weigh every ticked format with the current settings',
-  centerRow:'Centre the title in the band, on this format',
-  centerRowAll:'Centre the title in the band, on every format',
+  centerRow:'Centre the title row up and down inside the band, on this format only',
+  centerRowAll:'Centre the title row up and down inside the band, on every format',
   variantAdd:'Store the whole design as a variant you can come back to',
   variantUpdate:'Overwrite the selected variant with what you see now',
   compareShow:'Show every variant side by side on the canvas',
@@ -5881,6 +6144,8 @@ function percorsiGuida(){
 }
 function guidaAltreRighe(path){
   if(percorsiGuida()[path]) return true;
+  /* il tipo di file decide se la riga Quality serve */
+  if(path==='export.format') return true;
   /* i livelli hanno percorsi tipo 'lay:12.gradOn': qui conta il campo, e
      questi quattro accendono e spengono altre righe */
   if(isLay(path)){
@@ -6148,7 +6413,7 @@ function makeRow(r){
                      return (k>=0 && SHOTS[k]) ? (k+1)+'. '+SHOTS[k].name : '(main image)'; }
       }));
       if(n>1){
-        [['weights','Width',0.2,3,0.05],['slants','Cut angle',-1.5,1.5,0.01]].forEach(sp=>{
+        [['weights','Width',0.2,3,0.05],['slants','Right cut angle',-1.5,1.5,0.01]].forEach(sp=>{
           const key=sp[0], idx = key==='slants' ? i+1 : i;
           if(!Array.isArray(S[key])) S[key] = key==='weights' ? [1,1,1,1,1,1] : [0,0,0,0,0,0,0];
           if(S[key][idx]===undefined) S[key][idx] = key==='weights' ? 1 : 0;
@@ -6440,16 +6705,38 @@ function compagnoColore(p){
   if(p === 'theme.gradB') return 'theme.gradA';
   return null;
 }
+/* "f80", "#FF8800", "ff8800" -> "#ff8800"; qualunque altra cosa -> null */
+function codiceColore(t){
+  let h = String(t || '').trim().replace(/^#/, '');
+  if(/^[0-9a-f]{3}$/i.test(h)) h = h.replace(/./g, c=> c+c);
+  return /^[0-9a-f]{6}$/i.test(h) ? '#' + h.toLowerCase() : null;
+}
 function aggiungiComandiColore(row, p){
   const hex = document.createElement('button');
   hex.className = 'hex'; hex.setAttribute('data-hexof', p);
   hex.textContent = String(getVal(p) || '').toUpperCase();
-  hex.title = 'Copy this colour code';
+  hex.title = 'Click: copy. Double-click: type a colour code';
   hex.onclick = ()=>{
     const v = String(getVal(p) || '').toUpperCase();
     const fatto = ()=> toast(v + ' copied');
     if(navigator.clipboard && navigator.clipboard.writeText)
       navigator.clipboard.writeText(v).then(fatto, ()=> toast('Could not reach the clipboard'));
+  };
+  /* doppio clic: il codice diventa un campo e si scrive a mano (#rgb o
+     #rrggbb, il cancelletto e' facoltativo). Sul colore guida vale come il
+     selettore: ricolora tutto, e un passo di annulla riporta com'era. */
+  hex.ondblclick = ()=>{
+    rinominaInLinea(hex, String(getVal(p) || '').toUpperCase(), txt=>{
+      const v = codiceColore(txt);
+      if(!v){ toast('Not a colour code'); return; }
+      if(v === String(getVal(p) || '').toLowerCase()) return;
+      pushUndo();
+      setVal(p, v);
+      if(p === 'theme.accent') applyAccent(v, state.theme.scope==='this format');
+      const ci = row.querySelector('input[type=color]'); if(ci) ci.value = v;
+      hex.textContent = v.toUpperCase();
+      syncControls(); syncPack(); render();
+    });
   };
   row.appendChild(hex);
   const altro = compagnoColore(p);
@@ -6765,6 +7052,11 @@ window.addEventListener('touchmove', moveDrag, {passive:false});
 window.addEventListener('touchend', endDrag);
 window.addEventListener('touchcancel', endDrag);
 window.addEventListener('keydown', e=>{
+  /* con una finestra di dialogo aperta la tastiera e' sua (Esc, Invio, Tab) */
+  if(dialogoAperto()) return;
+  /* Esc chiude per prima cosa l'elenco delle scorciatoie, anche da un campo */
+  if(e.key==='Escape' && !document.getElementById('keysPop').hidden){
+    e.preventDefault(); keysToggle(false); return; }
   const t = e.target.tagName;
   const inCampo = (t==='INPUT'||t==='TEXTAREA'||t==='SELECT');
   /* Dentro a un campo di testo le lettere da sole scrivono, e ci mancherebbe.
@@ -6796,6 +7088,8 @@ window.addEventListener('keydown', e=>{
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='e'){
     e.preventDefault();
     document.getElementById(e.shiftKey ? 'bZip' : 'bExp').click(); return; }
+  if((e.ctrlKey||e.metaKey) && !e.shiftKey && e.key.toLowerCase()==='o'){
+    e.preventDefault(); document.getElementById('bLoad').click(); return; }
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='d'){
     e.preventDefault();
     if(isLay(state.sel)) layerDup(state.sel.slice(4));
@@ -6814,6 +7108,8 @@ window.addEventListener('keydown', e=>{
   /* Da qui in giu' ci sono i tasti singoli: dentro a un campo scrivono e
      basta */
   if(inCampo) return;
+  /* ? apre e chiude l'elenco delle scorciatoie */
+  if(e.key==='?'){ e.preventDefault(); keysToggle(); return; }
   /* Esc esce dalle viste speciali e scioglie la selezione multipla */
   if(e.key==='Escape'){
     if(compareMode){
@@ -6832,9 +7128,7 @@ window.addEventListener('keydown', e=>{
     e.preventDefault();
     /* layerDelete si porta via da solo tutta la selezione multipla, e in
        quel caso il messaggio lo dice gia' lui */
-    const uno = ids.length === 1;
     layerDelete(ids[0]);
-    if(uno) toast('Layer deleted. Ctrl+Z brings it back');
     return; }
   if(!e.ctrlKey && !e.metaKey && e.key.toLowerCase()==='l'){
     selLocked = !selLocked; HOVER = null; buildTools(); render();
@@ -7012,10 +7306,130 @@ function loadImage(file, cb){
   tempo = setTimeout(()=> conBitmap(), 25000);
   im.src = url;
 }
-function toast(m){
+/* toast(messaggio, opzioni): l'avviso in basso. Opzioni:
+     ms      quanto resta (di base cresce con la lunghezza: 2,8 s + 40 ms a
+             lettera, da 2,8 a 9 s, cosi' una frase lunga si fa leggere)
+     kind    'err' | 'warn' (bordo rosso o giallo). Se manca, un messaggio che
+             comincia con "Could not", "Export failed" o "Autosave failed"
+             e' un errore da solo: i toast vecchi non cambiano una riga
+     action  {label, fn}: un bottone nell'avviso; il clic lo fa e lo chiude
+     undo    true = bottone "Undo" che annulla l'ultimo passo, ma solo se
+             dopo l'azione non e' successo altro (se no annullerebbe una
+             cosa diversa da quella nel messaggio) */
+function toast(m, o){
+  o = o || {};
   const t = document.getElementById('toast');
-  t.textContent = m; t.classList.add('on');
-  clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove('on'), 2800);
+  m = String(m);
+  t.textContent = m;
+  t.classList.remove('toast-err', 'toast-warn');
+  const kind = o.kind || (/^(Could not|Export failed|Autosave failed)/.test(m) ? 'err' : '');
+  if(kind) t.classList.add('toast-' + kind);
+  let az = o.action || null;
+  if(!az && o.undo){
+    const fine = undoStack.length, ultimo = undoStack[fine - 1];
+    az = {label:'Undo', fn: ()=>{
+      if(undoStack.length === fine && undoStack[fine - 1] === ultimo) undo();
+      else toast('Too late for this button: Ctrl+Z steps back one change at a time');
+    }};
+  }
+  if(az){
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = az.label || 'OK';
+    b.onclick = ()=>{
+      clearTimeout(t._t); t.classList.remove('on');
+      try{ az.fn && az.fn(); }catch(e){ console.error(e); }
+    };
+    t.appendChild(b);
+  }
+  t.classList.add('on');
+  clearTimeout(t._t);
+  t._t = setTimeout(()=>t.classList.remove('on'), o.ms || clamp(2800 + 40*m.length, 2800, 9000));
+}
+/* dialogo({title, text, body, buttons:[{id, label, primary, danger}]}):
+   la finestra al centro. Restituisce una promessa con l'id del bottone
+   premuto, o null con Esc e con il clic fuori. Invio preme il bottone
+   primary. `body` e' un nodo (o una stringa HTML scritta da noi) che sta
+   sotto il testo. Un dialogo aperto ne chiude un altro con null. */
+function dialogoAperto(){
+  const h = document.getElementById('dlg');
+  return !!(h && !h.hidden);
+}
+function dialogo(o){
+  o = o || {};
+  const host = document.getElementById('dlg');
+  if(host._chiudi) host._chiudi(null);
+  const prima = document.activeElement;
+  return new Promise(ris=>{
+    host.textContent = '';
+    const scrim = document.createElement('div');
+    scrim.className = 'dlg-scrim';
+    const box = document.createElement('div');
+    box.className = 'dlg';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-modal', 'true');
+    if(o.title){
+      const h = document.createElement('h3'); h.textContent = o.title; box.appendChild(h);
+      box.setAttribute('aria-label', o.title);
+    }
+    const corpo = document.createElement('div');
+    corpo.className = 'dlg-body';
+    if(o.text){
+      const p = document.createElement('div');
+      p.style.whiteSpace = 'pre-line'; p.textContent = o.text;
+      corpo.appendChild(p);
+    }
+    if(o.body){
+      if(typeof o.body === 'string'){ const w = document.createElement('div'); w.innerHTML = o.body; corpo.appendChild(w); }
+      else corpo.appendChild(o.body);
+    }
+    box.appendChild(corpo);
+    const barra = document.createElement('div');
+    barra.className = 'dlg-btns';
+    const lista = (o.buttons && o.buttons.length) ? o.buttons : [{id:'ok', label:'OK', primary:true}];
+    const bott = lista.map(d=>{
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = d.label || d.id;
+      if(d.primary) b.classList.add('primary');
+      if(d.danger) b.classList.add('danger');
+      b.onclick = ()=> chiudi(d.id);
+      barra.appendChild(b);
+      return b;
+    });
+    box.appendChild(barra);
+    scrim.appendChild(box);
+    host.appendChild(scrim);
+    host.hidden = false;
+    let chiuso = false, giu = null;
+    const chiudi = id=>{
+      if(chiuso) return;
+      chiuso = true;
+      window.removeEventListener('keydown', tasto, true);
+      host._chiudi = null;
+      host.hidden = true; host.textContent = '';
+      try{ if(prima && prima.isConnected && prima.focus) prima.focus(); }catch(e){}
+      ris(id);
+    };
+    host._chiudi = chiudi;
+    const tasto = e=>{
+      if(!box.isConnected){ chiudi(null); return; }
+      if(e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); chiudi(null); return; }
+      if(e.key === 'Enter' && !(e.target && e.target.tagName === 'BUTTON')){
+        const i = lista.findIndex(d=> d.primary);
+        if(i >= 0){ e.preventDefault(); e.stopPropagation(); chiudi(lista[i].id); }
+        return;
+      }
+      if(e.key === 'Tab' && bott.length){
+        const i = bott.indexOf(document.activeElement);
+        const n = e.shiftKey ? (i <= 0 ? bott.length - 1 : i - 1) : (i < 0 || i === bott.length - 1 ? 0 : i + 1);
+        e.preventDefault(); e.stopPropagation(); bott[n].focus();
+      }
+    };
+    window.addEventListener('keydown', tasto, true);
+    scrim.addEventListener('mousedown', e=>{ giu = e.target; });
+    scrim.addEventListener('click', e=>{ if(e.target === scrim && giu === scrim) chiudi(null); });
+    const pri = bott[lista.findIndex(d=> d.primary)] || bott[bott.length - 1];
+    if(pri) pri.focus();
+  });
 }
 function slug(s){ return (s||'pack').trim().replace(/[^\w\s-]/g,'').replace(/\s+/g,'_').substring(0,40) || 'pack'; }
 /* Nome di file utilizzabile su Windows, Mac e Linux. Oltre ai caratteri
@@ -7056,12 +7470,13 @@ document.getElementById('bLogoDef').onclick = ()=>{
   render();
   toast('Built-in DAVFX logo');
 };
-document.getElementById('bKeys').onclick = ()=>{
-  const box = document.getElementById('controls');
-  const k = box.querySelector('.keys');
-  if(k) k.scrollIntoView({block:'nearest', behavior:'smooth'});
-  toast(SHORTCUTS.map(x=>x[0]+' '+x[1]).join('   |   '));
-};
+document.getElementById('bKeys').onclick = ()=> keysToggle();
+/* un clic fuori dall'elenco delle scorciatoie lo chiude */
+document.addEventListener('mousedown', e=>{
+  const p = document.getElementById('keysPop');
+  if(p.hidden || p.contains(e.target) || e.target.closest('#bKeys')) return;
+  keysToggle(false);
+}, true);
 document.getElementById('bFont').onclick = ()=> document.getElementById('fFont').click();
 /* Aprire passa dal selettore che restituisce anche il file stesso, non solo
    il suo contenuto: e' quello che permette a Save, dopo, di scrivere li'
@@ -7516,6 +7931,12 @@ document.getElementById('fFont').onchange = e=>{
 };
 
 document.getElementById('bAll').onclick = ()=>{
+  /* sovrascrive gli overlay di altri sette formati: si chiede prima */
+  const fa = FORMATS.find(x=> x.id===state.active);
+  if(!window.confirm('Copy the whole layout of ' + (fa ? nomeFormato(fa) : 'this format') +
+      ' to the other ' + (FORMATS.length-1) + ' formats?\n\n' +
+      'This replaces their overlay too (band, accent line, logo, text row, badges) ' +
+      'and their screenshot setup. Ctrl+Z brings it back.')) return;
   pushUndo();
   const src = JSON.parse(JSON.stringify(state.layouts[state.active]));
   FORMATS.forEach(f=>{
@@ -7531,7 +7952,7 @@ document.getElementById('bAll').onclick = ()=>{
      miniature a sinistra vanno pero' rifatte, se no restano quelle di
      prima. */
   buildControls(); render();
-  toast('Layout copied to every format');
+  toast('Layout copied to every format', {undo:true});
 };
 
 /* Ripartire da zero butta via il lavoro di un pacchetto intero, quindi si
@@ -7905,9 +8326,8 @@ function caricaPresetFile(f, handle){
           const blob = base64InBlob(x.data, x.type);
           const file = new File([blob], x.name || 'image.png', {type: blob.type});
           const im = await blobInImmagine(file);
-          /* buchi: lo calcola preparaImmagini (1A); senza, come prima */
-          if(im) nuove.push({name:file.name, img:im, path:x.path || file.name, blob:file,
-                             buchi: typeof preparaImmagini === 'function' ? undefined : haTrasparenza(im)});
+          /* buchi: lo calcola preparaImmagini */
+          if(im) nuove.push({name:file.name, img:im, path:x.path || file.name, blob:file});
           else rotte++;
         }catch(e){ rotte++; }
         /* si lascia respirare la pagina fra un'immagine e l'altra */
@@ -7915,7 +8335,7 @@ function caricaPresetFile(f, handle){
       }
       SHOTS = nuove; imgShot = SHOTS.length ? SHOTS[0].img : null;
       immagini = nuove.length;
-      if(typeof preparaImmagini === 'function') preparaImmagini(SHOTS);
+      preparaImmagini(SHOTS);
     }
     if(d.logo && d.logo.data){
       try{
@@ -7936,7 +8356,7 @@ function caricaPresetFile(f, handle){
        salvataggio automatico */
     migraSalvataggio({theme:state.theme, layouts:state.layouts});
     if(d.active && FORMATS.some(fm=> fm.id === d.active)) state.active = d.active;
-    if(typeof scaldaImmagini === 'function') await scaldaImmagini();
+    await scaldaImmagini();
     dbSalva();
     fileProgetto = handle || null; nomeProgetto = handle ? handle.name : '';
     if(handle) ricordaFileProgetto(handle); else dimenticaFileProgetto();
@@ -8378,7 +8798,7 @@ function variantDelete(i){
   state.variants.splice(i,1);
   if(state.currentVariant===i) state.currentVariant = null;
   else if(state.currentVariant > i) state.currentVariant--;
-  buildControls(); toast('Variant deleted');
+  buildControls(); toast('Variant deleted', {undo:true});
 }
 /* Rinomina sul posto: prompt() in Electron non esiste (restituisce null e
    basta), quindi il testo diventa un campo. Invio o clic fuori conferma se
@@ -8604,12 +9024,12 @@ function runAction(act){
     dbSvuota();
     rimappaImmagini(()=> -1);
     buildControls(); render();
-    toast('Images removed. Ctrl+Z brings them back'); return;
+    toast('Images removed', {undo:true}); return;
   }
   if(act==='resetAccent'){
     pushUndo();
     applyAccent(C.accentA2, state.theme.scope==='this format');
-    syncControls(); render(); toast('Back to the PSD orange'); return;
+    syncControls(); render(); toast('Back to the PSD orange', {undo:true}); return;
   }
   if(act==='autoClear'){ autoClear(); return; }
   if(act==='autoRestore'){
@@ -8999,20 +9419,61 @@ function preflightRun(){
   return t;
 }
 
+/* Pesa ogni formato acceso con le impostazioni di adesso e mostra la tabella
+   in una finestra che resta finche' non la si chiude: l'avviso di prima
+   spariva in tre secondi e diceva solo il file piu' grosso. Fab chiede meno
+   di 3 MB per immagine: i formati Fab oltre quel peso sono segnati. */
+const FAB_MAX_BYTE = 3 * 1048576;
 async function sizeCheck(){
   const list = FORMATS.filter(f=> state.layouts[f.id].on);
   if(!list.length){ toast('No format selected'); return; }
   let total = 0;
-  const lines = [];
+  const lines = [], righe = [];
+  toast('Weighing ' + list.length + ' image' + (list.length===1?'':'s') + '...', {ms:20000});
   for(const f of list){
+    await new Promise(r=> setTimeout(r, 0));
     const blob = await new Promise(res=> renderFormatToBlob(f, res));
     total += blob.size;
     const o = outSize(f);
-    lines.push(f.name+' '+o.w+'x'+o.h+': '+Math.round(blob.size/1024)+' KB');
+    const kb = Math.round(blob.size/1024);
+    lines.push(f.name+' '+o.w+'x'+o.h+': '+kb+' KB');
+    righe.push({nome:nomeFormato(f), px:o.w+' x '+o.h, kb, byte:blob.size,
+                fab: f.group==='Fab' && blob.size > FAB_MAX_BYTE});
   }
-  toast(exportExt().toUpperCase()+' - total '+(total/1048576).toFixed(2)+' MB for '+
-        list.length+' images. Biggest: '+
-        lines.sort((a,b)=> parseInt(b.split(': ')[1]) - parseInt(a.split(': ')[1]))[0]);
+  righe.sort((x,y)=> y.byte - x.byte);
+  document.getElementById('toast').classList.remove('on');
+  const tab = document.createElement('table');
+  tab.style.cssText = 'width:100%;border-collapse:collapse;font-size:var(--fs)';
+  const riga = (celle, tag, extra)=>{
+    const tr = document.createElement('tr');
+    celle.forEach((c, i)=>{
+      const td = document.createElement(tag);
+      td.textContent = c;
+      td.style.cssText = 'padding:4px 8px;border-bottom:1px solid var(--line);text-align:' +
+                         (i===0 ? 'left' : 'right') + (extra && extra[i] ? ';' + extra[i] : '');
+      tr.appendChild(td);
+    });
+    return tr;
+  };
+  const th = riga(['Format', 'Size (px)', 'Weight'], 'th', [';color:var(--dim)', ';color:var(--dim)', ';color:var(--dim)']);
+  tab.appendChild(th);
+  righe.forEach(r=>{
+    const tr = riga([r.nome, r.px, r.kb.toLocaleString('en-US') + ' KB'], 'td',
+                    r.fab ? ['color:var(--warn)', 'color:var(--warn)', 'color:var(--warn)'] : null);
+    if(r.fab) tr.title = 'Fab asks under 3 MB per image';
+    tab.appendChild(tr);
+    if(r.fab){
+      const n = document.createElement('tr'), td = document.createElement('td');
+      td.colSpan = 3; td.textContent = 'Fab asks under 3 MB';
+      td.style.cssText = 'padding:0 8px 4px;text-align:right;font-size:var(--fs-s);color:var(--warn)';
+      n.appendChild(td); tab.appendChild(n);
+    }
+  });
+  const tot = riga(['Total, ' + righe.length + ' image' + (righe.length===1?'':'s'), exportExt().toUpperCase(),
+                    (total/1048576).toFixed(2) + ' MB'], 'td', ['font-weight:600;color:var(--txt)', 'font-weight:600;color:var(--txt)', 'font-weight:600;color:var(--txt)']);
+  tab.appendChild(tot);
+  dialogo({title:'Size of every format', body:tab,
+           buttons:[{id:'ok', label:'Close', primary:true}]});
   return lines;
 }
 
@@ -9103,7 +9564,9 @@ paintIcons(document);
 buildFormats();
 buildTools();
 buildControls();
-selectEl('row');
+/* all'avvio l'elemento scelto e' il testo, ma il pannello non si apre e non
+   scorre da solo: resta com'era l'ultima volta */
+state.sel = 'row';
 render();
 /* i pesi del font vanno caricati esplicitamente, altrimenti il browser
    carica solo quelli gia' usati e gli altri cadono sul font di sistema */

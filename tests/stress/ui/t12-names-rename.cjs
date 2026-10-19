@@ -9,7 +9,7 @@ module.exports = async ({ ev, command, delay, log }) => {
   const bad = [];
   const eq = (a, b, m) => { if (JSON.stringify(a) !== JSON.stringify(b)) bad.push(m + ': got ' + JSON.stringify(a) + ' expected ' + JSON.stringify(b)); };
   const yes = (c, m) => { if (!c) bad.push(m); };
-  const tab = t => ev(`(()=>{ if(typeof tabOf==='function') activeTab = tabOf(${JSON.stringify(t)}); buildControls(); return 1; })()`);
+  const tab = t => ev(`(()=>{ if(typeof tabOf==='function') { activeTab = tabOf(${JSON.stringify(t)}); openSecs[${JSON.stringify(t)}] = true; } buildControls(); return 1; })()`);
   const KEY = (k) => `(()=>{ const i = document.querySelector('#controls input.inl'); if(!i) return 'gone';
     i.dispatchEvent(new KeyboardEvent('keydown', {key: ${JSON.stringify(k)}, bubbles: true, cancelable: true})); return 'ok'; })()`;
 

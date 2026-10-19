@@ -81,7 +81,7 @@ window.F = (()=>{
       case 'del': { key('Delete'); L('del'); break; }
       case 'addlayer': { const b=[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='+ Shape'); if(b) b.click(); L('addlayer'); break; }
       case 'wheel': { const st=document.getElementById('stage')||cvwrap; st.dispatchEvent(new WheelEvent('wheel',{deltaY:-100,altKey:true,bubbles:true,cancelable:true,clientX:300,clientY:300})); L('wheel'); break; }
-      case 'tab': { const t=pick([...document.querySelectorAll('button')].filter(b=>['Design','Image','Content','Test','Output'].includes(b.textContent.trim()))); if(t) t.click(); L('tab'); break; }
+      case 'tab': { const t=pick([...document.querySelectorAll('button')].filter(b=>['Design','Image','Content','Variants','Output'].includes(b.textContent.trim()))); if(t) t.click(); L('tab'); break; }
     }
   }
   return {rnd, ri, pick, fp, invariants, mkFiles, op, log, setSeed:s=>{seed=s;}, key, fire, mouse, drag, cvPt};
