@@ -1,4 +1,4 @@
-# Toolbox — working notes (last updated 2026-10-19, version 1.7.1)
+# Toolbox — working notes (last updated 2026-10-19, version 1.7.2)
 
 Davide asked to integrate **the complete Scene Sync interface inside Toolbox**, not an external launcher.
 
@@ -44,7 +44,7 @@ npm run test:workflow
 
 **Since 1.6.0 Toolbox runs from an unpacked folder, `Tools/_app/Toolbox`, not from a portable .exe.** Davide asked for a much faster start. Measured: the portable .exe took 3.3 to 5.0 s to show its window, because it unpacks the whole app to a temporary folder at every start; the unpacked copy shows it in 0.5 to 0.6 s (1.4 s on a cold first start). The folder is about 360 MB. User data stays in `%APPDATA%\Toolbox` either way, so nothing was lost in the switch. There is no portable target any more.
 
-Electron remains **33.4.11**, locked by `package-lock.json`; electron-builder remains 25.1.8. Do not upgrade them as part of routine feature work. Build caches remain in `Tools/_cache`. Current version: **1.7.1**.
+Electron remains **33.4.11**, locked by `package-lock.json`; electron-builder remains 25.1.8. Do not upgrade them as part of routine feature work. Build caches remain in `Tools/_cache`. Current version: **1.7.2**.
 
 **A running Toolbox cannot be replaced.** `build.ps1` checks for it and stops with "Toolbox is open" instead of letting electron-builder hang.
 
@@ -153,6 +153,10 @@ After a read-only code audit (no full rewrite needed; render core left alone) an
 - Pickers go through `selettoreUnico`: one in-flight picker, cancel is silent ("File picker already active" fixed).
 - "Desktop" button / Ctrl+Alt+E writes the current format to the Desktop through IPC `desktop:save-to-desktop` (main.js validates name and extension, never overwrites) and `desktop:show-item`.
 - Undo no longer restores `ui` (preview size); format checkbox is undoable; back layers hit-test in draw order; logo recolour cache keyed per logo; layer ids never collide after reload; Restore last save undoable; unreadable images no longer shift panels; startup library load does not overwrite work added meanwhile.
+
+## Store Graphics 1.7.2 (20 October 2026)
+
+Interface polish pass by four agents (header/left aside, right panel, stage/toolbar, strip/toasts/dialogs), each from screenshots at three sizes: no clipped text, pickers styled like selects, keyboard focus everywhere, error toasts and preflight without left bars, toolbar fixed at the top of the stage, grid popover restyled. Renders unchanged (hash gates). tests/stress/ui/t9 limits: median 8 ms, p95 16 ms per panel rebuild.
 
 ## User requirements / limits to preserve
 
