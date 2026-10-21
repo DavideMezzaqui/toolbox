@@ -31,11 +31,11 @@ module.exports = async ({ev, delay, until, capture}) => {
     const content = document.querySelector('#controls textarea[data-path="pack.title"]');
     return {st: state.pack.title, content: content && content.value, card: ta.value}; })()`);
   chk('card title -> state', typed.st.endsWith('Smoke Test'), typed.st);
-  chk('card title -> Content field', typed.content === typed.st, typed.content);
+  chk('title lives only in the card (right panel Pack data has no Title field)', typed.content === null, typed.content);
   chk('one undo step per typing gesture', (await undoN()) === u0 + 1, [u0, await undoN()]);
   /* title typed in the Content field shows in the card */
   const rev = await ev(`(async()=>{
-    const c = document.querySelector('#controls textarea[data-path="pack.title"]');
+    const c = document.querySelector('#packrows textarea[data-path="pack.title"]');
     c.value = 'From Content'; c.dispatchEvent(new Event('input', {bubbles: true}));
     await new Promise(r => setTimeout(r, 500));
     return document.querySelector('#packrows textarea').value; })()`);

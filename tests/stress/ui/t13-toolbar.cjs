@@ -18,7 +18,7 @@ module.exports = async ({ev, command, delay, capture}) => {
   const want = ['Undo', 'Redo', '|', 'Recentre image', '|', 'Snap', 'Grid', 'Wheel resizes', '|', 'Lock', '|'];
   if (bar.kids.slice(0, 11).join(',') !== want.join(',')) fail('order', bar.kids);
   if (bar.kids[bar.kids.length - 2] !== 'grow' || bar.kids[bar.kids.length - 1] !== 'Reset format') fail('tail', bar.kids);
-  if (bar.kids.indexOf('Compare') < 0) fail('compare', bar.kids);
+  if (bar.kids.indexOf('Compare variants') < 0) fail('compare', bar.kids);
   if (!bar.resetAfterCompare || bar.resetRightGap > 16) fail('resetPosition', [bar.resetRightGap, bar.resetAfterCompare]);
   const noKey = bar.titles.filter(([, t]) => !/Key: \S/.test(t) || /\.$/.test(t.trim()));
   if (noKey.length) fail('tooltipKey', noKey);
@@ -58,9 +58,9 @@ module.exports = async ({ev, command, delay, capture}) => {
   const lab = await ev(`(()=>{ const all = []; PARTS.forEach(p => (p.rows || []).forEach(r => { if(r.p) all.push([r.p, r.l]); }));
     return all; })()`);
   const L = Object.fromEntries(lab);
-  const exp = {'shot.slant': 'Cut angle (all)', 'shot.gap': 'Gap between panels', 'row.itemFont': 'Category/brand font',
-    'row.itemSize': 'Category/brand size', 'row.itemColor': 'Category/brand colour', 'row.y2': 'Line 2 Y', 'row.x2': 'Line 2 X',
-    'accent.gradLink': 'Use theme gradient', 'badges.gradLink': 'Use theme gradient'};
+  const exp = {'shot.slant': 'Cut angle (all)', 'shot.gap': 'Panel gap', 'row.itemFont': 'Brand font',
+    'row.itemSize': 'Brand size', 'row.itemColor': 'Brand colour', 'row.y2': 'Line 2 Y', 'row.x2': 'Line 2 X',
+    'accent.gradLink': 'Theme gradient', 'badges.gradLink': 'Theme gradient'};
   Object.entries(exp).forEach(([p, l]) => { if (L[p] !== l) fail('label ' + p, L[p]); });
   const olds = ['Cut slant', 'Cut gap', 'Item font', 'Item size', 'Item colour', '2nd line Y', '2nd line X', 'Follow theme'];
   const left = lab.filter(([, l]) => olds.indexOf(l) >= 0);

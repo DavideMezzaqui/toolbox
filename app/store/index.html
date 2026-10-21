@@ -142,8 +142,13 @@
   /* ==========================================================================
      [v17-right] pannello destro: schede, ricerca, sezioni, righe di controlli
      ========================================================================== */
-  .row{display:flex;align-items:center;gap:8px;min-height:24px;margin-bottom:4px}
-  .row label{width:92px;flex:none;color:var(--txt2);font-size:var(--fs);line-height:1.25}
+  /* tipi del pannello: da 1600 px di larghezza il testo piccolo cresce di un punto
+     (solo qui: la colonna sinistra e la barra della tela hanno le loro misure) */
+  @media(min-width:1600px){ aside.right{--fs-xs:11px; --fs-s:12px} }
+  /* una sola freccia per menu a tendina e selettori con anteprima */
+  aside.right{--chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 3.5 5 6.5 8 3.5' fill='none' stroke='%23b4b4bb' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+  .row{display:flex;align-items:center;gap:8px;min-height:26px;margin-bottom:4px}
+  .row label{width:100px;flex:none;color:var(--txt2);font-size:var(--fs);line-height:1.25;overflow-wrap:anywhere}
   /* Slider: riga sottile e cursore tondo. Quello di serie del browser e'
      un tondo grosso che fa pesare ogni riga, e in un pannello con duecento
      controlli si vede. */
@@ -157,21 +162,24 @@
   .row input[type=range]:focus-visible::-webkit-slider-thumb{outline:1px solid #8a8a94;outline-offset:2px}
   .row input[type=color]{width:30px;height:20px;padding:0;border:1px solid #4a4a52;background:none;border-radius:3px;cursor:pointer}
   .row input[type=text],.row textarea,.row select{flex:1;min-width:0;background:var(--bg);color:var(--txt);
-    border:1px solid var(--line);border-radius:5px;padding:4px 7px;font:var(--fs)/1.3 inherit;font-family:inherit}
+    border:1px solid var(--line);border-radius:5px;padding:4px 7px;font-family:inherit;font-size:var(--fs);line-height:1.3}
   .row input[type=text]:hover,.row textarea:hover,.row select:hover{border-color:#4a4a52}
   .row input[type=text]:focus,.row textarea:focus,.row select:focus{border-color:#8a8a94;outline:none}
-  .row select{height:25px;padding-right:4px}
+  .row input[type=text]{height:26px}
   .row textarea{resize:vertical;height:46px}
+  /* menu a tendina: stessa altezza e stessa freccia del selettore con anteprima (.pick) */
+  .row select{-webkit-appearance:none;appearance:none;height:26px;padding:0 26px 0 8px;cursor:pointer;
+    background:var(--bg) var(--chev) no-repeat right 8px center/10px 10px}
   /* il numero accanto allo slider: sempre con la sua riga sotto, cosi' si
      vede che si puo' scrivere e non solo leggere */
-  .row input.val{width:56px;flex:none;text-align:right;color:var(--txt2);
+  .row input.val{width:62px;height:24px;flex:none;text-align:right;color:var(--txt2);
     font:var(--fs-s)/1.4 var(--mono);font-variant-numeric:tabular-nums;
-    background:transparent;border:0;border-bottom:1px solid var(--line2);border-radius:0;padding:2px 2px;
+    background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:2px 6px;
     -moz-appearance:textfield}
   .row input.val::-webkit-outer-spin-button,
   .row input.val::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-  .row input.val:hover{border-bottom-color:#6a6a74;color:var(--txt)}
-  .row input.val:focus{border-bottom-color:#c8c8ce;color:var(--txt);background:var(--bg);outline:none}
+  .row input.val:hover{border-color:#4a4a52;color:var(--txt)}
+  .row input.val:focus{border-color:#8a8a94;color:var(--txt);outline:none}
   .full{display:block}
   .full label{display:block;width:auto;margin-bottom:4px}
   /* In una riga a blocco il "flex:1" non vale piu' niente e la casella
@@ -179,22 +187,15 @@
      titolo, che e' il campo che si scrive di piu', veniva meta' degli
      altri. Qui si prende tutta la riga, come tutto il resto. */
   .full textarea,.full input[type=text]{width:100%;box-sizing:border-box}
-  .hint{color:var(--dim);font-size:var(--fs-xs);line-height:1.45;margin:-2px 0 8px}
-  /* esito del controllo prima dell'export: una riga per cosa da guardare */
-  .chk{font-size:var(--fs-s);line-height:1.45;padding:4px 8px;margin-bottom:3px;border-radius:4px;
-     background:var(--panel2);color:var(--dim);cursor:default}
-  .chk.bad{color:#e8e8ec;border-left:2px solid var(--err)}
-  .chk[title]{cursor:pointer}
-  .chk[title]:hover{background:#33333c}
+  .hint{color:var(--dim);font-size:var(--fs-s);line-height:1.45;margin:-2px 0 8px}
   .swatches{display:flex;gap:4px;flex:1;flex-wrap:wrap}
-  .grads{display:flex;gap:4px;flex-wrap:wrap;margin:2px 0 4px}
-  .gr{width:34px;height:15px;padding:0;flex:none;border-radius:3px;
-      border:1px solid var(--line);cursor:pointer}
+  .gr{padding:0;border-radius:3px;border:1px solid var(--line);cursor:pointer}
   .gr.on{outline:1px solid #e8e8ec;outline-offset:1px}
   .sw{width:18px;height:18px;padding:0;flex:none;border-radius:3px;border:1px solid var(--line)}
-  .row button.hex{flex:none;padding:1px 4px;font:var(--fs-xs)/1.4 var(--mono);
+  .row button.hex{flex:none;height:22px;min-height:22px;padding:0 5px;font:var(--fs-xs)/20px var(--mono);
      color:var(--dim);background:transparent;border:1px solid transparent}
   .row button.hex:hover{border-color:var(--line);color:var(--txt)}
+  .row input.inl.hexinl{flex:none;width:82px;height:22px;padding:0 5px;font:var(--fs-xs)/20px var(--mono)}
   .row button.swapc{flex:none;padding:0 5px;font-size:var(--fs);line-height:16px}
   .sw.on{outline:1px solid #e8e8ec;outline-offset:1px}
   /* titoletto che divide i controlli in gruppi dentro una sezione */
@@ -209,8 +210,9 @@
   .sec{border:1px solid var(--line);border-radius:8px;margin-bottom:6px;overflow:hidden;
        scroll-margin-top:var(--phead-h,0px)}
   .sec>.hd{display:flex;align-items:center;gap:8px;padding:0 11px;height:34px;background:var(--panel2);
-           cursor:pointer;user-select:none;transition:background .12s}
-  .sec>.hd:hover{background:#25252b}
+           box-shadow:inset 0 0 0 1px transparent;
+           cursor:pointer;user-select:none;transition:background .12s,box-shadow .12s}
+  .sec>.hd:hover{background:#2b2b31;box-shadow:inset 0 0 0 1px var(--line2)}
   .sec>.hd b{flex:1;font-size:12.5px;font-weight:600;letter-spacing:.01em}
   .sec>.hd>span{color:var(--dim);font-size:15px;line-height:1}
   .sec>.hd>span.cnt{flex:none;font-size:var(--fs-xs);font-weight:500;line-height:16px;padding:0 6px;
@@ -218,40 +220,46 @@
   .sec>.bd{padding:10px 11px 6px;display:none}
   .sec.open>.bd{display:block}
   .sec.open>.hd{background:var(--panel3)}
-  .sec>.hd>svg.ic{opacity:.6}
-  .sec.open>.hd>svg.ic{opacity:1}
-  .sec>.hd:hover>svg.ic{opacity:.9}
-  /* schede del pannello: un unico controllo a segmenti */
-  .tabs{display:flex;gap:2px;padding:2px;margin-bottom:8px;background:var(--bg);
+  .sec.open>.hd:hover{background:#31313a}
+  /* schede del pannello: un unico controllo a segmenti, sulla stessa riga della ricerca */
+  .tabs{display:flex;flex:none;gap:2px;padding:2px;background:var(--bg);
         border:1px solid var(--line);border-radius:8px}
-  .tabs button{flex:1;padding:5px 2px;font-size:var(--fs);border-radius:6px;border:0;
+  .tabs button{flex:none;padding:0 8px;height:24px;font-size:var(--fs);border-radius:6px;border:0;
         background:transparent;color:var(--txt2)}
   .tabs button:hover{background:#26262b;color:var(--txt)}
   .tabs button.on{background:#383841;color:#fff;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.4)}
-  /* in cima al pannello: immagini, schede e ricerca restano in vista */
+  /* in cima al pannello: immagini, schede e ricerca restano in vista; e' una
+     fascia bassa (meno di un quinto del pannello), con schede e ricerca su una riga */
   .phead{position:sticky;top:-10px;z-index:4;background:var(--panel);margin:-10px -10px 10px;
-         padding:10px 10px 8px;border-bottom:1px solid var(--line)}
-  .phead #imgs{position:static;margin:0 0 8px;padding:0;border:0;background:none}
-  .phead>.row{margin-bottom:0}
-  #secFilter{height:28px}
-  #secClose{padding:4px 9px;font-size:var(--fs-s);color:var(--txt2)}
+         padding:6px 10px 6px;border-bottom:1px solid var(--line);container-type:inline-size}
+  .phead #imgs{position:relative;margin:0 0 5px;padding:0;border:0;background:none}
+  .phead #imgs .ih{margin-bottom:3px}
+  .hbar{display:flex;align-items:center;gap:6px}
+  #secFilter{flex:1;min-width:0;height:30px;background:var(--bg);color:var(--txt);border:1px solid var(--line);
+        border-radius:6px;padding:0 8px;font:var(--fs)/1.3 inherit;font-family:inherit}
+  #secFilter:hover{border-color:#4a4a52}
+  #secFilter:focus{border-color:#8a8a94;outline:none}
+  #secFilter::placeholder{color:var(--dim)}
+  /* "Collapse all" e' un'icona (due frecce in su disegnate col CSS): il nome resta nel testo, nascosto, e nel suggerimento */
+  #secClose{position:relative;flex:none;width:30px;height:30px;padding:0;color:var(--txt2)}
+  #secClose i{position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px}
+  #secClose i::before,#secClose i::after{content:"";position:absolute;left:1.5px;width:6px;height:6px;
+        border:solid currentColor;border-width:1.5px 0 0 1.5px;transform:rotate(45deg)}
+  #secClose i::before{top:-1px}
+  #secClose i::after{top:4px}
+  #secClose .cl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  /* stretto: solo la scheda aperta porta il nome, le altre restano icone (il nome e' nel suggerimento) */
+  @container (max-width:469px){ .tabs button:not(.on) .tl{display:none} .tabs button:not(.on){padding:0 7px} }
   /* il segno aperto/chiuso e' una freccia disegnata, che gira quando si apre */
   .sec>.hd>span.sg{flex:none;width:7px;height:7px;margin:0 3px 3px 0;border:solid var(--dim);
         border-width:0 1.5px 1.5px 0;transform:rotate(-45deg);transition:transform .12s}
   .sec.open>.hd>span.sg{transform:rotate(45deg);margin-top:2px;border-color:var(--txt2)}
-  /* testata piu' compatta, e la fascia delle immagini non si mangia lo schermo */
-  .phead .tabs{margin-bottom:6px}
-  .phead #imgs .ih{margin-bottom:5px}
-  .phead{padding-bottom:7px}
-  @media(min-height:801px){ .phead .lib{max-height:min(150px,15vh)} }
   .sec>.bd .row:hover label{color:var(--txt)}
   @media(max-width:900px){ .rz{display:none} }
   #bDesk[hidden]{display:none}
-  /* tinta discreta per sezione: solo l'icona e uno sfondo appena percettibile */
-  .sec>.hd{background:color-mix(in srgb,var(--sc,#888) 5%,var(--panel2))}
-  .sec>.hd:hover{background:color-mix(in srgb,var(--sc,#888) 8%,#25252b)}
-  .sec.open>.hd{background:color-mix(in srgb,var(--sc,#888) 9%,var(--panel3))}
-  .sec>.hd>svg.ic{color:var(--sc,var(--txt2));opacity:.9}
+  /* tinta discreta per sezione: solo l'icona */
+  .sec>.hd>svg.ic{color:var(--sc,var(--txt2));opacity:.85}
+  .sec.open>.hd>svg.ic,.sec>.hd:hover>svg.ic{opacity:1}
   .sec[data-title="Colours"]{--sc:hsl(28,42%,66%)}
   .sec[data-title="Bottom band"]{--sc:hsl(212,42%,66%)}
   .sec[data-title="Accent line"]{--sc:hsl(45,42%,66%)}
@@ -273,58 +281,18 @@
   .sec[data-title="Session"]{--sc:hsl(220,42%,66%)}
   .tabs button{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
   .tabs button svg.ic{width:14px;height:14px;opacity:.8}
+  .tabs button.on svg.ic{opacity:1}
   .cslot{display:none !important}
-  /* testo mai tagliato: altezza minima, non fissa, cosi' la riga cresce con il carattere */
-  .row select{height:auto;min-height:25px;line-height:1.3;padding-top:3px;padding-bottom:3px}
   .row button,.sec .btnrow button{line-height:1.3;min-height:24px}
-  .row input.val{min-height:20px;box-sizing:border-box}
-  /* --- passata di rifinitura 1.7.2 --- */
-  .row label{width:100px;overflow-wrap:anywhere}
-  .row label{line-height:1.2}
-  /* selettore con anteprima: stessa scatola di un menu a tendina */
-  .pick>.cur{background:var(--bg);border:1px solid var(--line);border-radius:5px;min-height:25px;
-             padding:3px 7px;font-size:var(--fs)}
+  /* selettore con anteprima: stessa scatola e stessa freccia di un menu a tendina */
+  .pick{position:relative;flex:1;min-width:0}
+  .pick>.cur{width:100%;height:26px;display:flex;align-items:center;justify-content:space-between;gap:7px;
+             background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:0 8px;font-size:var(--fs)}
   .pick>.cur:hover{border-color:#4a4a52;background:var(--bg)}
   .pick>.cur:focus-visible{border-color:#8a8a94;outline:none}
-  .pick>.cur .car{font-size:0;width:5px;height:5px;margin:-3px 3px 0 0;border:solid var(--txt2);
-             border-width:0 1.5px 1.5px 0;transform:rotate(45deg)}
-  .pick .opt span{font-size:var(--fs-xs)}
-  .pick .opt:focus-visible{outline:1px solid #9a9aa2}
-  /* il riquadro dell'ultimo export non compare finche' non c'e' niente da dire */
-  .lastexp:empty{display:none}
-  /* un problema da guardare: puntino rosso, niente barra colorata sul bordo */
-  .chk.bad{border-left:0}
-  .chk.bad::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;
-             background:var(--err);margin-right:7px;vertical-align:1px}
-  .chk[title]:focus-visible{outline:1px solid #9a9aa2}
-  /* elenco livelli e varianti */
-  .layrow:focus-visible{outline:1px solid #9a9aa2;outline-offset:1px}
-  .layrow .ltag{font-size:var(--fs-xs)}
-  .sec>.bd>.hint:only-child{margin:0 0 6px}
-  .row.varrow button:first-child{text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  /* campioni di gradiente: griglia regolare, senza ultima riga spezzata */
-  .grads{display:grid;grid-template-columns:repeat(auto-fill,minmax(32px,1fr));gap:4px}
-  .grads .gr{width:auto;min-width:0}
-  /* [/v17-right] */
-
-  /* --- griglia di ancoraggio dei livelli --- */
-  .apad{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;width:96px;flex:none}
-  .apad button{padding:0;height:24px;line-height:0;color:var(--dim);
-     display:flex;align-items:center;justify-content:center}
-  .apad button:hover{border-color:#5a5a62}
-  .apad button canvas{display:block}
-  .arow{display:flex;gap:9px;align-items:flex-start;margin-bottom:7px}
-  .acol{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
-  .acol button{padding:4px 6px;font-size:var(--fs-xs);text-align:left}
-
-  /* --- selettore con anteprima disegnata --- */
-  .pick{position:relative;flex:1;min-width:0}
-  .pick>.cur{width:100%;display:flex;align-items:center;
-             justify-content:space-between;padding:4px 7px;gap:7px}
   .pick>.cur canvas{width:30px;height:16px;flex:none;background:var(--bg);border-radius:2px}
-  .pick>.cur .lbl{flex:1;min-width:0;text-align:left;overflow:hidden;
-                  text-overflow:ellipsis;white-space:nowrap}
-  .pick>.cur .car{color:var(--dim);font-size:9px;flex:none}
+  .pick>.cur .lbl{flex:1;min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pick>.cur .car{flex:none;width:10px;height:10px;background:var(--chev) no-repeat center/10px 10px}
   .pick .pop{position:absolute;z-index:50;top:calc(100% + 3px);left:0;right:0;
     background:var(--panel2);border:1px solid #4a4a52;border-radius:6px;padding:5px;
     display:grid;gap:4px;max-height:250px;overflow-y:auto;
@@ -333,31 +301,53 @@
              background:var(--bg);padding:2px;overflow:hidden}
   .pick .opt:hover{border-color:#6a6a74}
   .pick .opt.on{border-color:#e6e6e8}
+  .pick .opt:focus-visible{outline:1px solid #9a9aa2}
   .pick .opt canvas{display:block;width:100%;height:30px}
-  .pick .opt span{display:block;font-size:9px;color:var(--dim);text-align:center;
+  .pick .opt span{display:block;font-size:var(--fs-xs);color:var(--dim);text-align:center;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-top:1px}
-
-  /* blocco di un pannello: quello scelto si riconosce */
+  /* il riquadro dell'ultimo export non compare finche' non c'e' niente da dire */
+  .lastexp:empty{display:none}
+  /* blocco di un pannello: quello scelto si riconosce. Con un pannello solo non c'e' cornice */
   .pblk{border:1px solid var(--line);border-radius:6px;padding:7px 8px 3px;margin-bottom:6px;cursor:pointer}
   .pblk.on{border-color:#8a8a94;background:#1d1d22}
   .pblk .ph{font-size:var(--fs-xs);color:var(--dim);margin-bottom:4px;letter-spacing:.06em}
   .pblk.on .ph{color:var(--txt)}
-
-  /* --- lista dei livelli --- */
-  .layrow{display:flex;align-items:center;gap:4px;padding:4px 6px;border-radius:5px;
+  .pblk.solo{border:0;border-radius:0;padding:0;margin:0;cursor:default;background:none}
+  /* griglia di ancoraggio dei livelli: i nove punti e, sotto, i comandi in due colonne */
+  .apad{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;width:96px;flex:none}
+  .apad button{padding:0;height:24px;line-height:0;color:var(--dim);
+     display:flex;align-items:center;justify-content:center}
+  .apad button:hover{border-color:#5a5a62}
+  .apad button canvas{display:block}
+  .arow{display:flex;gap:10px;align-items:center;margin-bottom:6px}
+  .arow .ahint{flex:1;min-width:0;color:var(--dim);font-size:var(--fs-s);line-height:1.4}
+  .acol{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px}
+  .acol button{display:block;min-width:0;padding:4px 8px;font-size:var(--fs-s);text-align:left;
+     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* elenco livelli e varianti */
+  .layrow{display:flex;align-items:center;gap:2px;padding:3px 4px;border-radius:5px;
           border:1px solid transparent;cursor:pointer;margin-bottom:3px;background:var(--bg)}
   .layrow:hover{background:var(--panel2)}
+  .layrow:focus-visible{outline:1px solid #9a9aa2;outline-offset:1px}
   .layrow.on{border-color:#6a6a74;background:var(--panel2)}
   /* gli altri livelli della selezione multipla: segno piu' leggero */
   .layrow.sel2{border-color:#4e4e58;background:#232329}
   .layrow.on .lname{color:#fff}
-  .layrow .lname{flex:1;min-width:0;font-size:var(--fs);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .layrow .ltag{color:var(--dim);font-size:9px;letter-spacing:.06em;text-transform:uppercase}
-  button.lbtn{padding:3px 4px;background:none;border:1px solid transparent;color:var(--dim)}
+  .layrow .lname{flex:1;min-width:0;padding-left:3px;font-size:var(--fs);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .layrow .ltag{color:var(--dim);font-size:var(--fs-xs);letter-spacing:.06em;text-transform:uppercase;margin:0 4px}
+  .layrow svg.ic{width:13px;height:13px}
+  button.lbtn{padding:5px;line-height:0;background:none;border:1px solid transparent;color:var(--dim)}
   button.lbtn:hover{border-color:var(--line);color:var(--txt);background:var(--panel2)}
   /* una freccia che non ha dove andare si vede che e' spenta */
   button.lbtn:disabled{opacity:.28;cursor:default}
   button.lbtn:disabled:hover{border-color:transparent;color:var(--dim);background:none}
+  .sec>.bd>.hint:only-child{margin:0 0 6px}
+  .row.varrow button:first-child{text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* campioni di gradiente: griglia regolare, l'ultima riga si allarga e non resta corta (colonne da gradsets) */
+  .grads{display:grid;gap:4px;margin:2px 0 6px}
+  .grads .gr{width:auto;min-width:0;height:18px}
+  /* [/v17-right] */
+
 
   /* --- scorciatoie sempre visibili --- */
   .keys{font-size:var(--fs-xs);color:var(--dim);line-height:1.7;margin-top:10px;
@@ -430,7 +420,49 @@
   .fmt .nm i{display:block;margin-top:1px}
   .rz{flex:none;width:6px;margin:0 -3px;position:relative;z-index:6;cursor:col-resize;touch-action:none;background:transparent;transition:background .12s}
   .rz:hover,.rz.on{background:rgba(160,160,170,.35)}
+  /* 1.8.0: riquadro anteprima fisso (72x44, il disegno ci sta "contain"): tutte le
+     righe senza 4K|1080p alte uguali. Il velo dei formati spenti sta solo sulla
+     miniatura; il nome e la riga scelta restano com'e'. */
+  #formats{padding-bottom:16px}
+  .fmt:not(.big):has(canvas.th)>.nm{align-self:center}
+  .fmt:not(.big):has(canvas.th)>.nm+.seg{margin-top:2px}
+  .fmt.off canvas.th{opacity:.4}
+  .fmt.off.on canvas.th{opacity:.7}
+  /* finestra bassa (sotto gli 800 px): la scheda Pack si fa piccola, cosi' l'elenco
+     dei formati ha spazio. Titolo su una riga (si apre quando ci si scrive), logo in
+     miniatura con i suoi bottoni sulla stessa riga. */
+  @media (max-height:799px){
+    #packcard{padding:7px 10px 8px;margin-bottom:2px}
+    #packcard .pc-hd{display:none}
+    #packrows{margin-bottom:5px}
+    #packcard .row{min-height:24px;margin-bottom:3px}
+    #packcard .row input[type=text]{height:24px;padding-top:2px;padding-bottom:2px}
+    #packcard .row.full{display:flex;align-items:flex-start;gap:8px}
+    #packcard .row.full label{display:block;width:62px;margin:5px 0 0}
+    #packcard .row.full textarea{flex:1;width:auto;min-width:0;height:26px;padding-top:3px;padding-bottom:3px}
+    #packcard .row.full textarea{overflow:hidden;white-space:pre}
+    #packcard .row.full textarea:focus{height:60px;overflow:auto;white-space:pre-wrap}
+    .pc-logo{grid-template-columns:52px 1fr 1fr 1fr;gap:0 4px;padding-top:7px;align-items:center}
+    .pc-logo canvas{grid-row:auto;width:52px;height:26px}
+    .pc-logo button,.pc-logo #bFont{grid-column:auto;height:26px;padding:0 4px;min-width:0}
+    .pc-logo button svg.ic{display:none}
+    .thumbbar{margin-bottom:6px}
+  }
+  /* finestra New pack: due scelte, una riga ciascuna */
+  .newopts{display:flex;flex-direction:column;gap:9px}
+  .newopt{display:grid;grid-template-columns:140px minmax(0,1fr);column-gap:12px;align-items:baseline}
+  .newopt b{font-weight:600;color:var(--txt)}
+  .newopt span{color:var(--txt2)}
+  .newhint{margin-top:3px;color:var(--dim);font-size:var(--fs)}
   /* [/v17-left] */
+
+  /* ==========================================================================
+     [v18-header] bottoni della barra in cima
+     ========================================================================== */
+  header button:hover:not(:disabled):not(.acc){background:#2c2c33;border-color:var(--line2)}
+  /* il bottone delle scorciatoie resta "scelto" finche' l'elenco e' aperto */
+  header button[aria-expanded="true"]{background:var(--panel3);border-color:#74747e;color:#fff}
+  /* [/v18-header] */
 
   /* ==========================================================================
      [v17-toolbar] barra sopra la tela
@@ -438,7 +470,13 @@
   .toolbar{display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:center;
            background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:5px 7px}
   .toolbar button{padding:5px 10px;font-size:var(--fs)}
-  .toolbar button.on{background:#e6e6e8;border-color:#e6e6e8;color:#101012}
+  /* attivo = grigio rialzato con bordo chiaro e testo bianco; il riempimento
+     bianco e' solo di "Export all" */
+  .toolbar button.on{background:var(--panel3);border-color:#74747e;color:#fff}
+  /* passando sopra: un po' piu' chiaro e il bordo si vede. Lo stato scelto
+     resta com'e' */
+  .toolbar button:hover:not(:disabled):not(.on){background:#2c2c33;border-color:var(--line2)}
+  .toolbar button.on:hover:not(:disabled){background:#30303a;border-color:#8a8a94}
   .toolbar .tsep{width:1px;height:18px;background:var(--line);margin:0 4px}
   /* barra sopra la tela: due gradini di risparmio, prima le etichette dei
      bottoni con icona, poi i divisori e i margini */
@@ -496,11 +534,23 @@
   #imgs .ih{display:flex;align-items:center;gap:5px;margin-bottom:7px}
   #imgs .ih b{flex:1;min-width:0;font-size:var(--fs-xs);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:600;
         white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #imgs .ih button{flex:none;padding:3px 8px;font-size:var(--fs-s);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+  #imgs .ih button{flex:none;padding:0 7px;height:22px;font-size:var(--fs-s);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
   #imgs .vuoto{border:1px dashed #3a3a42;border-radius:6px;padding:14px 12px;text-align:center;line-height:1.5;
         color:var(--dim);font-size:var(--fs-s);cursor:pointer;transition:border-color .12s,color .12s}
   #imgs .vuoto:hover{border-color:#6a6a74;color:var(--txt)}
-  .lib{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;max-height:176px;overflow-y:auto;padding:2px}
+  /* Altezza della fascia = un numero intero di righe di schede, mai una riga tagliata a meta'.
+     La scheda e' larga un quarto della fascia (container query) e alta 9/16 piu' il bordo: --ch e'
+     la sua altezza, e max-height = righe x (scheda + spazio). Con piu' immagini di quelle in vista
+     (.ov) c'e' la barra di scorrimento e le schede sono un po' piu' strette; lo scorrimento si
+     ferma sempre all'inizio di una riga. */
+  :root{--lib-rows:2}
+  @media(max-height:800px){ :root{--lib-rows:1} }
+  .lib{--sb:0px;--cw:calc((100cqw - 16px - var(--sb)) / 4);--ch:calc((var(--cw) - 2px) * .5625 + 2px);
+       display:grid;grid-template-columns:repeat(4,var(--cw));gap:4px;padding:2px;
+       max-height:calc(var(--lib-rows) * (var(--ch) + 4px));overflow-x:hidden;overflow-y:auto;
+       scroll-snap-type:y mandatory;scroll-padding:2px}
+  .lib.ov{--sb:var(--sbw,11px)}
+  .lib .card{scroll-snap-align:start}
   .lib .card{position:relative;border:1px solid var(--line);border-radius:4px;overflow:hidden;
              background:#000;cursor:pointer;user-select:none}
   .lib .card{transition:border-color .12s}
@@ -512,38 +562,37 @@
   .lib .card.prima{box-shadow:-3px 0 0 #e6e6e8}
   .lib .card.dopo{box-shadow:3px 0 0 #e6e6e8}
   .lib .card canvas{display:block;width:100%;height:auto;aspect-ratio:16/9}
+  /* Una sola etichetta sempre in vista: il numero. Il resto (in quanti formati, quale pannello) e' una
+     piccola etichetta scura che compare solo quando serve: pannelli con piu' di un pannello, conteggio al passaggio del mouse. */
   .lib .card .num{position:absolute;top:2px;left:2px;background:rgba(0,0,0,.72);
                   color:#e6e6e8;font-size:10px;line-height:14px;padding:0 4px;border-radius:3px;
                   font-variant-numeric:tabular-nums}
-  .lib .card .pan{position:absolute;bottom:2px;left:2px;background:#e6e6e8;color:#101012;
-                  font-size:9px;line-height:13px;font-weight:700;padding:0 4px;border-radius:3px;white-space:nowrap}
+  .lib .card .pan{position:absolute;bottom:2px;left:2px;background:rgba(0,0,0,.72);color:#e6e6e8;
+                  font-size:10px;line-height:14px;font-weight:600;padding:0 4px;border-radius:3px;white-space:nowrap}
   .lib .card .uses{position:absolute;bottom:2px;right:2px;background:rgba(0,0,0,.72);color:#e6e6e8;
                   font-size:10px;line-height:14px;font-weight:600;padding:0 4px;border-radius:3px;
-                  font-variant-numeric:tabular-nums}
+                  font-variant-numeric:tabular-nums;opacity:0;transition:opacity .12s}
+  .lib .card:hover .uses{opacity:1}
   .lib .card.replace-target{border-color:#fff;outline:2px dashed #e6e6e8;outline-offset:-3px}
   .lib .card .del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.72);
                   border:none;color:#e6e6e8;padding:3px 4px;border-radius:3px;
                   line-height:0;cursor:pointer;opacity:0;transition:opacity .12s,background .12s}
   .lib .card:hover .del,.lib .card .del:focus-visible{opacity:1}
   .lib .card .del:hover{background:#c04040}
-  /* schermi bassi: le immagini stanno in una sola riga che scorre di lato */
-  @media(max-height:800px){
-    .lib{display:flex;gap:4px;max-height:60px;overflow-x:auto;overflow-y:hidden;padding:2px 2px 6px}
-    .lib .card{flex:none;width:68px}
-  }
   #imgs .ih button[hidden]{display:none}
-  #imgs .ih .rmu{color:var(--txt2)}
-  /* altezza scelta trascinando la maniglia sotto le immagini: vale su ogni altezza di finestra */
-  .rzh{position:relative;height:9px;margin:0 0 -3px;cursor:row-resize;touch-action:none;border-radius:3px;background:transparent;transition:background .12s}
+  #imgs .ih .rmu,#imgs .ih .rma{color:var(--txt2)}
+  /* altezza scelta trascinando la maniglia sotto le immagini (a righe intere): vale su ogni altezza di
+     finestra. Sta sopra lo spazio fra le immagini e le schede, cosi' non aggiunge altezza alla testata */
+  .rzh{position:absolute;left:0;right:0;bottom:-8px;height:9px;cursor:row-resize;touch-action:none;border-radius:3px;background:transparent;transition:background .12s}
   .rzh::after{content:"";position:absolute;left:50%;top:3px;width:28px;height:2px;margin-left:-14px;border-radius:1px;
         background:#6a6a74;opacity:.45;transition:opacity .12s}
   .rzh:hover,.rzh.on{background:rgba(160,160,170,.18)}
   .rzh:hover::after,.rzh.on::after{opacity:1}
   /* a una larghezza stretta Add e Folder restano icone (hanno il tooltip) e il conteggio non va a capo */
   #imgs{container-type:inline-size}
-  @container (max-width:330px){
-    #imgs .ih button:not(.rmu) span{display:none}
-    #imgs .ih button:not(.rmu){padding:3px 7px}
+  @container (max-width:359px){
+    #imgs .ih button:not(.rmu):not(.rma) span{display:none}
+    #imgs .ih button:not(.rmu):not(.rma){padding:3px 7px}
   }
   /* selettore con anteprima (immagine di un pannello, forme): tessere piu' leggibili */
   .pick .opt{transition:border-color .12s,background .12s}
@@ -551,14 +600,14 @@
   .pick .opt span{font-size:10px;line-height:1.25;padding-top:2px;white-space:normal;overflow-wrap:anywhere;
         display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
   .pick .pop{padding:6px;gap:5px}
-  body.lib-custom .lib{display:grid;grid-template-columns:repeat(4,1fr);max-height:var(--lib-h);overflow-x:hidden;overflow-y:auto;padding:2px}
-  body.lib-custom .lib .card{flex:none;width:auto}
   /* [/v17-strip] */
 
   /* ==========================================================================
      [v17-feedback] avvisi, finestre di dialogo, elenco delle scorciatoie
      ========================================================================== */
-  #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);width:max-content;
+  /* l'avviso sta in basso a sinistra della tela, sopra la riga informativa
+     (la posizione esatta la calcola posizionaToast); mai sui comandi */
+  #toast{position:fixed;left:14px;bottom:20px;width:max-content;
          max-width:min(640px,calc(100vw - 32px));display:flex;align-items:center;gap:12px;
          background:var(--panel3);border:1px solid #4a4a52;padding:10px 16px;border-radius:8px;
          font-size:var(--fs);line-height:1.45;opacity:0;transition:opacity .25s;pointer-events:none;
@@ -569,16 +618,22 @@
   #toast button:hover{background:#fff}
   #toast.toast-err,.toast-err{border-color:var(--err);background:color-mix(in srgb,var(--err) 9%,var(--panel3))}
   #toast.toast-warn,.toast-warn{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 8%,var(--panel3))}
-  #keysPop{position:fixed;top:calc(var(--hdr-h) + 8px);right:14px;z-index:60;width:min(580px,calc(100vw - 28px));
+  #keysPop{position:fixed;top:calc(var(--hdr-h) + 8px);right:14px;z-index:60;width:min(740px,calc(100vw - 28px));
          max-height:calc(100vh - var(--hdr-h) - 24px);overflow:auto;padding:14px 18px 16px;
          background:var(--panel2);border:1px solid #4a4a52;border-radius:10px;box-shadow:0 14px 40px rgba(0,0,0,.6)}
   #keysPop h4{margin:12px 0 6px;font-size:var(--fs-xs);font-weight:600;letter-spacing:.12em;
          text-transform:uppercase;color:var(--dim)}
   #keysPop h4:first-child{margin-top:0}
-  #keysPop .kgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px 28px}
-  #keysPop .kgrid>div{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  #keysPop .kgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px 28px}
+  /* colonna dei tasti a larghezza fissa, le descrizioni tutte allineate */
+  #keysPop .kgrid>div{display:grid;grid-template-columns:124px minmax(0,1fr);align-items:baseline;gap:10px;
          font-size:var(--fs);color:var(--txt2)}
-  #keysPop .kgrid b{flex:none;min-width:22px;text-align:center;white-space:nowrap;font:600 var(--fs-s) var(--mono);
+  #keysPop .khead{display:flex;align-items:center;gap:10px;margin:-2px 0 12px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+  #keysPop .khead b{flex:1;font-size:var(--fs-l);font-weight:600;color:var(--txt)}
+  #keysPop .khead span{font-size:var(--fs-s);color:var(--dim)}
+  #keysPop .kx{padding:3px 5px;line-height:0}
+  #keysPop .khead+h4{margin-top:0}
+  #keysPop .kgrid b{justify-self:start;max-width:100%;white-space:nowrap;font:600 var(--fs-s) var(--mono);
          color:var(--txt);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 6px}
   .dlg-scrim{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;
          padding:24px;background:rgba(6,6,8,.64)}
@@ -608,7 +663,37 @@
   .lastexp .dim{color:var(--dim)}
   .sztab{width:100%;border-collapse:collapse;font-size:var(--fs);font-variant-numeric:tabular-nums}
   .sztab th{font-weight:500;font-size:var(--fs-s)}
+  .sztab td,.sztab th{padding:4px 8px;border-bottom:1px solid var(--line)}
   .sztab tr:last-child td{border-bottom:none}
+  .sztab .sznote td{padding:0 8px 4px;border-bottom:none;text-align:right;font-size:var(--fs-s);color:var(--warn)}
+  /* cartella dell'export: se e' lunga va a capo, non si taglia */
+  .expdir{flex:1;min-width:0;font-size:var(--fs-s);line-height:1.3;overflow-wrap:anywhere;color:var(--txt2)}
+  /* riepilogo del controllo prima dell'export, nella sezione */
+  .pfsum{display:flex;align-items:center;gap:8px;margin:2px 0 8px;padding:5px 8px;border:1px solid var(--line);
+         border-radius:6px;background:var(--bg);font-size:var(--fs-s);line-height:1.4;color:var(--txt2);cursor:pointer}
+  .pfsum:hover{border-color:var(--line2);color:var(--txt)}
+  .pfsum:focus-visible{outline:1px solid #9a9aa2;outline-offset:1px}
+  .pfsum span:not(.pf-dot){flex:1;min-width:0}
+  .pfsum em{flex:none;font-style:normal;color:var(--dim)}
+  .pf-dot{flex:none;width:8px;height:8px;border-radius:50%;background:var(--dim)}
+  .pf-dot.bad{background:var(--err)}
+  .pf-dot.warn{background:var(--warn)}
+  .pf-dot.ok{background:#6fbf8a}
+  /* finestra del controllo: una riga per cosa da guardare */
+  .pfl{display:flex;flex-direction:column;gap:5px}
+  .pfl .pf-sum{margin:0 0 4px;color:var(--txt);font-size:var(--fs-l)}
+  .pf-row{display:flex;align-items:flex-start;gap:9px;padding:7px 9px;border-radius:6px;background:var(--bg);
+          border:1px solid var(--line);font-size:var(--fs);line-height:1.4;color:var(--txt)}
+  .pf-row .pf-dot{margin-top:5px}
+  .pf-row.bad .pf-dot{background:var(--err)}
+  .pf-row.warn .pf-dot{background:var(--warn)}
+  .pf-row.bad .pf-txt{color:#f2c4bd}
+  .pf-row.warn .pf-txt{color:#ecd9ae}
+  .pf-row.go{cursor:pointer}
+  .pf-row.go:hover{background:#26262c;border-color:var(--line2)}
+  .pf-txt{flex:1;min-width:0}
+  .pf-txt b{font-weight:600;color:var(--txt)}
+  .pf-acc{flex:none;padding:2px 9px;font-size:var(--fs-s)}
   /* [/v17-export] */
 
   /* ==========================================================================
@@ -653,10 +738,10 @@
 <body>
 
 <header>
-  <button id="bNew" title="Start a new pack. Texts, layouts and the screenshot library go back to the start; your logo, font and accent colour stay" data-ic="file">New</button>
+  <button id="bNew" title="Start a new pack. Texts, layouts and the screenshot library go back to the start; your logo, font and accent colour stay. Ctrl+N" data-ic="file">New</button>
   <button id="bLoad" title="Open a project file" data-ic="open">Open</button>
   <button id="bSave" title="Save the project, images included. The first time it asks where; after that it saves straight to the same file. Ctrl+S" data-ic="save">Save</button>
-  <button id="bSaveAs" title="Save the project to a new file. Ctrl+Shift+S" data-ic="copy">Save as</button>
+  <button id="bSaveAs" title="Save the project to a new file. Ctrl+Shift+S" data-ic="saveas">Save as</button>
   <span id="projInfo" class="projinfo"></span>
   <div class="grow"></div>
   <button id="bExp" title="Export the format you are on. Ctrl+E" data-ic="down">Export current</button>
@@ -680,7 +765,7 @@
     </div>
     <div id="formats"></div>
     <div class="leftfoot">
-      <button id="bAll" title="Copy this format layout onto every other format" data-ic="copy">Whole layout to all...</button>
+      <button id="bAll" title="Copy this format layout onto every other format" data-ic="layoutall">Whole layout to all...</button>
     </div>
   </aside>
   <div class="rz" id="rzL" role="separator" aria-orientation="vertical" title="Drag to resize the left column. Double-click: default width"></div>
@@ -853,13 +938,19 @@ const ICONS = {
   folder: 'M2 4h4.5L8 5.5H14V13H2z',
   logo:   'M3 3h6.5L13 6.5V13H3z M6 6h3.5v4H6z',
   type:   'M3.5 3.5h9 M8 3.5V13 M5.5 13h5',
-  open:   'M8 10.5V3 M5.5 5.5L8 3l2.5 2.5 M2.5 10.5V13h11v-2.5',
-  save:   'M8 3v7.5 M5.5 8L8 10.5 10.5 8 M2.5 13h11',
+  /* una icona per significato: Open = cartella aperta, Save = dischetto,
+     Save as = dischetto con il piu', Export = freccia nel vassoio (down) */
+  open:   'M2 13V4h4.5L8 5.5h6V7 M2 13l1.6-5.5H15L13.4 13z',
+  save:   'M3 2.5h8.5l2 2v9H3z M5.5 2.5v3.5h5V2.5 M5.5 13.5V9.5h5v4',
+  saveas: 'M2.5 2.5h7.5l2.5 2.5V8 M2.5 2.5v11H8 M4.5 2.5v3.5h4V2.5 M11.5 9.5v4 M9.5 11.5h4',
+  /* uno a molti: il layout di questo formato su tutti gli altri */
+  layoutall:'M2 5.5h5v5H2z M7 8h1.5 M8.5 4.3v7.4 M8.5 4.3H10 M8.5 11.7H10 M10 2.8h4v3h-4z M10 10.2h4v3h-4z',
   copy:   'M5.5 2.5h8v8h-8z M2.5 5.5v8h8',
   desktop:'M2 3h12v8H2z M6 13.5h4 M8 11v2.5',
   down:   'M8 2.5v7 M5.5 7L8 9.5 10.5 7 M2.5 13.5h11',
-  zip:    'M2.5 4.5h11v9h-11z M2.5 4.5L4 2.5h8l1.5 2 M8 6.5v3 M6.5 8h3',
-  key:    'M2.5 8h5.5 M8 5.5h5.5v5H8z M10.5 8h1.5',
+  zip:    'M2.5 4h11v3h-11z M3.5 7v6.5h9V7 M6.5 9.5h3',
+  /* tastiera: i punti sono segmenti di lunghezza zero con il capo tondo */
+  key:    'M1.5 4.5h13v7h-13z M4 7v.02 M6.5 7v.02 M9 7v.02 M11.5 7v.02 M4.5 9.5h7',
   undo:   'M5.5 4.5L2.5 7.5l3 3 M2.5 7.5h6.5c2 0 3.5 1.5 3.5 3.5v1.5',
   redo:   'M10.5 4.5l3 3-3 3 M13.5 7.5H7c-2 0-3.5 1.5-3.5 3.5v1.5',
   reset:  'M13 3.5v3.5h-3.5 M13 7A5.2 5.2 0 1 0 12.4 10.2',
@@ -868,14 +959,17 @@ const ICONS = {
   eye:    'M2 8s2.4-3.5 6-3.5S14 8 14 8s-2.4 3.5-6 3.5S2 8 2 8z M6.5 8h3',
   eyeoff: 'M2.5 2.5l11 11 M2 8s2.4-3.5 6-3.5c1 0 1.9.2 2.6.6 M12.4 6.6c1 .8 1.6 1.4 1.6 1.4s-2.4 3.5-6 3.5c-.6 0-1.2-.1-1.7-.2',
   up:     'M8 13V4 M4.5 7.5L8 4l3.5 3.5',
+  close:  'M4 4l8 8 M12 4l-8 8',
   trash:  'M2.5 4h11 M5.5 4V2h5v2 M4 4l.8 9.5h6.4L12 4',
   compare:'M2.5 2.5h5v11h-5z M8.5 2.5h5v11h-5z',
   lock:   'M4 7V5a4 4 0 0 1 8 0v2 M3 7h10v7H3z M8 9.5v2',
   unlock: 'M4 7V5a4 4 0 0 1 7.2-2.4 M3 7h10v7H3z M8 9.5v2',
-  /* Calamita, vista di lato con i due poli: si legge meglio del ferro
-     di cavallo minuscolo che c'era prima */
-  magnet2:'M3.5 3v4.5a4.5 4.5 0 0 0 9 0V3 M3.5 3H7 M9 3h3.5 M3.5 6.2H7 M9 6.2h3.5',
-  wheel:  'M8 2.5v3 M8 10.5v3 M2.5 8h3 M10.5 8h3 M4.2 4.2l2.1 2.1 M9.7 9.7l2.1 2.1 M11.8 4.2L9.7 6.3 M6.3 9.7l-2.1 2.1',
+  /* calamita a ferro di cavallo con i due poli segnati */
+  magnet2:'M3 2.5h3.5v6a1.5 1.5 0 0 0 3 0v-6H13v6a5 5 0 0 1-10 0z M3 5.5h3.5 M9.5 5.5H13',
+  /* due frecce che si allontanano in diagonale: ridimensiona */
+  wheel:  'M9.5 2.5h4v4 M13.5 2.5L9 7 M6.5 13.5h-4v-4 M2.5 13.5L7 9',
+  /* immagine con la croce: toglie le immagini che nessun pannello mostra */
+  unused: 'M2.5 3.5h11v9h-11z M6 6.5l4 3 M10 6.5l-4 3',
   /* lente con il piu' e con il meno: l'ingrandimento della tela, non
      quello dell'immagine dentro un pannello */
   zin:    'M7 2.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9z M10.4 10.4l3.1 3.1 M7 5v4 M5 7h4',
@@ -937,8 +1031,7 @@ window.addEventListener('keyup', e=>{ if(e.key===' ') spazio = false; });
 const SHORTCUTS = [
   ['Edit', [
     ['Ctrl+Z',        'Undo'],
-    ['Ctrl+Shift+Z',  'Redo'],
-    ['Ctrl+Y',        'Redo'],
+    ['Ctrl+Shift+Z',  'Redo (Ctrl+Y does the same)'],
     ['Alt+click',     'A control back to its default'],
     ['Alt+click image', 'Use that image in the selected panel of every format'],
     ['Ctrl+click image', 'Swap the image in the selected panel for that one, in every format']
@@ -952,10 +1045,12 @@ const SHORTCUTS = [
     ['Wheel',         'Zoom the canvas'],
     ['+  -  0',       'Zoom in, out, back to fit'],
     ['Space+drag',    'Move the zoomed canvas'],
+    ['R',             'Recentre the selected image'],
     ['G',             'Snapping on/off'],
+    ['#',             'Grid on/off'],
     ['L',             'Lock the selection'],
     ['L then drag',   'With the selection locked, drag from anywhere to move it'],
-    ['C',             'Comparison view on/off'],
+    ['C',             'Compare variants on/off'],
     ['Tab',           'Next format (Shift+Tab: previous)'],
     ['Esc',           'Back to editing, or drop the multiple selection']
   ]],
@@ -965,10 +1060,11 @@ const SHORTCUTS = [
     ['Ctrl+A',        'Take every layer'],
     ['Ctrl+click',    'Add a layer to the selection'],
     ['Shift+click',   'Take a range of layers'],
-    ['Shift+drag',    'Box select the layers instead of moving'],
-    ['Drag on empty', 'Box select: take every layer the box touches']
+    ['Shift+drag',    'Box select the layers it touches (a plain drag moves the image)'],
+    ['Ctrl+Shift+drag', 'Add the box to the layers already taken']
   ]],
   ['File', [
+    ['Ctrl+N',        'New pack (asks first)'],
     ['Ctrl+O',        'Open a project'],
     ['Ctrl+S',        'Save the project (Shift: save as)'],
     ['Ctrl+E',        'Export current'],
@@ -988,15 +1084,22 @@ function keysHtml(){
   const esc = t=> String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;');
   return SHORTCUTS.map(g=>
     '<h4>' + esc(g[0]) + '</h4><div class="kgrid">' +
-    g[1].map(k=> '<div><span>' + esc(k[1]) + '</span><b>' + esc(k[0]) + '</b></div>').join('') +
+    g[1].map(k=> '<div><b>' + esc(k[0]) + '</b><span>' + esc(k[1]) + '</span></div>').join('') +
     '</div>').join('');
 }
+const KEYS_HEAD = '<div class="khead"><b>Keyboard shortcuts</b><span>Esc to close</span>' +
+  '<button type="button" class="kx" title="Close (Esc)" aria-label="Close the list"></button></div>';
 /* Apre o chiude il popover. Si chiude con Esc, con ? e con un clic fuori. */
 function keysToggle(on){
   const p = document.getElementById('keysPop');
   if(!p) return;
   const apri = on === undefined ? p.hidden : !!on;
-  if(apri){ p.innerHTML = keysHtml(); p.hidden = false; }
+  if(apri){
+    p.innerHTML = KEYS_HEAD + keysHtml(); p.hidden = false;
+    const x = p.querySelector('.kx');
+    x.appendChild(icon('close'));
+    x.onclick = ()=> keysToggle(false);
+  }
   else p.hidden = true;
   const b = document.getElementById('bKeys');
   if(b) b.setAttribute('aria-expanded', apri ? 'true' : 'false');
@@ -1808,7 +1911,7 @@ const PARTS = [
     {p:'shot.panels', l:'Panels',   type:'range', min:1, max:6, step:1},
     {p:'shot.slant',  l:'Cut angle (all)', type:'range', min:-1.5, max:1.5, step:0.01,
      when:L=> L.shot.panels > 1},
-    {p:'shot.gap',    l:'Gap between panels', type:'range', min:0, max:0.15, step:0.002,
+    {p:'shot.gap',    l:'Panel gap', type:'range', min:0, max:0.15, step:0.002,
      when:L=> L.shot.panels > 1},
     /* la linea di divisione esiste solo se ci sono piu' pannelli, e i suoi
        colori solo se la linea e' accesa */
@@ -2096,7 +2199,7 @@ const PARTS = [
        arrivare a 0.3 rendeva lo slider inutilizzabile nella parte bassa */
     {p:'accent.thick', l:'Thickness', type:'range', min:0.0005, max:0.14, step:0.0005},
     {type:'group', l:'Colour'},
-    {p:'accent.gradLink', l:'Use theme gradient', type:'check'},
+    {p:'accent.gradLink', l:'Theme gradient', type:'check'},
     {p:'accent.color', l:'Colour',     type:'color', when:L=> !L.accent.gradLink},
     {p:'accent.gradOn',   l:'Gradient',    type:'check'},
     {p:'accent.color2',   l:'Colour right', type:'color',
@@ -2414,7 +2517,7 @@ PARTS.push(
     {p:'row.mode',        l:'Mode',        type:'select', opts:['inline','stack']},
     {type:'group', l:'Type'},
     {p:'row.titleFont',   l:'Title font',  type:'select', opts:FONTS},
-    {p:'row.itemFont',    l:'Category/brand font', type:'select', opts:FONTS},
+    {p:'row.itemFont',    l:'Brand font', type:'select', opts:FONTS},
     {type:'group', l:'Placement'},
     {p:'row.x',           l:'X',      type:'range', min:0, max:1, step:0.002},
     {p:'row.y',           l:'Baseline Y',  type:'range', min:0, max:1, step:0.002},
@@ -2424,19 +2527,19 @@ PARTS.push(
      when:L=> L.row.mode==='stack'},
     {p:'row.titleSize',   l:'Title size',  type:'range', min:0.005, max:0.25, step:0.001},
     {p:'row.titleWeight', l:'Title weight',type:'select', opts:WEIGHTS},
-    {p:'row.itemSize',    l:'Category/brand size', type:'range', min:0.005, max:0.25, step:0.001},
-    {p:'row.itemWeight',  l:'Category/brand weight', type:'select', opts:WEIGHTS},
+    {p:'row.itemSize',    l:'Brand size', type:'range', min:0.005, max:0.25, step:0.001},
+    {p:'row.itemWeight',  l:'Brand weight', type:'select', opts:WEIGHTS},
     {p:'row.titleTrack',  l:'Title track', type:'range', min:-0.05, max:0.3, step:0.005},
-    {p:'row.itemTrack',   l:'Category/brand track', type:'range', min:-0.05, max:0.3, step:0.005},
+    {p:'row.itemTrack',   l:'Brand track', type:'range', min:-0.05, max:0.3, step:0.005},
     {p:'row.gap',         l:'Gap',         type:'range', min:0, max:3, step:0.05},
     {p:'row.fitW',        l:'Max width',   type:'range', min:0.1, max:1, step:0.01},
     {type:'group', l:'Colour'},
     {p:'row.color',       l:'Title colour', type:'color'},
-    {p:'row.itemColor',   l:'Category/brand colour', type:'color'},
+    {p:'row.itemColor',   l:'Brand colour', type:'color'},
     /* la seconda riga esiste solo nella modalita' impilata */
     {p:'row.brandColor',  l:'Line 2 colour', type:'color', when:L=> L.row.mode==='stack'},
     {p:'row.titleOp',     l:'Title opacity',type:'range', min:0, max:1, step:0.02},
-    {p:'row.itemOp',      l:'Category/brand opacity', type:'range', min:0, max:1, step:0.02},
+    {p:'row.itemOp',      l:'Brand opacity', type:'range', min:0, max:1, step:0.02},
     {type:'group', l:'Separators'},
     {p:'row.sepOn',       l:'Separators',  type:'check'},
     {p:'row.sepOp',       l:'Sep opacity', type:'range', min:0, max:1, step:0.02},
@@ -2658,7 +2761,7 @@ PARTS.push(
      when:L=> L.badges.strokeOn},
     {p:'badges.strokeOp',    l:'Stroke opacity', type:'range', min:0, max:1, step:0.02,
      when:L=> L.badges.strokeOn},
-    {p:'badges.gradLink',    l:'Use theme gradient', type:'check', when:L=> L.badges.strokeOn},
+    {p:'badges.gradLink',    l:'Theme gradient', type:'check', when:L=> L.badges.strokeOn},
     {p:'badges.color',       l:'Stroke colour', type:'color',
      when:L=> L.badges.strokeOn && !L.badges.gradLink},
     {p:'badges.gradOn',      l:'Gradient',     type:'check', when:L=> L.badges.strokeOn},
@@ -3199,7 +3302,7 @@ function posKeysOf(k){ return isLay(k) ? {x:'x', y:'y'} : (POS_KEYS[k]||{x:null,
 
 /* ------------------------------------------------------------- comandi */
 function layerAdd(type){
-  pushUndo();
+  pushUndo('Add layer');
   const L = state.layouts[state.active];
   const list = layersOf(L);
   const n = list.filter(x=>x.type===type).length + 1;
@@ -3211,7 +3314,7 @@ function layerAdd(type){
   toast(l.name+' added');
 }
 function layerDelete(id){
-  pushUndo();
+  pushUndo('Delete layer');
   const L = state.layouts[state.active];
   const list = layersOf(L);
   /* se il livello fa parte di una selezione multipla se ne vanno tutti */
@@ -3227,7 +3330,7 @@ function layerDelete(id){
   toast(via.length > 1 ? via.length+' layers deleted' : 'Layer deleted', {undo:true});
 }
 function layerDup(id){
-  pushUndo();
+  pushUndo('Duplicate layer');
   const L = state.layouts[state.active];
   const list = layersOf(L);
   const scelti = multiIds();
@@ -3256,13 +3359,13 @@ function layerMove(id, dir){
   const i = list.findIndex(x=>x.id===id);
   const j = i + dir;
   if(i<0 || j<0 || j>=list.length) return;   /* niente da fare, niente da annullare */
-  pushUndo();
+  pushUndo('Move layer');
   const t = list[i]; list[i] = list[j]; list[j] = t;
   buildControls(); render();
 }
 /* copia i livelli di questo formato su tutti gli altri */
 function layersToAll(){
-  pushUndo();
+  pushUndo('Layers to all formats');
   const src = layersOf(state.layouts[state.active]);
   FORMATS.forEach(f=>{
     if(f.id===state.active) return;
@@ -3556,6 +3659,14 @@ function renderTo(c, f, L, preview){
    Le cose che si toccano di continuo mentre si lavora sull'immagine stanno
    qui, non in una sezione del pannello a destra.
    ========================================================================== */
+/* Rimette lo screenshot del pannello scelto al centro, zoom 1, senza rotazione:
+   il bottone della barra e il tasto R fanno la stessa cosa */
+function recentraImmagine(){
+  pushUndo('Recentre image');
+  const S = state.layouts[state.active].shot, i = pannelloAttivo(S);
+  Object.keys(PANNELLO_ZERO).forEach(k=>{ S[k][i] = PANNELLO_ZERO[k]; });
+  buildControls(); render();
+}
 function buildTools(){
   const bar = document.getElementById('tools');
   if(!bar) return;
@@ -3583,17 +3694,12 @@ function buildTools(){
   /* "Fit" qui accanto ai comandi dello zoom si leggeva come "adatta la tela
      alla finestra", che e' un'altra cosa: questo rimette a posto lo
      screenshot dentro la grafica */
-  mk('fit','Recentre image','Put the selected screenshot back in the graphic: zoom 1, centred, no rotation or flip. Other panels are left alone. Key: none', ()=>{
-    pushUndo();
-    const S = state.layouts[state.active].shot, i = pannelloAttivo(S);
-    Object.keys(PANNELLO_ZERO).forEach(k=>{ S[k][i] = PANNELLO_ZERO[k]; });
-    buildControls(); render();
-  });
+  mk('fit','Recentre image','Put the selected screenshot back in the graphic: zoom 1, centred, no rotation or flip. Other panels are left alone. Key: R', recentraImmagine);
   sep();
   mk('magnet2','Snap','Snap to the margins, the middle of the canvas and the other elements, by their edge or by their centre. Hold Alt while dragging to skip it once. Key: G', ()=>{
     state.snap.on = !state.snap.on; buildTools(); syncControls();
   }, state.snap.on);
-  const gb = mk('grid','Grid','Show a grid over the canvas. Click the small arrow, or right-click the button, for its settings. Key: none', (e)=>{
+  const gb = mk('grid','Grid','Show a grid over the canvas. Click the small arrow, or right-click the button, for its settings. Key: #', (e)=>{
     if(e && e.offsetX > e.currentTarget.offsetWidth - 16){ gridPopApri(e.currentTarget); return; }
     showGrid = !showGrid; buildTools(); render();
   }, showGrid);
@@ -3614,11 +3720,11 @@ function buildTools(){
   mk('zin','','Zoom into the canvas to work on small details. Key: + (or the mouse wheel)',
      ()=> zoomStep(1));
   sep();
-  mk('compare','Compare','Show all variants side by side. Key: C',
+  mk('compare','Compare variants','Show all the variants side by side on the canvas. Click again, or press C, to go back to editing. Key: C',
      ()=> runAction('compareShow'), compareMode);
   const grow = document.createElement('div'); grow.className = 'tgrow'; bar.appendChild(grow);
   mk('reset','Reset format','Put this format back to its default layout, screenshot panels included. The message that follows has an Undo button (or Ctrl+Z). Key: none', ()=>{
-    pushUndo();
+    pushUndo('Reset format');
     const f = FORMATS.find(x=>x.id===state.active);
     const keep = state.layouts[f.id].on;
     state.layouts[f.id] = defLayout(f);
@@ -3817,7 +3923,7 @@ let wheelTimer = null;
     /* al limite il valore non cambia: niente passo di undo a vuoto */
     if(nuovo === el[sk]){ e.preventDefault(); return; }
     /* un solo passo di undo per gesto continuo di rotellina */
-    if(wheelTimer===null) pushUndo();
+    if(wheelTimer===null) pushUndo('Resize');
     clearTimeout(wheelTimer);
     wheelTimer = setTimeout(()=>{ wheelTimer = null; }, 450);
     el[sk] = nuovo;
@@ -4189,10 +4295,11 @@ function render(){
     const sheet = compareSheet();
     cv.width = sheet.width; cv.height = sheet.height;
     ctx.drawImage(sheet, 0, 0);
+    const nv = state.variants.length || 1;
     document.getElementById('dims').textContent =
-      'Comparison, '+(state.variants.length||1)+' variants of '+f.name;
+      'Comparison, '+nv+(nv === 1 ? ' variant' : ' variants')+' of '+f.name;
     document.getElementById('selinfo').textContent =
-      'Click "Compare all on canvas" again to go back to editing';
+      'Press C, or click Compare variants again, to go back to editing';
     adattaTela();
     drawThumbs();          /* le anteprime a sinistra restano aggiornate */
     return;
@@ -4320,8 +4427,9 @@ function ripristinaColonna(lato){
 function iniziaManigliaColonne(){
   let salvato = {};
   try{ salvato = JSON.parse(localStorage.getItem(PANEL_KEY) || '{}') || {}; }catch(e){}
-  if(typeof salvato.lib === 'number'){
-    document.documentElement.style.setProperty('--lib-h', salvato.lib + 'px');
+  /* l'altezza della fascia immagini si ricorda in righe (le versioni prima della 1.8 salvavano i pixel: si ignorano) */
+  if(typeof salvato.libRows === 'number' && salvato.libRows >= 1){
+    document.documentElement.style.setProperty('--lib-rows', Math.min(8, Math.round(salvato.libRows)));
     document.body.classList.add('lib-custom');
   }
   ['l','r'].forEach(lato=>{
@@ -4358,8 +4466,11 @@ iniziaManigliaColonne();
 
 /* ------------------------------------------------------ lista dei formati */
 const THUMB_STEPS = [0, 44, 72, 110, 168];
+const THUMB_BOX_W = 72, THUMB_BOX_H = 44;
 function thumbSize(dir){
-  const cur = state.ui.thumb || 72;
+  /* 0 = anteprime spente e' un valore vero: con "|| 72" il passo dopo lo
+     spento saltava a 110 invece di 44 */
+  const cur = state.ui.thumb === undefined ? 72 : state.ui.thumb;
   let i = THUMB_STEPS.reduce((best, v, k)=>
     Math.abs(v-cur) < Math.abs(THUMB_STEPS[best]-cur) ? k : best, 0);
   i = Math.max(0, Math.min(THUMB_STEPS.length-1, i + dir));
@@ -4477,10 +4588,10 @@ function buildFormats(){
       box.appendChild(gEl);
     }
     const row = document.createElement('div');
-    row.className = 'fmt'+(f.id===state.active?' on':'');
+    row.className = 'fmt'+(f.id===state.active?' on':'')+(state.layouts[f.id].on?'':' off');
     const cb = document.createElement('input');
     cb.type='checkbox'; cb.checked = state.layouts[f.id].on;
-    cb.onclick = e=>{ e.stopPropagation(); pushUndo(); state.layouts[f.id].on = cb.checked; drawThumbs(true); autoSave(); };
+    cb.onclick = e=>{ e.stopPropagation(); pushUndo('Tick format'); state.layouts[f.id].on = cb.checked; row.classList.toggle('off', !cb.checked); drawThumbs(true); autoSave(); };
     /* anteprima: la stessa immagine che uscirebbe, in piccolo.
        Si ridisegna da sola dopo ogni modifica, con un ritardo, cosi' non
        pesa mentre si trascina un elemento sulla tela. */
@@ -4494,10 +4605,12 @@ function buildFormats(){
       th = document.createElement('canvas');
       th.className = 'th';
       /* il doppio dei pixel, per gli schermi fitti */
+      /* riquadro fisso 72x44 (in proporzione a TW): il disegno ci sta dentro
+         "contain", cosi' un formato quadrato non allunga la riga */
       th.width = TW*2;
-      th.height = Math.round(TW*2 * b.h/b.w);
+      th.height = Math.round(TW*2 * THUMB_BOX_H/THUMB_BOX_W);
       th.style.width = TW+'px';
-      th.style.height = Math.round(TW * b.h/b.w)+'px';
+      th.style.height = Math.round(TW * THUMB_BOX_H/THUMB_BOX_W)+'px';
       th.dataset.fmt = f.id;
     }
     const grande = TW >= 110;
@@ -4529,7 +4642,7 @@ function buildFormats(){
         bt.onclick = e=>{
           e.stopPropagation();
           if(sz[2] === (state.layouts[f.id].res || f.sizes[0][2])) return;
-          pushUndo();
+          pushUndo('Export size');
           state.layouts[f.id].res = sz[2];
           buildFormats(); render();
           toast(f.name+': '+sz[2]);
@@ -4582,7 +4695,10 @@ function drawThumbs(now){
                state.layouts[f.id], false);
     }catch(err){ return; }
     g.drawImage(off.canvas, Math.round((cv2.width-w)/2), Math.round((cv2.height-h)/2));
-    cv2.style.opacity = state.layouts[f.id].on ? '1' : '0.4';
+    /* il velo sui formati spenti e' una classe della riga (.off): copre solo
+       la miniatura, mai il nome ne' lo stato "scelto" */
+    const riga = cv2.closest('.fmt');
+    if(riga) riga.classList.toggle('off', !state.layouts[f.id].on);
   };
   const run = ()=>{
     thumbTimer = null;
@@ -4611,11 +4727,9 @@ function drawThumbs(now){
 /* ---------------------------------------------------- pannello dei controlli
    le sezioni si costruiscono da PARTS, piu' i dati del pack in cima */
 const PACK_SECTION = {t:'Pack data', open:true, rows:[
-  {p:'pack.title',   l:'Title',    type:'area'},
-  {p:'pack.category',l:'Category', type:'text'},
   {p:'pack.brand',   l:'Brand',    type:'text'},
-  {p:'pack.version', l:'Version',  type:'text'},
   {p:'pack.badges',  l:'Badges',   type:'text'},
+  {type:'note', text:'Title, version and category are in the Pack card on the left.'},
 ], note:'Valid for every format. Badges: comma separated, e.g. URP, HDRP.'};
 
 const THEME_SECTION = {t:'Colours', open:true, rows:[
@@ -4627,7 +4741,7 @@ const THEME_SECTION = {t:'Colours', open:true, rows:[
   {type:'gradsets'},
   {p:'theme.scope',  l:'Recolour', type:'select', opts:['all formats','this format']},
   {type:'button', text:'Apply colour again', act:'applyAccent'},
-  {type:'button', text:'Back to default orange', act:'resetAccent'},
+  {type:'button', text:'Back to default colour', act:'resetAccent'},
 ], note:'One picker for the whole design. Moving it repaints every colour that is not a grey, on every element, every layer and every format. Gradients keep their two tones: the second colour is rotated by the same amount instead of being flattened onto the first.'};
 
 const NAMING_SECTION = {t:'File naming', rows:[
@@ -4651,7 +4765,7 @@ const EXPORT_SECTION = {t:'Export', open:true, rows:[
   {type:'button', text:'Check size of every format', act:'sizeCheck'},
   {type:'button', text:'Export one file per image...', act:'perImage', wide:true,
    tip:'Export the format you are on once for every image, using its layout. Each file shows one image'},
-], note:'Export all as: Zip file makes one zip, Separate files writes every image into a folder named by the Folder setting under Naming. PNG is lossless and is the default. WebP at 0.9 looks the same and weighs a fraction. Quality only applies to WebP and JPEG. Fab accepts PNG or JPEG, under 3 MB. Scale changes the pixel size, so leave it at 1 for the store formats that require exact dimensions.'};
+], note:'Export all as: Zip file makes one zip, Separate files writes every image into a folder named by the Folder setting under File naming. PNG is lossless and is the default. WebP at 0.9 looks the same and weighs a fraction. Quality only applies to WebP and JPEG. Fab accepts PNG or JPEG, under 3 MB. Scale changes the pixel size, so leave it at 1 for the store formats that require exact dimensions.'};
 
 /* le righe di controllo del livello selezionato, diverse per forma e testo */
 /* aiutanti per le condizioni delle righe di un livello: lavorano sul
@@ -4818,7 +4932,7 @@ const VARIANTS_SECTION = {t:'Variants', rows:[
   {type:'variants'},
   {type:'button', text:'Save current as new variant', act:'variantAdd'},
   {type:'button', text:'Update selected variant',     act:'variantUpdate'},
-  {type:'button', text:'Compare all on canvas',       act:'compareShow'},
+  {type:'button', text:'Compare variants',            act:'compareShow'},
   {type:'button', text:'Export comparison sheet',     act:'compareExport'},
 ], note:'A variant is a full snapshot of the design. Save a few, click to switch, compare them side by side. They travel inside the project file.'};
 
@@ -4840,6 +4954,7 @@ function snapState(senzaUi){
 }
 function applySnap(s){
   const d = JSON.parse(s);
+  const titoloPrima = state.pack && state.pack.title;
   if(d.pack && typeof d.pack === 'object') state.pack = d.pack;   /* un salvataggio senza testi lascia quelli che ci sono */
   state.layouts = d.layouts || {};
   migraTuttiIPannelli(state.layouts);
@@ -4858,13 +4973,15 @@ function applySnap(s){
   fixSelection();
   if(d.theme)  state.theme  = d.theme;
   if(d.naming) state.naming = d.naming;
-  if(d.export) state.export = Object.assign(state.export, {bundle:'Zip file'}, d.export);
+  if(d.export) state.export = Object.assign(state.export, {bundle:'Zip file', accepted:undefined}, d.export);
   if(Array.isArray(d.variants)) state.variants = d.variants.filter(v=> v && typeof v === 'object');
   if(d.current !== undefined) state.currentVariant = (d.current < state.variants.length) ? d.current : null;
   if(d.ui){
     if(d.ui.thumb !== undefined) state.ui.thumb = d.ui.thumb;
     if(d.ui.margin !== undefined) state.ui.margin = d.ui.margin;
   }
+  /* un altro pacchetto: il controllo e l'ultimo export erano del precedente */
+  if(state.pack && state.pack.title !== titoloPrima) azzeraEsiti();
   buildFormats(); buildControls(); render();
 }
 /* una mossa nuova cancella la pila del ripeti: e' il comportamento di
@@ -4889,36 +5006,44 @@ function shotsBack(s){
     fileProgetto = s.progetto.h; nomeProgetto = s.progetto.n; firmaSalvata = s.progetto.f;
     titoloFile = s.progetto.t || '';
     if(fileProgetto) ricordaFileProgetto(fileProgetto);
-    else dbApri().then(d=>{ if(!d) return; try{ d.transaction('meta','readwrite').objectStore('meta').delete('progetto'); }catch(e){} });
+    else metaDel('progetto');
   }
   if(imgShot && !SHOTS.some(x=> x.img===imgShot)) imgShot = SHOTS.length ? SHOTS[0].img : null;
   if(!imgShot && SHOTS.length) imgShot = SHOTS[0].img;
 }
-function pushUndo(){
+/* Il nome della mossa viaggia su due pile parallele a quelle dello stato
+   (mai dentro snapState): serve solo al messaggio "Undo: Swap image". */
+let undoNomi = [], redoNomi = [];
+function pushUndo(nome){
   undoStack.push(snapState(true));
   undoShots.push(shotsSnap());
-  if(undoStack.length>60){ undoStack.shift(); undoShots.shift(); }
-  redoStack.length = 0; redoShots.length = 0;
+  undoNomi.push(nome ? String(nome) : '');
+  if(undoStack.length>60){ undoStack.shift(); undoShots.shift(); undoNomi.shift(); }
+  redoStack.length = 0; redoShots.length = 0; redoNomi.length = 0;
   updateHistBtns();
 }
 function undo(){
   const s = undoStack.pop();
   if(!s){ toast('Nothing to undo'); return; }
+  const nome = undoNomi.pop() || '';
   redoStack.push(snapState(true));
   redoShots.push(shotsSnap());
-  if(redoStack.length>60){ redoStack.shift(); redoShots.shift(); }
+  redoNomi.push(nome);
+  if(redoStack.length>60){ redoStack.shift(); redoShots.shift(); redoNomi.shift(); }
   shotsBack(undoShots.pop());
   dbSalva();
-  applySnap(s); updateHistBtns(); toast('Undo');
+  applySnap(s); updateHistBtns(); toast(nome ? 'Undo: ' + nome : 'Undo');
 }
 function redo(){
   const s = redoStack.pop();
   if(!s){ toast('Nothing to redo'); return; }
+  const nome = redoNomi.pop() || '';
   undoStack.push(snapState(true));
   undoShots.push(shotsSnap());
+  undoNomi.push(nome);
   shotsBack(redoShots.pop());
   dbSalva();
-  applySnap(s); updateHistBtns(); toast('Redo');
+  applySnap(s); updateHistBtns(); toast(nome ? 'Redo: ' + nome : 'Redo');
 }
 function updateHistBtns(){
   const u = document.getElementById('bUndo'), r = document.getElementById('bRedo');
@@ -5127,6 +5252,7 @@ function autoRestore(daBottone){
     if(!daBottone){
       undoStack.length = 0; redoStack.length = 0;
       undoShots.length = 0; redoShots.length = 0;
+      undoNomi.length = 0; redoNomi.length = 0;
     }
     updateHistBtns();
     return true;
@@ -5499,29 +5625,36 @@ function buildControls(){
   head.className = 'phead';
   head.appendChild(stripImmagini());
 
+  /* schede e ricerca stanno su una sola riga (.hbar): in uno spazio stretto le schede non aperte
+     restano icone (la regola e' nel CSS, il nome e' nel suggerimento) */
+  const fr = document.createElement('div');
+  fr.className = 'hbar';
   const tb = document.createElement('div');
   tb.className = 'tabs';
   TABS.forEach(t=>{
     const b = document.createElement('button');
-    b.textContent = t.label;
+    const tl = document.createElement('span'); tl.className = 'tl'; tl.textContent = t.label;
+    b.appendChild(tl);
     b.dataset.tab = t.id;
     b.setAttribute('data-ic', t.ic);
-    b.title = t.has.join(', ');
+    b.title = t.label + ': ' + t.has.join(', ');
     if(t.id===activeTab) b.classList.add('on');
     b.onclick = ()=> vaiScheda(t.id);
     tb.appendChild(b);
   });
-  head.appendChild(tb);
+  fr.appendChild(tb);
 
   /* filtro: scrivere due lettere e' piu' veloce che scorrere.
      Con il filtro attivo si cerca in tutte le schede, non solo in questa. */
-  const fr = document.createElement('div');
-  fr.className = 'row';
-  fr.innerHTML = '<input type="text" id="secFilter" placeholder="Search all settings..." ' +
-                 'title="Searches every tab, not just this one. Esc clears it" style="flex:1">' +
-                 '<button id="secClose" style="flex:none" title="Collapse every section">Collapse all</button>';
+  const fx = document.createElement('div');
+  fx.innerHTML = '<input type="text" id="secFilter" placeholder="Search settings" ' +
+                 'title="Searches every tab, not just this one. Esc clears it. Key: /">' +
+                 '<button id="secClose" title="Collapse all sections"><i></i><span class="cl">Collapse all</span></button>';
+  while(fx.firstChild) fr.appendChild(fx.firstChild);
   head.appendChild(fr);
   box.appendChild(head);
+  /* le righe della fascia delle immagini si contano ora che e' nella pagina */
+  segnaStrip();
 
   const vuoto = document.createElement('div');
   vuoto.id = 'secVuoto'; vuoto.className = 'hint';
@@ -5600,14 +5733,34 @@ function buildControls(){
       if(el && el.isConnected) portaInVista(el);
     }, 0);
   }
+  /* se la tela ha scelto un altro pannello dello stesso formato, i suoi comandi
+     possono stare piu' in basso di quanto si vede: si portano sotto la testata */
+  const S0 = state.layouts[state.active] && state.layouts[state.active].shot;
+  const ora = S0 ? {f: state.active, i: pannelloAttivo(S0)} : null;
+  const cambiato = !!(ora && _pannelloVisto && _pannelloVisto.f === ora.f && _pannelloVisto.i !== ora.i);
+  _pannelloVisto = ora;
+  if(cambiato) setTimeout(portaPannelloScelto, 0);
 }
 let scrollTo = null;
+let _pannelloVisto = null;
+function portaPannelloScelto(){
+  const box = document.getElementById('controls');
+  const blk = box && box.querySelector('.pblk.on');
+  if(!blk) return;
+  const head = box.querySelector('.phead');
+  const cr = box.getBoundingClientRect();
+  const alto = head ? head.getBoundingClientRect().bottom : cr.top;
+  const r = blk.getBoundingClientRect();
+  if(r.top < alto + 4) box.scrollTop += r.top - alto - 8;
+  else if(r.bottom > cr.bottom - 4) box.scrollTop += Math.min(r.bottom - cr.bottom + 8, r.top - alto - 8);
+}
 let _phTimer = 0;
 function aggiornaAltezzaTesta(){
   clearTimeout(_phTimer);
   _phTimer = setTimeout(()=>{
     const box = document.getElementById('controls'), h = box && box.querySelector('.phead');
     if(h) box.style.setProperty('--phead-h', h.offsetHeight + 'px');
+    segnaStrip();
   }, 0);
 }
 /* "/" porta il cursore nella ricerca, come nei pannelli di impostazioni di tutti i giorni */
@@ -5858,7 +6011,7 @@ function spostaImmagine(da, verso){
   /* verso e' il punto d'inserimento nell'elenco com'e' ora */
   const a = verso > da ? verso - 1 : verso;
   if(a === da) return;
-  pushUndo();
+  pushUndo('Reorder images');
   fissaPrincipale();
   const ordine = SHOTS.map((_, k)=> k);
   ordine.splice(a, 0, ordine.splice(da, 1)[0]);
@@ -5897,7 +6050,7 @@ function testoUsi(usi){
 }
 function togliImmagine(i){
   const usi = usiImmagine(SHOTS[i].img);
-  pushUndo();
+  pushUndo('Remove image');
   fissaPrincipale();
   const via = SHOTS[i].img;
   SHOTS.splice(i, 1);
@@ -5927,7 +6080,7 @@ function sostituisciUso(i){
     if(dove.length){ tocchi.push({f:f, S:S, n:n, dove:dove}); tot += dove.length; }
   });
   if(!tot) return;
-  pushUndo();
+  pushUndo('Swap image');
   tocchi.forEach(t=>{
     if(!Array.isArray(t.S.src)) t.S.src = [];
     for(let k=0;k<t.n;k++) if(t.S.src[k] === undefined) t.S.src[k] = panelSrc(t.S, k);
@@ -5969,7 +6122,7 @@ function indiciNonUsati(){
 function togliNonUsate(){
   const via = indiciNonUsati();
   if(!via.length){ toast('Every image is in use'); return; }
-  pushUndo();
+  pushUndo('Remove unused images');
   fissaPrincipale();
   const fuori = new Set(via), nuovo = {};
   let n = 0;
@@ -5987,23 +6140,18 @@ function togliNonUsate(){
 function sostituisciImmagine(i, file){
   const vecchio = SHOTS[i];
   if(!vecchio) return;
-  loadImage(file, (im, motivo)=>{
+  fileInMemoria(file).then(copia=> loadImage(copia, (im, motivo)=>{
     /* nel frattempo l'elenco puo' essere cambiato: si cerca di nuovo la stessa scheda */
     const k = SHOTS.indexOf(vecchio);
     if(k < 0) return;
     if(!im){ toast('Could not replace image ' + (k+1) + ': ' + (motivo || 'the file cannot be opened')); return; }
-    pushUndo();
-    const nuova = {name:file.name, img:im, path:file.webkitRelativePath || file.name, blob:file};
-    SHOTS[k] = nuova;
-    if(imgShot === vecchio.img) imgShot = im;
-    preparaImmagini([nuova]);
-    dbSalva();
+    const nuova = {name:file.name, img:im, path:file.webkitRelativePath || file.name, blob:copia};
+    scambiaImmagini([{vecchio:vecchio, nuova:nuova}], 'Replace image');
     toast('Image ' + (k+1) + ' replaced by ' + file.name, {undo:true});
-    scaldaImmagini().then(()=>{ buildControls(); render(); });
-  });
+  }));
 }
 function usaImmagine(i, ovunque){
-  pushUndo();
+  pushUndo('Use image');
   const metti = id=>{
     const S = state.layouts[id].shot;
     if(!Array.isArray(S.src)) S.src = [];
@@ -6077,32 +6225,57 @@ function aggiornaStrip(el){
     for(let p=0;p<np;p++) if(shotByIndex(panelSrc(S, p)) === sh.img) pannelli.push(p+1);
     card.classList.toggle('usata', pannelli.length > 0);
     card.classList.toggle('on', sh.img === nelPannello);
+    /* con un solo pannello "in uso" lo dice gia' il bordo della scheda: l'etichetta serve solo per dire quale pannello */
     let pn = card.querySelector('.pan');
-    if(pannelli.length){
+    if(pannelli.length && np > 1){
       if(!pn){
         pn = document.createElement('span'); pn.className = 'pan';
         const del = card.querySelector('.del');
         card.insertBefore(pn, del);
       }
-      const t = np > 1 ? 'P' + pannelli.join(' P') : 'IN USE';
+      const t = 'P' + pannelli.join(' P');
       if(pn.textContent !== t) pn.textContent = t;
     }else if(pn) pn.remove();
   });
+  segnaStrip(el);
 }
+/* quante righe di schede si vedono: 2 (1 sotto gli 800 px di altezza) o quante ne ha scelte chi trascina la maniglia */
+function righeStrip(){
+  const v = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--lib-rows'), 10);
+  return v > 0 ? v : 2;
+}
+/* con piu' immagini di quelle in vista la fascia ha la barra di scorrimento (.ov): il CSS ne tiene conto
+   per la larghezza delle schede, cosi' l'altezza resta un numero intero di righe */
+function segnaStrip(el){
+  const g = (el || document).querySelector('.lib');
+  if(!g) return;
+  g.classList.toggle('ov', SHOTS.length > righeStrip() * 4);
+  /* la larghezza vera della barra dipende dal sistema: si misura una volta e il CSS la usa (--sbw) */
+  if(g.classList.contains('ov') && g.isConnected && !_sbw){
+    const w = g.offsetWidth - g.clientWidth;
+    if(w > 0){ _sbw = w; document.documentElement.style.setProperty('--sbw', w + 'px'); }
+  }
+}
+let _sbw = 0;
 /* altezza dell'area immagini: si trascina il bordo in basso, doppio clic = di serie */
 function impostaAltezzaStrip(px, salva){
   const box = document.getElementById('controls');
-  const mx = Math.max(60, (box ? box.clientHeight : 600) * 0.6);
-  const v = Math.round(clamp(px, 48, mx));
-  document.documentElement.style.setProperty('--lib-h', v + 'px');
+  const grid = document.querySelector('#imgs .lib'), card = grid && grid.querySelector('.card');
+  /* l'altezza e' sempre un numero intero di righe: px diventa il numero di righe piu' vicino, da 1 al 60% del pannello */
+  const riga = (card ? card.getBoundingClientRect().height : 45) + 4;
+  const mx = Math.max(1, Math.floor((box ? box.clientHeight : 600) * 0.6 / riga));
+  const righe = Math.round(clamp(Math.round(px / riga), 1, mx));
+  document.documentElement.style.setProperty('--lib-rows', righe);
   document.body.classList.add('lib-custom');
-  if(salva) salvaPannello('lib', v);
+  segnaStrip();
+  const v = grid ? Math.round(grid.getBoundingClientRect().height) : Math.round(righe * riga);
+  if(salva){ salvaPannello('lib', v); salvaPannello('libRows', righe); }
   aggiornaAltezzaTesta();
   return v;
 }
 function manigliaStrip(grid){
   const h = document.createElement('div');
-  h.className = 'rzh'; h.title = 'Drag to change the height of the images area. Double-click: default height';
+  h.className = 'rzh'; h.title = 'Drag to change how many rows of images show. Double-click: default';
   h.addEventListener('pointerdown', e=>{
     if(e.button) return;
     e.preventDefault();
@@ -6116,16 +6289,17 @@ function manigliaStrip(grid){
       h.removeEventListener('pointermove', muovi);
       h.removeEventListener('pointerup', fine);
       h.removeEventListener('pointercancel', fine);
-      salvaPannello('lib', ultimo);
+      salvaPannello('lib', ultimo); salvaPannello('libRows', righeStrip());
     };
     h.addEventListener('pointermove', muovi);
     h.addEventListener('pointerup', fine);
     h.addEventListener('pointercancel', fine);
   });
   h.addEventListener('dblclick', ()=>{
-    document.documentElement.style.removeProperty('--lib-h');
+    document.documentElement.style.removeProperty('--lib-rows');
     document.body.classList.remove('lib-custom');
-    salvaPannello('lib', null);
+    salvaPannello('lib', null); salvaPannello('libRows', null);
+    segnaStrip();
     aggiornaAltezzaTesta();
   });
   return h;
@@ -6157,9 +6331,11 @@ function stripImmagini(){
   bt('image', 'Add', 'Add images. Dropping files on the window does the same', ()=> document.getElementById('fImg').click());
   bt('folder', 'Folder', 'Add every image in a folder, subfolders included', ()=> document.getElementById('fFolder').click());
   if(SHOTS.length){
-    const rm = bt('trash', 'Unused', 'Remove the images no panel shows', togliNonUsate);
+    const rm = bt('unused', 'Unused', 'Remove the images no panel shows', togliNonUsate);
     rm.classList.add('rmu'); rm.hidden = true;
-    bt('trash', '', 'Remove every image. Ctrl+Z brings them back', ()=> runAction('shotsClear'));
+    /* cancella tutto: ha il nome scritto (niente icona sola), e Ctrl+Z / Annulla nell'avviso lo riportano */
+    const ra = bt('trash', 'Remove all', 'Remove every image from the project. Ctrl+Z brings them back', ()=> runAction('shotsClear'));
+    ra.classList.add('rma');
   }
   box.appendChild(hd);
   if(!SHOTS.length){
@@ -6193,9 +6369,9 @@ function stripImmagini(){
     card.appendChild(th);
     const num = document.createElement('span'); num.className = 'num'; num.textContent = i + 1;
     card.appendChild(num);
-    if(pannelli.length){
+    if(pannelli.length && np > 1){
       const pn = document.createElement('span'); pn.className = 'pan';
-      pn.textContent = np > 1 ? 'P' + pannelli.join(' P') : 'IN USE';
+      pn.textContent = 'P' + pannelli.join(' P');
       card.appendChild(pn);
     }
     const del = document.createElement('button');
@@ -6222,7 +6398,7 @@ function stripImmagini(){
         /* un file dal desktop: prende il posto di questa immagine; gli altri file seguono la strada di sempre */
         if(!haFile(e)) return;
         const files = [...e.dataTransfer.files];
-        const imgs = files.filter(f=> /^image\//.test(f.type) || /\.(png|jpe?g|webp|gif|bmp)$/i.test(f.name));
+        const imgs = files.filter(f=> eImmagine(f));
         if(!imgs.length) return;
         e.preventDefault(); e.stopPropagation();
         dropProfondita = 0; mostraDrop(false); segnaCarta(null);
@@ -6240,6 +6416,7 @@ function stripImmagini(){
   });
   box.appendChild(grid);
   box.appendChild(manigliaStrip(grid));
+  grid.classList.toggle('ov', SHOTS.length > righeStrip() * 4);
   aggiornaNonUsate(box);
   paintIcons(box);
   _strip = {chiave:chiave, el:box, scroll:scrollPrima};
@@ -6448,7 +6625,6 @@ function pickerRow(r){
   const cur = document.createElement('button');
   cur.className = 'cur'; cur.setAttribute('aria-haspopup','listbox');
   cur.type = 'button';
-  cur.title = tip || ('Pick ' + String(r.l).toLowerCase());
   box.appendChild(cur);
 
   const paint = ()=>{
@@ -6459,8 +6635,10 @@ function pickerRow(r){
     t.className = 'lbl';
     t.textContent = r.label ? r.label(v) : String(v);
     cur.appendChild(t);
+    /* il nome intero: nel selettore puo' essere tagliato con i puntini */
+    cur.title = t.textContent + (tip ? '\n' + tip : '');
     const car = document.createElement('span');
-    car.className = 'car'; car.textContent = '▾';
+    car.className = 'car';
     cur.appendChild(car);
   };
   paint();
@@ -6586,7 +6764,7 @@ const TIP_PATH = {
   'accent.segGap':'Empty space between the pieces of the line',
   'accent.endCut':'Cuts the two ends of the line on a slant instead of straight across',
   'accent.y':'Height of the bar on the canvas',
-  'accent.gradLink':'Use the two colours of the theme gradient (Theme section) instead of a colour of its own',
+  'accent.gradLink':'Use theme gradient: take the two colours of the theme gradient (Colours section) instead of a colour of its own',
 
   'logo.pad':'Space between the logo and its box',
   'logo.outOn':'Coloured outline following the logo shape',
@@ -6609,7 +6787,7 @@ const TIP_PATH = {
   'shot.fit':'Cover fills the frame and crops what overflows, contain shows the whole image',
   'shot.panels':'Split the image into slanted panels',
   'shot.slant':'Angle of every cut between panels at once; each panel can also have its own',
-  'shot.gap':'Empty space left along each cut',
+  'shot.gap':'Gap between panels: empty space left along each cut',
   'shot.edgeOn':'Draw a line along each cut',
 
   'fx.expo':'Exposure, like a camera stop',
@@ -6660,20 +6838,20 @@ const TIP_PATH = {
   'logo.fill':'A solid square under the logo, in the colour below',
 
   'row.titleFont':'Typeface of the title',
-  'row.itemFont':'Typeface of category and brand',
+  'row.itemFont':'Category/brand font: typeface of category and brand',
   'row.x2':'Second line, horizontal position',
   'row.y2':'Second line, vertical position',
   'row.titleSize':'Size of the title',
   'row.titleWeight':'How heavy the title is',
-  'row.itemSize':'Size of category and brand',
-  'row.itemWeight':'How heavy category and brand are',
+  'row.itemSize':'Category/brand size: size of category and brand',
+  'row.itemWeight':'Category/brand weight: how heavy category and brand are',
   'row.titleTrack':'Space between letters of the title',
-  'row.itemTrack':'Space between letters of category and brand',
+  'row.itemTrack':'Category/brand track: space between letters of category and brand',
   'row.gap':'Space around each separator, between title, category and brand',
-  'row.itemColor':'Colour of category and brand',
+  'row.itemColor':'Category/brand colour: colour of category and brand',
   'row.brandColor':'Colour of the second line',
   'row.titleOp':'How solid the title is',
-  'row.itemOp':'How solid category and brand are',
+  'row.itemOp':'Category/brand opacity: how solid category and brand are',
   'row.sepOp':'How solid the separators are',
   'row.sepH':'Height of a separator',
   'row.sepW':'Width of a separator',
@@ -6686,7 +6864,7 @@ const TIP_PATH = {
 
   'badges.strokeOn':'Outline around each badge',
   'badges.strokeOp':'How solid the outline is. The PSD uses 0.8',
-  'badges.gradLink':'Take the two gradient ends from the Theme section',
+  'badges.gradLink':'Use theme gradient: take the two gradient ends from the Colours section',
   'badges.fillOn':'Solid background inside each badge',
 
   'naming.case':'Upper, lower or left as typed',
@@ -6835,6 +7013,12 @@ function makeRow(r){
     if(r.tip) d.title = r.tip;
     return d;
   }
+  if(r.type==='note'){
+    const d = document.createElement('div');
+    d.className = 'hint';
+    d.textContent = r.text;
+    return d;
+  }
   if(r.type==='alignpad'){
     const l = layOfKey(state.sel);
     const wrap = document.createElement('div');
@@ -6855,7 +7039,7 @@ function makeRow(r){
       bt.appendChild(cv2);
       bt.title = 'Snap to ' + a[0];
       bt.onclick = ()=>{
-        pushUndo();
+        pushUndo('Snap');
         /* con piu' livelli scelti si agganciano tutti allo stesso punto */
         (multiCount() > 1 ? multiLayers() : [l]).forEach(x=> layerAnchor(x, f, a[1], a[2]));
         syncControls(); render();
@@ -6863,6 +7047,10 @@ function makeRow(r){
       pad.appendChild(bt);
     });
     arow.appendChild(pad);
+    const ah = document.createElement('div');
+    ah.className = 'ahint';
+    ah.textContent = 'Click a point to snap the layer to that spot of the canvas. Margin sets how far from the edge.';
+    arow.appendChild(ah);
 
     const col = document.createElement('div');
     col.className = 'acol';
@@ -6893,8 +7081,8 @@ function makeRow(r){
       ()=> layerMatch(l, f, state.layouts[state.active], 'title', 'centre'));
     if(tg.logo) add('Centre on the logo', 'Same centre as the logo square',
       ()=> layerMatch(l, f, state.layouts[state.active], 'logo', 'centre'));
-    arow.appendChild(col);
     wrap.appendChild(arow);
+    wrap.appendChild(col);
 
     /* il margine usato dai nove punti */
     wrap.appendChild(makeRow({p:'ui.margin', l:'Margin', type:'range',
@@ -6937,13 +7125,13 @@ function makeRow(r){
       eye.className = 'lbtn';
       eye.title = l.on ? 'Hide' : 'Show';
       eye.appendChild(icon(l.on ? 'eye' : 'eyeoff'));
-      eye.onclick = e=>{ e.stopPropagation(); pushUndo(); l.on = !l.on; buildControls(); render(); };
+      eye.onclick = e=>{ e.stopPropagation(); pushUndo('Show or hide layer'); l.on = !l.on; buildControls(); render(); };
 
       const nm = document.createElement('span');
       nm.className = 'lname';
       nm.textContent = l.name + (l.front ? '  (front)' : '');
       nm.title = 'Click to select, double click to rename';
-      const rinomina = ()=> rinominaInLinea(nm, l.name, v=>{ pushUndo(); l.name = v; buildControls(); });
+      const rinomina = ()=> rinominaInLinea(nm, l.name, v=>{ pushUndo('Rename layer'); l.name = v; buildControls(); });
       nm.ondblclick = e=>{ e.stopPropagation(); rinomina(); };
 
       const tag = document.createElement('span');
@@ -7026,9 +7214,9 @@ function makeRow(r){
     const wrap = document.createElement('div'); wrap.className = 'row';
     const lb = document.createElement('label'); lb.textContent = 'Folder';
     const nm = document.createElement('span');
-    nm.style.cssText = 'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px';
+    nm.className = 'expdir';
     nm.textContent = cartellaExport ? cartellaExport.name : 'asked at the first export';
-    nm.title = 'Exports are written here, each with the next free number';
+    nm.title = (cartellaExport ? cartellaExport.name + '\n' : '') + 'Exports are written here, each with the next free number';
     const b = document.createElement('button'); b.textContent = cartellaExport ? 'Change' : 'Choose';
     b.style.flex = 'none';
     b.onclick = ()=> scegliCartellaExport().catch(e=>{ if(e && e.name !== 'AbortError') toast(e.message); });
@@ -7041,7 +7229,7 @@ function makeRow(r){
     const n = Math.max(1, Math.round(S.panels||1)), attivo = pannelloAttivo(S);
     for(let i=0;i<n;i++){
       const blk = document.createElement('div');
-      blk.className = 'pblk' + (n>1 && i===attivo ? ' on' : '');
+      blk.className = 'pblk' + (n>1 ? (i===attivo ? ' on' : '') : ' solo');
       if(n>1){
         const head = document.createElement('div');
         head.className = 'ph';
@@ -7121,7 +7309,7 @@ function makeRow(r){
       bt.title = c;
       if(c.toLowerCase() === String(state.theme.accent).toLowerCase()) bt.classList.add('on');
       bt.onclick = ()=>{
-        pushUndo();
+        pushUndo('Accent colour');
         state.theme.accent = c;
         applyAccent(c, state.theme.scope==='this format');
         syncControls(); buildControls(); render();
@@ -7138,14 +7326,26 @@ function makeRow(r){
     box.className = 'grads';
     const oraA = String(state.theme.gradA||'').toLowerCase();
     const oraB = String(state.theme.gradB||'').toLowerCase();
-    GRADIENTI.forEach(g=>{
+    /* Colonne: si sceglie il numero per riga (7-9) che lascia l'ultima riga meno
+       corta e si fa una griglia fine in modo che l'ultima riga si allarghi a
+       tutta la larghezza invece di restare a meta' */
+    let per = 8, meglio = 1e9;
+    for(let c=7; c<=9; c++){
+      const resto = GRADIENTI.length % c;
+      const rapporto = resto ? c/resto : 1;
+      if(rapporto < meglio){ meglio = rapporto; per = c; }
+    }
+    const resto = GRADIENTI.length % per;
+    box.style.gridTemplateColumns = 'repeat(' + (resto ? per*resto : per) + ',1fr)';
+    GRADIENTI.forEach((g, gi)=>{
       const bt = document.createElement('button');
       bt.className = 'gr';
+      bt.style.gridColumn = 'span ' + (resto ? (gi < GRADIENTI.length - resto ? resto : per) : 1);
       bt.style.background = 'linear-gradient(90deg,'+g[1]+','+g[2]+')';
       bt.title = g[0] + '  ' + g[1] + ' -> ' + g[2];
       if(g[1]===oraA && g[2]===oraB) bt.classList.add('on');
       bt.onclick = ()=>{
-        pushUndo();
+        pushUndo('Gradient');
         state.theme.gradA = g[1];
         state.theme.gradB = g[2];
         syncControls(); buildControls(); render();
@@ -7164,25 +7364,21 @@ function makeRow(r){
   if(r.type==='preflight'){
     const wrap = document.createElement('div');
     if(!PREVOLO) return wrap;
-    if(!PREVOLO.trovati.length){
-      const ok = document.createElement('div');
-      ok.className = 'hint'; ok.textContent = 'No problems found';
-      wrap.appendChild(ok);
-      return wrap;
-    }
-    PREVOLO.trovati.forEach(x=>{
-      const d = document.createElement('div');
-      d.className = 'chk' + (x.tipo==='errore' ? ' bad' : '');
-      d.textContent = (x.formato ? x.formato + ': ' : '') + x.testo;
-      const f = x.id ? FORMATS.find(y=> y.id===x.id) : null;
-      if(f){
-        d.title = 'Go to ' + f.group + ' / ' + f.name;
-        d.onclick = ()=>{
-          state.active = f.id; buildFormats(); buildControls(); render();
-        };
-      }
-      wrap.appendChild(d);
-    });
+    const d = document.createElement('div');
+    d.className = 'pfsum';
+    d.tabIndex = 0; d.setAttribute('role', 'button');
+    d.title = 'Open the list from the last check';
+    const visto = esitoVisto();
+    const errori = visto.trovati.some(x=> x.tipo==='errore');
+    const dot = document.createElement('span');
+    dot.className = 'pf-dot ' + (errori ? 'bad' : (visto.trovati.length ? 'warn' : 'ok'));
+    const tx = document.createElement('span'); tx.textContent = riepilogoPreflight();
+    const em = document.createElement('em'); em.textContent = (visto.trovati.length || visto.accettate) ? 'Show list' : '';
+    d.appendChild(dot); d.appendChild(tx); d.appendChild(em);
+    const apri = ()=>{ preflightDialogo(); };
+    d.onclick = apri;
+    d.onkeydown = e=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); apri(); } };
+    wrap.appendChild(d);
     return wrap;
   }
   if(r.type==='lastexport'){
@@ -7389,16 +7585,25 @@ function aggiungiComandiColore(row, p){
   hex.className = 'hex'; hex.setAttribute('data-hexof', p);
   hex.textContent = String(getVal(p) || '').toUpperCase();
   hex.title = 'Click: copy. Double-click: type a colour code';
-  hex.onclick = ()=>{
-    const v = String(getVal(p) || '').toUpperCase();
-    const fatto = ()=> toast(v + ' copied');
-    if(navigator.clipboard && navigator.clipboard.writeText)
-      navigator.clipboard.writeText(v).then(fatto, ()=> toast('Could not reach the clipboard'));
+  hex.style.flex = 'none';
+  /* il primo clic di un doppio clic non deve copiare e dire "copied" per poi
+     lasciar posto al campo: si aspetta un attimo e il doppio clic annulla */
+  let attesaCopia = 0;
+  hex.onclick = e=>{
+    if(e.detail > 1) return;
+    clearTimeout(attesaCopia);
+    attesaCopia = setTimeout(()=>{
+      const v = String(getVal(p) || '').toUpperCase();
+      const fatto = ()=> toast(v + ' copied');
+      if(navigator.clipboard && navigator.clipboard.writeText)
+        navigator.clipboard.writeText(v).then(fatto, ()=> toast('Could not reach the clipboard'));
+    }, 250);
   };
   /* doppio clic: il codice diventa un campo e si scrive a mano (#rgb o
      #rrggbb, il cancelletto e' facoltativo). Sul colore guida vale come il
      selettore: ricolora tutto, e un passo di annulla riporta com'era. */
   hex.ondblclick = ()=>{
+    clearTimeout(attesaCopia);
     rinominaInLinea(hex, String(getVal(p) || '').toUpperCase(), txt=>{
       const v = codiceColore(txt);
       if(!v){ toast('Not a colour code'); return; }
@@ -7410,6 +7615,9 @@ function aggiungiComandiColore(row, p){
       hex.textContent = v.toUpperCase();
       syncControls(); syncPack(); render();
     });
+    /* il campo ha la stessa altezza del bottone: la riga non cresce */
+    const campo = row.querySelector('input.inl');
+    if(campo) campo.classList.add('hexinl');
   };
   row.appendChild(hex);
   const altro = compagnoColore(p);
@@ -7542,8 +7750,8 @@ function startDrag(e){
     }
   }
   /* il ripeti si salva: un clic che non sposta niente lo deve lasciare com'era */
-  dragRedo = {r: redoStack.slice(), s: redoShots.slice()};
-  pushUndo();
+  dragRedo = {r: redoStack.slice(), s: redoShots.slice(), n: redoNomi.slice()};
+  pushUndo('Move or resize');
   /* con la tela divisa si prende il pannello su cui si e' cliccato */
   if(state.sel === 'shot' && !onHandle){
     const S = state.layouts[state.active].shot, prima = pannelloAttivo(S);
@@ -7695,8 +7903,8 @@ function endDrag(){
   /* un clic senza spostare niente non e' una mossa: se restasse nella pila,
      Ctrl+Z dopo un clic sembrerebbe non fare nulla */
   if(undoStack.length && undoStack[undoStack.length-1] === snapState(true)){
-    undoStack.pop(); undoShots.pop();
-    if(dragRedo){ redoStack = dragRedo.r; redoShots = dragRedo.s; }
+    undoStack.pop(); undoShots.pop(); undoNomi.pop();
+    if(dragRedo){ redoStack = dragRedo.r; redoShots = dragRedo.s; redoNomi = dragRedo.n; }
     dragRedo = null;
     updateHistBtns();
   }
@@ -7725,6 +7933,9 @@ cv.addEventListener('touchstart', startDrag, {passive:false});
 window.addEventListener('touchmove', moveDrag, {passive:false});
 window.addEventListener('touchend', endDrag);
 window.addEventListener('touchcancel', endDrag);
+let nudgeTimer = null, nudgeLen = -1;
+/* un clic o un trascinamento chiude la raffica: la freccia dopo e' un passo nuovo */
+window.addEventListener('mousedown', ()=>{ nudgeLen = -1; }, true);
 window.addEventListener('keydown', e=>{
   /* con una finestra di dialogo aperta la tastiera e' sua (Esc, Invio, Tab) */
   if(dialogoAperto()) return;
@@ -7766,6 +7977,9 @@ window.addEventListener('keydown', e=>{
     document.getElementById(e.shiftKey ? 'bZip' : 'bExp').click(); return; }
   if((e.ctrlKey||e.metaKey) && !e.shiftKey && e.key.toLowerCase()==='o'){
     e.preventDefault(); document.getElementById('bLoad').click(); return; }
+  /* Ctrl+N apre la finestra "New pack", che chiede prima di toccare il lavoro */
+  if((e.ctrlKey||e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase()==='n'){
+    e.preventDefault(); document.getElementById('bNew').click(); return; }
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='d'){
     e.preventDefault();
     if(isLay(state.sel)) layerDup(state.sel.slice(4));
@@ -7823,6 +8037,15 @@ window.addEventListener('keydown', e=>{
     e.preventDefault(); viewFit(); return; }
   if(!e.ctrlKey && !e.metaKey && e.key.toLowerCase()==='c'){
     runAction('compareShow'); return; }
+  /* R rimette a posto lo screenshot scelto, # accende e spegne la griglia
+     (# su tastiera italiana e' AltGr, che per il browser e' Ctrl+Alt: per
+     questo qui non si guarda Ctrl) */
+  if(e.key === '#'){
+    if(compareMode) return;
+    e.preventDefault(); showGrid = !showGrid; buildTools(); render(); return; }
+  if(!e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase()==='r'){
+    if(compareMode) return;
+    e.preventDefault(); recentraImmagine(); return; }
   if(!e.ctrlKey && !e.metaKey && e.key.toLowerCase()==='g'){
     state.snap.on = !state.snap.on; buildTools(); syncControls();
     toast('Snapping ' + (state.snap.on ? 'on' : 'off')); return; }
@@ -7831,13 +8054,22 @@ window.addEventListener('keydown', e=>{
     const i = FORMATS.findIndex(f=>f.id===state.active);
     const n = FORMATS[(i + (e.shiftKey?-1:1) + FORMATS.length) % FORMATS.length];
     state.active = n.id; buildFormats(); buildControls(); render();
-    toast(n.group+' / '+n.name); return; }
+    return; }
   if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].indexOf(e.key)<0) return;
   if(compareMode){
     e.preventDefault();
     toast('Comparison view: press C to go back to editing');
     return; }
-  if(!e.repeat) pushUndo();
+  /* Una raffica di frecce (tasto tenuto o colpi entro 600 ms l'uno dall'altro)
+     e' un solo passo di undo, come l'Alt+rotellina. Il passo si riconosce
+     dalla lunghezza della pila (le voci non hanno un'identita' propria):
+     se nel frattempo c'e' stato un undo o un altro passo, la lunghezza
+     non torna e la raffica ne apre uno nuovo. */
+  if(nudgeTimer === null || undoStack.length !== nudgeLen){
+    pushUndo('Nudge'); nudgeLen = undoStack.length;
+  }
+  clearTimeout(nudgeTimer);
+  nudgeTimer = setTimeout(()=>{ nudgeTimer = null; nudgeLen = -1; }, 600);
   /* Un colpo di freccia = un pixel vero del formato che si sta guardando,
      cinque con Shift. Prima il passo era una frazione fissa: sulla Cover
      erano quasi quattro pixel per volta, e sull'Icon da 160 un terzo di
@@ -8018,9 +8250,32 @@ function toast(m, o){
     };
     t.appendChild(b);
   }
+  posizionaToast(t);
   t.classList.add('on');
   clearTimeout(t._t);
   t._t = setTimeout(()=>t.classList.remove('on'), o.ms || clamp(2800 + 40*m.length, 2800, 9000));
+}
+/* L'avviso sta in basso a sinistra dell'area della tela. Se cosi' coprirebbe
+   la riga informativa sotto la tela (nome del formato, elemento scelto) sale
+   sopra di lei: non copre mai il testo, ne' i comandi. */
+function posizionaToast(t){
+  const st = document.getElementById('stage');
+  if(!st) return;
+  const r = st.getBoundingClientRect();
+  const alto = window.innerHeight;
+  t.style.left = Math.max(8, r.left + 14) + 'px';
+  t.style.maxWidth = Math.max(220, Math.min(640, r.width - 28)) + 'px';
+  t.style.bottom = Math.max(12, alto - Math.min(r.bottom, alto) + 12) + 'px';
+  const tb = t.getBoundingClientRect();
+  let topCap = Infinity;
+  ['dims', 'selinfo'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el || !el.textContent) return;
+    const c = el.getBoundingClientRect();
+    if(tb.left < c.right + 6 && tb.right > c.left - 6 && tb.top < c.bottom + 6 && tb.bottom > c.top - 6)
+      topCap = Math.min(topCap, c.top);
+  });
+  if(topCap < Infinity) t.style.bottom = Math.max(12, alto - topCap + 8) + 'px';
 }
 /* dialogo({title, text, body, buttons:[{id, label, primary, danger}]}):
    la finestra al centro. Restituisce una promessa con l'id del bottone
@@ -8141,7 +8396,7 @@ function safe(s){
 document.getElementById('bLogo').onclick = ()=> document.getElementById('fLogo').click();
 document.getElementById('bLogoDef').onclick = ()=>{
   if(!imgLogoDefault){ toast('The built-in logo is still loading'); return; }
-  pushUndo();
+  pushUndo('Default logo');
   imgLogo = imgLogoDefault;
   logoBlob = null; dbSalva();
   render();
@@ -8203,15 +8458,27 @@ function haTrasparenza(im){
     return bucati > sw*sh*0.005;
   }catch(e){ return false; }
 }
+/* Un File scelto dal disco e' solo un riferimento: se lo screenshot viene
+   rifatto con lo stesso nome (nuova ripresa in Unity), il riferimento che il
+   browser teneva non si legge piu', e Save e il salvataggio delle immagini
+   falliscono. Per questo alla scelta se ne tiene una copia in memoria, con
+   nome, tipo e data del file. Se non si riesce a leggere si lascia il file
+   com'e': sara' loadImage a spiegare perche'. */
+async function fileInMemoria(file){
+  try{
+    const buf = await file.arrayBuffer();
+    return new File([buf], file.name, {type: file.type, lastModified: file.lastModified});
+  }catch(e){ return file; }
+}
 function addShots(files, done){
   if(!files.length){ if(done) done(0, 0); return; }
   let left = files.length;
   const loaded = [];
   let rotte = 0, primoMotivo = '';
   files.forEach((file, i)=>{
-    loadImage(file, (im, motivo)=>{
+    fileInMemoria(file).then(copia=> loadImage(copia, (im, motivo)=>{
       if(im) loaded[i] = {name:file.name, img:im, path:file.webkitRelativePath || file.name,
-                          blob:file};
+                          blob:copia};
       else { rotte++; if(!primoMotivo && motivo) primoMotivo = motivo; }
       if(--left===0){
         /* Lo stesso file aggiunto due volte entra una volta sola. Prima
@@ -8220,12 +8487,21 @@ function addShots(files, done){
            spariva in silenzio, pur contato fra quelli caricati. */
         const stesso = (a, b)=> a.name === b.name && a.path === b.path &&
           !!a.blob && !!b.blob && a.blob.size === b.blob.size && a.blob.lastModified === b.blob.lastModified;
-        const fresh = [];
+        const fresh = [], cambiate = [];
         loaded.filter(Boolean).forEach(sh=>{
-          if(!SHOTS.some(x=> stesso(x, sh)) && !fresh.some(x=> stesso(x, sh))) fresh.push(sh);
+          if(SHOTS.some(x=> stesso(x, sh)) || fresh.some(x=> stesso(x, sh))) return;
+          /* Stesso percorso dentro la cartella, ma dimensione o data diverse:
+             lo screenshot e' stato rifatto. Non si aggiunge un doppione: lo
+             si offre come sostituzione (vale solo con un percorso vero, un
+             file trascinato ha per percorso il solo nome e due cartelle
+             diverse possono averne uno uguale). */
+          const vecchio = sh.path.indexOf('/') > 0
+            ? SHOTS.find(x=> x.name === sh.name && x.path === sh.path) : null;
+          if(vecchio){ if(!cambiate.some(c=> c.vecchio === vecchio)) cambiate.push({vecchio:vecchio, nuova:sh}); return; }
+          fresh.push(sh);
         });
         /* aggiungere immagini si annulla da solo, non insieme alla mossa prima */
-        if(fresh.length) pushUndo();
+        if(fresh.length) pushUndo('Add images');
         fresh.forEach(sh=> SHOTS.push(sh));
         if(!imgShot && SHOTS.length) imgShot = SHOTS[0].img;
         autoAssignPanels();
@@ -8235,18 +8511,55 @@ function addShots(files, done){
         preparaImmagini(fresh);
         scaldaImmagini().then(()=>{
           showLibrary();
-          if(done) done(fresh.length, rotte, primoMotivo);
+          if(done) done(fresh.length, rotte, primoMotivo, {cambiate:cambiate});
         });
       }
-    });
+    }));
   });
+}
+/* Mette le immagini nuove al posto delle vecchie, nello stesso posto della
+   libreria: i pannelli parlano per posizione, quindi continuano a mostrarle
+   con lo zoom e la posizione di prima. Un solo passo di annulla. */
+function scambiaImmagini(coppie, nome){
+  const vive = coppie.filter(c=> SHOTS.indexOf(c.vecchio) >= 0);
+  if(!vive.length) return 0;
+  pushUndo(nome);
+  const nuove = [];
+  vive.forEach(c=>{
+    SHOTS[SHOTS.indexOf(c.vecchio)] = c.nuova;
+    if(imgShot === c.vecchio.img) imgShot = c.nuova.img;
+    nuove.push(c.nuova);
+  });
+  preparaImmagini(nuove);
+  dbSalva();
+  scaldaImmagini().then(()=>{ buildControls(); render(); });
+  return vive.length;
+}
+/* Il messaggio dopo aver aggiunto immagini (bottone, trascinamento, cartella,
+   incolla). Se alcuni file erano gia' in libreria ma sul disco sono cambiati,
+   il messaggio porta il bottone che li sostituisce al loro posto. */
+function avvisoAggiunte(n, rotte, motivo, info, base){
+  const cam = (info && info.cambiate) || [];
+  let m = base || frase(n, rotte, motivo);
+  const o = {};
+  if(cam.length){
+    const c = cam.length + (cam.length === 1 ? ' image has' : ' images have') + ' changed on disk';
+    m = (n || rotte) ? m + '. ' + c : c;
+    o.ms = 12000;
+    o.action = {label: 'Replace ' + cam.length + ' changed image' + (cam.length === 1 ? '' : 's'), fn: ()=>{
+      const k = scambiaImmagini(cam, 'Replace changed images');
+      toast(k ? k + (k === 1 ? ' image replaced' : ' images replaced') : 'Those images are no longer in the library',
+            k ? {undo:true} : undefined);
+    }};
+  }
+  toast(m, o);
 }
 
 document.getElementById('fImg').onchange = e=>{
   const files = [...e.target.files];
   e.target.value = '';
-  addShots(files, (n, rotte, motivo)=>{
-    toast(n===1 && SHOTS.length===1 && !rotte ? 'Screenshot loaded' : frase(n, rotte, motivo));
+  addShots(files, (n, rotte, motivo, info)=>{
+    avvisoAggiunte(n, rotte, motivo, info, n===1 && SHOTS.length===1 && !rotte ? 'Screenshot loaded' : null);
   });
 };
 
@@ -8278,9 +8591,41 @@ function dbApri(){
     req.onblocked = ()=>{ _dbRotto = true; ris(null); };
   });
 }
+/* Il deposito "meta" di IndexedDB (file di progetto, cartella di export,
+   immagine principale, logo): tre funzioni sole, mai un errore che esce.
+   metaGet torna il valore o null; metaPut e metaDel tornano una promessa. */
+function metaGet(chiave){
+  return dbApri().then(d=> !d ? null : new Promise(ris=>{
+    try{ const r = d.transaction('meta').objectStore('meta').get(chiave);
+         r.onsuccess = ()=> ris(r.result === undefined ? null : r.result); r.onerror = ()=> ris(null); }
+    catch(e){ ris(null); }
+  }));
+}
+function metaPut(chiave, valore){
+  return dbApri().then(d=>{ if(!d) return; try{ d.transaction('meta','readwrite').objectStore('meta').put(valore, chiave); }catch(e){} });
+}
+function metaDel(chiave){
+  return dbApri().then(d=>{ if(!d) return; try{ d.transaction('meta','readwrite').objectStore('meta').delete(chiave); }catch(e){} });
+}
 /* riscrivo l'elenco intero: le mosse sono poche (aggiunta, cancellazione,
    spostamento) e cosi' l'ordine sul disco e' sempre quello vero */
 let dbTimer = null, dbAvvisato = false, _dbUltimaLista = null;
+/* Perche' IndexedDB non ha scritto: solo QuotaExceededError e' davvero "poco
+   spazio"; un file che non si legge piu' o un errore del browser si dicono col
+   loro nome, se no uno cerca spazio dove il guaio e' un altro. */
+function causaDb(e){
+  const nome = (e && e.name) || '';
+  if(nome === 'QuotaExceededError') return 'not enough room in the browser';
+  if(nome === 'NotReadableError' || nome === 'NotFoundError')
+    return 'an image file could not be read (was it replaced or moved on disk?). Add the image again';
+  const m = (e && e.message) || '';
+  return nome ? nome + (m ? ': ' + m : '') : (m || 'the browser refused to write');
+}
+function avvisaDb(e){
+  if(dbAvvisato) return;
+  dbAvvisato = true;
+  toast('Could not keep the images for next time: ' + causaDb(e));
+}
 function dbSalva(){
   if(dbTimer) clearTimeout(dbTimer);
   dbTimer = setTimeout(dbSalvaOra, 400);
@@ -8291,10 +8636,9 @@ function dbSalvaOra(){
     if(!d) return;
     try{
       const t = d.transaction(['shots','meta'], 'readwrite');
-      t.onerror = t.onabort = ()=>{
-        if(!dbAvvisato){ dbAvvisato = true;
-          toast('Could not keep the images for next time: not enough room in the browser'); }
-      };
+      t.onerror = t.onabort = ev=>{ avvisaDb(t.error || (ev && ev.target && ev.target.error)); };
+      /* un salvataggio riuscito riarma l'avviso: il prossimo guaio si dice di nuovo */
+      t.addEventListener('complete', ()=>{ dbAvvisato = false; });
       /* Le immagini si riscrivono solo se l'elenco e' cambiato. Prima ogni
          clic che metteva una foto in un pannello riscriveva tutti i file:
          con cento screenshot 4K, centinaia di megabyte su disco per niente. */
@@ -8312,7 +8656,7 @@ function dbSalvaOra(){
       const attiva = SHOTS.findIndex(x=> x.img === imgShot);
       mt.put(attiva, 'principale');
       mt.put(logoBlob || null, 'logo');
-    }catch(e){ _dbRotto = true; }
+    }catch(e){ _dbRotto = true; avvisaDb(e); }
   });
 }
 function dbSvuota(){
@@ -8369,16 +8713,9 @@ async function dbCarica(){
       r.onsuccess = ()=> ris(r.result || []);
       r.onerror   = ()=> ris([]);
     });
-    principale = await new Promise(ris=>{
-      const r = d.transaction('meta').objectStore('meta').get('principale');
-      r.onsuccess = ()=> ris(typeof r.result === 'number' ? r.result : -1);
-      r.onerror   = ()=> ris(-1);
-    });
-    logo = await new Promise(ris=>{
-      const r = d.transaction('meta').objectStore('meta').get('logo');
-      r.onsuccess = ()=> ris(r.result || null);
-      r.onerror   = ()=> ris(null);
-    });
+    const p = await metaGet('principale');
+    principale = typeof p === 'number' ? p : -1;
+    logo = (await metaGet('logo')) || null;
   }catch(e){ return 0; }
   righe.sort((a,b)=> a.i - b.i);
   /* tutte insieme, nell'ordine salvato: una dopo l'altra erano cento attese in fila */
@@ -8440,14 +8777,24 @@ function showLibrary(){
    tutte due volte.
    ========================================================================== */
 const IMG_RE = /\.(png|jpe?g|webp|bmp|gif)$/i;
+/* Un solo test per "questo file e' un'immagine": l'estensione, o il tipo che
+   il browser dichiara (un file trascinato puo' avere il tipo ma un nome strano).
+   Nella scansione di una cartella conta solo il nome (soloNome), per non
+   raccogliere SVG e simili che il browser dichiara image/* ma non sa usare. */
+function eImmagine(f, soloNome){
+  return IMG_RE.test(f.name) || (!soloNome && /^image\//.test(f.type));
+}
 function immaginiDellaCartella(files){
   const parola = x => String(x).toLowerCase().replace(/[^a-z]/g, '');
   const cartelle = f => (f.webkitRelativePath || f.name).split('/').slice(0, -1).map(parola);
-  const img = files.filter(f=> IMG_RE.test(f.name));
+  const img = files.filter(f=> eImmagine(f, true));
   const conNoEdit = img.some(f=> cartelle(f).indexOf('noedit') >= 0);
   const prese = conNoEdit ? img.filter(f=> cartelle(f).indexOf('edit') < 0) : img;
   const via = f => f.webkitRelativePath || f.name;
-  return prese.sort((a, b)=> via(a).localeCompare(via(b), undefined, {numeric:true, sensitivity:'base'}));
+  const lista = prese.sort((a, b)=> via(a).localeCompare(via(b), undefined, {numeric:true, sensitivity:'base'}));
+  /* quante copie Edit sono rimaste fuori: il messaggio lo dice */
+  lista.saltate = conNoEdit ? img.length - prese.length : 0;
+  return lista;
 }
 
 /* ==========================================================================
@@ -8527,26 +8874,18 @@ window.addEventListener('drop', e=>{
 });
 
 function smistaFile(files, comeLogo){
-  const img  = files.filter(f=> /^image\//.test(f.type) || /\.(png|jpe?g|webp|gif|bmp)$/i.test(f.name));
+  const img  = files.filter(f=> eImmagine(f));
   const json = files.filter(f=> /\.json$/i.test(f.name));
   const font = files.filter(f=> /\.(ttf|otf|woff2?)$/i.test(f.name));
   if(comeLogo && img.length){
     caricaLogoFile(img[0]);
-    if(img.length > 1) addShots(img.slice(1), (n, rotte, motivo)=> toast(frase(n, rotte, motivo)));
+    if(img.length > 1) addShots(img.slice(1), (n, rotte, motivo, info)=> avvisoAggiunte(n, rotte, motivo, info));
     return;
   }
-  if(img.length) addShots(img, (n, rotte, motivo)=>
-    toast(n===1 && SHOTS.length===1 && !rotte ? 'Screenshot loaded' : frase(n, rotte, motivo)));
+  if(img.length) addShots(img, (n, rotte, motivo, info)=>
+    avvisoAggiunte(n, rotte, motivo, info, n===1 && SHOTS.length===1 && !rotte ? 'Screenshot loaded' : null));
   if(json.length) caricaPresetFile(json[0]);
-  if(font.length){
-    const file = font[0];
-    file.arrayBuffer().then(buf=>{
-      const ff = new FontFace('UserFont', buf);
-      return ff.load().then(l=>{ document.fonts.add(l); state.customFont = file.name;
-        buildControls(); render();
-        toast('Font loaded - pick "Custom (loaded)" in any Font list'); });
-    }).catch(()=> toast('Invalid font file'));
-  }
+  if(font.length) caricaFontFile(font[0]);
   if(!img.length && !json.length && !font.length)
     toast('I can take images, a font, or a project file (.json)');
 }
@@ -8570,6 +8909,8 @@ window.addEventListener('paste', e=>{
     const rinominati = files.map(f=>{
       if(!/^image\//.test(f.type)) return f;
       const est = (f.type.split('/')[1]||'png').replace('jpeg','jpg');
+      /* il numero non deve coincidere con un'immagine gia' in libreria */
+      while(SHOTS.some(s=> s.name === 'pasted-'+k+'.'+est)) k++;
       try{ return new File([f], 'pasted-'+(k++)+'.'+est, {type:f.type}); }
       catch(err){ return f; }
     });
@@ -8586,12 +8927,17 @@ document.getElementById('fFolder').onchange = e=>{
     toast('No images in that folder: looked for PNG, JPG, WebP, BMP and GIF, subfolders included');
     return;
   }
-  addShots(lista, (n, rotte, motivo)=>{
-    const gia = lista.length - n - rotte;
-    toast(n ? n + ' image' + (n===1?'':'s') + ' added from the folder' +
-              (gia > 0 ? ', ' + gia + ' already in the library' : '') +
-              (rotte ? ', ' + rotte + ' could not be read' : '')
-            : frase(n, rotte, motivo));
+  addShots(lista, (n, rotte, motivo, info)=>{
+    const cam = info && info.cambiate ? info.cambiate.length : 0;
+    const gia = lista.length - n - rotte - cam;
+    const saltate = lista.saltate || 0;
+    /* le copie Edit lasciate fuori si dicono, se no 12 file diventano 6 senza motivo */
+    const edit = saltate ? ', ' + saltate + ' Edit cop' + (saltate===1 ? 'y' : 'ies') + ' skipped because No Edit exists' : '';
+    avvisoAggiunte(n, rotte, motivo, info,
+      (n ? n + ' image' + (n===1?'':'s') + ' added from the folder' +
+           (gia > 0 ? ', ' + gia + ' already in the library' : '') +
+           (rotte ? ', ' + rotte + ' could not be read' : '')
+         : frase(n, rotte, motivo)) + edit);
   });
 };
 /* Il PNG del logo di solito ha una tela molto piu' grande del segno, con
@@ -8634,28 +8980,38 @@ function trimAlpha(im, thr){
 
 function caricaLogoFile(file){
   if(!file) return;
-  loadImage(file, (im, motivo)=>{
+  fileInMemoria(file).then(copia=> loadImage(copia, (im, motivo)=>{
     if(!im){ toast(motivo || 'That file could not be read as an image'); return; }
-    pushUndo();
+    pushUndo('Load logo');
     const r = trimAlpha(im);
     imgLogo = r.img;
-    logoBlob = file; dbSalva();
+    logoBlob = copia; dbSalva();
     render();
     toast(r.trimmed
       ? 'Logo loaded, transparent border trimmed ('+r.before[0]+'x'+r.before[1]+
         ' -> '+r.after[0]+'x'+r.after[1]+')'
       : 'Logo loaded');
-  });
+  }));
 }
-document.getElementById('fLogo').onchange = e=>{ caricaLogoFile(e.target.files[0]); };
-document.getElementById('fFont').onchange = e=>{
-  const file = e.target.files[0]; if(!file) return;
+/* i tre selettori di file si azzerano dopo la scelta: lo stesso file scelto
+   due volte (rifatto nel frattempo) deve far scattare di nuovo il cambio */
+document.getElementById('fLogo').onchange = e=>{
+  const file = e.target.files[0]; e.target.value = '';
+  caricaLogoFile(file);
+};
+/* il font caricato: lo usano il bottone Font e il trascinamento di un .ttf */
+function caricaFontFile(file){
+  if(!file) return;
   file.arrayBuffer().then(buf=>{
     const ff = new FontFace('UserFont', buf);
     return ff.load().then(l=>{ document.fonts.add(l); state.customFont = file.name;
       buildControls(); render();
       toast('Font loaded - pick "Custom (loaded)" in any Font list'); });
   }).catch(()=> toast('Invalid font file'));
+}
+document.getElementById('fFont').onchange = e=>{
+  const file = e.target.files[0]; e.target.value = '';
+  caricaFontFile(file);
 };
 
 /* Copia solo l'impostazione dello screenshot (shot, fx, grad) dal formato
@@ -8675,7 +9031,7 @@ function copiaImpostazioneImmagine(tutti){
   if(!dest.length){
     toast("No other format has the same shape. Use 'All other formats'"); return;
   }
-  pushUndo();
+  pushUndo('Copy image setup');
   const src = state.layouts[fa.id];
   dest.forEach(f=>{
     const L = state.layouts[f.id];
@@ -8698,7 +9054,7 @@ document.getElementById('bAll').onclick = async ()=>{
     buttons: [{id:'no', label:'Cancel'}, {id:'si', label:'Copy to all', primary:true}]
   });
   if(ris !== 'si') return;
-  pushUndo();
+  pushUndo('Whole layout to all');
   const src = JSON.parse(JSON.stringify(state.layouts[state.active]));
   FORMATS.forEach(f=>{
     if(f.id===state.active) return;
@@ -8722,21 +9078,20 @@ document.getElementById('bAll').onclick = async ()=>{
    che su ogni pacchetto sono gli stessi e riscriverli ogni volta sarebbe
    solo una scocciatura. E comunque un passo di annulla riporta tutto. */
 document.getElementById('bNew').onclick = async ()=>{
+  /* due scelte, una riga ciascuna. Invio = "New from this pack": non
+     butta via niente di quello che si e' impostato. Il vuoto e' la seconda. */
   const r = await dialogo({
     title: 'New pack',
-    text: 'Blank new pack: title, category, version, every layout, the variants and the ' +
-          'screenshot library go back to the start. Your logo, font, accent colour, brand ' +
-          'name and badges stay.\n\n' +
-          'New from this pack: keeps every layout and the variants, so the next pack starts ' +
-          'with the same look. Title and category are emptied, the version goes back to v1.0, ' +
-          'and the screenshot library and the project file are cleared.\n\n' +
-          'Ctrl+Z brings the previous pack back.',
-    buttons: [{id:'blank', label:'Blank new pack', primary:true},
-              {id:'copy', label:'New from this pack'},
-              {id:'cancel', label:'Cancel'}]
+    body: '<div class="newopts">' +
+          '<div class="newopt"><b>New from this pack</b><span>Keeps layouts and variants. Clears texts and images.</span></div>' +
+          '<div class="newopt"><b>Blank new pack</b><span>Starts over. Logo, font, accent and brand stay.</span></div>' +
+          '<div class="newhint">Ctrl+Z brings the previous pack back.</div></div>',
+    buttons: [{id:'cancel', label:'Cancel'},
+              {id:'blank', label:'Blank new pack'},
+              {id:'copy', label:'New from this pack', primary:true}]
   });
   if(r === 'blank'){
-    pushUndo();
+    pushUndo('New pack');
     state.pack = Object.assign({}, state.pack, {title:'', category:'', version:'v1.0'});
     state.variants = []; state.currentVariant = null;
     FORMATS.forEach(f=>{ state.layouts[f.id] = defLayout(f); });
@@ -8745,15 +9100,17 @@ document.getElementById('bNew').onclick = async ()=>{
     dbSvuota();
     dimenticaFileProgetto();
     centerRowInBand(true, true);
+    azzeraEsiti();
     buildFormats(); buildControls(); render();
     toast('New pack', {undo:true});
   }else if(r === 'copy'){
-    pushUndo();
+    pushUndo('New pack');
     state.pack = Object.assign({}, state.pack, {title:'', category:'', version:'v1.0'});
     SHOTS = []; imgShot = null;
     rimappaImmagini(()=> -1);
     dbSvuota();
     dimenticaFileProgetto();
+    azzeraEsiti();
     buildFormats(); buildControls(); render();
     toast('New pack from this one: same layouts, no title, no images', {undo:true});
   }
@@ -8882,12 +9239,10 @@ function avanzamentoInfo(testo){
   auto.textContent = testo ? (nomeProgetto ? '  ·  ' : '') + testo : '';
   auto.classList.remove('lampo');
 }
-function ricordaFileProgetto(h){
-  dbApri().then(d=>{ if(!d) return; try{ d.transaction('meta','readwrite').objectStore('meta').put(h, 'progetto'); }catch(e){} });
-}
+function ricordaFileProgetto(h){ metaPut('progetto', h); }
 function dimenticaFileProgetto(){
   fileProgetto = null; nomeProgetto = ''; firmaSalvata = ''; titoloFile = ''; autoPrima = null;
-  dbApri().then(d=>{ if(!d) return; try{ d.transaction('meta','readwrite').objectStore('meta').delete('progetto'); }catch(e){} });
+  metaDel('progetto');
   aggiornaInfoProgetto();
 }
 async function riprendiFileProgetto(){
@@ -8895,12 +9250,7 @@ async function riprendiFileProgetto(){
   finally{ autoPrima = null; }
 }
 async function riprendiFileProgettoPasso(){
-  const d = await dbApri(); if(!d) return;
-  const h = await new Promise(ris=>{
-    try{ const r = d.transaction('meta').objectStore('meta').get('progetto');
-         r.onsuccess = ()=> ris(r.result || null); r.onerror = ()=> ris(null); }
-    catch(e){ ris(null); }
-  });
+  const h = await metaGet('progetto');
   if(!h || !h.name) return;
   fileProgetto = h; nomeProgetto = h.name;
   titoloFile = autoPrima ? autoPrima.titoloFile : '';
@@ -9131,7 +9481,7 @@ function caricaPresetFile(f, handle){
     const suo = d && typeof d === 'object' &&
                 (d.pack || d.layouts || d.theme || d.naming || Array.isArray(d.variants));
     if(!suo){ toast((f.name||'That file') + ' is not a Store Graphics project'); return; }
-    pushUndo();
+    pushUndo('Open project');
     /* le immagini del progetto prendono il posto di quelle aperte: gli
        indici dei pannelli parlano di quell'elenco, non di un altro */
     let immagini = 0, rotte = 0, presenti = [];
@@ -9163,7 +9513,7 @@ function caricaPresetFile(f, handle){
         if(im){ imgLogo = trimAlpha(im).img; logoBlob = new File([blob], d.logo.name || 'logo.png', {type: blob.type}); }
       }catch(e){}
     }
-    if(d.export) state.export = Object.assign({}, state.export, {bundle:'Zip file'}, d.export);
+    if(d.export) state.export = Object.assign({}, state.export, {bundle:'Zip file', accepted:undefined}, d.export);
     if(d.pack) state.pack = Object.assign({}, state.pack, d.pack);
     if(d.theme) state.theme = Object.assign({}, state.theme, d.theme);
     if(d.naming) state.naming = Object.assign({}, state.naming, d.naming);
@@ -9187,6 +9537,7 @@ function caricaPresetFile(f, handle){
     autoPrima = null;
     firmaSalvata = firmaProgetto();
     aggiornaInfoProgetto(firmaSalvata);
+    azzeraEsiti();
     buildFormats(); buildControls(); render();
     /* si dice cosa e' entrato davvero: un preset di un'altra versione puo'
        avere solo una parte delle cose */
@@ -9196,17 +9547,22 @@ function caricaPresetFile(f, handle){
     if(Array.isArray(d.variants) && d.variants.length) pezzi.push(d.variants.length + ' variants');
     if(immagini) pezzi.push(immagini + ' image' + (immagini===1?'':'s'));
     if(rotte) pezzi.push(rotte + ' image' + (rotte===1?'':'s') + ' could not be read');
-    toast((lista ? 'Project opened' : 'Older preset opened, images not included') +
-          (pezzi.length ? ': ' + pezzi.join(', ') : ''));
     /* il font caricato non sta dentro al preset: se il preset lo chiede e
-       non c'e', le scritte escono con un altro carattere senza dire niente */
-    if(!state.customFont && chiedonoIlFontMio())
-      setTimeout(()=> toast('This project asks for a loaded font, and none is loaded: ' +
-        'the text falls back to the system font. Use Font to load the file'), 2400);
+       non c'e', le scritte escono con un altro carattere senza dire niente.
+       Lo si dice nello stesso messaggio, che porta il bottone Undo: aprire
+       sostituisce il lavoro di adesso, e un secondo messaggio lo coprirebbe. */
+    const senzaFont = !state.customFont && chiedonoIlFontMio();
+    toast((lista ? 'Project opened' : 'Older preset opened, images not included') +
+          (pezzi.length ? ': ' + pezzi.join(', ') : '') +
+          (senzaFont ? '.  It asks for a loaded font and none is loaded: the text uses the system font. Use Font to load the file' : ''),
+          {undo:true, ms:senzaFont ? 11000 : 8000});
   }).catch(()=> toast('That file could not be read as a project'))
     .finally(()=>{ aprendoProgetto = false; });
 }
-document.getElementById('fPreset').onchange = e=>{ caricaPresetFile(e.target.files[0]); };
+document.getElementById('fPreset').onchange = e=>{
+  const file = e.target.files[0]; e.target.value = '';
+  caricaPresetFile(file);
+};
 
 function renderFormatToBlob(f, cb, L){
   const o = outSize(f);
@@ -9295,23 +9651,11 @@ async function esportaPerImmagine(){
     let dir = null, dove = '';
     try{
       dir = await cartellaPronta();
-      if(dir && state.export.bundle === 'Separate files'){
-        const sub = folderFor(f, state.pack, 1).replace(/\/$/, '');
-        if(sub){
-          try{ dir = await dir.getDirectoryHandle(sub, {create:true}); }
-          catch(e){
-            if(e && e.name === 'NotFoundError'){
-              cartellaExport = null;
-              dbApri().then(d=>{ if(!d) return; try{ d.transaction('meta','readwrite').objectStore('meta').delete('cartellaExport'); }catch(x){} });
-              buildControls();
-              throw new Error('the export folder is no longer there. Export again to choose a folder');
-            }
-            throw e;
-          }
-          dove = (cartellaExport ? cartellaExport.name + '/' : '') + sub;
-        }
+      if(dir){
+        const r = await sottoCartellaExport(dir, f);
+        dove = dir.name + (r.sub ? '/' + r.sub : '');
+        dir = r.dir;
       }
-      if(!dove && dir) dove = dir.name;
     }catch(e){
       if(!e || e.name !== 'AbortError') toast('Export failed: ' + (e && e.message || e));
       return;
@@ -9376,19 +9720,21 @@ function scegliCartellaExport(){
   return selettoreUnico('cartella', async ()=>{
     const h = await window.showDirectoryPicker({id:'sg-export', mode:'readwrite'});
     cartellaExport = h;
-    dbApri().then(d=>{ if(!d) return; try{ d.transaction('meta','readwrite').objectStore('meta').put(h, 'cartellaExport'); }catch(e){} });
+    metaPut('cartellaExport', h);
     buildControls();
     toast('Exports go to ' + h.name);
     return h;
   });
 }
 async function riprendiCartellaExport(){
-  const d = await dbApri(); if(!d) return;
-  cartellaExport = await new Promise(ris=>{
-    try{ const r = d.transaction('meta').objectStore('meta').get('cartellaExport');
-         r.onsuccess = ()=> ris(r.result || null); r.onerror = ()=> ris(null); }
-    catch(e){ ris(null); }
-  });
+  cartellaExport = await metaGet('cartellaExport');
+}
+/* La cartella di export e' sparita o spostata: si dimentica, cosi' il
+   prossimo export la chiede di nuovo invece di fallire ogni volta. */
+function dimenticaCartellaExport(){
+  cartellaExport = null;
+  metaDel('cartellaExport');
+  buildControls();
 }
 function scaricaFile(blob, nome){
   const a = document.createElement('a');
@@ -9433,9 +9779,7 @@ async function esportaNumerato(blobOPromessa, nome, dirGia){
       /* la cartella e' stata spostata o cancellata: la si dimentica, cosi' il
          prossimo export la chiede di nuovo invece di fallire ogni volta */
       if(e && e.name === 'NotFoundError'){
-        cartellaExport = null;
-        dbApri().then(d=>{ if(!d) return; try{ d.transaction('meta','readwrite').objectStore('meta').delete('cartellaExport'); }catch(x){} });
-        buildControls();
+        dimenticaCartellaExport();
         throw new Error('the export folder ' + dir.name + ' is no longer there. Export again to choose a folder');
       }
       throw e;
@@ -9481,9 +9825,7 @@ async function sottoCartellaExport(dir, f){
   try{ return {dir: await dir.getDirectoryHandle(sub, {create:true}), sub}; }
   catch(e){
     if(e && e.name === 'NotFoundError'){
-      cartellaExport = null;
-      dbApri().then(d=>{ if(!d) return; try{ d.transaction('meta','readwrite').objectStore('meta').delete('cartellaExport'); }catch(x){} });
-      buildControls();
+      dimenticaCartellaExport();
       throw new Error('the export folder ' + dir.name + ' is no longer there. Export again to choose a folder');
     }
     throw e;
@@ -9492,6 +9834,14 @@ async function sottoCartellaExport(dir, f){
 /* Ultimo export della sessione: solo in memoria, non entra in annulla, nel
    progetto ne' nel salvataggio automatico. */
 let ULTIMO_EXPORT = null;
+/* Un altro pacchetto (New, Open, o un annulla che riporta un altro titolo):
+   l'esito del controllo prima dell'export e l'ultimo export erano del pacchetto
+   di prima e non valgono piu'. Il try copre l'avvio, quando PREVOLO (piu' in
+   basso) non e' ancora nato. */
+function azzeraEsiti(){
+  try{ PREVOLO = null; ULTIMO_EXPORT = null; }catch(e){ return; }
+  document.querySelectorAll('.lastexp').forEach(riempiUltimoExport);
+}
 function riempiUltimoExport(el){
   el.textContent = '';
   const u = ULTIMO_EXPORT;
@@ -9542,6 +9892,18 @@ const haPonteDesktop = ()=> !!(window.desktop && typeof window.desktop.saveToDes
 function mostraBottoneDesktop(){ const b = document.getElementById('bDesk'); if(b) b.hidden = !haPonteDesktop(); }
 mostraBottoneDesktop();
 window.addEventListener('load', ()=>{ mostraBottoneDesktop(); setTimeout(mostraBottoneDesktop, 400); setTimeout(mostraBottoneDesktop, 1500); });
+/* Nome del file sul Desktop: titolo del pacchetto + nome del file (Cover.png ->
+   Realistic_Impacts_Pack_Cover.png). Il guscio aggiunge _1, _2... e non
+   sovrascrive mai. Sul Desktop i file di pacchetti diversi si mischiano, e un
+   semplice "Cover_1.png" non dice di chi e'. Se lo schema dei nomi contiene gia'
+   il titolo non si ripete. */
+function nomeDesktop(f, pk){
+  const file = fileNameFor(f, pk, 1).split('/').pop();
+  const t = String((pk && pk.title) || '').trim();
+  if(!t) return file;
+  const titolo = safe(applyCase(t, state.naming.case, state.naming.sep || '_'));
+  return file.toLowerCase().indexOf(titolo.toLowerCase()) === 0 ? file : titolo + '_' + file;
+}
 let _esportoDesktop = false;
 document.getElementById('bDesk').onclick = async ()=>{
   if(!haPonteDesktop()){ toast('Export to the Desktop needs the desktop app'); return; }
@@ -9551,7 +9913,7 @@ document.getElementById('bDesk').onclick = async ()=>{
   try{
     const blob = await new Promise(res=> renderFormatToBlob(f, res));
     if(!blob) throw new Error('the image could not be rendered, probably out of memory. Try a smaller Scale');
-    const nome = fileNameFor(f, state.pack, 1).split('/').pop();
+    const nome = nomeDesktop(f, state.pack);
     const r = await window.desktop.saveToDesktop(nome, new Uint8Array(await blob.arrayBuffer()));
     if(!r || r.error) throw new Error(r && r.error || 'no answer from the app');
     const av = avvisoFab(f, blob);
@@ -9886,7 +10248,7 @@ function variantLayouts(v){
 function variantLoad(i){
   const v = state.variants[i];
   if(!v) return;
-  pushUndo();
+  pushUndo('Load variant');
   state.pack = JSON.parse(JSON.stringify(v.pack));
   state.theme = JSON.parse(JSON.stringify(v.theme||state.theme));
   state.layouts = variantLayouts({layouts: JSON.parse(JSON.stringify(v.layouts || {}))});
@@ -9896,7 +10258,7 @@ function variantLoad(i){
   toast('Variant: '+v.name);
 }
 function variantAdd(){
-  pushUndo();
+  pushUndo('Add variant');
   const n = 'Variant '+(state.variants.length+1);
   state.variants.push(variantSnap(n));
   state.currentVariant = state.variants.length-1;
@@ -9905,13 +10267,13 @@ function variantAdd(){
 function variantUpdate(){
   const i = state.currentVariant;
   if(i==null || !state.variants[i]){ variantAdd(); return; }
-  pushUndo();
+  pushUndo('Update variant');
   const name = state.variants[i].name;
   state.variants[i] = variantSnap(name);
   buildControls(); toast('Updated '+name);
 }
 function variantDelete(i){
-  pushUndo();
+  pushUndo('Delete variant');
   state.variants.splice(i,1);
   if(state.currentVariant===i) state.currentVariant = null;
   else if(state.currentVariant > i) state.currentVariant--;
@@ -9958,7 +10320,7 @@ function variantRename(i, el){
     el = bs[0] || null;
   }
   if(!el) return;
-  rinominaInLinea(el, v.name, n=>{ pushUndo(); v.name = n; buildControls(); });
+  rinominaInLinea(el, v.name, n=>{ pushUndo('Rename variant'); v.name = n; buildControls(); });
 }
 
 /* confronto: tutte le varianti affiancate sul canvas */
@@ -9993,7 +10355,7 @@ function compareSheet(){
     const y = pad + Math.floor(i/cols)*(ch+lab+pad);
     g.drawImage(c, x, y+lab);
     g.fillStyle = '#c8c8d0';
-    g.font = '600 '+Math.round(lab*0.62)+'px sans-serif';
+    g.font = '600 '+Math.round(lab*0.62)+'px "Segoe UI", Roboto, sans-serif';
     g.textBaseline = 'alphabetic'; g.textAlign = 'left';
     g.fillText(v.name, x, y+lab*0.78);
   });
@@ -10098,12 +10460,12 @@ function centerRowInBand(all, silent, soloNonPsd){
 
 function runAction(act){
   if(act==='resetFx'){
-    pushUndo();
+    pushUndo('Reset effects');
     state.layouts[state.active].fx = PARTS.find(p=>p.key==='fx').defaults({});
     syncControls(); render(); return;
   }
   if(act==='applyAccent'){
-    pushUndo();
+    pushUndo('Apply accent');
     const n = applyAccent(state.theme.accent, state.theme.scope==='this format');
     syncControls(); render();
     toast(n+' colour'+(n===1?'':'s')+' repainted'); return;
@@ -10115,20 +10477,20 @@ function runAction(act){
       (fuori.length ? '     (ignored: ' + [...new Set(fuori)].join(' ') + ')' : '')); return;
   }
   if(act==='panelsEven'){
-    pushUndo();
+    pushUndo('Even panels');
     const S = state.layouts[state.active].shot;
     S.weights = [1,1,1,1,1,1]; S.slants = [0,0,0,0,0,0,0];
     buildControls(); render(); toast('Even panels'); return;
   }
   if(act==='panelsHero'){
-    pushUndo();
+    pushUndo('Big panel on the left');
     const S = state.layouts[state.active].shot;
     S.weights = [2,1,1,1,1,1]; S.slants = [0,0,0,0,0,0,0];
     if((S.panels||1) < 3) S.panels = 3;
     buildControls(); render(); toast('Big panel on the left'); return;
   }
   if(act==='panelsFan'){
-    pushUndo();
+    pushUndo('Fan panels');
     const S = state.layouts[state.active].shot;
     const n = Math.max(2, Math.round(S.panels||1));
     S.slants = [];
@@ -10137,7 +10499,7 @@ function runAction(act){
   }
   if(act==='shotToSimilar' || act==='shotToAll'){ copiaImpostazioneImmagine(act==='shotToAll'); return; }
   if(act==='shotsClear'){
-    pushUndo();
+    pushUndo('Remove all images');
     SHOTS = []; imgShot = null;
     dbSvuota();
     rimappaImmagini(()=> -1);
@@ -10145,13 +10507,13 @@ function runAction(act){
     toast('Images removed', {undo:true}); return;
   }
   if(act==='resetAccent'){
-    pushUndo();
+    pushUndo('Reset accent');
     applyAccent(C.accentA2, state.theme.scope==='this format');
     syncControls(); render(); toast('Back to the PSD orange', {undo:true}); return;
   }
   if(act==='autoClear'){ autoClear(); return; }
   if(act==='autoRestore'){
-    pushUndo();
+    pushUndo('Restore last save');
     toast(autoRestore(true) ? 'Last save restored'
           : (ripristinoRotto ? 'The saved work is damaged and could not be read'
                              : 'Nothing saved yet'));
@@ -10160,8 +10522,8 @@ function runAction(act){
   if(act==='sizeCheck'){ sizeCheck(); return; }
   if(act==='perImage'){ esportaPerImmagine(); return; }
   if(act==='preflight'){ preflightRun(); return; }
-  if(act==='centerRow'){ pushUndo(); centerRowInBand(false); return; }
-  if(act==='centerRowAll'){ pushUndo(); centerRowInBand(true); return; }
+  if(act==='centerRow'){ pushUndo('Centre row'); centerRowInBand(false); return; }
+  if(act==='centerRowAll'){ pushUndo('Centre row in all formats'); centerRowInBand(true); return; }
   if(act==='variantAdd'){ variantAdd(); return; }
   if(act==='variantUpdate'){ variantUpdate(); return; }
   if(act==='compareShow'){
@@ -10175,7 +10537,7 @@ function runAction(act){
     c.toBlob(b=>{
       const a = document.createElement('a');
       a.href = URL.createObjectURL(b);
-      a.download = safe(applyCase('comparison '+(state.variants.length||1)+' variants',
+      a.download = safe(applyCase('comparison '+(state.variants.length||1)+((state.variants.length||1) === 1 ? ' variant' : ' variants'),
                                   state.naming.case, state.naming.sep||'_'))+'.png';
       a.click();
     }, 'image/png');
@@ -10193,6 +10555,14 @@ function runAction(act){
    esporta. Non blocca niente: elenca e basta.
    ========================================================================== */
 let PREVOLO = null;                 /* ultimo esito, per stamparlo nel pannello */
+/* L'esito resta finche' non lo si rifa: nel frattempo un formato puo' essere
+   stato spuntato fuori. Le sue note non si mostrano piu' (quelle senza formato
+   restano). */
+function esitoPreflight(){
+  if(!PREVOLO) return null;
+  const vivi = x=> !x.id || (state.layouts[x.id] && state.layouts[x.id].on);
+  return {quando: PREVOLO.quando, trovati: PREVOLO.trovati.filter(vivi)};
+}
 
 function inkDelDisegno(f, L, quale){
   /* riquadro di inchiostro vero di una parte, misurato sul disegno */
@@ -10204,6 +10574,17 @@ function inkDelDisegno(f, L, quale){
   let box = null;
   try{ box = parte.draw(c, f.w, f.h, L, false); }catch(e){ return null; }
   return box;
+}
+
+/* Le note che l'utente ha accettato per questo pack (state.export.accepted, chiavi
+   formato|testo senza numeri): non si elencano e non entrano nei messaggi. Sono
+   ammesse solo le note: un errore resta sempre. */
+function accettate(){
+  const a = state.export && state.export.accepted;
+  return Array.isArray(a) ? a : [];
+}
+function chiaveNota(x){
+  return (x.id || '') + '|' + String(x.testo).replace(/[0-9]+/g, '#');
 }
 
 function preflight(){
@@ -10532,22 +10913,112 @@ function preflight(){
     visti[chiave] = true; unici.push(x);
   });
   unici.sort((a,b)=> (a.tipo===b.tipo) ? 0 : (a.tipo==='errore' ? -1 : 1));
-  const tagliati = unici.length > 20 ? unici.slice(0,20) : unici;
-  if(unici.length > 20)
-    tagliati.push({formato:'', id:'', tipo:'nota', testo:'and ' + (unici.length-20) + ' more'});
-  PREVOLO = {quando: Date.now(), trovati: tagliati};
+  /* le note accettate escono dall'elenco, ma si contano */
+  unici.forEach(x=>{ if(x.tipo === 'nota') x.chiave = chiaveNota(x); });
+  const accolte = accettate();
+  const visibili = unici.filter(x=> !(x.tipo === 'nota' && accolte.indexOf(x.chiave) >= 0));
+  const nascoste = unici.length - visibili.length;
+  const tagliati = visibili.length > 20 ? visibili.slice(0,20) : visibili;
+  if(visibili.length > 20)
+    tagliati.push({formato:'', id:'', tipo:'nota', testo:'and ' + (visibili.length-20) + ' more'});
+  PREVOLO = {quando: Date.now(), trovati: tagliati, accettate: nascoste};
   return tagliati;
+}
+
+/* L'esito da mostrare: se c'e' esitoPreflight() (solo i formati spuntati) si usa
+   quello, altrimenti l'ultimo esito intero. Accetta sia un elenco sia un oggetto
+   come PREVOLO; null se non c'e' ancora un controllo. */
+function esitoVisto(){
+  if(!PREVOLO) return null;
+  let r = (typeof esitoPreflight === 'function') ? esitoPreflight() : PREVOLO;
+  if(Array.isArray(r)) r = {trovati: r, accettate: PREVOLO.accettate};
+  if(!r || !Array.isArray(r.trovati)) return PREVOLO;
+  return {trovati: r.trovati, accettate: (r.accettate !== undefined ? r.accettate : PREVOLO.accettate) || 0};
+}
+/* una riga di riepilogo: "2 problems, 3 notes, 1 accepted" */
+function riepilogoPreflight(){
+  const ev = esitoVisto();
+  if(!ev) return '';
+  const t = ev.trovati, acc = ev.accettate || 0;
+  const errori = t.filter(x=> x.tipo==='errore').length;
+  const note = t.length - errori;
+  const pezzi = [];
+  if(errori) pezzi.push(errori + ' problem' + (errori===1?'':'s'));
+  if(note) pezzi.push(note + ' note' + (note===1?'':'s'));
+  if(acc) pezzi.push(acc + ' accepted');
+  return pezzi.length ? pezzi.join(', ') : 'No problems found';
 }
 
 function preflightRun(){
   const t = preflight();
-  const errori = t.filter(x=> x.tipo==='errore').length;
-  const note   = t.length - errori;
   buildControls();
-  toast(!t.length ? 'Everything checks out'
-    : errori + ' problem' + (errori===1?'':'s') + ', ' + note + ' thing' + (note===1?'':'s') +
-      ' to look at.  The list is under Export.');
+  preflightDialogo();
   return t;
+}
+
+/* L'esito del controllo in una finestra, come la misura dei formati: una riga
+   per cosa da guardare, puntino rosso per un problema e ambra per una nota.
+   Un clic su una riga porta a quel formato; "Accept" su una nota la toglie
+   dall'elenco per questo pack (si ritrova con "Show accepted again"). */
+async function preflightDialogo(){
+  const visto = esitoVisto();
+  if(!visto) return;
+  const t = visto.trovati, acc = visto.accettate || 0;
+  const corpo = document.createElement('div');
+  corpo.className = 'pfl';
+  const sum = document.createElement('div');
+  sum.className = 'pf-sum';
+  sum.textContent = t.length ? riepilogoPreflight()
+    : (acc ? 'Everything else checks out (' + acc + ' accepted)' : 'Everything checks out');
+  corpo.appendChild(sum);
+  t.forEach(x=>{
+    const riga = document.createElement('div');
+    riga.className = 'pf-row ' + (x.tipo==='errore' ? 'bad' : 'warn');
+    const dot = document.createElement('span'); dot.className = 'pf-dot';
+    riga.appendChild(dot);
+    const txt = document.createElement('div'); txt.className = 'pf-txt';
+    if(x.formato){ const b = document.createElement('b'); b.textContent = x.formato + ': '; txt.appendChild(b); }
+    txt.appendChild(document.createTextNode(x.testo));
+    riga.appendChild(txt);
+    const f = x.id ? FORMATS.find(y=> y.id===x.id) : null;
+    if(f){
+      riga.classList.add('go');
+      riga.title = 'Go to ' + f.group + ' / ' + f.name;
+      riga.onclick = ()=>{
+        const h = document.getElementById('dlg');
+        if(h && h._chiudi) h._chiudi(null);
+        state.active = f.id; buildFormats(); buildControls(); render();
+      };
+    }
+    if(x.chiave){
+      const ok = document.createElement('button');
+      ok.type = 'button'; ok.className = 'pf-acc'; ok.textContent = 'Accept';
+      ok.title = 'Accept for this pack: this note is hidden from the list and the warnings. Show accepted again brings it back';
+      ok.onclick = e=>{
+        e.stopPropagation();
+        pushUndo('Accept note');
+        state.export.accepted = accettate().concat([x.chiave]);
+        PREVOLO.trovati = PREVOLO.trovati.filter(y=> y !== x);
+        PREVOLO.accettate = (PREVOLO.accettate || 0) + 1;
+        autoSave();
+        buildControls();
+        preflightDialogo();
+      };
+      riga.appendChild(ok);
+    }
+    corpo.appendChild(riga);
+  });
+  const bott = [{id:'ok', label:'Close', primary:true}];
+  if(acc) bott.unshift({id:'again', label:'Show ' + acc + ' accepted again'});
+  const id = await dialogo({title:'Check before exporting', body:corpo, buttons:bott});
+  if(id === 'again'){
+    pushUndo('Show accepted notes');
+    delete state.export.accepted;
+    autoSave();
+    preflight();
+    buildControls();
+    preflightDialogo();
+  }
 }
 
 /* Pesa ogni formato acceso con le impostazioni di adesso e mostra la tabella
@@ -10582,8 +11053,7 @@ async function sizeCheck(){
     celle.forEach((c, i)=>{
       const td = document.createElement(tag);
       td.textContent = c;
-      td.style.cssText = 'padding:4px 8px;border-bottom:1px solid var(--line);text-align:' +
-                         (i===0 ? 'left' : 'right') + (extra && extra[i] ? ';' + extra[i] : '');
+      td.style.cssText = 'text-align:' + (i===0 ? 'left' : 'right') + (extra && extra[i] ? ';' + extra[i] : '');
       tr.appendChild(td);
     });
     return tr;
@@ -10597,8 +11067,8 @@ async function sizeCheck(){
     tab.appendChild(tr);
     if(r.fab){
       const n = document.createElement('tr'), td = document.createElement('td');
+      n.className = 'sznote';
       td.colSpan = 3; td.textContent = 'Fab asks under 3 MB';
-      td.style.cssText = 'padding:0 8px 4px;text-align:right;font-size:var(--fs-s);color:var(--warn)';
       n.appendChild(td); tab.appendChild(n);
     }
   });

@@ -129,7 +129,7 @@ module.exports = async ({ev, delay, capture}) => {
       const o = {btn: b && b.textContent, on: t.classList.contains('on'), msg: t.firstChild && t.firstChild.textContent,
                  changed: snapState() !== snap0 || SHOTS.length !== sh0, grew: undoStack.length - n0};
       if(b) b.click();
-      o.restored = snapState() === snap0 && SHOTS.length === sh0; o.stack = undoStack.length - n0; o.hid = !t.querySelector('button') && t.firstChild.textContent === 'Undo';
+      o.restored = snapState() === snap0 && SHOTS.length === sh0; o.stack = undoStack.length - n0; o.hid = !t.querySelector('button') && /^Undo(:|$)/.test(t.firstChild.textContent);
       o.imgs = SHOTS.length === sh0; o.vr = state.variants.length === vr0;
       return o; })()`);
     res['undo_' + name] = r;

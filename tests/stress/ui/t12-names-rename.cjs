@@ -51,13 +51,14 @@ module.exports = async ({ ev, command, delay, log }) => {
     state.active = 'unity_cover';
     const t = [{formato: nomeFormato(FORMATS.find(f => f.id === 'yt_thumb')), id: 'yt_thumb', tipo: 'errore', testo: 'probe YT'},
                {formato: nomeFormato(FORMATS.find(f => f.id === 'fab_thumb')), id: 'fab_thumb', tipo: 'nota', testo: 'probe Fab'}];
-    PREVOLO = {quando: Date.now(), trovati: t};
-    const w = makeRow({type: 'preflight'});
-    const rows = [...w.querySelectorAll('.chk')];
+    PREVOLO = {quando: Date.now(), trovati: t, accettate: 0};
+    preflightDialogo();
+    const rows = [...document.querySelectorAll('#dlg .pf-row')];
     const yt = rows.find(r => /probe YT/.test(r.textContent)), fab = rows.find(r => /probe Fab/.test(r.textContent));
     const res = {labels: rows.map(r => r.textContent)};
     yt.click(); res.afterYT = state.active;
     state.active = 'unity_cover'; fab.click(); res.afterFab = state.active;
+    const hd = document.getElementById('dlg'); if(hd._chiudi) hd._chiudi(null);
     state.active = 'unity_cover'; PREVOLO = null; return res; })()`);
   eq(jump.labels, ['YouTube Thumbnail: probe YT', 'Fab Thumbnail: probe Fab'], 'preflight line labels');
   eq(jump.afterYT, 'yt_thumb', 'clicking the YouTube line opens YouTube');

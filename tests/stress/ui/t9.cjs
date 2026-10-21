@@ -51,7 +51,7 @@ module.exports = async ({ev, command, delay, reload, capture, log}) => {
   chk('Export format back to PNG', (await ev(`state.export.format`)) === 'PNG (lossless)');
   await ev(`vaiScheda('design'); 1`);
   const labels = await ev(`[...document.querySelectorAll('#controls .sec[data-title="Colours"] button')].map(b => b.textContent.trim())`);
-  chk('theme button labels', labels.includes('Apply colour again') && labels.includes('Back to default orange') && !labels.includes('Repaint now'), labels);
+  chk('theme button labels', labels.includes('Apply colour again') && labels.includes('Back to default colour') && !labels.includes('Repaint now'), labels);
 
   // ---------- 100 images: timing ----------
   const n = await ev(mk100);

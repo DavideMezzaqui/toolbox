@@ -104,7 +104,7 @@ module.exports = async ({ ev, delay, reload, until }) => {
   const dg = await ev(`(async () => { confirmCalled = 0; const u0 = undoStack.length; document.getElementById('bNew').click(); const open = await waitDlg();
       const btns = [...document.querySelectorAll('#dlg .dlg-btns button')].map(b => b.textContent + (b.classList.contains('primary') ? '*' : ''));
       dlgBtn('Cancel').click(); await new Promise(r => setTimeout(r, 50)); return { open, btns, confirmCalled, steps: undoStack.length - u0, n: SHOTS.length, title: state.pack.title }; })()`);
-  chk('New opens dialogo (no window.confirm), Blank is primary', dg.open && dg.confirmCalled === 0 && JSON.stringify(dg.btns) === JSON.stringify(['Blank new pack*', 'New from this pack', 'Cancel']), dg);
+  chk('New opens dialogo (no window.confirm), New from this pack is primary', dg.open && dg.confirmCalled === 0 && JSON.stringify(dg.btns) === JSON.stringify(['Cancel', 'Blank new pack', 'New from this pack*']), dg);
   chk('New > Cancel changes nothing', dg.steps === 0 && dg.n === 3 && dg.title === 'Zeta', dg);
 
   /* New from this pack */
