@@ -16,8 +16,9 @@
      SISTEMA VISIVO (1.7.0)
      Stessa tavolozza scura di sempre, ma con una scala di testo, un solo
      ritmo per le righe e tre larghezze: strumenti a sinistra, tela al
-     centro, impostazioni a destra. I blocchi marcati [v17-...] sono delle
-     aree: ogni pacchetto aggiunge le sue regole in fondo al blocco suo.
+     centro, impostazioni a destra. I blocchi marcati [v17-...] e [v18-...]
+     raggruppano le regole per area della pagina; ogni selettore sta in un
+     blocco solo.
      ========================================================================== */
   :root{
     --bg:#101012; --panel:#18181a; --panel2:#202024; --panel3:#282830; --line:#2e2e33; --line2:#3a3a42;
@@ -27,13 +28,15 @@
     --mono:ui-monospace,Consolas,monospace;
     --hdr-h:46px;
     --lw:clamp(262px,13vw,340px); --rw:clamp(342px,19vw,460px);
+    --lib-rows:2;
   }
+  @media(max-height:800px){ :root{--lib-rows:1} }
   /* schermi grandi: un punto in piu' al testo e colonne piu' larghe */
   @media(min-width:2200px){
     :root{--fs-l:14px; --fs:13px; --fs-s:12px; --fs-xs:11px;
           --lw:clamp(320px,14vw,390px); --rw:clamp(420px,20vw,540px)}
   }
-  *{box-sizing:border-box}
+  *{box-sizing:border-box;scrollbar-width:thin;scrollbar-color:#3a3a42 transparent}
   [hidden]{display:none!important}
   html,body{height:100%}
   body{margin:0;background:var(--bg);color:var(--txt);font:var(--fs-l)/1.45 -apple-system,Segoe UI,Roboto,sans-serif;
@@ -67,18 +70,17 @@
   button.acc:hover{background:#fff;border-color:#fff}
   main{display:flex;flex:1;min-height:0}
   aside{flex:none;overflow-y:auto;background:var(--panel);padding:10px}
-  aside.right{width:var(--rw);border-left:1px solid var(--line)}
   aside.left{width:var(--lw);border-right:1px solid var(--line);padding:0;display:flex;flex-direction:column}
-  #stage{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:9px;overflow:auto}
-  #cvwrap{position:relative;overflow:hidden;display:flex;align-items:center;
+  #stage{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:16px;gap:9px;overflow:auto}
+  #cvwrap{position:relative;overflow:hidden;display:flex;align-items:center;margin-top:auto;
      justify-content:center;max-width:100%;max-height:calc(100vh - var(--hdr-h) - 119px)}
-  #cv{max-width:100%;max-height:calc(100vh - var(--hdr-h) - 119px);background:#000;border:1px solid var(--line);
+  #cv{background:#000;border:1px solid var(--line);
      box-shadow:0 12px 40px rgba(0,0,0,.45);cursor:grab;touch-action:none;transform-origin:50% 50%}
   #cv.drag{cursor:grabbing}
   #cvwrap.panning #cv{cursor:move}
   /* velo che compare quando si trascina un file sopra la finestra */
-  #dropzone{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
-     background:rgba(10,10,12,.72);border:2px dashed #8a8a94;pointer-events:none;z-index:5}
+  #dropzone{position:absolute;inset:8px;display:none;align-items:center;justify-content:center;border-radius:12px;
+     background:rgba(10,10,12,.72);border:2px dashed #9a9aa4;pointer-events:none;z-index:5}
   #dropzone.on{display:flex}
   #dropzone span{font-size:var(--fs-l);letter-spacing:.06em;color:#e8e8ec;text-align:center;
      padding:10px 16px;border-radius:6px;background:rgba(0,0,0,.55)}
@@ -87,13 +89,14 @@
      pointer-events:none;padding:16px}
   body.no-images #canvasHint{display:flex}
   #canvasHint .ch-box{pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:6px;
-     text-align:center;padding:22px 30px;border:1px dashed #5a5a64;border-radius:12px;
-     background:rgba(16,16,18,.84)}
+     text-align:center;padding:22px 30px;border:1px dashed var(--line2);border-radius:12px;
+     background:rgba(24,24,26,.88)}
   #canvasHint b{font-size:16px;font-weight:600;color:var(--txt)}
   #canvasHint span{font-size:var(--fs);color:var(--txt2)}
   #canvasHint .ch-btns{display:flex;gap:8px;margin-top:10px}
   #canvasHint .ch-btns button{padding:7px 14px}
-  .stagebar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center;font-size:var(--fs-s);color:var(--dim)}
+  .stagebar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center;font-size:var(--fs-s);color:var(--dim);
+     margin-bottom:auto;min-height:18px}
   .stagebar #dims{color:var(--txt2)}
 
   input[type=range]{accent-color:#9a9aa2}
@@ -111,8 +114,8 @@
     left:4px;top:1px;width:3px;height:7px;border:solid #101012;
     border-width:0 2px 2px 0;transform:rotate(45deg)}
   /* Le barre di scorrimento di serie sono chiare e saltano all'occhio piu'
-     del disegno. Qui sono sottili e dello stesso grigio dei bordi. */
-  *{scrollbar-width:thin;scrollbar-color:#3a3a42 transparent}
+     del disegno. Qui sono sottili e dello stesso grigio dei bordi
+     (scrollbar-width e colore stanno nella regola * in cima). */
   ::-webkit-scrollbar{width:9px;height:9px}
   ::-webkit-scrollbar-track{background:transparent}
   ::-webkit-scrollbar-thumb{background:#33333b;border-radius:5px;
@@ -146,7 +149,7 @@
      (solo qui: la colonna sinistra e la barra della tela hanno le loro misure) */
   @media(min-width:1600px){ aside.right{--fs-xs:11px; --fs-s:12px} }
   /* una sola freccia per menu a tendina e selettori con anteprima */
-  aside.right{--chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 3.5 5 6.5 8 3.5' fill='none' stroke='%23b4b4bb' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+  aside.right{width:var(--rw);border-left:1px solid var(--line);--chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 3.5 5 6.5 8 3.5' fill='none' stroke='%23b4b4bb' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
   .row{display:flex;align-items:center;gap:8px;min-height:26px;margin-bottom:4px}
   .row label{width:100px;flex:none;color:var(--txt2);font-size:var(--fs);line-height:1.25;overflow-wrap:anywhere}
   /* Slider: riga sottile e cursore tondo. Quello di serie del browser e'
@@ -190,14 +193,13 @@
   .hint{color:var(--dim);font-size:var(--fs-s);line-height:1.45;margin:-2px 0 8px}
   .swatches{display:flex;gap:4px;flex:1;flex-wrap:wrap}
   .gr{padding:0;border-radius:3px;border:1px solid var(--line);cursor:pointer}
-  .gr.on{outline:1px solid #e8e8ec;outline-offset:1px}
+  .gr.on,.sw.on{outline:1px solid #e8e8ec;outline-offset:1px}
   .sw{width:18px;height:18px;padding:0;flex:none;border-radius:3px;border:1px solid var(--line)}
   .row button.hex{flex:none;height:22px;min-height:22px;padding:0 5px;font:var(--fs-xs)/20px var(--mono);
      color:var(--dim);background:transparent;border:1px solid transparent}
   .row button.hex:hover{border-color:var(--line);color:var(--txt)}
   .row input.inl.hexinl{flex:none;width:82px;height:22px;padding:0 5px;font:var(--fs-xs)/20px var(--mono)}
   .row button.swapc{flex:none;padding:0 5px;font-size:var(--fs);line-height:16px}
-  .sw.on{outline:1px solid #e8e8ec;outline-offset:1px}
   /* titoletto che divide i controlli in gruppi dentro una sezione */
   .grp2{display:flex;align-items:center;gap:8px;margin:12px 0 7px;
         font-size:var(--fs-xs);font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
@@ -225,7 +227,8 @@
   .tabs{display:flex;flex:none;gap:2px;padding:2px;background:var(--bg);
         border:1px solid var(--line);border-radius:8px}
   .tabs button{flex:none;padding:0 8px;height:24px;font-size:var(--fs);border-radius:6px;border:0;
-        background:transparent;color:var(--txt2)}
+        background:transparent;color:var(--txt2);
+        display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
   .tabs button:hover{background:#26262b;color:var(--txt)}
   .tabs button.on{background:#383841;color:#fff;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.4)}
   /* in cima al pannello: immagini, schede e ricerca restano in vista; e' una
@@ -255,8 +258,6 @@
         border-width:0 1.5px 1.5px 0;transform:rotate(-45deg);transition:transform .12s}
   .sec.open>.hd>span.sg{transform:rotate(45deg);margin-top:2px;border-color:var(--txt2)}
   .sec>.bd .row:hover label{color:var(--txt)}
-  @media(max-width:900px){ .rz{display:none} }
-  #bDesk[hidden]{display:none}
   /* tinta discreta per sezione: solo l'icona */
   .sec>.hd>svg.ic{color:var(--sc,var(--txt2));opacity:.85}
   .sec.open>.hd>svg.ic,.sec>.hd:hover>svg.ic{opacity:1}
@@ -279,7 +280,6 @@
   .sec[data-title="Export"]{--sc:hsl(150,42%,66%)}
   .sec[data-title="File naming"]{--sc:hsl(42,42%,66%)}
   .sec[data-title="Session"]{--sc:hsl(220,42%,66%)}
-  .tabs button{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
   .tabs button svg.ic{width:14px;height:14px;opacity:.8}
   .tabs button.on svg.ic{opacity:1}
   .cslot{display:none !important}
@@ -294,17 +294,19 @@
   .pick>.cur .lbl{flex:1;min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .pick>.cur .car{flex:none;width:10px;height:10px;background:var(--chev) no-repeat center/10px 10px}
   .pick .pop{position:absolute;z-index:50;top:calc(100% + 3px);left:0;right:0;
-    background:var(--panel2);border:1px solid #4a4a52;border-radius:6px;padding:5px;
-    display:grid;gap:4px;max-height:250px;overflow-y:auto;
+    background:var(--panel2);border:1px solid #4a4a52;border-radius:6px;padding:6px;
+    display:grid;gap:5px;max-height:250px;overflow-y:auto;
     box-shadow:0 8px 22px rgba(0,0,0,.55)}
   .pick .opt{border:1px solid transparent;border-radius:4px;cursor:pointer;
-             background:var(--bg);padding:2px;overflow:hidden}
-  .pick .opt:hover{border-color:#6a6a74}
+             background:var(--bg);padding:2px;overflow:hidden;transition:border-color .12s,background .12s}
+  .pick .opt:hover{border-color:#6a6a74;background:var(--panel3,#1c1c22)}
   .pick .opt.on{border-color:#e6e6e8}
   .pick .opt:focus-visible{outline:1px solid #9a9aa2}
   .pick .opt canvas{display:block;width:100%;height:30px}
-  .pick .opt span{display:block;font-size:var(--fs-xs);color:var(--dim);text-align:center;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-top:1px}
+  /* tessere piu' leggibili: nome su due righe al massimo */
+  .pick .opt span{color:var(--dim);text-align:center;font-size:10px;line-height:1.25;padding-top:2px;
+    white-space:normal;overflow-wrap:anywhere;overflow:hidden;text-overflow:ellipsis;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
   /* il riquadro dell'ultimo export non compare finche' non c'e' niente da dire */
   .lastexp:empty{display:none}
   /* blocco di un pannello: quello scelto si riconosce. Con un pannello solo non c'e' cornice */
@@ -349,12 +351,6 @@
   /* [/v17-right] */
 
 
-  /* --- scorciatoie sempre visibili --- */
-  .keys{font-size:var(--fs-xs);color:var(--dim);line-height:1.7;margin-top:10px;
-        border-top:1px solid var(--line);padding-top:8px}
-  .keys b{color:#c8c8ce;font-weight:600;font-family:var(--mono)}
-  .keys div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
   /* ==========================================================================
      [v17-left] colonna sinistra: scheda Pack, elenco dei formati, piede
      ========================================================================== */
@@ -373,11 +369,11 @@
            background:repeating-conic-gradient(#222226 0 25%,#1a1a1d 0 50%) 0 0/10px 10px}
   .pc-logo button{padding:0 8px;height:22px;font-size:var(--fs-s)}
   .pc-logo #bFont{grid-column:1/-1;height:26px}
-  #formats{flex:none;padding:8px 10px 6px}
+  #formats{flex:none;padding:8px 10px 16px}
   .leftfoot{flex:none;position:sticky;bottom:0;margin-top:auto;padding:10px;background:var(--panel);
             border-top:1px solid var(--line)}
   .leftfoot button{width:100%;height:30px}
-  .grp{margin-bottom:10px}
+  .grp{margin-bottom:12px}
   .grp h4{margin:0 0 5px 2px;font-size:var(--fs-xs);font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
   .fmt{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;cursor:pointer;
        border:1px solid transparent;transition:background .12s}
@@ -385,47 +381,31 @@
   .fmt.on{background:var(--panel3);border-color:#5a5a64}
   .fmt canvas.th{flex:none;background:#000;border:1px solid var(--line);
      border-radius:3px;image-rendering:auto}
-  /* sopra una certa misura l'anteprima va sopra il nome, non di fianco:
-     di fianco resterebbero due dita di spazio per la scritta */
-  .fmt.big{flex-direction:column;align-items:stretch;gap:5px;padding:7px}
-  .fmt.big canvas.th{width:100%;height:auto}
-  .fmt.big .top{display:flex;align-items:center;gap:8px}
-  .thumbbar{display:flex;align-items:center;gap:5px;margin-bottom:9px;
+  .thumbbar{display:flex;align-items:center;gap:5px;margin-bottom:9px;margin-left:2px;min-height:24px;
             font-size:var(--fs-xs);font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
-  .thumbbar button{padding:3px 8px;font-size:var(--fs);line-height:1;letter-spacing:0}
+  /* bottoni di misura comodi da prendere */
+  .thumbbar button{width:26px;height:24px;padding:0;display:inline-flex;align-items:center;justify-content:center;
+            font-size:var(--fs-l);line-height:1;letter-spacing:0}
   .thumbbar span{flex:1}
   .fmt .nm{flex:1;min-width:0}
   .fmt .nm b{display:block;font-weight:600;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .fmt .nm i{font-style:normal;color:var(--dim);font-size:var(--fs-s)}
-  .fmt select.res{flex:none;width:58px;background:var(--bg);color:var(--txt);
-    border:1px solid var(--line);border-radius:4px;padding:1px 2px;font:var(--fs-xs) inherit}
-  /* con le anteprime grandi il menu della risoluzione va sotto il nome,
-     se no mangia lo spazio della scritta e il nome viene troncato */
-  .fmt.big select.res{width:auto;align-self:flex-start;font:var(--fs-s) inherit;padding:2px 4px}
+  .fmt .nm i{font-style:normal;color:var(--dim);font-size:var(--fs-s);display:block;margin-top:1px}
   .fmt .seg{flex:none}
   /* con l'anteprima di fianco, il selettore di risoluzione va sotto il nome:
      sulla stessa riga al nome restavano pochi pixel e "Asset page" si tagliava */
-  .fmt:not(.big):has(canvas.th){display:grid;grid-template-columns:auto auto minmax(0,1fr);column-gap:8px;row-gap:0}
-  .fmt:not(.big):has(canvas.th)>input[type=checkbox],.fmt:not(.big):has(canvas.th)>canvas.th{grid-row:1/3;align-self:center}
-  .fmt:not(.big):has(canvas.th)>.nm{grid-column:3}
-  .fmt:not(.big):has(canvas.th)>select.res,.fmt:not(.big):has(canvas.th)>.seg{grid-column:3;justify-self:start;margin-top:4px}
-  .fmt.big .seg{align-self:flex-start}
-  /* maniglia per ridimensionare la colonna: sul bordo interno, fra colonna e tela */
-  /* [v17-left] rifinitura 1.7.2: bordo sinistro comune alle etichette, bottoni di misura piu' comodi, spazio fra i gruppi */
-  .thumbbar{margin-left:2px;min-height:24px}
-  .thumbbar button{width:26px;height:24px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:var(--fs-l)}
-  .grp{margin-bottom:12px}
-  .grp h4{margin-left:2px}
+  .fmt:has(canvas.th){display:grid;grid-template-columns:auto auto minmax(0,1fr);column-gap:8px;row-gap:0}
+  .fmt:has(canvas.th)>input[type=checkbox],.fmt:has(canvas.th)>canvas.th{grid-row:1/3;align-self:center}
+  .fmt:has(canvas.th)>.nm{grid-column:3;align-self:center}
+  .fmt:has(canvas.th)>.seg{grid-column:3;justify-self:start;margin-top:4px}
   .fmt:focus-visible{outline:1px solid #9a9aa2;outline-offset:1px}
-  .fmt .nm i{display:block;margin-top:1px}
+  /* maniglia per ridimensionare la colonna: sul bordo interno, fra colonna e tela */
   .rz{flex:none;width:6px;margin:0 -3px;position:relative;z-index:6;cursor:col-resize;touch-action:none;background:transparent;transition:background .12s}
   .rz:hover,.rz.on{background:rgba(160,160,170,.35)}
+  @media(max-width:900px){ .rz{display:none} }
   /* 1.8.0: riquadro anteprima fisso (72x44, il disegno ci sta "contain"): tutte le
      righe senza 4K|1080p alte uguali. Il velo dei formati spenti sta solo sulla
      miniatura; il nome e la riga scelta restano com'e'. */
-  #formats{padding-bottom:16px}
-  .fmt:not(.big):has(canvas.th)>.nm{align-self:center}
-  .fmt:not(.big):has(canvas.th)>.nm+.seg{margin-top:2px}
+  .fmt:has(canvas.th)>.nm+.seg{margin-top:2px}
   .fmt.off canvas.th{opacity:.4}
   .fmt.off.on canvas.th{opacity:.7}
   /* finestra bassa (sotto gli 800 px): la scheda Pack si fa piccola, cosi' l'elenco
@@ -439,8 +419,7 @@
     #packcard .row input[type=text]{height:24px;padding-top:2px;padding-bottom:2px}
     #packcard .row.full{display:flex;align-items:flex-start;gap:8px}
     #packcard .row.full label{display:block;width:62px;margin:5px 0 0}
-    #packcard .row.full textarea{flex:1;width:auto;min-width:0;height:26px;padding-top:3px;padding-bottom:3px}
-    #packcard .row.full textarea{overflow:hidden;white-space:pre}
+    #packcard .row.full textarea{flex:1;width:auto;min-width:0;height:26px;padding-top:3px;padding-bottom:3px;overflow:hidden;white-space:pre}
     #packcard .row.full textarea:focus{height:60px;overflow:auto;white-space:pre-wrap}
     .pc-logo{grid-template-columns:52px 1fr 1fr 1fr;gap:0 4px;padding-top:7px;align-items:center}
     .pc-logo canvas{grid-row:auto;width:52px;height:26px}
@@ -491,46 +470,33 @@
   .toolbar .tgrow{flex:1 1 0;min-width:0}
   .toolbar button.gridBtn::after{content:'';display:inline-block;margin-left:6px;vertical-align:middle;
            border:4px solid transparent;border-top-color:currentColor;border-bottom:0;opacity:.6}
-  #gridPop{position:fixed;z-index:60;width:230px;padding:10px 12px;background:var(--panel2);
-           border:1px solid #4a4a52;border-radius:10px;box-shadow:0 14px 40px rgba(0,0,0,.6);
-           display:flex;flex-direction:column;gap:7px;font-size:var(--fs);color:var(--txt2)}
+  #gridPop{position:fixed;z-index:60;width:244px;padding:12px 14px;background:var(--panel2);
+           border:1px solid var(--line2);border-radius:10px;box-shadow:0 14px 40px rgba(0,0,0,.6);
+           display:flex;flex-direction:column;gap:9px;font-size:var(--fs);color:var(--txt2)}
   #gridPop .gpRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
-  #gridPop .gpRow[hidden]{display:none}
-  #gridPop input[type=number],#gridPop select{width:96px;font-size:var(--fs);background:var(--panel3,#1c1c22);color:var(--txt);border:1px solid var(--line2);border-radius:4px;padding:2px 6px;color-scheme:dark}
-  #gridPop input[type=range]{width:96px}
-  #gridPop input[type=color]{width:96px;height:22px;padding:0;background:none;border:1px solid var(--line2)}
-  #gridPop{padding:12px 14px;gap:9px;width:244px;border-color:var(--line2)}
+  #gridPop input[type=number],#gridPop select{width:96px;height:24px;font-size:var(--fs);background:var(--panel3,#1c1c22);color:var(--txt);border:1px solid var(--line2);border-radius:5px;padding:2px 6px;color-scheme:dark}
+  #gridPop input[type=range]{width:104px}
+  #gridPop input[type=color]{width:96px;height:24px;padding:0;background:none;border:1px solid var(--line2);border-radius:5px;cursor:pointer}
   #gridPop .gpHead{font-size:var(--fs-xs);letter-spacing:.09em;text-transform:uppercase;color:var(--dim);
            padding-bottom:7px;border-bottom:1px solid var(--line);margin-bottom:1px}
   #gridPop .gpRow>span{color:var(--txt2)}
-  #gridPop input[type=number],#gridPop select{height:24px;border-radius:5px}
   #gridPop input[type=number]:hover,#gridPop select:hover{border-color:#4a4a52}
   #gridPop input[type=number]:focus,#gridPop select:focus{border-color:#8a8a94;outline:none}
-  #gridPop input[type=color]{height:24px;border-radius:5px;cursor:pointer}
   #gridPop input[type=color]::-webkit-color-swatch-wrapper{padding:3px}
   #gridPop input[type=color]::-webkit-color-swatch{border:0;border-radius:3px}
-  #gridPop input[type=range]{width:104px}
   /* [/v17-toolbar] */
 
   /* ==========================================================================
      [v17-stage] area della tela: la barra resta ferma in alto, tela e riga
      informativa si centrano nello spazio che resta
      ========================================================================== */
-  #stage{justify-content:flex-start}
-  #cvwrap{margin-top:auto}
-  .stagebar{margin-bottom:auto;min-height:18px}
   .stagebar #selinfo:not(:empty)::before{content:'';display:inline-block;width:3px;height:3px;border-radius:50%;
            background:var(--dim);vertical-align:middle;margin-right:12px;opacity:.7}
-  #dropzone{inset:8px;border-radius:12px;border-color:#9a9aa4}
-  #canvasHint .ch-box{border-color:var(--line2);background:rgba(24,24,26,.88)}
   /* [/v17-stage] */
 
   /* ==========================================================================
      [v17-strip] immagini del progetto: schede con miniatura e segni d'uso
      ========================================================================== */
-  /* senza il pannello in cima (.phead) la fascia resta incollata da sola */
-  aside.right>#imgs{position:sticky;top:-10px;z-index:4;background:var(--panel);
-        margin:-10px -10px 10px;padding:10px 10px 9px;border-bottom:1px solid var(--line)}
   #imgs .ih{display:flex;align-items:center;gap:5px;margin-bottom:7px}
   #imgs .ih b{flex:1;min-width:0;font-size:var(--fs-xs);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:600;
         white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -543,17 +509,13 @@
      la sua altezza, e max-height = righe x (scheda + spazio). Con piu' immagini di quelle in vista
      (.ov) c'e' la barra di scorrimento e le schede sono un po' piu' strette; lo scorrimento si
      ferma sempre all'inizio di una riga. */
-  :root{--lib-rows:2}
-  @media(max-height:800px){ :root{--lib-rows:1} }
   .lib{--sb:0px;--cw:calc((100cqw - 16px - var(--sb)) / 4);--ch:calc((var(--cw) - 2px) * .5625 + 2px);
        display:grid;grid-template-columns:repeat(4,var(--cw));gap:4px;padding:2px;
        max-height:calc(var(--lib-rows) * (var(--ch) + 4px));overflow-x:hidden;overflow-y:auto;
        scroll-snap-type:y mandatory;scroll-padding:2px}
   .lib.ov{--sb:var(--sbw,11px)}
-  .lib .card{scroll-snap-align:start}
   .lib .card{position:relative;border:1px solid var(--line);border-radius:4px;overflow:hidden;
-             background:#000;cursor:pointer;user-select:none}
-  .lib .card{transition:border-color .12s}
+             background:#000;cursor:pointer;user-select:none;scroll-snap-align:start;transition:border-color .12s}
   .lib .card:hover{border-color:#6a6a74}
   /* in uso su questo formato: bordo chiaro; nel pannello scelto: anello pieno */
   .lib .card.usata{border-color:#8a8a94}
@@ -579,7 +541,6 @@
                   line-height:0;cursor:pointer;opacity:0;transition:opacity .12s,background .12s}
   .lib .card:hover .del,.lib .card .del:focus-visible{opacity:1}
   .lib .card .del:hover{background:#c04040}
-  #imgs .ih button[hidden]{display:none}
   #imgs .ih .rmu,#imgs .ih .rma{color:var(--txt2)}
   /* altezza scelta trascinando la maniglia sotto le immagini (a righe intere): vale su ogni altezza di
      finestra. Sta sopra lo spazio fra le immagini e le schede, cosi' non aggiunge altezza alla testata */
@@ -594,12 +555,6 @@
     #imgs .ih button:not(.rmu):not(.rma) span{display:none}
     #imgs .ih button:not(.rmu):not(.rma){padding:3px 7px}
   }
-  /* selettore con anteprima (immagine di un pannello, forme): tessere piu' leggibili */
-  .pick .opt{transition:border-color .12s,background .12s}
-  .pick .opt:hover{background:var(--panel3,#1c1c22)}
-  .pick .opt span{font-size:10px;line-height:1.25;padding-top:2px;white-space:normal;overflow-wrap:anywhere;
-        display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-  .pick .pop{padding:6px;gap:5px}
   /* [/v17-strip] */
 
   /* ==========================================================================
@@ -616,8 +571,9 @@
   #toast button{pointer-events:auto;flex:none;padding:3px 11px;font-size:var(--fs-s);font-weight:600;
          background:#e6e6e8;border-color:#e6e6e8;color:#101012}
   #toast button:hover{background:#fff}
-  #toast.toast-err,.toast-err{border-color:var(--err);background:color-mix(in srgb,var(--err) 9%,var(--panel3))}
-  #toast.toast-warn,.toast-warn{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 8%,var(--panel3))}
+  #toast:not(.on) button{pointer-events:none}
+  #toast.toast-err{border-color:var(--err);background:color-mix(in srgb,var(--err) 9%,var(--panel3))}
+  #toast.toast-warn{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 8%,var(--panel3))}
   #keysPop{position:fixed;top:calc(var(--hdr-h) + 8px);right:14px;z-index:60;width:min(740px,calc(100vw - 28px));
          max-height:calc(100vh - var(--hdr-h) - 24px);overflow:auto;padding:14px 18px 16px;
          background:var(--panel2);border:1px solid #4a4a52;border-radius:10px;box-shadow:0 14px 40px rgba(0,0,0,.6)}
@@ -628,6 +584,7 @@
   /* colonna dei tasti a larghezza fissa, le descrizioni tutte allineate */
   #keysPop .kgrid>div{display:grid;grid-template-columns:124px minmax(0,1fr);align-items:baseline;gap:10px;
          font-size:var(--fs);color:var(--txt2)}
+  #keysPop .kgrid>div span{min-width:0}
   #keysPop .khead{display:flex;align-items:center;gap:10px;margin:-2px 0 12px;padding-bottom:10px;border-bottom:1px solid var(--line)}
   #keysPop .khead b{flex:1;font-size:var(--fs-l);font-weight:600;color:var(--txt)}
   #keysPop .khead span{font-size:var(--fs-s);color:var(--dim)}
@@ -648,8 +605,6 @@
   .dlg-btns button.danger{border-color:var(--err);color:var(--err)}
   .dlg-btns button.danger:hover{background:color-mix(in srgb,var(--err) 14%,var(--panel2))}
   .dlg-btns button:focus-visible{outline:2px solid #9a9aa2;outline-offset:2px}
-  #toast:not(.on) button{pointer-events:none}
-  #keysPop .kgrid>div span{min-width:0}
   /* [/v17-feedback] */
 
   /* ==========================================================================
@@ -659,8 +614,6 @@
            border:1px solid var(--line);border-radius:6px;padding:6px 9px;margin-bottom:8px}
   .lastexp b{color:var(--txt);font-weight:500}
   .lastexp .warn{color:var(--warn)}
-  .lastexp .bad{color:var(--err)}
-  .lastexp .dim{color:var(--dim)}
   .sztab{width:100%;border-collapse:collapse;font-size:var(--fs);font-variant-numeric:tabular-nums}
   .sztab th{font-weight:500;font-size:var(--fs-s)}
   .sztab td,.sztab th{padding:4px 8px;border-bottom:1px solid var(--line)}
@@ -702,8 +655,7 @@
   .imgpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;
            max-height:min(46vh,420px);overflow-y:auto;padding:2px}
   .imgpick .it{position:relative;border:1px solid var(--line);border-radius:6px;overflow:hidden;
-           background:#000;cursor:pointer;user-select:none;opacity:.55}
-  .imgpick .it{transition:opacity .12s,border-color .12s}
+           background:#000;cursor:pointer;user-select:none;opacity:.55;transition:opacity .12s,border-color .12s}
   .imgpick .it:hover{opacity:.85}
   .imgpick .it.on{opacity:1;border-color:#9a9aa2}
   .imgpick .it:focus-visible{outline:2px solid #9a9aa2;outline-offset:2px}
@@ -731,7 +683,6 @@
     #stage{order:-1}
     /* e l'elenco non si prende mezza pagina: scorre per conto suo */
     aside.left{max-height:40vh;overflow:auto}
-    #cv{max-height:52vh}
   }
 </style>
 </head>
@@ -917,7 +868,7 @@ const GRADIENTI = [
 
 /* colori presi dal PSD */
 const C = {band:'#181818', accent:'#ffb600', accentAlt:'#f8a718',
-           text:'#efefef', dark:'#060606', badgeBg:'#181818',
+           text:'#efefef', dark:'#060606',
            /* i due capi del gradiente della barra, letti dal GradientOverlay
               del PSD. La versione "mini" e' quella di Card e Icon, dove il
               gradiente sta al 67% sopra un arancio pieno */
@@ -974,7 +925,6 @@ const ICONS = {
      quello dell'immagine dentro un pannello */
   zin:    'M7 2.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9z M10.4 10.4l3.1 3.1 M7 5v4 M5 7h4',
   zout:   'M7 2.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9z M10.4 10.4l3.1 3.1 M5 7h4',
-  z100:   'M2.5 5.5V3.5h11v2 M8 3.5v9 M5.5 12.5h5',
   /* una per sezione del pannello, stessa griglia 16x16 e stessi spessori */
   layers: 'M8 2.5L2.5 5.5 8 8.5l5.5-3z M2.5 9L8 12l5.5-3',
   branch: 'M2.5 4.5h4.5v7h-4.5z M9 4.5h4.5v7h-4.5z',
@@ -1162,10 +1112,7 @@ function chiedonoIlFontMio(){
   });
   return quanti;
 }
-function hex2rgb(h){
-  const n = parseInt(String(h).replace('#',''),16);
-  return ((n>>16)&255)+','+((n>>8)&255)+','+(n&255);
-}
+function hex2rgb(h){ return hex2rgbArr(h).join(','); }
 function setFont(c, font, weight, px, track){
   c.font = weight+' '+px+'px '+fam(font)+', sans-serif';
   if('letterSpacing' in c) c.letterSpacing = (px*track)+'px';
@@ -1235,8 +1182,12 @@ function dilateSharp(src, r){
 function formatoRidotto(f, tetto){
   const k = Math.min(1, tetto/Math.max(f.w, f.h));
   if(k >= 1) return f;
-  return {id:f.id, group:f.group, name:f.name, note:f.note, profile:f.profile,
-          w: Math.max(2, Math.round(f.w*k)), h: Math.max(2, Math.round(f.h*k))};
+  return conMisura(f, Math.max(2, Math.round(f.w*k)), Math.max(2, Math.round(f.h*k)));
+}
+/* Lo stesso formato con un'altra misura, senza 'sizes': w/h sono gia' la misura finale
+   e ricalcolarla porterebbe a disegnare alla risoluzione sbagliata. */
+function conMisura(f, w, h){
+  return {id:f.id, group:f.group, name:f.name, note:f.note, profile:f.profile, w:w, h:h};
 }
 
 /* Il bordo alto della fascia, nel PSD, non sfuma in modo lineare: resta un
@@ -1506,6 +1457,7 @@ function ridTogli(v){
   _ridPx -= v.px;
   v.canvas.width = 1; v.canvas.height = 1;
 }
+/* Usata dai test (export-hash, render/ridotta): svuota la cache delle copie ridotte. */
 function svuotaRidotte(){
   _ridLista.slice().forEach(ridTogli);
   _ridLista = []; _ridPx = 0;
@@ -1619,8 +1571,10 @@ function pannelloT(cfg, i){
           rot:panelVal(cfg,i,'rot'), fh:!!panelVal(cfg,i,'fh'), fv:!!panelVal(cfg,i,'fv'),
           fit:cfg.fit};
 }
+/* quanti pannelli ha lo screenshot: almeno uno, sempre intero */
+function nPannelli(S){ return Math.max(1, Math.round(S.panels||1)); }
 function pannelloAttivo(S){
-  const n = Math.max(1, Math.round(S.panels||1));
+  const n = nPannelli(S);
   return Math.min(Math.max(0, Math.round(S.active||0)), n-1);
 }
 /* Porta un layout di prima al modello nuovo. Si rifa' a ogni caricamento
@@ -1724,7 +1678,7 @@ function drawImageInBox(c, img, box, cfg, fx, H){
 }
 
 function drawPanels(c, W, H, cfg, fx){
-  const n = Math.max(1, Math.round(cfg.panels||1));
+  const n = nPannelli(cfg);
   /* Anche con un pannello solo vale la scelta dell'immagine: prima qui si
      prendeva sempre la principale, e il menu "Image" non faceva niente
      finche' non si spezzava lo screenshot in due. */
@@ -1798,7 +1752,7 @@ function shotCacheMetti(k, memo){
   }
 }
 function shotChiave(W, H, cfg, fx){
-  const n = Math.max(1, Math.round(cfg.panels||1));
+  const n = nPannelli(cfg);
   const usate = [];
   for(let i=0;i<n;i++){
     const im = shotByIndex(panelSrc(cfg, i));
@@ -1827,7 +1781,7 @@ function paintShot(c, W, H, cfg, fx){
   c.drawImage(memo, 0, 0);
 }
 function paintShotVero(c, W, H, cfg, fx){
-  const many = Math.max(1, Math.round(cfg.panels||1)) > 1;
+  const many = nPannelli(cfg) > 1;
   /* con un pannello solo conta comunque l'immagine scelta nel menu, non
      per forza quella principale */
   const uno = many ? null : shotByIndex(panelSrc(cfg, 0));
@@ -3077,13 +3031,8 @@ function testoConSegnaposto(t){
      vera del formato, se no a schermo si legge un numero e nel file un altro */
   const f = FORMATS.find(x=> x.id===shim.id) || shim;
   const mis = sizeOf(f);
-  const d = new Date();
-  const map = {title:state.pack.title, category:state.pack.category,
-               brand:state.pack.brand, version:state.pack.version,
-               badges:state.pack.badges,
-               platform:String(f.group||'').split(' ')[0], format:f.name,
-               w:mis.w, h:mis.h,
-               date:d.getFullYear()+'-'+two(d.getMonth()+1)+'-'+two(d.getDate())};
+  const map = valoriSegnaposto(state.pack, f, f.name, mis.w, mis.h);
+  map.badges = state.pack.badges;
   return str.replace(/\{(\w+)\}/g, (m,k)=> map[k]!==undefined ? String(map[k]) : m);
 }
 function drawTextLayer(c, W, H, o){
@@ -3282,7 +3231,7 @@ function selLabel(k){
   if(isLay(k)){ const l = layOfKey(k); return l ? l.name : 'Layer'; }
   if(k === 'shot'){
     const S = state.layouts[state.active].shot;
-    if(Math.round(S.panels||1) > 1) return 'Screenshot, panel ' + (pannelloAttivo(S)+1);
+    if(nPannelli(S) > 1) return 'Screenshot, panel ' + (pannelloAttivo(S)+1);
   }
   return SEL_LABEL[k] || k;
 }
@@ -3410,7 +3359,6 @@ function defLayout(f){
                asset:P==='asset', mini:(P==='small'||P==='tiny'),
                fromPsd: FROM_PSD.indexOf(f.id)>=0};
   const k = FROM_PSD.indexOf(f.id)>=0 ? 1 : Math.max(0.35, Math.min(1, (f.w/f.h)/1.5));
-  ctx.k = k;
   ctx.S = v => v*k;
   ctx.B = v => 1-(1-v)*k;
   const L = {on:true};
@@ -3577,7 +3525,6 @@ function applyAccent(hex, onlyCurrent){
      che segue il tema invece di ridipingerlo */
   state.theme.gradA = shift(C.accentA2);
   state.theme.gradB = shift(C.accentB2);
-  state.theme.accentRef = hex;
   state.theme.accent = hex;
   return n;
 }
@@ -3585,7 +3532,7 @@ function applyAccent(hex, onlyCurrent){
 const state = {
   pack:{title:'Realistic Impacts Pack', category:'VFX Graph', brand:'DAVFX',
         version:'v1.0', badges:'URP, HDRP'},
-  theme:{accent:C.accentA2, accentRef:C.accentA2,
+  theme:{accent:C.accentA2,
          /* i due capi del gradiente stanno qui una volta sola: ogni parte
             con "Use theme gradient" acceso li legge da qui, cosi' cambiarli
             ridipinge barra, badge e bordo del logo insieme */
@@ -3770,7 +3717,7 @@ let vistaNitida = false, nitidoTimer = null;
 /* Uno schermo fitto ha piu' pixel veri di quelli che il CSS conta. Si tiene
    il conto fino a due: oltre il guadagno non si vede e il disegno costa. */
 function dprVista(){
-  const d = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
+  const d = window.devicePixelRatio || 1;
   return Math.max(1, Math.min(2, d));
 }
 
@@ -4194,7 +4141,7 @@ function drawSelection(c, W, H){
   const b = (state.sel==='shot') ? {x:0,y:0,w:W,h:H} : BOXES[state.sel];
   if(!b) return;
   if(state.sel === 'shot'){
-    const S = state.layouts[state.active].shot, n = Math.max(1, Math.round(S.panels||1));
+    const S = state.layouts[state.active].shot, n = nPannelli(S);
     if(n > 1){
       const u = Math.max(1.2, Math.min(W,H)*0.0022);
       const poly = panelPoly(pannelloAttivo(S), n, W, H, S.slant||0, S.gap||0, S);
@@ -4271,8 +4218,7 @@ let PW = 0, PH = 0;
 let vistaFormato = null;
 function previewFormat(f){
   const m = misureVista(f, vistaNitida);
-  return {id:f.id, group:f.group, name:f.name, note:f.note, profile:f.profile,
-          w:m.rw, h:m.rh};
+  return conMisura(f, m.rw, m.rh);
 }
 function render(){
   /* Un livello cancellato, o rimasto in un altro formato, non deve restare
@@ -4690,9 +4636,7 @@ function drawThumbs(now){
     const w = Math.max(2, Math.round(b.w*k)), h = Math.max(2, Math.round(b.h*k));
     const off = scratch(90, w, h);
     try{
-      renderTo(off, {id:f.id, group:f.group, name:f.name, note:f.note,
-                     profile:f.profile, w:w, h:h},
-               state.layouts[f.id], false);
+      renderTo(off, conMisura(f, w, h), state.layouts[f.id], false);
     }catch(err){ return; }
     g.drawImage(off.canvas, Math.round((cv2.width-w)/2), Math.round((cv2.height-h)/2));
     /* il velo sui formati spenti e' una classe della riga (.off): copre solo
@@ -4760,10 +4704,10 @@ const EXPORT_SECTION = {t:'Export', open:true, rows:[
   {p:'export.quality', l:'Quality',   type:'range', min:0.4, max:1, step:0.01,
    when:L=> !/PNG/.test(state.export.format)},
   {p:'export.scale',   l:'Scale',     type:'range', min:0.25, max:1, step:0.05},
-  {type:'button', text:'Check before exporting', act:'preflight', wide:true},
+  {type:'button', text:'Check before exporting', act:'preflight'},
   {type:'preflight'},
   {type:'button', text:'Check size of every format', act:'sizeCheck'},
-  {type:'button', text:'Export one file per image...', act:'perImage', wide:true,
+  {type:'button', text:'Export one file per image...', act:'perImage',
    tip:'Export the format you are on once for every image, using its layout. Each file shows one image'},
 ], note:'Export all as: Zip file makes one zip, Separate files writes every image into a folder named by the Folder setting under File naming. PNG is lossless and is the default. WebP at 0.9 looks the same and weighs a fraction. Quality only applies to WebP and JPEG. Fab accepts PNG or JPEG, under 3 MB. Scale changes the pixel size, so leave it at 1 for the store formats that require exact dimensions.'};
 
@@ -5329,6 +5273,13 @@ function setVal(path, v){
 
 /* ------------------------------------------------------ nomi dei file */
 function two(n){ return String(n).padStart(2,'0'); }
+function dataIso(d){ return d.getFullYear()+'-'+two(d.getMonth()+1)+'-'+two(d.getDate()); }
+/* I valori dei segnaposto che il testo dei livelli e il nome dei file hanno in comune */
+function valoriSegnaposto(pk, f, nomeF, w, h){
+  return {title:pk.title, category:pk.category, brand:pk.brand, version:pk.version,
+          platform:String(f.group||'').split(' ')[0], format:nomeF, w:w, h:h,
+          date:dataIso(new Date())};
+}
 const TOKENS = ['title','category','brand','version','platform','format',
                 'w','h','index','date'];
 /* Un segnaposto scritto male non deve finire dentro il nome del file: le
@@ -5360,13 +5311,10 @@ function nomeFormato(f){
 }
 function tokenize(str, f, pk, index){
   pk = pk || state.pack;
-  const d = new Date();
   /* con {platform} nel testo il gruppo c'e' gia': il nome resta corto */
   const nomeF = /{platform}/.test(String(str||'')) ? f.name : nomeFormato(f);
-  const map = {title:pk.title, category:pk.category, brand:pk.brand, version:pk.version,
-               platform:f.group.split(' ')[0], format:nomeF, w:f.w, h:f.h,
-               index:two(index==null?1:index),
-               date:d.getFullYear()+'-'+two(d.getMonth()+1)+'-'+two(d.getDate())};
+  const map = valoriSegnaposto(pk, f, nomeF, f.w, f.h);
+  map.index = two(index==null?1:index);
   return String(str||'').replace(/\{(\w+)\}/g, (m,k)=> map[k]!==undefined ? String(map[k]) : '');
 }
 function applyCase(str, mode, sep){
@@ -5480,7 +5428,6 @@ function applyFilter(){
     const bd = el.querySelector('.bd');
     if(bd) [...bd.children].forEach(ch=> ch.style.display = '');
     if(hit && t.indexOf(q)<0 && bd){
-      el.classList.add('open');
       let ultimoGruppo = null, gruppoUsato = false;
       [...bd.children].forEach(ch=>{
         if(ch.classList.contains('grp2')){
@@ -5607,7 +5554,6 @@ function buildControls(){
   const box = document.getElementById('controls');
   /* un selettore aperto resta legato a una riga che sta per sparire */
   closePop();
-  activeTab = SCHEDA_ALIAS[activeTab] || activeTab;
   if(!_uiLetta){ _uiLetta = true; leggiUI(); }
   /* Ricostruire il pannello riportava l'elenco in cima: se stavi regolando
      un cursore a meta' sezione ti ritrovavi all'inizio. La posizione si
@@ -5842,7 +5788,7 @@ function immaginiUsate(){
   FORMATS.forEach(f=>{
     const L = state.layouts[f.id], S = L && L.shot;
     if(!S) return;
-    const n = Math.max(1, Math.round(S.panels||1));
+    const n = nPannelli(S);
     for(let p=0;p<n;p++){ const im = shotByIndex(panelSrc(S, p)); if(im) set.add(im); }
   });
   return set;
@@ -5973,13 +5919,20 @@ function preparaImmagini(lista){
   _thCoda.sort((a, b)=> (usate.has(a.img) ? 0 : 1) - (usate.has(b.img) ? 0 : 1) || SHOTS.indexOf(a) - SHOTS.indexOf(b));
   pompaThumb();
 }
+/* Un'immagine che si puo' decodificare a parte (le tele, cioe' le immagini ricostruite, no) */
+function decodificabile(im){ return !!im && typeof im.decode === 'function' && !(im instanceof HTMLCanvasElement); }
+/* Promessa che si risolve a immagine decodificata, o dopo 2 secondi: il disegno non aspetta di piu' */
+function decodificaPronta(im){
+  return decodificabile(im)
+    ? Promise.race([im.decode().catch(()=>{}), new Promise(r=> setTimeout(r, 2000))]) : Promise.resolve();
+}
 /* Decodifica in anticipo, fuori dal thread principale, le immagini che i
    layout vivi stanno per disegnare: cosi' il primo disegno non paga i 47 ms
    di decodifica di un 4K. Le tele (immagini ricostruite) non si decodificano. */
 function scaldaImmagini(){
   const p = [];
   immaginiUsate().forEach(im=>{
-    if(im && typeof im.decode === 'function' && !(im instanceof HTMLCanvasElement)) p.push(im.decode().catch(()=>{}));
+    if(decodificabile(im)) p.push(im.decode().catch(()=>{}));
   });
   if(!p.length) return Promise.resolve();
   return Promise.race([Promise.all(p), new Promise(r=> setTimeout(r, 8000))]);
@@ -6028,7 +5981,7 @@ function mappaUsi(){
   FORMATS.forEach(f=>{
     const L = state.layouts[f.id], S = L && L.shot;
     if(!S) return;
-    const n = Math.max(1, Math.round(S.panels||1)), per = new Map();
+    const n = nPannelli(S), per = new Map();
     for(let p=0;p<n;p++){
       const im = shotByIndex(panelSrc(S, p));
       if(!im) continue;
@@ -6075,7 +6028,7 @@ function sostituisciUso(i){
   FORMATS.forEach(f=>{
     const S = state.layouts[f.id] && state.layouts[f.id].shot;
     if(!S) return;
-    const n = Math.max(1, Math.round(S.panels||1)), dove = [];
+    const n = nPannelli(S), dove = [];
     for(let p=0;p<n;p++) if(shotByIndex(panelSrc(S, p)) === X) dove.push(p);
     if(dove.length){ tocchi.push({f:f, S:S, n:n, dove:dove}); tot += dove.length; }
   });
@@ -6086,8 +6039,7 @@ function sostituisciUso(i){
     for(let k=0;k<t.n;k++) if(t.S.src[k] === undefined) t.S.src[k] = panelSrc(t.S, k);
     t.dove.forEach(p=> t.S.src[p] = i);
   });
-  const pronta = (typeof sh.img.decode === 'function' && !(sh.img instanceof HTMLCanvasElement))
-    ? Promise.race([sh.img.decode().catch(()=>{}), new Promise(r=> setTimeout(r, 2000))]) : Promise.resolve();
+  const pronta = decodificaPronta(sh.img);
   dbSalva(); buildControls();
   pronta.then(()=> render());
   toast(tot + (tot === 1 ? ' panel on ' : ' panels on ') + tocchi.map(t=> nomeFormato(t.f)).join(', ') +
@@ -6100,7 +6052,7 @@ function indiciNonUsati(){
   const usati = new Set();
   const principale = SHOTS.findIndex(x=> x.img === imgShot);
   const vedi = S=>{
-    const n = Math.max(1, Math.round(S.panels||1));
+    const n = nPannelli(S);
     for(let p=0;p<n;p++){
       const v = panelSrc(S, p);
       usati.add(v >= 0 && SHOTS[v] ? v : principale);
@@ -6163,11 +6115,10 @@ function usaImmagine(i, ovunque){
      principale e il disegno parte appena e' pronta (un 4K costava 47 ms di
      pagina ferma) */
   const im = SHOTS[i] && SHOTS[i].img;
-  const pronta = (im && typeof im.decode === 'function' && !(im instanceof HTMLCanvasElement))
-    ? Promise.race([im.decode().catch(()=>{}), new Promise(r=> setTimeout(r, 2000))]) : Promise.resolve();
+  const pronta = decodificaPronta(im);
   dbSalva(); buildControls();
   pronta.then(()=> render());
-  const S = state.layouts[state.active].shot, pann = Math.round(S.panels||1) > 1 ? ', panel ' + (pannelloAttivo(S)+1) : '';
+  const S = state.layouts[state.active].shot, pann = nPannelli(S) > 1 ? ', panel ' + (pannelloAttivo(S)+1) : '';
   toast(SHOTS[i].name + (ovunque ? ' in the selected panel of every format' : pann ? ' in' + pann : ' on this format'));
 }
 let _trascinoImg = null;
@@ -6208,7 +6159,7 @@ function aggiornaNonUsate(el){
   }
 }
 function aggiornaStrip(el){
-  const S = state.layouts[state.active].shot, np = Math.max(1, Math.round(S.panels||1));
+  const S = state.layouts[state.active].shot, np = nPannelli(S);
   const nelPannello = shotByIndex(panelSrc(S, pannelloAttivo(S)));
   const tit = el.querySelector('.ih b');
   if(tit) tit.textContent = SHOTS.length ? 'Images ' + SHOTS.length : 'Images';
@@ -6346,7 +6297,7 @@ function stripImmagini(){
     _strip = {chiave:chiave, el:box, scroll:0};
     return box;
   }
-  const S = state.layouts[state.active].shot, np = Math.max(1, Math.round(S.panels||1));
+  const S = state.layouts[state.active].shot, np = nPannelli(S);
   const nelPannello = shotByIndex(panelSrc(S, pannelloAttivo(S)));
   const usiTutti = mappaUsi();
   const grid = document.createElement('div'); grid.className = 'lib';
@@ -6401,7 +6352,7 @@ function stripImmagini(){
         const imgs = files.filter(f=> eImmagine(f));
         if(!imgs.length) return;
         e.preventDefault(); e.stopPropagation();
-        dropProfondita = 0; mostraDrop(false); segnaCarta(null);
+        fineDrop();
         sostituisciImmagine(i, imgs[0]);
         const resto = files.filter(f=> f !== imgs[0]);
         if(resto.length) smistaFile(resto, false);
@@ -6668,7 +6619,6 @@ function pickerRow(r){
         closePop(); paint(); render();
         /* cambiando forma cambiano anche le regolazioni che hanno senso */
         aggiornaRighe();
-        if(r.rebuild) buildControls();
       };
       pop.appendChild(cell);
     });
@@ -6940,7 +6890,6 @@ const ACT_TIP = {
   panelsFan:'Give each cut a different angle',
   shotToSimilar:'Copy the screenshot setup of this format (images, panels, position, scale, adjustments, gradient) to the formats with the same shape. The overlay is not touched',
   shotToAll:'Copy the screenshot setup of this format (images, panels, position, scale, adjustments, gradient) to every other format. The overlay is not touched',
-  shotsClear:'Empty the screenshot library',
   autoRestore:'Load the work saved in this browser',
   autoClear:'Forget the work saved in this browser',
   preflight:'Look for problems in every ticked format before exporting'
@@ -7226,7 +7175,7 @@ function makeRow(r){
   if(r.type==='panels'){
     const wrap = document.createElement('div');
     const L = state.layouts[state.active], S = L.shot;
-    const n = Math.max(1, Math.round(S.panels||1)), attivo = pannelloAttivo(S);
+    const n = nPannelli(S), attivo = pannelloAttivo(S);
     for(let i=0;i<n;i++){
       const blk = document.createElement('div');
       blk.className = 'pblk' + (n>1 ? (i===attivo ? ' on' : '') : ' solo');
@@ -7368,7 +7317,7 @@ function makeRow(r){
     d.className = 'pfsum';
     d.tabIndex = 0; d.setAttribute('role', 'button');
     d.title = 'Open the list from the last check';
-    const visto = esitoVisto();
+    const visto = esitoPreflight();
     const errori = visto.trovati.some(x=> x.tipo==='errore');
     const dot = document.createElement('span');
     dot.className = 'pf-dot ' + (errori ? 'bad' : (visto.trovati.length ? 'warn' : 'ok'));
@@ -7444,7 +7393,6 @@ function makeRow(r){
     /* la spiegazione va anche sul bottone, non solo sulla riga che lo
        contiene: cosi' compare ovunque ci si passi sopra */
     if(spiega) b.title = spiega;
-    if(r.wide) b.className = 'wide';
     b.onclick = ()=> runAction(r.act);
     row.appendChild(b);
     return row;
@@ -7664,7 +7612,7 @@ function snapTo(v, axis, tol){
     const d = Math.abs(v-t);
     if(d < dist){ dist = d; best = t; }
   });
-  return {v:best, hit: best!==v || dist<tol ? (dist<tol?best:null) : null};
+  return {v:best};
 }
 function drawGuides(c, W, H){
   if(GUIDES.x===null && GUIDES.y===null) return;
@@ -7702,7 +7650,7 @@ function vistaPannello(S){
 /* il pannello sotto il punto, in pixel dell'anteprima */
 function pannelloSotto(x, y){
   const S = state.layouts[state.active].shot;
-  const n = Math.max(1, Math.round(S.panels||1));
+  const n = nPannelli(S);
   if(n === 1) return 0;
   for(let i=n-1;i>=0;i--){
     const poly = panelPoly(i, n, PW, PH, S.slant||0, S.gap||0, S);
@@ -8708,7 +8656,7 @@ async function dbCarica(){
   if(!d) return 0;
   let righe = [], principale = -1, logo = null;
   try{
-    righe = await new Promise((ris, rif)=>{
+    righe = await new Promise(ris=>{
       const r = d.transaction('shots').objectStore('shots').getAll();
       r.onsuccess = ()=> ris(r.result || []);
       r.onerror   = ()=> ris([]);
@@ -8750,7 +8698,7 @@ async function dbCarica(){
 function autoAssignPanels(){
   FORMATS.forEach(f=>{
     const S = state.layouts[f.id].shot;
-    const n = Math.max(1, Math.round(S.panels||1));
+    const n = nPannelli(S);
     if(n < 2 || !Array.isArray(S.src)) return;
     let vuoti = 0;
     for(let i=0;i<n;i++) if(S.src[i]===undefined || S.src[i]<0) vuoti++;
@@ -8828,6 +8776,8 @@ function sopraIlLogo(e){
   return x >= b.x && x <= b.x+b.w && y >= b.y && y <= b.y+b.h;
 }
 let dropProfondita = 0;
+/* il file e' stato lasciato (o il trascinamento e' finito): velo e bersaglio spenti */
+function fineDrop(){ dropProfondita = 0; mostraDrop(false); segnaCarta(null); }
 /* indice della scheda della barra su cui passa un file (lo sostituirebbe), o null */
 let _sopraCarta = null;
 function segnaCarta(k){
@@ -8862,12 +8812,12 @@ window.addEventListener('dragover', e=>{
 });
 window.addEventListener('dragleave', e=>{
   if(!haFile(e)) return;
-  if(--dropProfondita <= 0){ dropProfondita = 0; mostraDrop(false); segnaCarta(null); }
+  if(--dropProfondita <= 0) fineDrop();
 });
 window.addEventListener('drop', e=>{
   if(!haFile(e)) return;
   e.preventDefault();
-  dropProfondita = 0; mostraDrop(false); segnaCarta(null);
+  fineDrop();
   const files = [...e.dataTransfer.files];
   if(!files.length) return;
   smistaFile(files, sopraIlLogo(e));
@@ -9189,7 +9139,7 @@ function pezziProgetto(avanza){
     yield '],"logo":' + JSON.stringify(logo) + '}';
   })();
 }
-/* il testo intero: serve solo ai test e a chi non ha il selettore di file */
+/* il testo intero: usata dai test (export, persist) e da chi non ha il selettore di file */
 async function testoProgetto(){
   const pezzi = [];
   for await(const p of pezziProgetto()) pezzi.push(p);
@@ -9564,6 +9514,7 @@ document.getElementById('fPreset').onchange = e=>{
   caricaPresetFile(file);
 };
 
+function blobDelFormato(f, L){ return new Promise(res=> renderFormatToBlob(f, res, L)); }
 function renderFormatToBlob(f, cb, L){
   const o = outSize(f);
   /* Un export a piena risoluzione alloca tele da decine di megabyte. Se la
@@ -9574,11 +9525,7 @@ function renderFormatToBlob(f, cb, L){
   if(Math.max(o.w, o.h) > CACHE_LATO_MAX) svuotaMemoriaSchermate();
   const c = document.createElement('canvas');
   c.width = o.w; c.height = o.h;
-  /* niente 'sizes' nello shim: w/h sono gia' la misura finale scelta,
-     ricalcolarla porterebbe a disegnare alla risoluzione sbagliata */
-  const shim = {id:f.id, group:f.group, name:f.name, note:f.note, profile:f.profile,
-                w:o.w, h:o.h};
-  renderTo(c.getContext('2d'), shim, L || state.layouts[f.id], false);
+  renderTo(c.getContext('2d'), conMisura(f, o.w, o.h), L || state.layouts[f.id], false);
   const mime = exportMime();
   if(mime === 'image/png') c.toBlob(cb, mime);          /* PNG: nessuna perdita */
   else c.toBlob(cb, mime, state.export.quality);
@@ -9673,8 +9620,8 @@ async function esportaPerImmagine(){
         if(!Array.isArray(S2.src)) S2.src = Array.from({length:PANNELLI_MAX}, (_, p)=> panelSrc(S2, p));
         S2.src[k] = i;
         const im = sh.img;
-        if(im && typeof im.decode === 'function' && !(im instanceof HTMLCanvasElement)) await im.decode().catch(()=>{});
-        const blob = await new Promise(res=> renderFormatToBlob(f, res, L2));
+        if(decodificabile(im)) await im.decode().catch(()=>{});
+        const blob = await blobDelFormato(f, L2);
         const nome = await esportaNumerato(blob, fileNameFor(f, state.pack, j+1), dir);
         nomi.push(nome);
         if(f.group === 'Fab' && blob.size > FAB_MAX_BYTE) avvisi.push(nome + ' is over 3 MB');
@@ -9861,7 +9808,7 @@ function riempiUltimoExport(el){
   el.title = u.nomi.length ? u.nomi.join('\n') : '';
 }
 /* segnaExport({n, dove, nomi, avvisi}): chiamata da ogni export riuscito
-   (anche da "una per immagine", sotto typeof) */
+   (anche da "una per immagine") */
 function segnaExport(o){
   o = o || {};
   ULTIMO_EXPORT = {quando: Date.now(), n: Math.max(0, +o.n || 0), dove: String(o.dove || ''),
@@ -9878,7 +9825,7 @@ document.getElementById('bExp').onclick = async ()=>{
        e' ancora fresco */
     const base = await cartellaPronta();
     const r = await sottoCartellaExport(base, f);
-    const blob = await new Promise(res=> renderFormatToBlob(f, res));
+    const blob = await blobDelFormato(f);
     const nome = await esportaNumerato(blob, fileNameFor(f, state.pack, 1), r.dir);
     const dove = base ? base.name + (r.sub ? '/' + r.sub : '') : '';
     const av = avvisoFab(f, blob);
@@ -9911,7 +9858,7 @@ document.getElementById('bDesk').onclick = async ()=>{
   _esportoDesktop = true;
   const f = FORMATS.find(x=>x.id===state.active);
   try{
-    const blob = await new Promise(res=> renderFormatToBlob(f, res));
+    const blob = await blobDelFormato(f);
     if(!blob) throw new Error('the image could not be rendered, probably out of memory. Try a smaller Scale');
     const nome = nomeDesktop(f, state.pack);
     const r = await window.desktop.saveToDesktop(nome, new Uint8Array(await blob.arrayBuffer()));
@@ -9954,7 +9901,7 @@ document.getElementById('bZip').onclick = async ()=>{
     const files = [];
     try{
       for(const f of list){
-        const blob = await new Promise(res=> renderFormatToBlob(f, res));
+        const blob = await blobDelFormato(f);
         if(!blob) throw new Error('the image could not be rendered, probably out of memory. Try a smaller Scale');
         const av = avvisoFab(f, blob); if(av) avvisi.push(av);
         files.push({name: folderFor(f, state.pack, 1)+fileNameFor(f, state.pack, 1),
@@ -9977,7 +9924,7 @@ document.getElementById('bZip').onclick = async ()=>{
     for(let k = 0; k < list.length; k++){
       const f = list[k];
       if(list.length > 1) toast('Exporting ' + (k+1) + '/' + list.length + '...', {ms:4000});
-      const blob = await new Promise(res=> renderFormatToBlob(f, res));
+      const blob = await blobDelFormato(f);
       if(!blob) throw new Error('the image could not be rendered, probably out of memory. Try a smaller Scale');
       const av = avvisoFab(f, blob); if(av) avvisi.push(av);
       const chiave = folderFor(f, state.pack, 1);
@@ -10561,7 +10508,7 @@ let PREVOLO = null;                 /* ultimo esito, per stamparlo nel pannello 
 function esitoPreflight(){
   if(!PREVOLO) return null;
   const vivi = x=> !x.id || (state.layouts[x.id] && state.layouts[x.id].on);
-  return {quando: PREVOLO.quando, trovati: PREVOLO.trovati.filter(vivi)};
+  return {trovati: PREVOLO.trovati.filter(vivi), accettate: PREVOLO.accettate || 0};
 }
 
 function inkDelDisegno(f, L, quale){
@@ -10774,15 +10721,12 @@ function preflight(){
       guarda('badges', 'the badges');
       guarda('version', 'the version number');
       /* un avviso solo, con l'elenco: tre righe uguali di fila non aiutano */
-      const elenca = a2 => a2.length > 1
-        ? a2.slice(0,-1).join(', ') + ' and ' + a2[a2.length-1]
-        : a2[0];
       if(sotto.length)
-        agg(f, 'nota', elenca(sotto) + (sotto.length>1?' end':' ends') +
+        agg(f, 'nota', elencaCose(sotto) + (sotto.length>1?' end':' ends') +
             ' up in the bottom ' + vero(basso) + ' px, where a story app puts the ' +
             'reply field and the share buttons');
       if(sopra.length)
-        agg(f, 'nota', elenca(sopra) + (sopra.length>1?' are':' is') +
+        agg(f, 'nota', elencaCose(sopra) + (sopra.length>1?' are':' is') +
             ' in the top ' + vero(alto) + ' px, where a story app puts the profile bar');
     }
 
@@ -10812,7 +10756,7 @@ function preflight(){
     /* la risoluzione delle immagini: una schermata piccola stirata su 3840
        si vede sgranata, ed e' l'errore che si scopre solo online */
     if(L.shot && L.shot.on !== false){
-      const n = Math.max(1, Math.round(L.shot.panels||1));
+      const n = nPannelli(L.shot);
       const viste = [];
       for(let i=0;i<n;i++){
         const im = shotByIndex(Array.isArray(L.shot.src) ? L.shot.src[i] : -1);
@@ -10921,23 +10865,13 @@ function preflight(){
   const tagliati = visibili.length > 20 ? visibili.slice(0,20) : visibili;
   if(visibili.length > 20)
     tagliati.push({formato:'', id:'', tipo:'nota', testo:'and ' + (visibili.length-20) + ' more'});
-  PREVOLO = {quando: Date.now(), trovati: tagliati, accettate: nascoste};
+  PREVOLO = {trovati: tagliati, accettate: nascoste};
   return tagliati;
 }
 
-/* L'esito da mostrare: se c'e' esitoPreflight() (solo i formati spuntati) si usa
-   quello, altrimenti l'ultimo esito intero. Accetta sia un elenco sia un oggetto
-   come PREVOLO; null se non c'e' ancora un controllo. */
-function esitoVisto(){
-  if(!PREVOLO) return null;
-  let r = (typeof esitoPreflight === 'function') ? esitoPreflight() : PREVOLO;
-  if(Array.isArray(r)) r = {trovati: r, accettate: PREVOLO.accettate};
-  if(!r || !Array.isArray(r.trovati)) return PREVOLO;
-  return {trovati: r.trovati, accettate: (r.accettate !== undefined ? r.accettate : PREVOLO.accettate) || 0};
-}
 /* una riga di riepilogo: "2 problems, 3 notes, 1 accepted" */
 function riepilogoPreflight(){
-  const ev = esitoVisto();
+  const ev = esitoPreflight();
   if(!ev) return '';
   const t = ev.trovati, acc = ev.accettate || 0;
   const errori = t.filter(x=> x.tipo==='errore').length;
@@ -10961,7 +10895,7 @@ function preflightRun(){
    Un clic su una riga porta a quel formato; "Accept" su una nota la toglie
    dall'elenco per questo pack (si ritrova con "Show accepted again"). */
 async function preflightDialogo(){
-  const visto = esitoVisto();
+  const visto = esitoPreflight();
   if(!visto) return;
   const t = visto.trovati, acc = visto.accettate || 0;
   const corpo = document.createElement('div');
@@ -11034,7 +10968,7 @@ async function sizeCheck(){
   toast('Weighing ' + list.length + ' image' + (list.length===1?'':'s') + '...', {ms:20000});
   for(const f of list){
     await new Promise(r=> setTimeout(r, 0));
-    const blob = await new Promise(res=> renderFormatToBlob(f, res));
+    const blob = await blobDelFormato(f);
     /* senza memoria il disegno non riesce: lo si dice invece di fermarsi */
     if(!blob){ toast('Could not weigh ' + nomeFormato(f) + ': the image could not be rendered, probably out of memory', {kind:'err'}); return lines; }
     total += blob.size;

@@ -1,4 +1,4 @@
-# Toolbox — working notes (last updated 2026-10-19, version 1.7.2)
+# Toolbox — working notes (last updated 2026-10-19, version 1.8.0)
 
 Davide asked to integrate **the complete Scene Sync interface inside Toolbox**, not an external launcher.
 
@@ -44,7 +44,7 @@ npm run test:workflow
 
 **Since 1.6.0 Toolbox runs from an unpacked folder, `Tools/_app/Toolbox`, not from a portable .exe.** Davide asked for a much faster start. Measured: the portable .exe took 3.3 to 5.0 s to show its window, because it unpacks the whole app to a temporary folder at every start; the unpacked copy shows it in 0.5 to 0.6 s (1.4 s on a cold first start). The folder is about 360 MB. User data stays in `%APPDATA%\Toolbox` either way, so nothing was lost in the switch. There is no portable target any more.
 
-Electron remains **33.4.11**, locked by `package-lock.json`; electron-builder remains 25.1.8. Do not upgrade them as part of routine feature work. Build caches remain in `Tools/_cache`. Current version: **1.7.2**.
+Electron remains **33.4.11**, locked by `package-lock.json`; electron-builder remains 25.1.8. Do not upgrade them as part of routine feature work. Build caches remain in `Tools/_cache`. Current version: **1.8.0**.
 
 **A running Toolbox cannot be replaced.** `build.ps1` checks for it and stops with "Toolbox is open" instead of letting electron-builder hang.
 
@@ -157,6 +157,15 @@ After a read-only code audit (no full rewrite needed; render core left alone) an
 ## Store Graphics 1.7.2 (20 October 2026)
 
 Interface polish pass by four agents (header/left aside, right panel, stage/toolbar, strip/toasts/dialogs), each from screenshots at three sizes: no clipped text, pickers styled like selects, keyboard focus everywhere, error toasts and preflight without left bars, toolbar fixed at the top of the stage, grid popover restyled. Renders unchanged (hash gates). tests/stress/ui/t9 limits: median 8 ms, p95 16 ms per panel rebuild.
+
+## Store Graphics 1.8.0 (21 October 2026)
+
+Planned from three audits (visual, functional, code) and built by agents by zone, then a cleanup pass. Keep:
+- Added files are copied into memory (`fileInMemoria`): a screenshot overwritten on disk no longer breaks Save/IndexedDB; the IndexedDB error toast names the real cause. Rescanning a folder detects changed files (same relative path, other size/date) and offers "Replace N changed images" (in place, one undo).
+- `pushUndo(label)`: labels on parallel stacks, toasts say "Undo: <step>"; arrow bursts are one step. Check results (`PREVOLO`, read through `esitoPreflight()`) and Last export reset on New/Open; Open toast has Undo.
+- Preflight results open in a dialog; notes can be accepted per pack (`state.export.accepted`, written only once used).
+- UI: active toggles grey (white = Export all only), one icon per meaning, toast at the bottom-left of the stage, tabs and search on one row, strip in whole rows (`libRows`), neutral section headers with tinted icons, Pack data on the right = Brand and Badges, compact Pack card under 800 px, New dialog defaults to "New from this pack". Keys: Ctrl+N, R (recentre), # (grid).
+- Desktop export names start with the pack title. Helpers after cleanup: `conMisura`, `valoriSegnaposto`, `decodificaPronta`, `nPannelli`, `blobDelFormato`, `fineDrop`, `metaGet/metaPut/metaDel`, `dimenticaCartellaExport`, `caricaFontFile`, `eImmagine`.
 
 ## User requirements / limits to preserve
 
