@@ -2,7 +2,7 @@
 // Real Electron/Chromium QA via CDP, with isolated preferences and disposable
 // projects only. No browser automation dependency or production test IPC.
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),cp=require('node:child_process'),assert=require('node:assert/strict');
-const root=path.resolve(__dirname,'..'),data=fs.mkdtempSync(path.join(os.tmpdir(),'DAVFX Toolbox UI ')),port=49387;
+const root=path.resolve(__dirname,'..'),data=fs.mkdtempSync(path.join(os.tmpdir(),'DAVFX Toolbox UI ')),port=+process.env.PORT||49387;
 const out=path.join(__dirname,'screenshots');fs.mkdirSync(out,{recursive:true});
 const sceneReport=JSON.parse(fs.readFileSync(path.join(root,'scene-sync/tests/ui-test-report.json'),'utf8'));
 const state={last:{sourceProject:'',targetProject:'',sourceFile:'',targetFile:'',options:{}},profiles:[]};
@@ -20,7 +20,7 @@ async function capture(name){const r=await command('Page.captureScreenshot',{for
   ws=new WebSocket(target.webSocketDebuggerUrl);await new Promise(r=>ws.onopen=r);ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.method==='Runtime.executionContextCreated')contexts.push(m.params.context);if(m.id){const p=pending.get(m.id);pending.delete(m.id);if(p)m.error?p.reject(Error(m.error.message)):p.resolve(m.result);}};
   ws.onclose=()=>{for(const p of pending.values())p.reject(Error('CDP connection closed'));pending.clear();};
   await command('Runtime.enable');await command('Page.enable');
-  await until(()=>evaluate('typeof show === "function"'),'Toolbox shell');assert.equal(await evaluate('TOOLS.length'),9);checks.push('Nine Toolbox tabs, including Scene Sync and Clip Joiner');
+  await until(()=>evaluate('typeof show === "function"'),'Toolbox shell');assert.equal(await evaluate('TOOLS.length'),3);assert.equal(await evaluate('TOOLS.map(t=>t.id).join()'),'studio,store,scene-sync');checks.push('Three Toolbox tabs: Studio, Store Graphics, Scene Sync');
   await evaluate('show("scene-sync")');await until(()=>evaluate('!!frames["scene-sync"]?.contentDocument?.body?.dataset.ready'),'Scene Sync ready');
   const tree=await command('Page.getFrameTree'),frame=tree.frameTree.childFrames.find(f=>f.frame.url.includes('/scene-sync/')).frame.id;
   const context=contexts.find(c=>c.auxData?.frameId===frame&&c.auxData?.isDefault).id;
@@ -30,9 +30,20 @@ async function capture(name){const r=await command('Page.captureScreenshot',{for
   await evaluate(`scene={plan:'test',report:${JSON.stringify(sceneReport)},index:0,selected:new Set()};renderScene()`,context);
   await evaluate('$("selectVisible").click()',context);assert(await evaluate('scene.selected.size>0 && !$("applyScene").disabled',context));await evaluate('$("clearVisible").click()',context);assert(await evaluate('$("applyScene").disabled',context));checks.push('Scene row selection controls Apply');
   await command('Emulation.setDeviceMetricsOverride',{width:1700,height:1000,deviceScaleFactor:1,mobile:false});await delay(100);await capture('toolbox-scenes');
-  await evaluate('$("sceneSearch").value="persistent-filter"',context);await evaluate('show("textures");show("scene-sync")');assert.equal(await evaluate('$("sceneSearch").value',context),'persistent-filter');checks.push('Tab switches preserve the tool document and state');
-  for(const id of ['flipbook','video','textures','frames','annotate','texgen','store','clips']){await evaluate('show('+JSON.stringify(id)+')');await until(()=>evaluate('frames['+JSON.stringify(id)+'].contentDocument?.readyState==="complete"'),id);}
-  checks.push('All eight other tool pages load, Clip Joiner included');await evaluate('show("scene-sync")');
+  await evaluate('$("sceneSearch").value="persistent-filter"',context);await evaluate('show("store");show("scene-sync")');assert.equal(await evaluate('$("sceneSearch").value',context),'persistent-filter');checks.push('Tab switches preserve the tool document and state');
+  await evaluate('show("studio")');await until(()=>evaluate('!!frames.studio?.contentWindow?.Studio?.mode()'),'Studio ready');
+  const studioModes=await evaluate('frames.studio.contentWindow.Studio.modes.map(m=>m.id).join()');assert.equal(studioModes,'join,compare,grid,sheet,flipbook,annotate,textures,texgen');
+  for(const id of studioModes.split(',')){
+    await evaluate('frames.studio.contentWindow.Studio.show('+JSON.stringify(id)+')');
+    await until(()=>evaluate('(()=>{const m=frames.studio.contentWindow.Studio.modes.find(x=>x.id==='+JSON.stringify(id)+');return !!m.frame&&m.state!=="loading"&&m.frame.contentDocument?.readyState==="complete"})()'),'Studio mode '+id);
+    const info=await evaluate('(()=>{const S=frames.studio.contentWindow,d=S.document,m=S.Studio.modes.find(x=>x.id==='+JSON.stringify(id)+');return {title:d.getElementById("title").textContent,on:d.querySelector(".mode.on").dataset.id,text:(m.frame.contentDocument.body.innerText||"").trim().length,visible:!m.frame.hidden&&m.frame.getBoundingClientRect().height>200}})()');
+    assert.equal(info.on,id);assert(info.title.length>2,'title of '+id);assert(info.text>10,id+' page has text');assert(info.visible,id+' frame is shown');
+  }
+  checks.push('Studio: all eight modes load in their own frames, each with a title and its page text');
+  assert.equal(await evaluate('frames.studio.contentWindow.Studio.modes.filter(m=>m.frame&&!m.frame.hidden).length'),1);checks.push('Studio: exactly one mode frame is visible, the others are kept hidden');
+  await evaluate('frames.studio.contentWindow.Studio.show("join")');
+  await evaluate('show("store")');await until(()=>evaluate('frames["store"].contentDocument?.readyState==="complete"'),'store');checks.push('Store Graphics page loads');
+  await evaluate('show("scene-sync")');
   const run=await evaluate('call("run",{action:"open-projects"})',context);assert(Array.isArray(run.projects));checks.push('Actual bundled engine detects open Unity projects through IPC');
   if(run.projects.length){
     await evaluate('openProjects("source")',context);

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Studio</title>
+<link rel="stylesheet" href="../shared/kit.css">
+<link rel="stylesheet" href="studio.css">
+</head>
+<body class="kit">
+<div id="app">
+  <nav id="rail" aria-label="Studio modes">
+    <div class="rail-top"><b>Studio</b><button class="ibtn" id="railToggle" type="button"></button></div>
+    <div id="railList"></div>
+  </nav>
+  <div id="col">
+    <header class="kit-head" id="head">
+      <h1 id="title">Studio</h1>
+      <span id="status" role="status"></span>
+      <div id="actions"></div>
+      <div class="sep"></div>
+      <button id="bKeys" type="button" title="Keyboard shortcuts"></button>
+    </header>
+    <div id="frames">
+      <div id="sendveil" class="kit-drop"><span id="sendveilText">Drop to send here</span></div>
+    </div>
+    <section id="tray" aria-label="Media tray">
+      <div class="tray-head" id="trayHead" role="button" tabindex="0" aria-expanded="false">
+        <span class="trayic"></span><span class="tt">Media tray</span><span class="cnt" id="trayCnt">0</span>
+        <span class="tip" id="trayTip"></span>
+        <button type="button" id="traySend" hidden>Send all to...</button>
+        <button type="button" id="trayClear" hidden>Clear</button>
+        <span class="sg"></span>
+      </div>
+      <div id="trayBody"></div>
+    </section>
+  </div>
+</div>
+<div id="veil" class="kit-drop fixed"><span id="veilText">Drop files here</span></div>
+<script src="../shared/kit.js"></script>
+<script src="studio.js"></script>
+</body>
+</html>

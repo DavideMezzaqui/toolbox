@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Studio test mode</title>
+<!-- A stand-in mode page for tests/stress/studio/t1.cjs: registers actions, takes files, counts show/hide.
+     ?legacy=1 skips embed.js, like a page that was not converted yet; ?noreg=1 loads it but never registers. -->
+<link rel="stylesheet" href="../shared/kit.css">
+<style>
+  html,body{height:100%;margin:0}
+  header{height:46px;display:flex;align-items:center;padding:0 14px;background:var(--panel);border-bottom:1px solid var(--line)}
+  body.embed header{display:none}
+  main{padding:16px;display:flex;flex-direction:column;gap:10px}
+</style>
+</head>
+<body class="kit">
+<header><h1 style="margin:0;font-size:13px">Test mode (own header)</h1></header>
+<main>
+  <div id="out">ready</div>
+  <label class="row"><span>Level</span><input type="range" id="level" min="0" max="100" value="10"></label>
+  <label class="row"><span>Mixed</span><input type="checkbox" id="mixed"></label>
+  <label class="row"><span>Pan</span><input type="range" id="panX" min="0" max="100" value="5"></label>
+</main>
+<script src="../shared/kit.js"></script>
+<script>
+  var legacy = /[?&]legacy=1/.test(location.search);
+  window.ran = []; window.received = []; window.events = []; window.dropped = [];
+  document.addEventListener('drop', function (e) { e.preventDefault(); window.dropped = [].map.call(e.dataTransfer.files, function (f) { return f.name; }); });
+  document.addEventListener('dragover', function (e) { e.preventDefault(); });
+  if (!legacy) document.write('<script src="../shared/embed.js"><\/script>');
+</script>
+<script>
+  if (window.Embed && !/noreg=1/.test(location.search)) {
+    (function () {
+      Embed.register({
+        id: 'test', title: 'Test mode',
+        actions: [
+          { id: 'a1', label: 'Run A', icon: 'play', tip: 'Runs A', key: 'A', run: function () { window.ran.push('a1'); } },
+          { id: 'a2', label: 'Second', run: function () { window.ran.push('a2'); window.activation = navigator.userActivation.isActive; } },
+          { id: 'dis', label: 'Off', icon: 'stop', disabled: true, run: function () { window.ran.push('dis'); } },
+          { id: 'go', label: 'Export', icon: 'down', primary: true, run: function () { window.ran.push('go'); Embed.status('exported'); } }
+        ],
+        shortcuts: [['Test group', [['T', 'Does a test thing'], ['Shift+T', 'Does another']]]],
+        accepts: ['image/*'],
+        onReceive: function (files) { window.received = [].map.call(files, function (f) { return f.name + ':' + (f instanceof File); }); document.getElementById('out').textContent = 'got ' + files.length; },
+        onShow: function () { window.events.push('show'); },
+        onHide: function () { window.events.push('hide'); }
+      });
+      Embed.status('3 things, 0:42');
+    })();
+  }
+</script>
+</body>
+</html>

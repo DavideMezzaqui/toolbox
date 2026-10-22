@@ -3,108 +3,102 @@
 <head>
 <meta charset="UTF-8">
 <title>Annotate</title>
+<link rel="stylesheet" href="../shared/kit.css">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-html{color-scheme:dark}
-::-webkit-scrollbar{width:10px;height:10px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:#2b2b31;border-radius:6px;border:2px solid #141416}
-body{background:#141416;color:#c8c8cc;font:13px/1.45 'Segoe UI',system-ui,sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;user-select:none}
+/* Page furniture only: every component comes from the shared kit. */
+html,body{height:100%}
+body.kit{display:flex;flex-direction:column;overflow:hidden;user-select:none}
+/* inside Studio the host header carries the title and the actions */
+body.embed .kit-head{display:none}
 
-.bar{display:flex;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid #232326;flex:none;flex-wrap:wrap}
-.grow{flex:1}
-.sep{width:1px;height:20px;background:#2a2a2e;flex:none;margin:0 3px}
+.abar{flex:none;padding:8px 14px;border-bottom:1px solid var(--line)}
+#tb{flex-wrap:nowrap;justify-content:flex-start;overflow:hidden;gap:5px}
+#tb>*{flex:none}
+#tb .tgrp{display:flex;gap:2px}
+#tb .tgrow{flex:1 1 0;min-width:0}
+#tb button.ibtn{padding:0;width:28px;height:28px}
+#tb .tl{font-size:var(--fs-s);color:var(--dim);white-space:nowrap}
+#tb input[type=range]{width:96px}
+#tb input[type=color]{width:30px;height:22px}
+#tb .swatches{flex:none;gap:4px;flex-wrap:nowrap;align-items:center}
+#tb .swatches button.sw{padding:0;width:18px;height:18px;border-radius:3px}
+#tb .swatches button.sw:hover{border-color:#8a8a94}
+#tb .swatches button.sw.on{border-color:#e8e8ec}
+#tb .val{font:var(--fs-s)/1.4 var(--mono);color:var(--txt2);min-width:18px;text-align:left}
+/* narrow window: first the Clear label goes, then the dividers, then the slider shortens */
+#tb.compact button.ib span{display:none}
+#tb.compact button.ib{padding-left:7px;padding-right:7px}
+#tb.tight{gap:2px;padding:4px}
+#tb.tight .tsep{display:none}
+#tb.tight .swatches{gap:3px}
+#tb.narrow input[type=range]{width:56px}
+#tb.narrow .tl{display:none}
 
-button{background:#1e1e21;border:1px solid #313136;color:#bbb;border-radius:4px;padding:5px 10px;font-size:12px;cursor:pointer;white-space:nowrap;transition:background .1s,border-color .1s,color .1s}
-button:hover:not(:disabled){background:#27272b;border-color:#5a5a63;color:#fff}
-button:disabled{opacity:.3;cursor:not-allowed}
-button.primary{background:#3d1618;border-color:#e5484d;color:#ff9a9d;font-weight:600}
-button.primary:hover:not(:disabled){background:#4d1c1f;border-color:#f0666b}
+.stage{flex:1;position:relative;background:var(--bg);overflow:hidden;min-height:0;touch-action:none}
+#cv{display:block;position:absolute;left:0;top:0}
+.view{position:absolute;right:10px;top:10px;padding:3px;gap:2px;flex-wrap:nowrap;justify-content:flex-start;z-index:3}
+.view button.ibtn{padding:0;width:26px;height:26px}
+.view span{font:var(--fs-s)/1 var(--mono);color:var(--txt2);min-width:46px;text-align:center}
 
-.tool{width:34px;height:30px;padding:0;display:inline-flex;align-items:center;justify-content:center;position:relative}
-.tool.on{background:#3d1618;border-color:#e5484d;color:#ff9a9d}
-.tool svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.tool .k{position:absolute;right:2px;bottom:0;font-size:8px;color:#5a5a63;font-family:ui-monospace,Consolas,monospace}
-.tool.on .k{color:#b8686b}
+.empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;color:var(--dim);pointer-events:none;text-align:center;padding:0 24px}
+.empty b{color:var(--txt);font-size:15px;font-weight:600}
+.empty div{font-size:var(--fs-l);line-height:1.8}
+.empty kbd{font:var(--fs-s) var(--mono);background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--txt2)}
 
-.swatches{display:flex;gap:3px;align-items:center}
-.sw{width:19px;height:19px;border-radius:3px;border:1px solid #3a3a42;cursor:pointer;padding:0}
-.sw.on{outline:2px solid #fff;outline-offset:1px}
-input[type=color]{width:24px;height:22px;border:1px solid #313136;border-radius:3px;background:#1c1c1c;cursor:pointer;padding:2px}
-input[type=range]{width:82px;accent-color:#e5484d;cursor:pointer}
-label{font-size:11px;color:#5f5f68;white-space:nowrap}
-.val{font:11px ui-monospace,Consolas,monospace;color:#8a8a94;min-width:22px;text-align:right}
+#textEdit{position:absolute;display:none;user-select:text;-webkit-user-select:text;background:var(--panel2);
+  border:1px solid #8a8a94;border-radius:4px;color:#fff;padding:3px 6px;
+  font:600 14px 'Segoe UI',system-ui,sans-serif;outline:none;min-width:120px;height:auto;z-index:5}
 
-.stage{flex:1;position:relative;background:#0c0c0e;overflow:hidden;min-height:0;touch-action:none}
-#cv{display:block;background-image:linear-gradient(45deg,#161619 25%,transparent 25%),linear-gradient(-45deg,#161619 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#161619 75%),linear-gradient(-45deg,transparent 75%,#161619 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0}
-.view{position:absolute;right:8px;top:8px;display:flex;gap:5px;align-items:center;background:rgba(12,12,14,.86);border:1px solid #262626;border-radius:4px;padding:3px 5px}
-.view span{font-size:11px;color:#777;min-width:44px;text-align:center}
-.view button{padding:2px 8px;font-size:11px}
-
-.empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#4a4a52;pointer-events:none;text-align:center}
-.empty b{color:#8a8a94;font-size:15px;font-weight:600}
-.empty kbd{font:11px ui-monospace,Consolas,monospace;background:#1c1c20;border:1px solid #2e2e34;border-radius:3px;padding:1px 5px;color:#a8a8b0}
-
-#textEdit{position:absolute;display:none;user-select:text;-webkit-user-select:text;background:rgba(20,20,22,.96);border:1px solid #e5484d;border-radius:3px;color:#fff;padding:3px 6px;font:600 14px 'Segoe UI',system-ui,sans-serif;outline:none;min-width:120px;z-index:5}
-
-.status{flex:none;padding:6px 12px;border-top:1px solid #232326;font-size:11px;color:#55555c;min-height:26px;display:flex;gap:14px;align-items:center}
-.status .hintkeys{color:#3e3e46}
+.status{flex:none;padding:0 14px;border-top:1px solid var(--line);background:var(--panel);font-size:var(--fs-s);
+  color:var(--dim);height:28px;display:flex;gap:14px;align-items:center;white-space:nowrap}
+.status #status{color:var(--txt2);overflow:hidden;text-overflow:ellipsis}
+.status .hintkeys{overflow:hidden;text-overflow:ellipsis;min-width:0}
 </style>
 </head>
-<body>
+<body class="kit">
 
-<div class="bar">
-  <button id="paste" class="primary">Paste screenshot</button>
-  <button id="open">Open…</button>
-  <div class="sep"></div>
-
-  <button class="tool on" id="t_select" data-tool="select" title="Select and move  (V)">
-    <svg viewBox="0 0 24 24"><path d="M5 3l7 17 2.5-6.5L21 11z"/></svg><span class="k">V</span></button>
-  <button class="tool" id="t_arrow" data-tool="arrow" title="Arrow  (A)">
-    <svg viewBox="0 0 24 24"><path d="M4 20L20 4M20 4h-7M20 4v7"/></svg><span class="k">A</span></button>
-  <button class="tool" id="t_rect" data-tool="rect" title="Rectangle  (R)">
-    <svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="1.5"/></svg><span class="k">R</span></button>
-  <button class="tool" id="t_ellipse" data-tool="ellipse" title="Ellipse  (E)">
-    <svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="8.5" ry="6.5"/></svg><span class="k">E</span></button>
-  <button class="tool" id="t_highlight" data-tool="highlight" title="Highlight  (H)">
-    <svg viewBox="0 0 24 24"><path d="M4 15l6-6 5 5-6 6H4z"/><path d="M13 6l5 5"/></svg><span class="k">H</span></button>
-  <button class="tool" id="t_pen" data-tool="pen" title="Freehand  (P)">
-    <svg viewBox="0 0 24 24"><path d="M3 21c3-1 4-6 7-9s7-6 9-4-1 6-4 9-8 4-9 7"/></svg><span class="k">P</span></button>
-  <button class="tool" id="t_text" data-tool="text" title="Text  (T)">
-    <svg viewBox="0 0 24 24"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg><span class="k">T</span></button>
-  <button class="tool" id="t_number" data-tool="number" title="Numbered marker  (N)">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M11 8.5l1.6-1V16M10.4 16h4"/></svg><span class="k">N</span></button>
-  <button class="tool" id="t_blur" data-tool="blur" title="Pixelate  (B)">
-    <svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/></svg><span class="k">B</span></button>
-
-  <div class="sep"></div>
-  <div class="swatches" id="swatches"></div>
-  <input type="color" id="colorCustom" value="#e5484d" title="Custom colour">
-  <div class="sep"></div>
-  <label>Size</label>
-  <input type="range" id="weight" min="1" max="24" step="1" value="4">
-  <span class="val" id="weightV">4</span>
-
+<header class="kit-head" id="head">
+  <h1>Annotate</h1>
   <div class="grow"></div>
-  <button id="undo" disabled title="Undo  (Ctrl+Z)">Undo</button>
-  <button id="redo" disabled title="Redo  (Ctrl+Y)">Redo</button>
-  <button id="clear" disabled title="Remove every annotation">Clear</button>
+  <button id="open" data-ic="open" title="Open an image  (Ctrl+O)">Open</button>
+  <button id="paste" data-ic="down" title="Paste the screenshot on the clipboard  (Ctrl+V)">Paste</button>
   <div class="sep"></div>
-  <button id="copy" class="primary" disabled title="Copy the result  (Ctrl+C)">Copy</button>
-  <button id="save" disabled title="Save as PNG  (Ctrl+S)">Save PNG</button>
+  <button id="undo" data-ic="undo" disabled title="Undo  (Ctrl+Z)">Undo</button>
+  <button id="redo" data-ic="redo" disabled title="Redo  (Ctrl+Y)">Redo</button>
+  <div class="sep"></div>
+  <button id="copy" data-ic="copy" disabled title="Copy the result  (Ctrl+C)">Copy</button>
+  <button id="save" class="primary" data-ic="save" disabled title="Save as PNG  (Ctrl+S)">Save PNG</button>
+  <div class="sep"></div>
+  <button id="bKeys" data-ic="key" title="Keyboard shortcuts  (?)">Shortcuts</button>
+</header>
+
+<div class="abar">
+  <div class="toolbar" id="tb">
+    <div class="tgrp" id="tools"></div>
+    <span class="tsep"></span>
+    <div class="swatches" id="swatches"></div>
+    <input type="color" id="colorCustom" value="#e5484d" title="Custom colour">
+    <span class="tsep"></span>
+    <span class="tl">Size</span>
+    <input type="range" id="weight" min="1" max="24" step="1" value="4" title="Line width, text and marker size">
+    <span class="val" id="weightV">4</span>
+    <span class="tgrow"></span>
+    <button id="clear" class="ib" data-ic="trash" disabled title="Remove every annotation"><span>Clear</span></button>
+  </div>
 </div>
 
 <div class="stage" id="stage">
   <canvas id="cv" width="16" height="9"></canvas>
-  <div class="view">
-    <button id="zoomOut">&minus;</button>
+  <div class="view toolbar tight">
+    <button class="ibtn" id="zoomOut" title="Zoom out" data-ic="zout"></button>
     <span id="zoomV">100%</span>
-    <button id="zoomIn">+</button>
-    <button id="fit">Fit</button>
+    <button class="ibtn" id="zoomIn" title="Zoom in" data-ic="zin"></button>
+    <button class="ibtn" id="fit" title="Fit to the window" data-ic="fit"></button>
   </div>
   <div class="empty" id="empty">
     <b>Paste a screenshot</b>
-    <div><kbd>Ctrl</kbd> + <kbd>V</kbd> &middot; or drop an image here &middot; or use Open…</div>
+    <div><kbd>Ctrl</kbd> + <kbd>V</kbd> &middot; or drop an image here &middot; or use Open</div>
   </div>
   <input id="textEdit" type="text" spellcheck="false">
 </div>
@@ -117,6 +111,8 @@ label{font-size:11px;color:#5f5f68;white-space:nowrap}
 
 <input type="file" id="file" accept="image/*" hidden>
 
+<script src="../shared/kit.js"></script>
+<script src="../shared/embed.js"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════════════════════
    Annotate - mark up a screenshot and get it onto the clipboard.
@@ -125,6 +121,11 @@ label{font-size:11px;color:#5f5f68;white-space:nowrap}
    removable until it is exported. The canvas shows the image and the shapes
    through a pan/zoom transform, and all geometry is stored in image
    coordinates so the result is independent of how you are looking at it.
+
+   Inside Studio (?embed=1) the page header is hidden and the same actions are
+   registered with the host (Embed.register). Remembered between runs:
+   `annotate.ui` (tool, colour, width, this page); the shell/host keep the
+   controls with an id (colorCustom, weight) under toolbox.controls.annotate.
    ═══════════════════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -134,8 +135,10 @@ label{font-size:11px;color:#5f5f68;white-space:nowrap}
   var cv = $('cv');
   var ctx = cv.getContext('2d');
   var textEdit = $('textEdit');
+  var viewBox = document.querySelector('.view');
 
   var img = null;            // the screenshot
+  var srcName = '';          // file name it came from ('' = clipboard)
   var shapes = [];           // annotations, in image coordinates
   var tool = 'select';
   var color = '#e5484d';
@@ -154,14 +157,42 @@ label{font-size:11px;color:#5f5f68;white-space:nowrap}
 
   var COLORS = ['#e5484d', '#f5a524', '#f5e14b', '#46c26a', '#4aa3f0', '#c76bf0', '#ffffff', '#111111'];
 
+  var TOOLS = [
+    { id: 'select',    key: 'V', label: 'Select and move', icon: 'a_select' },
+    { id: 'arrow',     key: 'A', label: 'Arrow',           icon: 'a_arrow' },
+    { id: 'rect',      key: 'R', label: 'Rectangle',       icon: 'a_rect' },
+    { id: 'ellipse',   key: 'E', label: 'Ellipse',         icon: 'a_ellipse' },
+    { id: 'highlight', key: 'H', label: 'Highlight',       icon: 'a_highlight' },
+    { id: 'pen',       key: 'P', label: 'Freehand',        icon: 'a_pen' },
+    { id: 'text',      key: 'T', label: 'Text',            icon: 'type' },
+    { id: 'number',    key: 'N', label: 'Numbered marker', icon: 'a_number' },
+    { id: 'blur',      key: 'B', label: 'Pixelate',        icon: 'a_pixel' }
+  ];
+  Kit.addIcons({
+    a_select:    'M4.5 2.5v10l2.7-2.4 1.9 3.6 1.7-.9-1.9-3.5 3.7-.1z',
+    a_arrow:     'M3 13L13 3 M6.5 3H13v6.5',
+    a_rect:      'M2.5 4h11v8h-11z',
+    a_ellipse:   'M8 3.5c3.3 0 5.5 2 5.5 4.5S11.3 12.5 8 12.5 2.5 10 2.5 8 4.7 3.5 8 3.5z',
+    a_highlight: 'M2.5 13.5h4l6-6-4-4-6 6z M7.8 5.2l3 3 M8.5 13.5h5',
+    a_pen:       'M2.5 11.5c1.8 0 2-6 4-6s1.6 5.5 3.4 5.5 1.5-3.5 3.6-3.5',
+    a_number:    'M8 2.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11z M7 6.7l1.3-.8v4.6 M6.7 10.5h3.3',
+    a_pixel:     'M2.5 2.5h11v11h-11z M2.5 8h11 M8 2.5v11 M2.5 2.5h5.5v5.5H2.5z M8 8h5.5v5.5H8z'
+  });
+
+  /* ---- small helpers ---------------------------------------------------- */
+  var uiStore = Kit.persist('annotate.ui');
+  function saveUi() { uiStore.setAll({ tool: tool, color: color, weight: weight }); }
+  function say(msg, opts) { return Embed.toast(msg, opts); }
+
   /* ---- history ---------------------------------------------------------- */
   function snapshot() { return JSON.stringify(shapes); }
-  function pushUndo() {
-    undoStack.push(snapshot());
+  function pushSnap(json) {
+    undoStack.push(json);
     if (undoStack.length > 60) undoStack.shift();
     redoStack.length = 0;
     syncButtons();
   }
+  function pushUndo() { pushSnap(snapshot()); }
   function restore(json) {
     shapes = JSON.parse(json);
     sel = -1;
@@ -181,12 +212,21 @@ label{font-size:11px;color:#5f5f68;white-space:nowrap}
     undoStack.push(snapshot());
     restore(redoStack.pop());
   }
+  var lastBtnState = '';
   function syncButtons() {
-    $('undo').disabled = !undoStack.length;
-    $('redo').disabled = !redoStack.length;
-    $('clear').disabled = !shapes.length;
-    $('copy').disabled = !img;
-    $('save').disabled = !img;
+    var st = {
+      undo: !undoStack.length, redo: !redoStack.length, clear: !shapes.length,
+      copy: !img, save: !img
+    };
+    $('undo').disabled = st.undo;
+    $('redo').disabled = st.redo;
+    $('clear').disabled = st.clear;
+    $('copy').disabled = st.copy;
+    $('save').disabled = st.save;
+    var sig = JSON.stringify(st);
+    if (sig === lastBtnState) return;
+    lastBtnState = sig;
+    ['undo', 'redo', 'copy', 'save'].forEach(function (id) { Embed.action(id, { disabled: st[id] }); });
   }
 
   /* ---- coordinates ------------------------------------------------------ */
@@ -381,38 +421,82 @@ label{font-size:11px;color:#5f5f68;white-space:nowrap}
     }
   }
 
+  // transparency shows through a quiet checkerboard that exists only under the image
+  var checker = null;
+  function checkerPattern() {
+    if (checker) return checker;
+    var t = document.createElement('canvas');
+    t.width = t.height = 16;
+    var tc = t.getContext('2d');
+    tc.fillStyle = '#1a1a1d'; tc.fillRect(0, 0, 16, 16);
+    tc.fillStyle = '#222226'; tc.fillRect(0, 0, 8, 8); tc.fillRect(8, 8, 8, 8);
+    checker = ctx.createPattern(t, 'repeat');
+    return checker;
+  }
+
+  var lastStatus = null;
+  function setStatus(text) {
+    if (text === lastStatus) return;
+    lastStatus = text;
+    $('status').textContent = text;
+    Embed.status(img ? text : '');
+  }
+
   function render() {
     var s = stageSize();
     var dpr = window.devicePixelRatio || 1;
-    cv.width = Math.max(1, Math.round(s.w * dpr));
-    cv.height = Math.max(1, Math.round(s.h * dpr));
-    cv.style.width = s.w + 'px';
-    cv.style.height = s.h + 'px';
+    // Assigning width/height clears the canvas and resets its state, which is
+    // costly on every pointer move: only do it when the size really changed.
+    var pw = Math.max(1, Math.round(s.w * dpr)), ph = Math.max(1, Math.round(s.h * dpr));
+    if (cv.width !== pw) cv.width = pw;
+    if (cv.height !== ph) cv.height = ph;
+    var cssW = s.w + 'px', cssH = s.h + 'px';
+    if (cv.style.width !== cssW) cv.style.width = cssW;
+    if (cv.style.height !== cssH) cv.style.height = cssH;
 
     if (view.fitted) fitView();
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, s.w, s.h);
+    if (img) {
+      var ix = view.x, iy = view.y, iw = img.width * view.zoom, ih = img.height * view.zoom;
+      ctx.fillStyle = checkerPattern();
+      ctx.fillRect(ix, iy, iw, ih);
+      ctx.strokeStyle = '#33333a';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(ix - 0.5, iy - 0.5, iw + 1, ih + 1);
+    }
     ctx.save();
     ctx.translate(view.x, view.y);
     ctx.scale(view.zoom, view.zoom);
     drawAll(ctx, true);
     ctx.restore();
 
-    $('zoomV').textContent = Math.round(view.zoom * 100) + '%';
+    var zt = Math.round(view.zoom * 100) + '%';
+    if ($('zoomV').textContent !== zt) $('zoomV').textContent = zt;
     $('empty').style.display = img ? 'none' : '';
-    $('status').textContent = img
+    viewBox.style.display = img ? '' : 'none';
+    setStatus(img
       ? img.width + '×' + img.height + ' · ' + shapes.length + ' annotation' + (shapes.length === 1 ? '' : 's')
-      : 'No image yet.';
+      : 'No image yet.');
     positionTextEditor();
   }
 
   /* ---- loading ---------------------------------------------------------- */
-  function loadBlob(blob) {
+  function stemOf(name) {
+    var n = String(name || '').replace(/^.*[\\/]/, '');
+    // the clipboard hands over "image.png": that is not a name worth keeping
+    if (/^image\.(png|jpe?g|gif|webp|bmp)$/i.test(n)) return '';
+    return n.replace(/\.[A-Za-z0-9]{1,5}$/, '').trim();
+  }
+  function loadBlob(blob, name) {
     var url = URL.createObjectURL(blob);
     var im = new Image();
     im.onload = function () {
+      // the decoded bitmap stays valid after the URL is gone
+      URL.revokeObjectURL(url);
       img = im;
+      srcName = stemOf(name || blob.name);
       shapes = [];
       undoStack.length = 0; redoStack.length = 0;
       sel = -1; nextNumber = 1;
@@ -422,29 +506,29 @@ label{font-size:11px;color:#5f5f68;white-space:nowrap}
     };
     im.onerror = function () {
       URL.revokeObjectURL(url);
-      $('status').textContent = 'That image could not be read.';
+      say('Could not read that image.');
     };
     im.src = url;
   }
+  function loadFile(f) { loadBlob(f, f && f.name); }
+  function isImage(f) { return f && (/^image\//.test(f.type || '') || /\.(png|jpe?g|gif|webp|bmp)$/i.test(f.name || '')); }
 
-  $('open').addEventListener('click', function () { $('file').click(); });
+  function openDialog() { $('file').click(); }
   $('file').addEventListener('change', function (e) {
-    if (e.target.files && e.target.files[0]) loadBlob(e.target.files[0]);
+    if (e.target.files && e.target.files[0]) loadFile(e.target.files[0]);
     e.target.value = '';
   });
 
-  $('paste').addEventListener('click', function () {
-    var btn = $('paste'), old = btn.textContent;
-    function say(m) { btn.textContent = m; setTimeout(function () { btn.textContent = old; }, 1500); }
-    if (!navigator.clipboard || !navigator.clipboard.read) { say('Clipboard unavailable'); return; }
+  function pasteFromClipboard() {
+    if (!navigator.clipboard || !navigator.clipboard.read) { say('Could not paste: the clipboard is not available here.'); return; }
     navigator.clipboard.read().then(function (items) {
       for (var i = 0; i < items.length; i++) {
         var type = items[i].types.filter(function (t) { return t.indexOf('image/') === 0; })[0];
-        if (type) { items[i].getType(type).then(loadBlob); return; }
+        if (type) { items[i].getType(type).then(function (b) { loadBlob(b, ''); }); return; }
       }
-      say('No image on clipboard');
-    }, function () { say('Clipboard blocked'); });
-  });
+      say('There is no image on the clipboard.');
+    }, function () { say('Could not paste: the clipboard is blocked.'); });
+  }
 
   document.addEventListener('paste', function (e) {
     if (e.target === textEdit) return;
@@ -453,37 +537,52 @@ label{font-size:11px;color:#5f5f68;white-space:nowrap}
     for (var i = 0; i < dt.items.length; i++) {
       if (dt.items[i].kind === 'file' && dt.items[i].type.indexOf('image/') === 0) {
         var f = dt.items[i].getAsFile();
-        if (f) { e.preventDefault(); loadBlob(f); return; }
+        if (f) { e.preventDefault(); loadBlob(f, ''); return; }
       }
     }
   });
 
-  ['dragenter', 'dragover'].forEach(function (t) {
-    document.addEventListener(t, function (e) { e.preventDefault(); });
-  });
-  document.addEventListener('drop', function (e) {
-    e.preventDefault();
-    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-    if (f && f.type.indexOf('image/') === 0) loadBlob(f);
+  Kit.config({ stage: '#stage' });
+  Kit.drop(document.body, {
+    accept: 'image/*',
+    overlayText: 'Drop an image to annotate it',
+    onFiles: function (files) { loadFile(files[0]); }
   });
 
   /* ---- tools ------------------------------------------------------------ */
-  function setTool(t) {
+  function setTool(t, quiet) {
     tool = t;
-    Array.prototype.forEach.call(document.querySelectorAll('.tool'), function (b) {
-      b.classList.toggle('on', b.dataset.tool === t);
+    Array.prototype.forEach.call(document.querySelectorAll('#tools button'), function (b) {
+      var on = b.dataset.tool === t;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
-    if (t !== 'select') { sel = -1; render(); }
+    if (t !== 'select') { sel = -1; if (!quiet) render(); }
+    saveUi();
   }
-  Array.prototype.forEach.call(document.querySelectorAll('.tool'), function (b) {
-    b.addEventListener('click', function () { setTool(b.dataset.tool); });
-  });
+  (function buildTools() {
+    var box = $('tools');
+    TOOLS.forEach(function (t) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ibtn';
+      b.id = 't_' + t.id;
+      b.dataset.tool = t.id;
+      b.title = t.label + '  (' + t.key + ')';
+      b.setAttribute('aria-label', t.label);
+      b.appendChild(Kit.icon(t.icon));
+      b.firstChild.classList.add('lg');
+      b.addEventListener('click', function () { setTool(t.id); });
+      box.appendChild(b);
+    });
+  })();
 
   (function buildSwatches() {
     var box = $('swatches');
     COLORS.forEach(function (c) {
       var b = document.createElement('button');
-      b.className = 'sw' + (c === color ? ' on' : '');
+      b.type = 'button';
+      b.className = 'sw';
       b.style.background = c;
       b.title = c;
       b.addEventListener('click', function () { setColor(c); });
@@ -491,36 +590,47 @@ label{font-size:11px;color:#5f5f68;white-space:nowrap}
     });
   })();
 
-  function setColor(c) {
+  // The colour picker fires input for every step of a drag: one undo step per drag.
+  var colorGesture = false;
+  function setColor(c, fromPicker) {
     color = c;
     $('colorCustom').value = /^#[0-9a-f]{6}$/i.test(c) ? c : '#e5484d';
     Array.prototype.forEach.call(document.querySelectorAll('.sw'), function (b) {
-      b.classList.toggle('on', b.title === c);
+      b.classList.toggle('on', b.title.toLowerCase() === String(c).toLowerCase());
     });
     // recolour the selection, which is what you expect after picking a swatch
-    if (sel >= 0 && shapes[sel] && shapes[sel].type !== 'blur') {
-      pushUndo();
-      shapes[sel].color = c;
+    var s = shapes[sel];
+    if (sel >= 0 && s && s.type !== 'blur' && s.color !== c) {
+      if (!colorGesture) pushUndo();
+      colorGesture = !!fromPicker;
+      s.color = c;
       render();
     }
+    saveUi();
   }
-  $('colorCustom').addEventListener('input', function () { setColor($('colorCustom').value); });
+  $('colorCustom').addEventListener('input', function () { setColor($('colorCustom').value, true); });
+  $('colorCustom').addEventListener('change', function () { colorGesture = false; });
 
+  var weightGesture = false;
   $('weight').addEventListener('input', function () {
     weight = parseInt($('weight').value, 10) || 4;
     $('weightV').textContent = weight;
-    if (sel >= 0 && shapes[sel]) {
-      shapes[sel].weight = weight;
-      if (shapes[sel].type === 'text' || shapes[sel].type === 'number') {
-        shapes[sel].size = textSize();
-      }
+    var s = shapes[sel];
+    if (sel >= 0 && s) {
+      if (!weightGesture) { pushUndo(); weightGesture = true; }
+      s.weight = weight;
+      if (s.type === 'text' || s.type === 'number') s.size = textSize();
       render();
     }
+    saveUi();
   });
+  $('weight').addEventListener('change', function () { weightGesture = false; });
 
   function textSize() { return Math.max(12, weight * 5); }
 
   /* ---- pointer ---------------------------------------------------------- */
+  function capture(e) { try { stageEl.setPointerCapture(e.pointerId); } catch (err) { /* synthetic pointer */ } }
+
   stageEl.addEventListener('pointerdown', function (e) {
     if (e.target === textEdit) return;
     commitText();
@@ -529,7 +639,7 @@ label{font-size:11px;color:#5f5f68;white-space:nowrap}
     // middle button, or space held: pan regardless of the active tool
     if (e.button === 1 || spaceDown) {
       panning = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y };
-      stageEl.setPointerCapture(e.pointerId);
+      capture(e);
       e.preventDefault();
       return;
     }
@@ -548,9 +658,12 @@ label{font-size:11px;color:#5f5f68;white-space:nowrap}
       return;
     }
 
-    stageEl.setPointerCapture(e.pointerId);
+    capture(e);
 
     if (tool === 'select') {
+      // A click that only selects must not add an undo step: the step is
+      // recorded by the first real movement (see pointermove), from the
+      // snapshot taken here.
       // a handle of the current selection wins over everything else
       if (sel >= 0 && shapes[sel]) {
         var hs = 6 / view.zoom;
@@ -558,8 +671,8 @@ label{font-size:11px;color:#5f5f68;white-space:nowrap}
           return Math.abs(p.x - h.x) <= hs && Math.abs(p.y - h.y) <= hs;
         })[0];
         if (found) {
-          pushUndo();
-          dragging = { mode: 'handle', id: found.id, start: p, orig: JSON.parse(JSON.stringify(shapes[sel])) };
+          dragging = { mode: 'handle', id: found.id, start: p, cx: e.clientX, cy: e.clientY, moved: false,
+                       pre: snapshot(), orig: JSON.parse(JSON.stringify(shapes[sel])) };
           return;
         }
       }
@@ -567,8 +680,8 @@ label{font-size:11px;color:#5f5f68;white-space:nowrap}
       for (var i = shapes.length - 1; i >= 0; i--) { if (hit(shapes[i], p)) { idx = i; break; } }
       sel = idx;
       if (idx >= 0) {
-        pushUndo();
-        dragging = { mode: 'move', start: p, orig: JSON.parse(JSON.stringify(shapes[idx])) };
+        dragging = { mode: 'move', start: p, cx: e.clientX, cy: e.clientY, moved: false,
+                     pre: snapshot(), orig: JSON.parse(JSON.stringify(shapes[idx])) };
       } else {
         // empty space: drag the picture around
         panning = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y };
@@ -610,6 +723,12 @@ label{font-size:11px;color:#5f5f68;white-space:nowrap}
     var p = toImage(e.clientX, e.clientY);
 
     if (dragging && sel >= 0) {
+      if (!dragging.moved) {
+        // a click is not a move: wait for 2 screen pixels before it counts
+        if (Math.hypot(e.clientX - dragging.cx, e.clientY - dragging.cy) < 2) return;
+        dragging.moved = true;
+        pushSnap(dragging.pre);
+      }
       var s = shapes[sel], o = dragging.orig;
       var dx = p.x - dragging.start.x, dy = p.y - dragging.start.y;
       if (dragging.mode === 'move') {
@@ -692,12 +811,28 @@ label{font-size:11px;color:#5f5f68;white-space:nowrap}
   $('zoomOut').addEventListener('click', function () {
     view.zoom = Math.max(ZMIN, view.zoom / 1.25); view.fitted = false; render();
   });
-  window.addEventListener('resize', render);
+
+  /* ---- layout: the toolbar never wraps ----------------------------------- */
+  var tbEl = $('tb');
+  function fitToolbar() {
+    tbEl.classList.remove('compact', 'tight', 'narrow');
+    var steps = ['compact', 'tight', 'narrow'];
+    for (var i = 0; i < steps.length && tbEl.scrollWidth > tbEl.clientWidth + 1; i++) {
+      tbEl.classList.add(steps[i]);
+    }
+  }
+  if (window.ResizeObserver) {
+    new ResizeObserver(function () { fitToolbar(); render(); }).observe(stageEl);
+    new ResizeObserver(fitToolbar).observe(tbEl.parentNode);
+  } else {
+    window.addEventListener('resize', function () { fitToolbar(); render(); });
+  }
 
   /* ---- text ------------------------------------------------------------- */
-  var editing = -1;
+  var editing = -1, editingUndoLen = -1;
   function startText(p) {
     pushUndo();
+    editingUndoLen = undoStack.length;
     shapes.push({ type: 'text', x: p.x, y: p.y, text: '', color: color, size: textSize(), weight: weight });
     editing = shapes.length - 1;
     sel = editing;
@@ -721,7 +856,12 @@ label{font-size:11px;color:#5f5f68;white-space:nowrap}
     var i = editing;
     editing = -1;
     textEdit.style.display = 'none';
-    if (s && !(s.text || '').trim()) { shapes.splice(i, 1); sel = -1; }
+    if (s && !(s.text || '').trim()) {
+      shapes.splice(i, 1); sel = -1;
+      // the empty box changed nothing: take its undo step back
+      if (undoStack.length === editingUndoLen) undoStack.pop();
+    }
+    editingUndoLen = -1;
     syncButtons();
     render();
   }
@@ -751,44 +891,62 @@ label{font-size:11px;color:#5f5f68;white-space:nowrap}
 
   function copyOut() {
     if (!img) return;
-    var btn = $('copy'), old = btn.textContent;
-    function say(m) { btn.textContent = m; setTimeout(function () { btn.textContent = old; }, 1400); }
     compose().toBlob(function (blob) {
-      if (!window.ClipboardItem || !navigator.clipboard || !navigator.clipboard.write) { say('Unavailable'); return; }
+      if (!window.ClipboardItem || !navigator.clipboard || !navigator.clipboard.write) { say('Could not copy: the clipboard is not available here.'); return; }
       navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
-        .then(function () { say('Copied'); }, function () { say('Failed'); });
+        .then(function () { say('Copied to the clipboard.'); }, function () { say('Could not copy to the clipboard.'); });
     }, 'image/png');
   }
 
+  // <source name>_annotated.png, or annotated.png for a pasted screenshot
+  function saveName() {
+    if (!srcName) return 'annotated.png';
+    var stem = srcName.replace(/[\\/:*?"<>|]+/g, '_');
+    return (/_annotated$/i.test(stem) ? stem : stem + '_annotated') + '.png';
+  }
   function saveOut() {
     if (!img) return;
+    var name = saveName();
     compose().toBlob(function (blob) {
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = 'annotated.png';
-      document.body.appendChild(a); a.click();
-      setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+      Kit.save(blob, name);
     }, 'image/png');
   }
 
-  $('copy').addEventListener('click', copyOut);
-  $('save').addEventListener('click', saveOut);
-  $('undo').addEventListener('click', undo);
-  $('redo').addEventListener('click', redo);
-  $('clear').addEventListener('click', function () {
+  function clearAll() {
     if (!shapes.length) return;
     pushUndo();
     shapes = []; sel = -1; nextNumber = 1;
     render(); syncButtons();
-  });
+  }
+
+  $('open').addEventListener('click', openDialog);
+  $('paste').addEventListener('click', pasteFromClipboard);
+  $('copy').addEventListener('click', copyOut);
+  $('save').addEventListener('click', saveOut);
+  $('undo').addEventListener('click', undo);
+  $('redo').addEventListener('click', redo);
+  $('clear').addEventListener('click', clearAll);
 
   /* ---- keyboard --------------------------------------------------------- */
-  var KEYS = { v: 'select', a: 'arrow', r: 'rect', e: 'ellipse', h: 'highlight',
-               p: 'pen', t: 'text', n: 'number', b: 'blur' };
+  var KEYS = {};
+  TOOLS.forEach(function (t) { KEYS[t.key.toLowerCase()] = t.id; });
+  var SHORTCUTS = [
+    ['Tools', TOOLS.map(function (t) { return [t.key, t.label]; })],
+    ['Edit', [
+      ['Ctrl+Z', 'Undo'], ['Ctrl+Y', 'Redo'], ['Del', 'Remove the selection'], ['Esc', 'Deselect']
+    ]],
+    ['Image', [
+      ['Ctrl+V', 'Paste a screenshot'], ['Ctrl+O', 'Open an image'],
+      ['Ctrl+C', 'Copy the result'], ['Ctrl+S', 'Save as PNG']
+    ]],
+    ['View', [
+      ['Wheel', 'Zoom at the pointer'], ['Space + drag', 'Pan'], ['Middle drag', 'Pan']
+    ]]
+  ];
 
   document.addEventListener('keydown', function (e) {
     if (e.target === textEdit) return;
+    if (Kit.dialogOpen()) return;
     var k = (e.key || '').toLowerCase();
 
     if (e.key === ' ') { spaceDown = true; e.preventDefault(); return; }
@@ -798,21 +956,60 @@ label{font-size:11px;color:#5f5f68;white-space:nowrap}
       if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); redo(); return; }
       if (k === 'c') { e.preventDefault(); copyOut(); return; }
       if (k === 's') { e.preventDefault(); saveOut(); return; }
+      if (k === 'o') { e.preventDefault(); openDialog(); return; }
       return;      // leave Ctrl+V to the paste handler
     }
 
+    if (k === '?' && !Embed.active) { e.preventDefault(); Kit.keys(SHORTCUTS, { button: $('bKeys'), title: 'Annotate shortcuts' }); return; }
     if (k === 'delete' || k === 'backspace') {
       if (sel >= 0) { e.preventDefault(); pushUndo(); shapes.splice(sel, 1); sel = -1; render(); syncButtons(); }
       return;
     }
     if (k === 'escape') { sel = -1; render(); return; }
-    if (KEYS[k]) { e.preventDefault(); setTool(KEYS[k]); }
+    if (KEYS[k] && !e.altKey) { e.preventDefault(); setTool(KEYS[k]); }
   });
 
   document.addEventListener('keyup', function (e) {
     if (e.key === ' ') spaceDown = false;
   });
+  window.addEventListener('blur', function () { spaceDown = false; });
 
+  $('bKeys').addEventListener('click', function () {
+    Kit.keys(SHORTCUTS, { button: $('bKeys'), title: 'Annotate shortcuts' });
+  });
+
+  /* ---- start ------------------------------------------------------------ */
+  Kit.paintIcons(document);
+  (function restoreUi() {
+    var ui = uiStore.getAll();
+    if (ui.weight >= 1 && ui.weight <= 24) { weight = Math.round(ui.weight); $('weight').value = weight; $('weightV').textContent = weight; }
+    if (typeof ui.color === 'string' && /^#[0-9a-f]{6}$/i.test(ui.color)) color = ui.color;
+    setColor(color);
+    setTool(TOOLS.some(function (t) { return t.id === ui.tool; }) ? ui.tool : 'select', true);
+  })();
+
+  Embed.register({
+    id: 'annotate',
+    title: 'Annotate',
+    actions: [
+      { id: 'open',  label: 'Open',     icon: 'open', tip: 'Open an image  (Ctrl+O)', run: openDialog },
+      { id: 'paste', label: 'Paste',    icon: 'down', tip: 'Paste the screenshot on the clipboard  (Ctrl+V)', run: pasteFromClipboard },
+      { id: 'undo',  label: 'Undo',     icon: 'undo', tip: 'Undo  (Ctrl+Z)', disabled: true, run: undo },
+      { id: 'redo',  label: 'Redo',     icon: 'redo', tip: 'Redo  (Ctrl+Y)', disabled: true, run: redo },
+      { id: 'copy',  label: 'Copy',     icon: 'copy', tip: 'Copy the result  (Ctrl+C)', disabled: true, run: copyOut },
+      { id: 'save',  label: 'Save PNG', icon: 'save', primary: true, tip: 'Save as PNG  (Ctrl+S)', disabled: true, run: saveOut }
+    ],
+    shortcuts: SHORTCUTS,
+    accepts: ['image/*'],
+    onReceive: function (files) {
+      var f = [].slice.call(files || []).filter(isImage)[0];
+      if (f) loadFile(f);
+    },
+    onShow: function () { fitToolbar(); render(); },
+    onHide: function () { commitText(); spaceDown = false; }
+  });
+
+  fitToolbar();
   syncButtons();
   render();
 })();

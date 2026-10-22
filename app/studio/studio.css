@@ -1,0 +1,96 @@
+/* Studio host: rail, header, frames, media tray. Everything else comes from ../shared/kit.css.
+   Rules of the look (same as the kit): neutral greys, white is the only primary, no coloured bars, no glows. */
+html,body{height:100%}
+body.kit{overflow:hidden}
+#app{display:flex;height:100%;min-width:0}
+
+/* [rail] ----------------------------------------------------------------- */
+#rail{flex:none;width:176px;display:flex;flex-direction:column;background:var(--panel);
+  border-right:1px solid var(--line);padding:0 8px 10px;overflow-x:hidden;overflow-y:auto}
+.rail-top{display:flex;align-items:center;gap:6px;flex:none;height:var(--hdr-h);margin:0 -8px 4px;
+  padding:0 8px 0 16px;border-bottom:1px solid var(--line)}
+.rail-top b{flex:1;font-size:var(--fs-l);font-weight:600;letter-spacing:.01em}
+.rg{flex:none;padding:14px 8px 6px;font-size:var(--fs-xs);font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--dim);white-space:nowrap}
+.mode{display:flex;align-items:center;gap:10px;flex:none;width:100%;height:32px;margin-bottom:2px;padding:0 8px;
+  border:1px solid transparent;background:transparent;color:var(--txt2);border-radius:6px;
+  font-size:var(--fs-l);text-align:left;white-space:nowrap}
+.mode:hover{background:#26262b;border-color:transparent;color:var(--txt)}
+.mode.on{background:#383841;color:#fff;box-shadow:0 1px 2px rgba(0,0,0,.4)}
+.mode.drop{background:#30303a;border-color:#8a8a94;color:#fff}
+.mode svg.ic{width:16px;height:16px;opacity:.85}
+.mode.on svg.ic,.mode:hover svg.ic{opacity:1}
+.mode .l{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.mode .n{flex:none;color:var(--dim);font:var(--fs-xs) var(--mono)}
+.mode.on .n{color:var(--txt2)}
+#app.slim #rail{width:52px}
+#app.slim .rail-top{padding:0;justify-content:center}
+#app.slim .rail-top b{display:none}
+#app.slim .rg{height:1px;margin:11px 6px 10px;padding:0;overflow:hidden;background:var(--line);font-size:0}
+#app.slim .mode{justify-content:center;padding:0}
+#app.slim .mode .l,#app.slim .mode .n{display:none}
+
+/* [column] header, frames, tray ------------------------------------------- */
+#col{flex:1;min-width:0;display:flex;flex-direction:column}
+#head{padding:0 14px 0 16px;gap:10px}
+#head h1{flex:none}
+#status{flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--dim);font-size:var(--fs)}
+#actions{flex:none;display:flex;align-items:center;gap:6px}
+#actions .sep{height:20px}
+#actions button.on{background:var(--panel3);border-color:#74747e;color:#fff}
+#head.compact #actions button.ib .l{display:none}
+#head.compact #actions button.ib{padding-left:8px;padding-right:8px}
+#head.tight #bKeys .l{display:none}
+#head.tight #bKeys{padding:0 8px}
+#frames{position:relative;flex:1;min-height:0;background:var(--bg)}
+#frames iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:var(--bg)}
+#sendveil{pointer-events:none;display:none}
+body.dragtray #sendveil{display:flex;pointer-events:auto}
+body.dragtray #frames iframe{pointer-events:none}
+
+/* [tray] ------------------------------------------------------------------- */
+#tray{flex:none;border-top:1px solid var(--line);background:var(--panel)}
+.tray-head{display:flex;align-items:center;gap:8px;height:30px;padding:0 12px 0 16px;cursor:pointer;
+  user-select:none;color:var(--txt2);font-size:var(--fs)}
+.tray-head:hover{color:var(--txt)}
+.tray-head .tt{font-weight:600;color:var(--txt)}
+.tray-head .cnt{flex:none;font-size:var(--fs-xs);line-height:16px;padding:0 6px;color:var(--dim);
+  background:var(--bg);border-radius:8px;font-variant-numeric:tabular-nums}
+.tray-head .tip{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--dim);font-size:var(--fs-s)}
+.tray-head button{height:22px;padding:0 8px;font-size:var(--fs-s)}
+.tray-head .sg{flex:none;width:7px;height:7px;margin:0 3px 3px 0;border:solid var(--dim);
+  border-width:0 1.5px 1.5px 0;transform:rotate(-135deg)}
+#tray.open .tray-head .sg{transform:rotate(45deg);margin-top:2px}
+#trayBody{display:none;gap:10px;height:112px;padding:6px 16px 12px;overflow-x:auto;overflow-y:hidden}
+#tray.open #trayBody{display:flex}
+#trayBody .empty{margin:auto;color:var(--dim);font-size:var(--fs)}
+.ti{flex:none;width:116px;display:flex;flex-direction:column;gap:3px;position:relative;cursor:grab;
+  border-radius:7px;outline-offset:2px}
+.ti:focus-visible{outline:1px solid #9a9aa2}
+.ti .th{position:relative;height:65px;border-radius:6px;background:#0c0c0e;border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--dim)}
+.ti:hover .th{border-color:#5a5a64}
+.ti .th img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
+.ti .th svg.ic{width:20px;height:20px}
+.ti .nm{font-size:var(--fs-s);color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ti .mt{font-size:var(--fs-xs);color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ti .acts{position:absolute;top:3px;right:3px;display:none;gap:3px}
+.ti:hover .acts,.ti:focus-within .acts{display:flex}
+.ti .acts button{width:22px;height:22px;padding:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(16,16,18,.88);border-color:#4a4a52}
+.ti .acts button:hover{background:#2c2c33;border-color:#8a8a94}
+
+/* [send menu] --------------------------------------------------------------- */
+.st-menu{position:fixed;z-index:70;min-width:210px;max-width:320px;padding:4px;background:var(--panel2);
+  border:1px solid #4a4a52;border-radius:8px;box-shadow:0 14px 40px rgba(0,0,0,.6)}
+.st-menu .mh{padding:6px 9px 5px;font-size:var(--fs-xs);font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-menu .mg{height:1px;margin:4px 2px;background:var(--line)}
+.st-menu button{display:flex;align-items:center;gap:9px;width:100%;height:28px;padding:0 9px;border:0;
+  background:transparent;border-radius:5px;font-size:var(--fs);color:var(--txt);text-align:left}
+.st-menu button:hover:not(:disabled),.st-menu button:focus-visible{background:#383841}
+.st-menu button .l{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.st-menu button .s{flex:none;color:var(--dim);font-size:var(--fs-s)}
+.st-menu button:disabled{opacity:.38}

@@ -32,14 +32,26 @@ async function capture(name){fs.mkdirSync(outDir,{recursive:true});const r=await
   await command('Emulation.setDeviceMetricsOverride',{width:1700,height:1000,deviceScaleFactor:1,mobile:false});
   await until(()=>evaluate('typeof show==="function"'),'shell');
   const TAB=process.env.TAB||'store';
-  await evaluate('show('+JSON.stringify(TAB)+')');
-  await until(()=>evaluate('frames['+JSON.stringify(TAB)+']?.contentDocument?.readyState==="complete" && frames['+JSON.stringify(TAB)+'].contentWindow.location.href.includes("/"+'+JSON.stringify(process.env.TAB_DIR||TAB)+'+"/")'),'tab '+TAB);
-  const ctxOf=async()=>{const tree=await command('Page.getFrameTree');const fr=tree.frameTree.childFrames.find(f=>f.frame.url.includes('/'+(TAB==='store'?'store':(process.env.TAB_DIR||TAB))+'/')).frame.id;return contexts.find(c=>c.auxData?.frameId===fr&&c.auxData?.isDefault).id;};
+  /* 2.0: the media tools are modes of the Studio tab. TAB=<old tool id> opens Studio
+     on that mode and ev() runs in the mode's own frame (nested in the studio frame). */
+  const MODO={clips:'join',video:process.env.TAB_MODE||'compare',frames:'sheet',annotate:'annotate',textures:'textures',flipbook:'flipbook',texgen:'texgen'};
+  const nested=!!MODO[TAB], DIR=process.env.TAB_DIR||TAB;
+  const trova=(node,pred)=>{for(const c of node.childFrames||[]){if(pred(c.frame))return c.frame;const r=trova(c,pred);if(r)return r;}return null;};
+  if(nested){
+    await evaluate('show("studio")');
+    await until(()=>evaluate('!!frames.studio?.contentWindow?.Studio'),'studio');
+    await evaluate('frames.studio.contentWindow.Studio.show('+JSON.stringify(MODO[TAB])+')');
+    await until(async()=>{const t=await command('Page.getFrameTree');const fr=trova(t.frameTree,x=>x.url.includes('/'+DIR+'/'));return !!fr&&await evaluate('(()=>{const m=frames.studio.contentWindow.Studio.modes.find(m=>m.id==='+JSON.stringify(MODO[TAB])+');return !!m.frame&&m.frame.contentDocument.readyState==="complete"})()');},'mode '+MODO[TAB]);
+  }else{
+    await evaluate('show('+JSON.stringify(TAB)+')');
+    await until(()=>evaluate('frames['+JSON.stringify(TAB)+']?.contentDocument?.readyState==="complete" && frames['+JSON.stringify(TAB)+'].contentWindow.location.href.includes("/"+'+JSON.stringify(DIR)+'+"/")'),'tab '+TAB);
+  }
+  const ctxOf=async()=>{const tree=await command('Page.getFrameTree');const fr=trova(tree.frameTree,x=>x.url.includes('/'+(TAB==='store'?'store':DIR)+'/')).id;return contexts.find(c=>c.auxData?.frameId===fr&&c.auxData?.isDefault).id;};
   let ctx=await ctxOf();
   const ev=async x=>{try{return await evaluate(x,ctx);}catch(e){if(/context|Cannot find/.test(e.message)){ctx=await ctxOf();return evaluate(x,ctx);}throw e;}};
   await ev('window.qaErrors=[];addEventListener("error",e=>qaErrors.push(e.message));addEventListener("unhandledrejection",e=>qaErrors.push(String(e.reason&&e.reason.stack||e.reason)));1');
   if(TAB==='store')await until(()=>ev('autoArmed===true'),'store started'); else await delay(800);
-  const reload=async()=>{await evaluate('frames['+JSON.stringify(TAB)+'].contentWindow.location.reload()');await delay(500);await until(async()=>{ctx=await ctxOf();return TAB==='store'?ev('typeof addShots==="function" && autoArmed===true'):ev('document.readyState==="complete"');},'reload');await ev('window.qaErrors=[];addEventListener("error",e=>qaErrors.push(e.message));addEventListener("unhandledrejection",e=>qaErrors.push(String(e.reason&&e.reason.stack||e.reason)));1');};
+  const reload=async()=>{await evaluate(nested?'frames.studio.contentWindow.Studio.modes.find(m=>m.id==='+JSON.stringify(MODO[TAB])+').frame.contentWindow.location.reload()':'frames['+JSON.stringify(TAB)+'].contentWindow.location.reload()');await delay(500);await until(async()=>{ctx=await ctxOf();return TAB==='store'?ev('typeof addShots==="function" && autoArmed===true'):ev('document.readyState==="complete"');},'reload');await ev('window.qaErrors=[];addEventListener("error",e=>qaErrors.push(e.message));addEventListener("unhandledrejection",e=>qaErrors.push(String(e.reason&&e.reason.stack||e.reason)));1');};
   const mod=require(path.resolve(process.argv[2]));
   const res=await mod({ev,evaluate,command,until,delay,capture,reload,log:(...a)=>console.log(...a)});
   console.log('RESULT',JSON.stringify(res,null,1));

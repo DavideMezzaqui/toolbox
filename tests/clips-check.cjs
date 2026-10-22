@@ -5,10 +5,14 @@
 const assert = require('node:assert/strict');
 
 module.exports = async function clipsCheck({ command, evaluate, until, contexts, checks, capture }) {
-  await evaluate('show("clips")');
-  await until(() => evaluate('frames["clips"]?.contentDocument?.readyState==="complete" && typeof frames["clips"].contentWindow.addFiles==="function"'), 'Clip Joiner ready');
+  /* Clip Joiner is the Join mode of Studio now: its page sits in a frame nested inside the Studio frame */
+  await evaluate('show("studio")');
+  await until(() => evaluate('!!frames.studio?.contentWindow?.Studio?.mode()'), 'Studio ready');
+  await evaluate('frames.studio.contentWindow.Studio.show("join")');
+  await until(() => evaluate('(()=>{const m=frames.studio.contentWindow.Studio.modes.find(x=>x.id==="join");return !!m.frame&&m.frame.contentDocument?.readyState==="complete"&&typeof m.win.addFiles==="function"})()'), 'Clip Joiner ready');
   const tree = await command('Page.getFrameTree');
-  const frame = tree.frameTree.childFrames.find(f => f.frame.url.includes('/clips/')).frame.id;
+  const findFrame = (node, part) => { for (const ch of node.childFrames || []) { if (ch.frame.url.includes(part)) return ch.frame; const deep = findFrame(ch, part); if (deep) return deep; } return null; };
+  const frame = findFrame(tree.frameTree, '/clips/').id;
   const ctx = contexts.find(c => c.auxData?.frameId === frame && c.auxData?.isDefault).id;
   const ev = x => evaluate(x, ctx);
 
@@ -29,7 +33,7 @@ module.exports = async function clipsCheck({ command, evaluate, until, contexts,
   catch (e) { throw new Error(e.message + ' ' + JSON.stringify(await ev('({n:clips.length,files:(window.__files||[]).map(f=>f.name+" "+f.size+" "+f.type),toast:document.getElementById("toast").textContent,errs:qaErrors})'))); }
   assert.deepEqual(await ev('clips.map(c=>c.name)'), ['A', 'B', 'C']);
   assert(await ev('items.every(it=>it.fadeInOn&&it.fadeOutOn)'), 'every clip opens from and closes to black by default');
-  checks.push('Clip Joiner: clips join in name order with a fade through black on every cut');
+  checks.push('Clip Joiner (Studio, Join mode): clips join in name order with a fade through black on every cut');
 
   await ev('select(clips[1].id);setTab("text");[...document.querySelectorAll("#insp button")].find(b=>b.textContent==="Add text").click();clips[1].tf.z0=1.25;commit();draw();1');
   assert.equal(await ev('clips[1].texts.length'), 1);

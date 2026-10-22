@@ -1,5 +1,5 @@
 'use strict';
-// video-io (app/shared/lib/video-io.js) inside the real app, through the Clip Joiner tab.
+// video-io (app/shared/lib/video-io.js) inside the real app, through the Join mode (Clip Joiner) of Studio.
 //   (a) Clip Joiner exports a coded H.264 MP4 + two WebM clips; the exported MP4 is read back frame by frame
 //   (b) FrameReader (decoder path) and the seek path return the same frames on the same MP4
 //   (c) a duration-less WebM (MediaRecorder output) loads with its real duration

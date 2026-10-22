@@ -251,13 +251,14 @@ module.exports = async ({evaluate, command, until, delay, capture}) => {
   chk('watchControls: restore puts values back and fires input + change', wc.back.pa === 'hello' && wc.back.pb === true && wc.back.pc === 'two' && wc.back.pt === 'long\ntext' && wc.back.offsetA === '' && wc.seen.includes('pa:input') && wc.seen.includes('pa:change') && wc.seen.includes('pc:change'), wc);
   chk('watchControls: stop() ends writing; notKept null keeps offsetA but never passwords', wc.still === 'hello' && wc.hasOffset && !wc.hasPw, wc);
 
-  // ---- 11. mp4-muxer is a byte-identical copy and loads as an ES module in the app
-  const mx = await KE(`const a=new Uint8Array(await (await fetch('app://local/shared/lib/mp4-muxer.mjs')).arrayBuffer());const b=new Uint8Array(await (await fetch('app://local/clips/lib/mp4-muxer.mjs')).arrayBuffer());
-    let same=a.length===b.length;for(let i=0;same&&i<a.length;i++)if(a[i]!==b[i])same=false;
-    const m=await new w.Function('return import("app://local/shared/lib/mp4-muxer.mjs")')();return {same,len:a.length,keys:Object.keys(m).slice(0,6)}`);
-  chk('shared/lib/mp4-muxer.mjs identical to clips copy, importable', mx.same && mx.len > 60000 && mx.keys.length > 0, mx);
-  const fc = await KE(`const a=await (await fetch('app://local/shared/fonts.css')).text();const b=await (await fetch('app://local/clips/fonts.css')).text();return {same:a===b,faces:(a.match(/@font-face/g)||[]).length}`);
-  chk('shared/fonts.css same as clips/fonts.css (6 faces)', fc.same && fc.faces === 6, fc);
+  // ---- 11. mp4-muxer is a shared module and loads as an ES module in the app (the clips copy is gone since Clip Joiner uses the shared one)
+  const gone = `async u=>{try{return (await fetch(u)).status}catch(e){return 'err'}}`;   // a deleted file: a 404, or a rejected fetch
+  const mx = await KE(`const gone=${gone};const a=new Uint8Array(await (await fetch('app://local/shared/lib/mp4-muxer.mjs')).arrayBuffer());
+    const m=await new w.Function('return import("app://local/shared/lib/mp4-muxer.mjs")')();
+    return {len:a.length,keys:Object.keys(m).slice(0,6),gone:await gone('app://local/clips/lib/mp4-muxer.mjs'),goneVideo:await gone('app://local/video/lib/mp4-muxer.mjs')}`);
+  chk('shared/lib/mp4-muxer.mjs importable, no second copy in clips or video', mx.len > 60000 && mx.keys.length > 0 && [404, 'err'].includes(mx.gone) && [404, 'err'].includes(mx.goneVideo), mx);
+  const fc = await KE(`const gone=${gone};const a=await (await fetch('app://local/shared/fonts.css')).text();return {faces:(a.match(/@font-face/g)||[]).length,gone:await gone('app://local/clips/fonts.css')}`);
+  chk('shared/fonts.css has 6 faces, no second copy in clips', fc.faces === 6 && [404, 'err'].includes(fc.gone), fc);
 
   // ---- 12. layout at three sizes: no horizontal scroll, nothing clipped, wraps, scale tokens; screenshots
   const layout = `(()=>{const w=${W},d=w.document,bad=[];
