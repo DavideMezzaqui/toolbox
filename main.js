@@ -10,6 +10,8 @@ const cfg = pkg.toolConfig || {};
 let sceneSyncHost;
 const testing = process.env.DAVFX_TOOLBOX_QA === '1';
 if (testing && process.env.DAVFX_TOOLBOX_QA_DATA) app.setPath('userData', process.env.DAVFX_TOOLBOX_QA_DATA);
+/* i test fanno suoni (clip registrate con un tono): in prova restano muti */
+if (testing) app.commandLine.appendSwitch('mute-audio');
 
 const APP_SCHEME = 'app';
 const APP_HOST = 'local';

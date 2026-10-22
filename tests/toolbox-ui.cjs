@@ -8,7 +8,7 @@ const sceneReport=JSON.parse(fs.readFileSync(path.join(root,'scene-sync/tests/ui
 const state={last:{sourceProject:'',targetProject:'',sourceFile:'',targetFile:'',options:{}},profiles:[]};
 fs.writeFileSync(path.join(data,'scene-sync.json'),JSON.stringify(state));
 const executable=process.env.DAVFX_QA_PACKAGED||path.join(root,'node_modules/electron/dist/electron.exe');
-const args=process.env.DAVFX_QA_PACKAGED?['--remote-debugging-port='+port]:[root,'--remote-debugging-port='+port];
+const args=process.env.DAVFX_QA_PACKAGED?['--remote-debugging-port='+port,'--mute-audio']:[root,'--remote-debugging-port='+port,'--mute-audio'];
 const proc=cp.spawn(executable,args,{cwd:root,windowsHide:true,stdio:'ignore',env:{...process.env,DAVFX_TOOLBOX_QA:'1',DAVFX_TOOLBOX_QA_DATA:data}});
 const delay=ms=>new Promise(r=>setTimeout(r,ms));let ws,seq=0;const pending=new Map(),contexts=[];const checks=[];
 function command(method,params={}){return new Promise((resolve,reject)=>{const id=++seq;const timer=setTimeout(()=>{pending.delete(id);reject(Error('CDP timeout: '+method));},45000);pending.set(id,{resolve:value=>{clearTimeout(timer);resolve(value);},reject:error=>{clearTimeout(timer);reject(error);}});ws.send(JSON.stringify({id,method,params}));});}

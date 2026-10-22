@@ -11,7 +11,7 @@ const port=+process.env.PORT||49500;
 const data=fs.mkdtempSync(path.join(os.tmpdir(),'DAVFX stress '));
 fs.writeFileSync(path.join(data,'scene-sync.json'),JSON.stringify({last:{},profiles:[]}));
 const exe=path.join(real,'node_modules/electron/dist/electron.exe');
-const proc=cp.spawn(exe,[root,'--remote-debugging-port='+port],{cwd:root,windowsHide:true,stdio:'ignore',env:{...process.env,DAVFX_TOOLBOX_QA:'1',DAVFX_TOOLBOX_QA_DATA:data}});
+const proc=cp.spawn(exe,[root,'--remote-debugging-port='+port,'--mute-audio'],{cwd:root,windowsHide:true,stdio:'ignore',env:{...process.env,DAVFX_TOOLBOX_QA:'1',DAVFX_TOOLBOX_QA_DATA:data}});
 const delay=ms=>new Promise(r=>setTimeout(r,ms));let ws,seq=0;const pending=new Map(),contexts=[];
 function command(method,params={}){return new Promise((resolve,reject)=>{const id=++seq;const t=setTimeout(()=>{pending.delete(id);reject(Error('CDP timeout: '+method));},120000);pending.set(id,{resolve:v=>{clearTimeout(t);resolve(v);},reject:e=>{clearTimeout(t);reject(e);}});ws.send(JSON.stringify({id,method,params}));});}
 async function evaluate(expression,contextId){const r=await command('Runtime.evaluate',{expression,contextId,returnByValue:true,awaitPromise:true,userGesture:true});if(r.exceptionDetails)throw Error(r.exceptionDetails.exception?.description||r.exceptionDetails.text);return r.result.value;}
