@@ -1,0 +1,279 @@
+/* ==========================================================================
+   DAVFX kit (Studio): the Store Graphics look as a shared stylesheet.
+   Source of truth is app/store/index.html (tokens, type scale, the [v17-*]
+   blocks). Same palette, same sizes, same rhythm; nothing here is new design.
+   Rules of the look: neutral dark greys, white is the only primary, no
+   per-tool accent colours, monochrome 16x16 stroke icons, no coloured left
+   bars, no glows, no decorative gradients.
+
+   Pair it with kit.js (window.Kit). Class names that Store already uses are
+   kept (.row .sec .tabs .seg .toolbar .sep .grow .hint .grp2 .btnrow .hd
+   .bd); the parts Kit.js creates for itself are namespaced (.kit-*).
+   Use <body class="kit"> for the page defaults (background, text, font).
+   ========================================================================== */
+
+/* [kit-tokens] ---------------------------------------------------------- */
+:root{
+  --bg:#101012; --panel:#18181a; --panel2:#202024; --panel3:#282830; --line:#2e2e33; --line2:#3a3a42;
+  --txt:#e6e6e8; --txt2:#b4b4bb; --dim:#8a8a90;
+  --warn:#d9a441; --err:#d96a5a;
+  --fs-l:13px; --fs:12px; --fs-s:11px; --fs-xs:10px;
+  --mono:ui-monospace,Consolas,monospace;
+  --hdr-h:46px;
+  /* one chevron for selects and pickers */
+  --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 3.5 5 6.5 8 3.5' fill='none' stroke='%23b4b4bb' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  color-scheme:dark;
+}
+/* big screens: one point more on every size */
+@media(min-width:2200px){
+  :root{--fs-l:14px; --fs:13px; --fs-s:12px; --fs-xs:11px}
+}
+/* a settings column (the Store right panel): from 1600 px the small sizes grow one point */
+@media(min-width:1600px){ .kit-panel,aside.right{--fs-xs:11px; --fs-s:12px} }
+
+*{box-sizing:border-box;scrollbar-width:thin;scrollbar-color:#3a3a42 transparent}
+[hidden]{display:none!important}
+body.kit{margin:0;background:var(--bg);color:var(--txt);font:var(--fs-l)/1.45 -apple-system,Segoe UI,Roboto,sans-serif}
+/* thin scrollbars, same grey as the borders */
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#33333b;border-radius:5px;border:2px solid var(--bg)}
+::-webkit-scrollbar-thumb:hover{background:#45454f}
+::-webkit-scrollbar-corner{background:transparent}
+
+/* [kit-header] bar at the top of a page: one line ------------------------ */
+.kit-head{display:flex;gap:6px;align-items:center;flex-wrap:nowrap;flex:none;height:var(--hdr-h);
+  padding:0 14px;background:var(--panel);border-bottom:1px solid var(--line)}
+.kit-head button{height:30px;padding:0 12px}
+.kit-head h1{margin:0;font-size:var(--fs-l);font-weight:600;letter-spacing:.01em;white-space:nowrap}
+.kit-head button[aria-expanded="true"]{background:var(--panel3);border-color:#74747e;color:#fff}
+.sep{width:1px;height:20px;background:var(--line);margin:0 4px;flex:none}
+.grow{flex:1;min-width:8px}
+
+/* [kit-buttons] ----------------------------------------------------------- */
+button{font-family:inherit;font-size:var(--fs);background:var(--panel2);color:var(--txt);
+  border:1px solid var(--line);border-radius:6px;padding:6px 11px;cursor:pointer;
+  transition:background .12s,border-color .12s,color .12s}
+button:hover{border-color:#4a4a52;background:#2a2a30}
+button:active{background:#323239}
+button:focus-visible{outline:1px solid #9a9aa2;outline-offset:1px}
+button:disabled{opacity:.4;cursor:default}
+button:disabled:hover{border-color:var(--line);background:var(--panel2)}
+/* white is the only primary */
+button.acc,button.primary{background:#e6e6e8;border-color:#e6e6e8;color:#101012;font-weight:600}
+button.acc:hover,button.primary:hover{background:#fff;border-color:#fff}
+button.danger{border-color:var(--err);color:var(--err)}
+button.danger:hover{background:color-mix(in srgb,var(--err) 14%,var(--panel2))}
+/* text and icon on the same line, text never wraps */
+button.ib,button[data-ic],button:has(>svg.ic),.kit-head button,.toolbar button,.btnrow button{display:inline-flex;align-items:center;
+  justify-content:center;gap:6px;white-space:nowrap}
+/* square icon button */
+button.ibtn{width:28px;height:28px;padding:0;display:inline-flex;align-items:center;justify-content:center;color:var(--txt2)}
+button.ibtn:hover{color:var(--txt)}
+button.ibtn.on{background:var(--panel3);border-color:#74747e;color:#fff}
+.kit-head button:hover:not(:disabled):not(.acc):not(.primary){background:#2c2c33;border-color:var(--line2)}
+
+/* [kit-icons] simple strokes, no emoji ------------------------------------ */
+svg.ic{width:13px;height:13px;flex:none;stroke:currentColor;fill:none;stroke-width:1.35;
+  stroke-linecap:round;stroke-linejoin:round;display:block;opacity:.85}
+svg.ic .f{fill:currentColor;stroke:none}
+button:hover svg.ic,button.on svg.ic{opacity:1}
+svg.ic.lg{width:16px;height:16px}
+
+/* [kit-inputs] ------------------------------------------------------------- */
+input[type=range]{accent-color:#9a9aa2}
+/* The stock checkbox is white when OFF and grey when ON on a dark panel, which reads backwards.
+   Drawn here: dark and empty when off, light with a tick when on. */
+input[type=checkbox]{appearance:none;-webkit-appearance:none;margin:0;width:14px;height:14px;flex:none;
+  position:relative;cursor:pointer;border:1px solid #4a4a52;border-radius:3px;background:var(--bg)}
+input[type=checkbox]:hover{border-color:#7a7a84}
+input[type=checkbox]:focus-visible{outline:1px solid #8a8a94;outline-offset:1px}
+input[type=checkbox]:checked{background:#c8c8ce;border-color:#c8c8ce}
+input[type=checkbox]:checked::after{content:'';position:absolute;left:4px;top:1px;width:3px;height:7px;
+  border:solid #101012;border-width:0 2px 2px 0;transform:rotate(45deg)}
+input[type=checkbox]:disabled{opacity:.4;cursor:default}
+/* thin track and a round thumb (the stock slider is a fat round one) */
+input[type=range]{-webkit-appearance:none;appearance:none;height:16px;background:transparent;cursor:pointer;min-width:0}
+input[type=range]::-webkit-slider-runnable-track{height:3px;background:#3a3a42;border-radius:2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;margin-top:-4px;
+  background:#a8a8b0;border:0;border-radius:50%}
+input[type=range]:hover::-webkit-slider-thumb{background:#d2d2d8}
+input[type=range]:active::-webkit-slider-thumb{background:#f0f0f4}
+input[type=range]:focus-visible{outline:none}
+input[type=range]:focus-visible::-webkit-slider-thumb{outline:1px solid #8a8a94;outline-offset:2px}
+input[type=range]:disabled{opacity:.4;cursor:default}
+/* text-like fields */
+input[type=text],input[type=number],input[type=search],input[type=url],input[type=email],input:not([type]),
+textarea,select{background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:5px;
+  padding:4px 7px;font-family:inherit;font-size:var(--fs);line-height:1.3}
+input[type=text],input[type=number],input[type=search],input[type=url],input[type=email],input:not([type]){height:26px}
+input[type=text]:hover,input[type=number]:hover,input[type=search]:hover,input[type=url]:hover,
+input[type=email]:hover,input:not([type]):hover,textarea:hover,select:hover{border-color:#4a4a52}
+input[type=text]:focus,input[type=number]:focus,input[type=search]:focus,input[type=url]:focus,
+input[type=email]:focus,input:not([type]):focus,textarea:focus,select:focus{border-color:#8a8a94;outline:none}
+input::placeholder,textarea::placeholder{color:var(--dim)}
+input:disabled,textarea:disabled,select:disabled{opacity:.4}
+textarea{resize:vertical}
+/* menus: same height and same arrow as every picker */
+select{-webkit-appearance:none;appearance:none;height:26px;padding:0 26px 0 8px;cursor:pointer;
+  background:var(--bg) var(--chev) no-repeat right 8px center/10px 10px}
+select option{background:var(--panel2);color:var(--txt)}
+input[type=color]{width:30px;height:20px;padding:0;border:1px solid #4a4a52;background:none;border-radius:3px;cursor:pointer}
+input[type=color]::-webkit-color-swatch-wrapper{padding:2px}
+input[type=color]::-webkit-color-swatch{border:0;border-radius:2px}
+/* inline rename field that replaces a label */
+input.inl{font:inherit;color:var(--txt);background:var(--bg);border:1px solid #8a8a94;border-radius:3px;
+  padding:1px 5px;width:100%;min-width:0;height:auto;outline:none}
+
+/* [kit-rows] one row = label + control. Same rhythm everywhere ------------- */
+.row{display:flex;align-items:center;gap:8px;min-height:26px;margin-bottom:4px}
+.row label{width:100px;flex:none;color:var(--txt2);font-size:var(--fs);line-height:1.25;overflow-wrap:anywhere}
+.row input[type=range]{flex:1}
+.row input[type=text],.row input[type=number],.row textarea,.row select{flex:1;min-width:0}
+.row textarea{height:46px}
+/* the number next to a slider: a field, so the exact value can be typed */
+.row input.val{width:62px;height:24px;flex:none;text-align:right;color:var(--txt2);
+  font:var(--fs-s)/1.4 var(--mono);font-variant-numeric:tabular-nums;padding:2px 6px;-moz-appearance:textfield}
+.row input.val::-webkit-outer-spin-button,.row input.val::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.row input.val:hover{color:var(--txt)}
+.row input.val:focus{color:var(--txt)}
+.row:hover>label{color:var(--txt)}
+.row button{line-height:1.3;min-height:24px}
+.row .seg{flex:1}
+.row .seg button{flex:1}
+.row .rtext{color:var(--txt);font-size:var(--fs)}
+.row.dis>label{opacity:.5}
+.full{display:block}
+.full label{display:block;width:auto;margin-bottom:4px}
+.full textarea,.full input[type=text]{width:100%}
+.hint{color:var(--dim);font-size:var(--fs-s);line-height:1.45;margin:-2px 0 8px}
+.swatches{display:flex;gap:4px;flex:1;flex-wrap:wrap}
+.sw{width:18px;height:18px;padding:0;flex:none;border-radius:3px;border:1px solid var(--line)}
+.sw.on{outline:1px solid #e8e8ec;outline-offset:1px}
+.row button.hex{flex:none;height:22px;min-height:22px;padding:0 5px;font:var(--fs-xs)/20px var(--mono);
+  color:var(--dim);background:transparent;border:1px solid transparent}
+.row button.hex:hover{border-color:var(--line);color:var(--txt)}
+.row input.inl.hexinl{flex:none;width:82px;height:22px;padding:0 5px;font:var(--fs-xs)/20px var(--mono)}
+/* small title that splits controls into groups inside a section */
+.grp2{display:flex;align-items:center;gap:8px;margin:12px 0 7px;font-size:var(--fs-xs);font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.grp2:first-child{margin-top:1px}
+.grp2::after{content:'';flex:1;height:1px;background:var(--line)}
+.btnrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.btnrow button{flex:1 1 auto;min-width:0;padding:6px 8px;font-size:var(--fs-s)}
+.row .btnrow{flex:1;margin-bottom:0}
+
+/* [kit-sections] collapsible sections ------------------------------------- */
+.sec{border:1px solid var(--line);border-radius:8px;margin-bottom:6px;overflow:hidden;
+  scroll-margin-top:var(--phead-h,0px)}
+.sec>.hd{display:flex;align-items:center;gap:8px;padding:0 11px;height:34px;background:var(--panel2);
+  box-shadow:inset 0 0 0 1px transparent;cursor:pointer;user-select:none;transition:background .12s,box-shadow .12s}
+.sec>.hd:hover{background:#2b2b31;box-shadow:inset 0 0 0 1px var(--line2)}
+.sec>.hd:focus-visible{outline:1px solid #9a9aa2;outline-offset:-1px}
+.sec>.hd b{flex:1;min-width:0;font-size:12.5px;font-weight:600;letter-spacing:.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sec>.hd>span.cnt{flex:none;font-size:var(--fs-xs);font-weight:500;line-height:16px;padding:0 6px;
+  color:var(--dim);background:var(--bg);border-radius:8px;font-variant-numeric:tabular-nums}
+.sec>.hd>svg.ic{color:var(--txt2);opacity:.85}
+.sec.open>.hd>svg.ic,.sec>.hd:hover>svg.ic{opacity:1}
+/* the open/closed sign is a drawn arrow that turns */
+.sec>.hd>span.sg{flex:none;width:7px;height:7px;margin:0 3px 3px 0;border:solid var(--dim);
+  border-width:0 1.5px 1.5px 0;transform:rotate(-45deg);transition:transform .12s}
+.sec.open>.hd>span.sg{transform:rotate(45deg);margin-top:2px;border-color:var(--txt2)}
+.sec>.bd{padding:10px 11px 6px;display:none}
+.sec.open>.bd{display:block}
+.sec.open>.hd{background:var(--panel3)}
+.sec.open>.hd:hover{background:#31313a}
+.sec>.bd>.hint:only-child{margin:0 0 6px}
+
+/* [kit-tabs] one segmented control, also used as a tab strip -------------- */
+.seg{display:inline-flex;gap:2px;padding:2px;background:var(--bg);border:1px solid var(--line);border-radius:7px}
+.seg button{border:0;background:transparent;color:var(--txt2);padding:3px 9px;font-size:var(--fs-s);border-radius:5px;
+  white-space:nowrap}
+.seg button:hover{background:#26262b;color:var(--txt)}
+.seg button.on{background:#383841;color:#fff;box-shadow:0 1px 2px rgba(0,0,0,.4)}
+.tabs{display:flex;flex:none;gap:2px;padding:2px;background:var(--bg);border:1px solid var(--line);border-radius:8px}
+.tabs button{flex:none;padding:0 8px;height:24px;font-size:var(--fs);border-radius:6px;border:0;
+  background:transparent;color:var(--txt2);display:inline-flex;align-items:center;justify-content:center;
+  gap:5px;white-space:nowrap}
+.tabs button:hover{background:#26262b;color:var(--txt)}
+.tabs button.on{background:#383841;color:#fff;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.4)}
+.tabs button svg.ic{width:14px;height:14px;opacity:.8}
+.tabs button.on svg.ic{opacity:1}
+
+/* [kit-toolbar] bar above a canvas ---------------------------------------- */
+.toolbar{display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:center;
+  background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:5px 7px}
+.toolbar button{padding:5px 10px;font-size:var(--fs)}
+/* active = raised grey with a light border and white text; white fill is only for the main action */
+.toolbar button.on{background:var(--panel3);border-color:#74747e;color:#fff}
+.toolbar button:hover:not(:disabled):not(.on):not(.acc):not(.primary){background:#2c2c33;border-color:var(--line2)}
+.toolbar button.on:hover:not(:disabled){background:#30303a;border-color:#8a8a94}
+.toolbar .tsep{width:1px;height:18px;background:var(--line);margin:0 4px}
+.toolbar .tgrow{flex:1 1 0;min-width:0}
+/* two steps of saving room: labels of icon buttons go first, then dividers and margins */
+.toolbar.compact button.ib span{display:none}
+.toolbar.compact button.ib{padding-left:7px;padding-right:7px}
+.toolbar.tight{gap:2px;padding:4px}
+.toolbar.tight button{padding:5px 6px}
+.toolbar.tight .tsep{display:none}
+
+/* [kit-feedback] toast ----------------------------------------------------- */
+.kit-toast{position:fixed;left:14px;bottom:20px;width:max-content;max-width:min(640px,calc(100vw - 32px));
+  display:flex;align-items:center;gap:12px;background:var(--panel3);border:1px solid #4a4a52;padding:10px 16px;
+  border-radius:8px;font-size:var(--fs);line-height:1.45;color:var(--txt);opacity:0;transition:opacity .25s;
+  pointer-events:none;z-index:100;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.kit-toast.on{opacity:1}
+.kit-toast .kit-toast-msg{min-width:0;overflow-wrap:anywhere}
+.kit-toast button{pointer-events:auto;flex:none;padding:3px 11px;font-size:var(--fs-s);font-weight:600;
+  background:#e6e6e8;border-color:#e6e6e8;color:#101012}
+.kit-toast button:hover{background:#fff}
+.kit-toast:not(.on) button{pointer-events:none}
+.kit-toast.toast-err{border-color:var(--err);background:color-mix(in srgb,var(--err) 9%,var(--panel3))}
+.kit-toast.toast-warn{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 8%,var(--panel3))}
+
+/* [kit-keys] shortcuts popover -------------------------------------------- */
+.kit-keys{position:fixed;top:calc(var(--hdr-h) + 8px);right:14px;z-index:60;width:min(740px,calc(100vw - 28px));
+  max-height:calc(100vh - var(--hdr-h) - 24px);overflow:auto;padding:14px 18px 16px;
+  background:var(--panel2);border:1px solid #4a4a52;border-radius:10px;box-shadow:0 14px 40px rgba(0,0,0,.6)}
+.kit-keys h4{margin:12px 0 6px;font-size:var(--fs-xs);font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--dim)}
+.kit-keys h4:first-child,.kit-keys .khead+h4{margin-top:0}
+.kit-keys .kgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px 28px}
+/* keys in a fixed column, descriptions aligned */
+.kit-keys .kgrid>div{display:grid;grid-template-columns:124px minmax(0,1fr);align-items:baseline;gap:10px;
+  font-size:var(--fs);color:var(--txt2)}
+.kit-keys .kgrid>div span{min-width:0}
+.kit-keys .khead{display:flex;align-items:center;gap:10px;margin:-2px 0 12px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.kit-keys .khead b{flex:1;font-size:var(--fs-l);font-weight:600;color:var(--txt)}
+.kit-keys .khead span{font-size:var(--fs-s);color:var(--dim)}
+.kit-keys .kx{padding:3px 5px;line-height:0}
+.kit-keys .kgrid b{justify-self:start;max-width:100%;white-space:nowrap;font:600 var(--fs-s) var(--mono);
+  color:var(--txt);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 6px}
+@media(max-width:700px){ .kit-keys .kgrid{grid-template-columns:1fr} }
+
+/* [kit-dialog] ------------------------------------------------------------- */
+.kit-dlg-scrim{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;
+  padding:24px;background:rgba(6,6,8,.64)}
+.kit-dlg{width:min(540px,100%);max-height:calc(100vh - 48px);display:flex;flex-direction:column;
+  background:var(--panel2);border:1px solid #4a4a52;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.65)}
+.kit-dlg h3{margin:0;padding:18px 22px 0;font-size:15px;font-weight:600}
+.kit-dlg-body{padding:12px 22px 4px;overflow:auto;color:var(--txt2);font-size:var(--fs-l);line-height:1.5}
+.kit-dlg-body:empty{display:none}
+.kit-dlg-btns{display:flex;justify-content:flex-end;gap:8px;padding:14px 22px 18px}
+.kit-dlg-btns button{padding:7px 16px;font-size:var(--fs-l)}
+.kit-dlg-btns button:focus-visible{outline:2px solid #9a9aa2;outline-offset:2px}
+.kit-dlg .kit-prompt{width:100%;height:30px;margin-top:6px;font-size:var(--fs-l)}
+.kit-dlg .kit-prompt-err{min-height:18px;margin-top:6px;color:var(--err);font-size:var(--fs)}
+.kit-dlg .kit-prompt-err:empty{min-height:0;margin:0}
+
+/* [kit-drop] veil while files are dragged over the window ------------------ */
+.kit-drop{position:absolute;inset:8px;display:none;align-items:center;justify-content:center;border-radius:12px;
+  background:rgba(10,10,12,.72);border:2px dashed #9a9aa4;pointer-events:none;z-index:95}
+.kit-drop.fixed{position:fixed}
+.kit-drop.on{display:flex}
+.kit-drop.no{border-color:#5a5a62}
+.kit-drop span{font-size:var(--fs-l);letter-spacing:.06em;color:#e8e8ec;text-align:center;padding:10px 16px;
+  border-radius:6px;background:rgba(0,0,0,.55)}
+
+@media(prefers-reduced-motion:reduce){ .kit-toast,button,.sec>.hd{transition:none} }

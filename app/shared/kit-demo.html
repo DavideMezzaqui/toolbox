@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DAVFX Kit</title>
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="kit.css">
+<style>
+  /* only the page furniture of this demo; every component comes from kit.css */
+  html,body{height:100%}
+  body.kit{display:flex;flex-direction:column;overflow:hidden}
+  main{display:flex;flex:1;min-height:0}
+  #stage{flex:1;min-width:0;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px;position:relative}
+  aside.kit-panel{flex:none;width:clamp(342px,19vw,460px);overflow-y:auto;background:var(--panel);
+    border-left:1px solid var(--line);padding:10px}
+  @media(min-width:2200px){ aside.kit-panel{width:clamp(420px,20vw,540px)} }
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:12px;align-items:start}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:12px 14px 14px;min-width:0}
+  .card h2{margin:0 0 10px;font-size:var(--fs-xs);font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+  .card .line{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}
+  .card .line:last-child{margin-bottom:0}
+  .card p{margin:0 0 8px;color:var(--txt2);font-size:var(--fs)}
+  #dropbox{height:96px;border:1px dashed var(--line2);border-radius:10px;background:var(--bg);display:flex;
+    flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--dim);font-size:var(--fs);text-align:center;padding:8px}
+  #dropbox b{color:var(--txt);font-weight:600;font-size:var(--fs-l)}
+  #dropped{color:var(--txt2);font-size:var(--fs-s);margin-top:8px;min-height:16px;overflow-wrap:anywhere}
+  .scale div{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+  .scale code{flex:none;width:92px;color:var(--dim);font:var(--fs-s) var(--mono)}
+  .turret{font-family:'Turret Road',sans-serif;font-weight:700;font-size:22px;letter-spacing:.04em}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px}
+  .tile{display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 4px 8px;border:1px solid var(--line);
+    border-radius:7px;background:var(--bg);color:var(--txt2);min-width:0}
+  .tile svg.ic{width:16px;height:16px;opacity:1;color:var(--txt)}
+  .tile span{font-size:var(--fs-xs);color:var(--dim);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tile.media svg.ic{color:#fff}
+  #status{flex:none;font-size:var(--fs-s);color:var(--dim);min-height:18px}
+  #status b{color:var(--txt2);font-weight:500}
+  #drawbox{display:flex;gap:10px;align-items:center}
+  .swrap{display:flex;align-items:center;gap:8px}
+  .swrap>span{font-size:var(--fs-s);color:var(--dim)}
+  .out{font:var(--fs-s)/1.5 var(--mono);color:var(--txt2);background:var(--bg);border:1px solid var(--line);border-radius:6px;
+    padding:6px 9px;margin-top:8px;white-space:pre-wrap;overflow-wrap:anywhere;min-height:30px}
+</style>
+</head>
+<body class="kit">
+<header class="kit-head">
+  <button class="ibtn" id="hIcon" title="DAVFX Kit" data-ic="sparkle" style="pointer-events:none"></button>
+  <h1>DAVFX Kit</h1>
+  <span class="projinfo" style="color:var(--dim);font-size:var(--fs-s)">shared components, dark</span>
+  <div class="grow"></div>
+  <button id="bSave" data-ic="save" title="Download a small text file with Kit.save">Save sample</button>
+  <button id="bUndo" data-ic="undo">Undo</button>
+  <button class="acc" id="bExport" data-ic="down">Export</button>
+  <div class="sep"></div>
+  <button id="bKeys" data-ic="key" title="Keyboard shortcuts (?)">Shortcuts</button>
+</header>
+<main>
+  <section id="stage">
+    <div class="cards">
+
+      <div class="card" id="cBtn">
+        <h2>Buttons</h2>
+        <div class="line">
+          <button>Default</button>
+          <button class="acc">Primary</button>
+          <button class="danger">Danger</button>
+          <button disabled>Disabled</button>
+          <button class="on" style="background:var(--panel3);border-color:#74747e;color:#fff">Active</button>
+        </div>
+        <div class="line">
+          <button data-ic="open">Open</button>
+          <button data-ic="send">Send to</button>
+          <button class="acc" data-ic="down">Export all</button>
+          <button class="ibtn" data-ic="play" title="Play"></button>
+          <button class="ibtn on" data-ic="pause" title="Pause"></button>
+          <button class="ibtn" data-ic="trash" title="Delete"></button>
+        </div>
+        <div class="line">
+          <label style="display:flex;align-items:center;gap:7px;font-size:var(--fs)"><input type="checkbox"> Off</label>
+          <label style="display:flex;align-items:center;gap:7px;font-size:var(--fs)"><input type="checkbox" checked> On</label>
+          <input type="text" placeholder="Text field" style="width:140px">
+          <select style="width:120px"><option>Select</option><option>Second</option></select>
+          <input type="range" min="0" max="100" value="40" style="width:110px">
+        </div>
+      </div>
+
+      <div class="card" id="cBar">
+        <h2>Toolbar, tabs, segmented</h2>
+        <div class="toolbar" id="demoBar" style="margin-bottom:10px">
+          <button class="ib" data-ic="tostart" title="To start"><span>Start</span></button>
+          <button class="ib" data-ic="stepback" title="Step back"><span>Back</span></button>
+          <button class="ib on" id="tbPlay" data-ic="play"><span>Play</span></button>
+          <button class="ib" data-ic="stepfwd" title="Step forward"><span>Next</span></button>
+          <button class="ib" data-ic="toend" title="To end"><span>End</span></button>
+          <div class="tsep"></div>
+          <button class="ib" data-ic="loop"><span>Loop</span></button>
+          <button class="ib" data-ic="sound"><span>Sound</span></button>
+          <div class="tgrow"></div>
+          <button class="ib" data-ic="reset"><span>Reset</span></button>
+        </div>
+        <div class="line" id="tabsHost"></div>
+        <div class="line">
+          <div class="seg" id="seg1"><button class="on">4K</button><button>1080p</button><button>720p</button></div>
+          <div class="swrap"><div class="seg" id="seg2"><button class="on" data-ic="grid4">Grid</button><button data-ic="film">Film</button></div></div>
+        </div>
+      </div>
+
+      <div class="card" id="cFeed">
+        <h2>Toast</h2>
+        <div class="line">
+          <button id="tInfo">Info</button>
+          <button id="tErr">Error</button>
+          <button id="tWarn">Warning</button>
+          <button id="tAct">With action</button>
+          <button id="tUndo">With undo</button>
+          <button id="tLong">Long text</button>
+        </div>
+        <h2 style="margin-top:14px">Dialog</h2>
+        <div class="line">
+          <button id="dDlg">Dialog</button>
+          <button id="dConf">Confirm</button>
+          <button id="dDanger">Confirm, danger</button>
+          <button id="dPrompt">Prompt</button>
+        </div>
+        <div class="out" id="dOut">Results show here.</div>
+      </div>
+
+      <div class="card" id="cDrop">
+        <h2>Drop files</h2>
+        <div id="dropbox"><b>Drop images or videos anywhere on the window</b><span>PNG, JPG, MP4, WebM. The veil covers this box.</span></div>
+        <div id="dropped"></div>
+      </div>
+
+      <div class="card" id="cType">
+        <h2>Type scale</h2>
+        <div class="scale">
+          <div><code>--fs-l 13</code><span style="font-size:var(--fs-l)">Large: dialog text, header title</span></div>
+          <div><code>--fs 12</code><span style="font-size:var(--fs)">Regular: buttons, rows, fields</span></div>
+          <div><code>--fs-s 11</code><span style="font-size:var(--fs-s)">Small: hints, values, status line</span></div>
+          <div><code>--fs-xs 10</code><span style="font-size:var(--fs-xs);letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--dim)">Extra small: group titles</span></div>
+          <div><code>Turret Road</code><span class="turret">DAVFX STUDIO 1234</span></div>
+          <div><code>--mono</code><span style="font:var(--fs-s) var(--mono)">00:01:12.480  1920x1080  #E6E6E8</span></div>
+        </div>
+      </div>
+
+      <div class="card" id="cMisc">
+        <h2>Hint, group, swatches</h2>
+        <div class="grp2"><span>Group title</span></div>
+        <div class="hint">A hint under a group, small and dim.</div>
+        <div class="row"><label>Swatches</label><div class="swatches" id="sws"></div></div>
+        <div class="btnrow"><button>One</button><button>Two</button><button class="acc">Three</button></div>
+      </div>
+
+    </div>
+
+    <div class="card" id="cIcons">
+      <h2>Icons <span id="iconCount" style="letter-spacing:0;text-transform:none;font-weight:400"></span></h2>
+      <div class="tiles" id="tiles"></div>
+    </div>
+    <div id="status"></div>
+  </section>
+
+  <aside class="kit-panel" id="panel"></aside>
+</main>
+
+<script src="kit.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var demo = window.demo = { values: {}, log: [], dropped: [] };
+
+  Kit.paintIcons(document);
+  Kit.config({ stage: $('stage'), avoid: ['#status'] });
+  $('iconCount').textContent = '(' + Object.keys(Kit.icons).length + ')';
+
+  /* icons: media ones first, then the Store set */
+  var MEDIA = 'play pause stop record stepback stepfwd tostart toend loop sound mute scissors crop rotate flip film join compare grid4 sheet flipbook annotate rename texture sparkle send tray folderopen image video'.split(' ');
+  var names = MEDIA.concat(Object.keys(Kit.icons).filter(function (k) { return MEDIA.indexOf(k) < 0; }));
+  names.forEach(function (n) {
+    var t = document.createElement('div');
+    t.className = 'tile' + (MEDIA.indexOf(n) >= 0 ? ' media' : '');
+    t.setAttribute('data-icon', n);
+    t.appendChild(Kit.icon(n));
+    var s = document.createElement('span'); s.textContent = n; t.appendChild(s);
+    $('tiles').appendChild(t);
+  });
+
+  /* tabs and segmented controls */
+  var tabs = Kit.tabs({ items: [
+    { id: 'design', label: 'Design', icon: 'sliders' }, { id: 'image', label: 'Image', icon: 'image' },
+    { id: 'pack', label: 'Pack & export', icon: 'down' }], value: 'design',
+    onChange: function (id) { status('Tab: <b>' + id + '</b>'); } });
+  $('tabsHost').appendChild(tabs);
+  [$('seg1'), $('seg2')].forEach(function (seg) {
+    seg.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      [].forEach.call(seg.children, function (x) { x.classList.toggle('on', x === b); });
+    });
+  });
+  var tbPlay = $('tbPlay');
+  tbPlay.onclick = function () {
+    var playing = tbPlay.classList.toggle('on');
+    tbPlay.querySelector('svg').replaceWith(Kit.icon(playing ? 'play' : 'pause'));
+    tbPlay.querySelector('span').textContent = playing ? 'Play' : 'Pause';
+  };
+
+  function status(html) { $('status').innerHTML = html; }
+  function out(t) { $('dOut').textContent = t; demo.log.push(t); }
+
+  /* swatches */
+  ['#e6e6e8', '#8a8a90', '#d9a441', '#d96a5a', '#6fbf8a', '#7fa6d8'].forEach(function (c, i) {
+    var b = document.createElement('button');
+    b.className = 'sw' + (i === 0 ? ' on' : ''); b.style.background = c; b.title = c;
+    b.onclick = function () { [].forEach.call($('sws').children, function (x) { x.classList.toggle('on', x === b); }); };
+    $('sws').appendChild(b);
+  });
+
+  /* toasts */
+  $('tInfo').onclick = function () { Kit.toast('Saved to the library'); };
+  $('tErr').onclick = function () { Kit.toast('Could not read this file: it has no video track'); };
+  $('tWarn').onclick = function () { Kit.toast('Frame rate rounded to 30 fps', { kind: 'warn' }); };
+  $('tAct').onclick = function () { Kit.toast('3 files added', { action: { label: 'Show', fn: function () { out('Toast action clicked'); } } }); };
+  $('tUndo').onclick = function () { Kit.toast('Clip deleted', { undo: function () { out('Undo clicked'); } }); };
+  $('tLong').onclick = function () { Kit.toast('The sheet has 48 frames of 1920x1080, so the export is 9600 pixels wide. Browsers refuse canvases past 16384 pixels, so the last row will be shrunk to fit.', { kind: 'warn' }); };
+
+  /* dialogs */
+  $('dDlg').onclick = function () {
+    Kit.dialog({ title: 'Replace the file?', text: 'A file with this name already exists in the folder.\nIt will be overwritten.',
+      buttons: [{ id: 'skip', label: 'Skip' }, { id: 'both', label: 'Keep both' }, { id: 'rep', label: 'Replace', primary: true }] })
+      .then(function (id) { out('dialog -> ' + id); });
+  };
+  $('dConf').onclick = function () { Kit.confirm('Start a new sequence? The current one stays in the history.', { ok: 'Start new', title: 'New sequence' }).then(function (v) { out('confirm -> ' + v); }); };
+  $('dDanger').onclick = function () { Kit.confirm('Delete all 12 clips from the tray? This cannot be undone.', { ok: 'Delete all', danger: true, title: 'Empty the tray' }).then(function (v) { out('confirm danger -> ' + v); }); };
+  $('dPrompt').onclick = function () {
+    Kit.prompt('Rename the sheet', { value: 'contact-sheet', placeholder: 'File name',
+      validate: function (v) { return v.trim() ? '' : 'Type a name'; } }).then(function (v) { out('prompt -> ' + JSON.stringify(v)); });
+  };
+
+  /* header */
+  var SHORT = [
+    ['Playback', [['Space', 'Play or pause'], ['Left / Right', 'Step one frame'], ['Home / End', 'To start / to end'], ['L', 'Loop on or off']]],
+    ['Edit', [['Ctrl+Z', 'Undo'], ['Ctrl+Shift+Z', 'Redo'], ['Alt+click', 'A control back to its default'], ['Delete', 'Remove the selection']]],
+    ['File', [['Ctrl+O', 'Open files'], ['Ctrl+S', 'Save'], ['Ctrl+E', 'Export'], ['Drop', 'Add files to the tray']]],
+    ['View', [['?', 'Show or hide this list'], ['Esc', 'Close this list']]]
+  ];
+  $('bKeys').onclick = function () { Kit.keys(SHORT, { button: $('bKeys') }); };
+  document.addEventListener('keydown', function (e) {
+    if (e.key === '?' && !/INPUT|TEXTAREA|SELECT/.test((e.target || {}).tagName || '')) { e.preventDefault(); Kit.keys(SHORT, { button: $('bKeys') }); }
+  });
+  $('bSave').onclick = function () { var n = Kit.save('DAVFX Kit sample\n', 'kit-sample.txt'); Kit.toast('Saved ' + n); };
+  $('bUndo').onclick = function () { Kit.toast('Nothing to undo'); };
+  $('bExport').onclick = function () { Kit.toast('Exported 3 files', { undo: function () { out('export undone'); } }); };
+
+  /* drop */
+  var d = Kit.drop($('dropbox'), {
+    accept: 'image/*,video/*,.json',
+    overlayText: function () { return 'Drop images, videos or a project file (.json)'; },
+    onFiles: function (files) {
+      files.forEach(function (f) { demo.dropped.push(f.name); });
+      $('dropped').textContent = 'Added: ' + files.map(function (f) { return f.name; }).join(', ');
+      Kit.toast(files.length + (files.length === 1 ? ' file' : ' files') + ' added');
+    }
+  });
+  demo.dropHandle = d;
+
+  /* rows: values live in demo.values, set() writes them, get() reads them */
+  var V = demo.values = {
+    zoom: 1, speed: 24, fps: 30, loop: true, bg: '#202024', fit: 'Contain', title: 'Dust impact',
+    notes: 'Two lines of text,\nin a text area.', mode: 'grid', crop: 4, show: true, tint: '#8a8a90'
+  };
+  function rowSpec(key, extra) {
+    var s = { get: function () { return V[key]; }, set: function (v) { V[key] = v; demo.last = key + '=' + v; }, id: 'k_' + key };
+    for (var k in extra) s[k] = extra[k];
+    return s;
+  }
+  var panel = $('panel');
+  var sec1 = Kit.section({ title: 'Output', icon: 'film', open: true, count: 9, rows: [
+    { type: 'group', label: 'Timing' },
+    rowSpec('zoom',  { type: 'range', label: 'Zoom', min: 0.2, max: 4, step: 0.01, def: 1, tip: 'Alt+click puts 1.00 back' }),
+    rowSpec('speed', { type: 'range', label: 'Speed', min: 1, max: 60, step: 1, def: 24 }),
+    rowSpec('fps',   { type: 'number', label: 'Frame rate', min: 1, max: 240, step: 1 }),
+    rowSpec('loop',  { type: 'check', label: 'Loop', text: 'Repeat at the end' }),
+    { type: 'group', label: 'Look' },
+    rowSpec('bg',    { type: 'color', label: 'Background' }),
+    rowSpec('fit',   { type: 'select', label: 'Fit', options: ['Contain', 'Cover', 'Stretch'] }),
+    rowSpec('mode',  { type: 'seg', label: 'Layout', options: [{ value: 'grid', label: 'Grid' }, { value: 'strip', label: 'Strip' }, { value: 'sheet', label: 'Sheet' }] }),
+    { type: 'note', text: 'Notes under a group look like this: small, dim, wrapped to the panel width.' }
+  ] });
+  var sec2 = Kit.section({ title: 'Text', icon: 'type', open: true, rows: [
+    rowSpec('title', { type: 'text', label: 'Title', placeholder: 'Type a title' }),
+    rowSpec('notes', { type: 'area', label: 'Notes' }),
+    { type: 'button', text: 'Rename all...', icon: 'rename', click: function () {
+        Kit.prompt('Rename all', { value: V.title }).then(function (v) { if (v !== null) { V.title = v; sec2.body.firstChild.sync(); } }); } },
+    { type: 'button', buttons: [
+        { text: 'Crop', icon: 'crop', click: function () { Kit.toast('Crop'); } },
+        { text: 'Rotate', icon: 'rotate', click: function () { Kit.toast('Rotate'); } },
+        { text: 'Flip', icon: 'flip', click: function () { Kit.toast('Flip'); } } ] }
+  ] });
+  var sec3 = Kit.section({ title: 'Closed section', icon: 'sliders', count: 2, rows: [
+    rowSpec('crop', { type: 'range', label: 'Crop', min: 0, max: 20, step: 1 }),
+    rowSpec('show', { type: 'check', label: 'Visible' })
+  ] });
+  var sec4 = Kit.section({ title: 'Disabled and conditional', icon: 'lock', open: true, rows: [
+    rowSpec('tint', { type: 'color', label: 'Tint', disabled: function () { return !V.show; } }),
+    rowSpec('crop', { type: 'range', label: 'Needs Visible', min: 0, max: 20, step: 1, when: function () { return V.show; }, id: 'k_crop2' })
+  ] });
+  panel.appendChild(sec1); panel.appendChild(sec2); panel.appendChild(sec3); panel.appendChild(sec4);
+  demo.sections = [sec1, sec2, sec3, sec4];
+
+  /* persistence: controls with an id keep their value across reloads */
+  demo.persist = Kit.persist('kit.demo.controls');
+  demo.watch = demo.persist.watchControls(document, Kit.persist.NOT_KEPT);
+
+  status('Press <b>?</b> for the shortcuts list. Drop a file anywhere on the window.');
+  demo.ready = true;
+})();
+</script>
+</body>
+</html>

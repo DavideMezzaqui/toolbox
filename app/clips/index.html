@@ -205,6 +205,16 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)!imp
  * the preview can draw at screen size and the export at full size.
  */
 
+/* Reading, decoding and encoding video is shared with the other tools:
+   app/shared/lib/video-io.js. It is an ES module and this page is a classic
+   script (its top-level names must stay reachable), so it is imported
+   dynamically and its functions bound to these names. Everything that uses
+   them waits for vioReady first. */
+let loadVideoElement, seekTo, mp4Index, FrameReader, Encoder, pickVideoCodec, decodeAudioFile, mixTracks;
+const vioReady = import('../shared/lib/video-io.js').then(m => {
+  ({ loadVideoElement, seekTo, mp4Index, FrameReader, Encoder, pickVideoCodec, decodeAudioFile, mixTracks } = m);
+}).catch(e => { console.error(e); });
+
 const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -316,39 +326,7 @@ function updateUndo() { $('bUndo').disabled = !past.length; $('bRedo').disabled 
 /* ================================================================ media */
 const pool = $('pool');
 
-function loadVideo(url) {
-  return new Promise((res, rej) => {
-    const v = document.createElement('video');
-    v.muted = true; v.playsInline = true; v.preload = 'auto'; v.crossOrigin = 'anonymous';
-    v.onloadedmetadata = async () => {
-      /* Screen recorders often write WebM without a duration. Asking for a
-         time far past the end makes the browser scan to the real one. */
-      if (!isFinite(v.duration)) {
-        await new Promise(r => {
-          const g = setTimeout(r, 8000);
-          v.ondurationchange = () => { if (isFinite(v.duration)) { clearTimeout(g); r(); } };
-          v.currentTime = 1e101;
-        });
-        v.ondurationchange = null;
-        await seekTo(v, 0);
-      }
-      res(v);
-    };
-    v.onerror = () => rej(new Error('cannot read this file'));
-    v.src = url;
-    pool.appendChild(v);
-  });
-}
-function seekTo(v, t) {
-  return new Promise(res => {
-    if (v.readyState >= 2 && Math.abs(v.currentTime - t) < 0.0005 && !v.seeking) { res(); return; }
-    let done = false;
-    const fin = () => { if (done) return; done = true; clearTimeout(g); v.removeEventListener('seeked', fin); res(); };
-    const g = setTimeout(fin, 4000);
-    v.addEventListener('seeked', fin);
-    v.currentTime = t;
-  });
-}
+function loadVideo(url) { return loadVideoElement(url, pool); }
 async function thumbOf(v, t) {
   await seekTo(v, t);
   const c = document.createElement('canvas'); c.width = 128; c.height = 72;
@@ -362,6 +340,7 @@ async function thumbOf(v, t) {
 
 async function addFiles(list) {
   if (exporting) return;
+  await vioReady;
   const files = [...list].filter(f => /^video\//.test(f.type) || /\.(mp4|m4v|mov|webm|mkv)$/i.test(f.name))
                          .sort((a, b) => natural.compare(a.name, b.name));
   if (!files.length) { toast('No video files in that drop.', true); return; }
@@ -406,6 +385,7 @@ async function addFiles(list) {
 async function duplicateClip(id) {
   const i = clips.findIndex(c => c.id === id); if (i < 0) return;
   const src = media.get(id);
+  await vioReady;
   const v = await loadVideo(src.url);
   const c = clone(clips[i]); c.id = uid();
   c.texts.forEach(t => t.id = uid());
@@ -421,197 +401,7 @@ function removeClip(id) {
   commit(); rebuildAll();
 }
 
-/* ================================================================ MP4 reading
- *
- * Export reads each clip once, front to back, through the hardware decoder.
- * Seeking a <video> to every frame instead is only fast when keyframes are
- * close together: Davide's showcase clips have one every 250 frames, so each
- * seek re-decoded up to 250 frames - 18 s to export 3 s of Javelin.
- *
- * This is a plain MP4/MOV reader for H.264 with its index in the moov box
- * (not fragmented files). Anything it cannot read falls back to seeking.
- */
-function* boxes(d, s, e) {
-  let o = s;
-  while (o + 8 <= e) {
-    let size = d.getUint32(o), h = 8;
-    const type = String.fromCharCode(d.getUint8(o + 4), d.getUint8(o + 5), d.getUint8(o + 6), d.getUint8(o + 7));
-    if (size === 1) { size = Number(d.getBigUint64(o + 8)); h = 16; } else if (size === 0) size = e - o;
-    if (size < h || o + size > e) return;
-    yield { type, s: o + h, e: o + size };
-    o += size;
-  }
-}
-const child = (d, b, type) => { for (const x of boxes(d, b.s, b.e)) if (x.type === type) return x; return null; };
-const path_ = (d, b, ...types) => { for (const t of types) { b = b && child(d, b, t); } return b; };
-
-const indexCache = new WeakMap();
-function mp4Index(file) {
-  if (!indexCache.has(file)) indexCache.set(file, readIndex(file).catch(() => null));
-  return indexCache.get(file);
-}
-async function readIndex(file) {
-  /* the moov box can be at the start or at the end: walk the top level */
-  let off = 0, moov = null;
-  while (off + 8 <= file.size) {
-    const h = new DataView(await file.slice(off, off + 16).arrayBuffer());
-    let size = h.getUint32(0), hdr = 8;
-    const type = String.fromCharCode(h.getUint8(4), h.getUint8(5), h.getUint8(6), h.getUint8(7));
-    if (size === 1) { size = Number(h.getBigUint64(8)); hdr = 16; } else if (size === 0) size = file.size - off;
-    if (size < hdr) return null;
-    if (type === 'moov') { moov = new DataView(await file.slice(off, off + size).arrayBuffer()); moov.hdr = hdr; break; }
-    if (type === 'moof') return null;                     /* fragmented: not handled */
-    off += size;
-  }
-  if (!moov) return null;
-  const d = moov, root = { s: moov.hdr, e: d.byteLength };
-  for (const trak of boxes(d, root.s, root.e)) {
-    if (trak.type !== 'trak') continue;
-    const mdia = child(d, trak, 'mdia'), hdlr = mdia && child(d, mdia, 'hdlr');
-    if (!hdlr || String.fromCharCode(d.getUint8(hdlr.s + 8), d.getUint8(hdlr.s + 9), d.getUint8(hdlr.s + 10), d.getUint8(hdlr.s + 11)) !== 'vide') continue;
-    const mdhd = child(d, mdia, 'mdhd');
-    const ts = d.getUint8(mdhd.s) ? d.getUint32(mdhd.s + 20) : d.getUint32(mdhd.s + 12);
-    const stbl = path_(d, mdia, 'minf', 'stbl');
-    const stsd = child(d, stbl, 'stsd');
-    /* first sample entry: 8 byte header, then 78 bytes of VisualSampleEntry */
-    const entry = { s: stsd.s + 8 + 8, e: stsd.s + 8 + d.getUint32(stsd.s + 8) };
-    const fourcc = String.fromCharCode(d.getUint8(stsd.s + 12), d.getUint8(stsd.s + 13), d.getUint8(stsd.s + 14), d.getUint8(stsd.s + 15));
-    if (fourcc !== 'avc1' && fourcc !== 'avc3') return null;
-    const width = d.getUint16(entry.s + 24), height = d.getUint16(entry.s + 26);
-    const avcC = child(d, { s: entry.s + 78, e: entry.e }, 'avcC');
-    if (!avcC) return null;
-    const hex = n => n.toString(16).padStart(2, '0');
-    const codec = fourcc + '.' + hex(d.getUint8(avcC.s + 1)) + hex(d.getUint8(avcC.s + 2)) + hex(d.getUint8(avcC.s + 3));
-    const description = new Uint8Array(d.buffer, d.byteOffset + avcC.s, avcC.e - avcC.s).slice();
-
-    /* sample table */
-    const stsz = child(d, stbl, 'stsz'), n = d.getUint32(stsz.s + 8), fixed = d.getUint32(stsz.s + 4);
-    const size = new Uint32Array(n);
-    for (let i = 0; i < n; i++) size[i] = fixed || d.getUint32(stsz.s + 12 + i * 4);
-    const stco = child(d, stbl, 'stco'), co64 = child(d, stbl, 'co64');
-    const nChunks = d.getUint32((stco || co64).s + 4);
-    const chunkOff = i => stco ? d.getUint32(stco.s + 8 + i * 4) : Number(d.getBigUint64(co64.s + 8 + i * 8));
-    const stsc = child(d, stbl, 'stsc'), nStsc = d.getUint32(stsc.s + 4);
-    const offset = new Float64Array(n);
-    let si = 0;
-    for (let k = 0; k < nStsc; k++) {
-      const first = d.getUint32(stsc.s + 8 + k * 12) - 1, per = d.getUint32(stsc.s + 12 + k * 12);
-      const last = k + 1 < nStsc ? d.getUint32(stsc.s + 8 + (k + 1) * 12) - 1 : nChunks;
-      for (let ch = first; ch < last && si < n; ch++) {
-        let o = chunkOff(ch);
-        for (let j = 0; j < per && si < n; j++) { offset[si] = o; o += size[si]; si++; }
-      }
-    }
-    const stts = child(d, stbl, 'stts'), dts = new Float64Array(n);
-    let t = 0; si = 0;
-    for (let k = 0, m = d.getUint32(stts.s + 4); k < m; k++) {
-      const cnt = d.getUint32(stts.s + 8 + k * 8), dl = d.getUint32(stts.s + 12 + k * 8);
-      for (let j = 0; j < cnt && si < n; j++) { dts[si++] = t; t += dl; }
-    }
-    const pts = Float64Array.from(dts);
-    const ctts = child(d, stbl, 'ctts');
-    if (ctts) {
-      si = 0;
-      for (let k = 0, m = d.getUint32(ctts.s + 4); k < m; k++) {
-        const cnt = d.getUint32(ctts.s + 8 + k * 8), off2 = d.getInt32(ctts.s + 12 + k * 8);
-        for (let j = 0; j < cnt && si < n; j++) pts[si++] += off2;
-      }
-    }
-    /* the edit list shifts the timeline the way <video> shows it: with
-       B-frames the encoder starts presentation a couple of frames in */
-    let shift = 0;
-    const elst = path_(d, trak, 'edts', 'elst');
-    if (elst) {
-      const v = d.getUint8(elst.s), m = d.getUint32(elst.s + 4);
-      for (let k = 0; k < m; k++) {
-        const o = elst.s + 8 + k * (v ? 20 : 12);
-        const mt = v ? Number(d.getBigInt64(o + 8)) : d.getInt32(o + 4);
-        if (mt >= 0) { shift = mt; break; }
-      }
-    }
-    const key = new Uint8Array(n);
-    const stss = child(d, stbl, 'stss');
-    if (stss) for (let k = 0, m = d.getUint32(stss.s + 4); k < m; k++) key[d.getUint32(stss.s + 8 + k * 4) - 1] = 1;
-    else key.fill(1);
-    const sec = new Float64Array(n);
-    for (let i = 0; i < n; i++) sec[i] = (pts[i] - shift) / ts;
-    const cfg = { codec, codedWidth: width, codedHeight: height, description, optimizeForLatency: false };
-    let ok = false;
-    for (const hw of ['prefer-hardware', 'no-preference']) {
-      try { if ((await VideoDecoder.isConfigSupported(Object.assign({ hardwareAcceleration: hw }, cfg))).supported) { cfg.hardwareAcceleration = hw; ok = true; break; } } catch (e) {}
-    }
-    if (!ok) return null;
-    return { cfg, n, size, offset, key, sec, frameDur: n > 1 ? (dts[n - 1] - dts[0]) / (n - 1) / ts : 1 / 30 };
-  }
-  return null;
-}
-
-/* Hands out the frame on screen at a given time, for times that only move
-   forward. Frames come out of the decoder in display order; everything
-   older than the requested time is closed straight away. */
-class FrameReader {
-  constructor(file, idx) {
-    this.file = file; this.x = idx; this.q = []; this.cur = null; this.err = null;
-    this.block = null; this.blockAt = 0; this.flushed = false; this.wake = null;
-  }
-  open(t) {
-    const x = this.x;
-    /* start from the last keyframe that is on screen at or before t */
-    let k = 0;
-    for (let i = 0; i < x.n; i++) if (x.key[i] && x.sec[i] <= t + 1e-6) k = i;
-    this.next = k;
-    this.dec = new VideoDecoder({
-      output: f => { this.q.push(f); if (this.wake) { this.wake(); this.wake = null; } },
-      error: e => { this.err = e; if (this.wake) { this.wake(); this.wake = null; } }
-    });
-    this.dec.configure(x.cfg);
-  }
-  async bytes(off, len) {
-    const B = 8 << 20;
-    if (!this.block || off < this.blockAt || off + len > this.blockAt + this.block.byteLength) {
-      this.blockAt = off;
-      this.block = new Uint8Array(await this.file.slice(off, Math.min(this.file.size, off + Math.max(B, len))).arrayBuffer());
-    }
-    return this.block.subarray(off - this.blockAt, off - this.blockAt + len);
-  }
-  async feed(count) {
-    const x = this.x;
-    for (let j = 0; j < count && this.next < x.n; j++) {
-      const i = this.next++;
-      const data = await this.bytes(x.offset[i], x.size[i]);
-      this.dec.decode(new EncodedVideoChunk({ type: x.key[i] ? 'key' : 'delta',
-        timestamp: Math.round(x.sec[i] * 1e6), duration: Math.round(x.frameDur * 1e6), data }));
-    }
-  }
-  /* The hardware decoder only has a handful of frames to hand out. Never
-     wait on it while holding frames it could need back: awaiting flush()
-     here, with frames piling up unread, stopped the export dead at the end
-     of Thinner Columns. So flush is fired and forgotten, and the loop keeps
-     reading (and closing) what comes out. */
-  async frameAt(t) {
-    const tu = t * 1e6 + 500;
-    let idle = performance.now();
-    for (;;) {
-      if (this.err) throw this.err;
-      if (cancelExport) throw new Error('cancelled');
-      const before = this.q.length;
-      /* keep only the newest frame that is already due */
-      while (this.q.length && this.q[0].timestamp <= tu) { if (this.cur) this.cur.close(); this.cur = this.q.shift(); }
-      if (this.q.length || this.flushed) return this.cur || this.q[0] || null;
-      if (this.next >= this.x.n) {
-        if (!this.flushing) { this.flushing = true; this.dec.flush().then(() => { this.flushed = true; if (this.wake) this.wake(); }, e => { this.err = e; }); }
-      } else if (this.dec.decodeQueueSize < 8) await this.feed(4);
-      await new Promise(r => { this.wake = r; setTimeout(r, 10); });
-      if (this.q.length !== before) idle = performance.now();
-      else if (performance.now() - idle > 15000) throw new Error('the video decoder stopped responding');
-    }
-  }
-  close() {
-    for (const f of this.q) f.close(); this.q = [];
-    if (this.cur) this.cur.close(); this.cur = null;
-    try { if (this.dec && this.dec.state !== 'closed') this.dec.close(); } catch (e) {}
-  }
-}
+/* The MP4 index reader, FrameReader, seeking and the encoder live in ../shared/lib/video-io.js. */
 
 /* ================================================================ timeline */
 const transOf = c => ({ type: c.trans || seq.trans, dur: c.transDur != null ? c.transDur : seq.crossDur });
@@ -1440,29 +1230,19 @@ let wheelTimer = 0;
 /* ================================================================ export */
 async function exportMP4() {
   if (!clips.length || exporting) return;
+  await vioReady;
   if (typeof VideoEncoder === 'undefined') { toast('This build has no video encoder.', true); return; }
   pause();
   const W = seq.w & ~1, H = seq.h & ~1, fps = seq.fps;
   const N = Math.max(1, Math.round(total * fps));
   exporting = true; cancelExport = false;
   busy(true, 'Preparing…', 0);
-  let encoder = null, aenc = null, readers = null, usedDecoder = 0, usedSeek = 0;
+  let encoder = null, readers = null, usedDecoder = 0, usedSeek = 0;
   try {
-    const mod = await import('./lib/mp4-muxer.mjs');
     const bitrate = Math.round(seq.mbps * 1e6);
 
     /* pick a codec this machine can actually encode at this size */
-    const big = W * H > 2048 * 1088;
-    const tries = (big ? ['avc1.640034', 'avc1.640033', 'avc1.4d0034'] : ['avc1.640028', 'avc1.4d0028', 'avc1.640032', 'avc1.42001f'])
-      .flatMap(c => [[c, 'prefer-hardware', 'avc'], [c, 'prefer-software', 'avc']])
-      .concat([['vp09.00.41.08', 'prefer-software', 'vp9'], ['vp09.00.51.08', 'prefer-software', 'vp9']]);
-    let vc = null;
-    for (const [codec, hw, mux] of tries) {
-      try {
-        const r = await VideoEncoder.isConfigSupported({ codec, width: W, height: H, bitrate, framerate: fps, hardwareAcceleration: hw });
-        if (r.supported) { vc = { codec, hw, mux }; break; }
-      } catch (e) {}
-    }
+    const vc = await pickVideoCodec(W, H, { bitrate, fps });
     if (!vc) throw new Error('no encoder for ' + W + '×' + H + ' on this machine');
 
     /* sound: decode each clip once, mix offline with the same fades */
@@ -1471,36 +1251,16 @@ async function exportMP4() {
       busy(true, 'Reading audio…', 0);
       audio = await mixAudio();
     }
-    let ac = null;
-    if (audio) {
-      for (const [codec, mux] of [['mp4a.40.2', 'aac'], ['opus', 'opus']]) {
-        try {
-          const r = await AudioEncoder.isConfigSupported({ codec, sampleRate: 48000, numberOfChannels: 2, bitrate: 192000 });
-          if (r.supported) { ac = { codec, mux }; break; }
-        } catch (e) {}
-      }
-    }
 
-    const target = new mod.ArrayBufferTarget();
-    const muxer = new mod.Muxer({
-      target, fastStart: 'in-memory', firstTimestampBehavior: 'offset',
-      video: { codec: vc.mux, width: W, height: H, frameRate: fps },
-      audio: ac ? { codec: ac.mux, numberOfChannels: 2, sampleRate: 48000 } : undefined
-    });
-    let encErr = null;
-    encoder = new VideoEncoder({ output: (ch, meta) => muxer.addVideoChunk(ch, meta), error: e => encErr = e });
-    encoder.configure({ codec: vc.codec, width: W, height: H, bitrate, framerate: fps, hardwareAcceleration: vc.hw,
-                        latencyMode: 'quality', bitrateMode: 'variable' });
+    encoder = await Encoder.create({ width: W, height: H, fps, bitrate, audio: !!audio, vc });
+    const ac = encoder.hasAudio;
 
     const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
     const g = cv.getContext('2d', { alpha: false });
-    const us = 1e6 / fps;
     let n = 0;
     const emit = (t, frames) => {
       renderAt(g, W, H, t, null, frames);
-      const f = new VideoFrame(cv, { timestamp: Math.round(n * us), duration: Math.round(us) });
-      encoder.encode(f, { keyFrame: n % (fps * 2) === 0 });
-      f.close(); n++;
+      encoder.encode(cv); n++;
       if (n % 3 === 0) {
         vctx.setTransform(1, 0, 0, 1, 0, 0); vctx.drawImage(cv, 0, 0, pw, ph);
         busy(true, 'Frame ' + n + ' / ' + N + (ac ? '  ·  with sound' : ''), n / N);
@@ -1514,7 +1274,7 @@ async function exportMP4() {
       const frames = new Map();
       for (let i = 0; i < N; i++) {
         if (cancelExport) throw new Error('cancelled');
-        if (encErr) throw encErr;
+        encoder.check();
         const t = i / fps, act = activeAt(t);
         for (const [id, r] of readers) if (r && !act.some(it => it.c.id === id)) { r.close(); readers.set(id, null); }
         frames.clear();
@@ -1523,7 +1283,7 @@ async function exportMP4() {
           if (!readers.has(it.c.id)) {
             const idx = await mp4Index(m.file);
             let r = null;
-            if (idx) { r = new FrameReader(m.file, idx); r.open(st); }
+            if (idx) { r = new FrameReader(m.file, idx, { cancelled: () => cancelExport }); r.open(st); }
             readers.set(it.c.id, r);
             if (r) usedDecoder++; else usedSeek++;
           }
@@ -1532,31 +1292,18 @@ async function exportMP4() {
           else await seekTo(m.video, st);
         }));
         emit(t, frames);
-        while (encoder.encodeQueueSize > 8) await new Promise(r => setTimeout(r, 4));
+        await encoder.drain();
       }
     }
-    await encoder.flush();
+    await encoder.flushVideo();
 
     if (ac) {
       busy(true, 'Encoding sound…', 1);
-      aenc = new AudioEncoder({ output: (ch, meta) => muxer.addAudioChunk(ch, meta), error: e => encErr = e });
-      aenc.configure({ codec: ac.codec, sampleRate: 48000, numberOfChannels: 2, bitrate: 192000 });
-      const L = audio.getChannelData(0), R = audio.numberOfChannels > 1 ? audio.getChannelData(1) : L;
-      const frames = Math.min(audio.length, Math.round(N / fps * 48000));
-      for (let off = 0; off < frames; off += 1024) {
-        const k = Math.min(1024, frames - off), data = new Float32Array(k * 2);
-        data.set(L.subarray(off, off + k), 0); data.set(R.subarray(off, off + k), k);
-        const ad = new AudioData({ format: 'f32-planar', sampleRate: 48000, numberOfFrames: k, numberOfChannels: 2,
-                                   timestamp: Math.round(off / 48000 * 1e6), data });
-        aenc.encode(ad); ad.close();
-      }
-      await aenc.flush();
+      await encoder.addAudio(audio, N / fps);
     }
-    if (encErr) throw encErr;
-    muxer.finalize();
+    const { blob } = encoder.finalize();
 
-    const blob = new Blob([target.buffer], { type: 'video/mp4' });
-    const name = (seq.name || (clips.length === 1 ? clips[0].name : 'reel')).replace(/[\\/:*?"<>|]+/g, '_') + '.mp4';
+    const name = (seq.name || (clips.length === 1 ? clips[0].name : 'reel')).replace(/[\/:*?"<>|]+/g, '_') + '.mp4';
     const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: name });
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 60000);
@@ -1565,8 +1312,7 @@ async function exportMP4() {
     if (e.message !== 'cancelled') { console.error(e); toast('Export failed: ' + e.message, true); }
     else toast('Export cancelled.');
   } finally {
-    try { if (encoder && encoder.state !== 'closed') encoder.close(); } catch (e) {}
-    try { if (aenc && aenc.state !== 'closed') aenc.close(); } catch (e) {}
+    if (encoder) encoder.close();
     if (readers) for (const r of readers.values()) if (r) r.close();
     window.__decodeStats = { usedDecoder, usedSeek };
     pauseAll();
@@ -1582,18 +1328,16 @@ async function mixAudio() {
   for (const it of items) {
     const m = media.get(it.c.id);
     if (m.audio === undefined) {
-      try { m.audio = await dec.decodeAudioData(await m.file.arrayBuffer()); } catch (e) { m.audio = null; }
+      m.audio = await decodeAudioFile(m.file, dec);
       for (const o of media.values()) if (o.file === m.file && o.audio === undefined) o.audio = m.audio;
     }
     if (m.audio && !it.c.mute && it.c.vol > 0) any = true;
   }
   if (!any) return null;
-  const ctx = new OfflineAudioContext(2, Math.max(1, Math.ceil(total * rate)), rate);
+  const tracks = [];
   for (const it of items) {
     const m = media.get(it.c.id), c = it.c;
     if (!m.audio || c.mute || c.vol <= 0) continue;
-    const src = ctx.createBufferSource(); src.buffer = m.audio; src.playbackRate.value = c.speed;
-    const gn = ctx.createGain(); src.connect(gn); gn.connect(ctx.destination);
     const a = it.start, b = it.start + it.len, v = c.vol;
     const pts = [];
     const fi = it.fadeInOn ? Math.min(fadeInOf(c), it.len * 0.5) : 0, fo = it.fadeOutOn ? Math.min(fadeOutOf(c), it.len * 0.5) : 0;
@@ -1603,11 +1347,9 @@ async function mixAudio() {
     if (rin > 0) pts.push([a + rin, v]);
     if (rout > 0) pts.push([b - rout, v]);
     pts.push([b, rout > 0 ? 0 : v]);
-    gn.gain.setValueAtTime(pts[0][1], pts[0][0]);
-    for (const [t, val] of pts.slice(1)) gn.gain.linearRampToValueAtTime(val, t);
-    src.start(a, c.in, c.out - c.in);
+    tracks.push({ buffer: m.audio, speed: c.speed, start: a, offset: c.in, duration: c.out - c.in, points: pts });
   }
-  return await ctx.startRendering();
+  return await mixTracks(tracks, total, rate);
 }
 
 function busy(on, s, p) {
