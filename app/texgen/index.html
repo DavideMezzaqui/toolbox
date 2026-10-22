@@ -3,15 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <title>TexGen</title>
+<link rel="stylesheet" href="../shared/kit.css">
 <style>
-  html, body { height: 100%; margin: 0; background: #0b0b0b; }
+  /* the kit's --dim (#8a8a90) is 4.3:1 on a raised panel; TexGen puts small text on --panel3 too */
+  :root { --tg-dim: #9a9aa2; }
+  html, body { height: 100%; margin: 0; }
+  body.kit { overflow: hidden; }
+  /* TexGen styles its selects with the `background` shorthand, which drops the kit chevron: put it back */
+  select { background-image: var(--chev) !important; background-repeat: no-repeat !important; background-position: right 8px center !important; background-size: 10px 10px !important; padding-right: 26px !important; }
   #root { height: 100%; }
   /* Shown only if the module never mounts - otherwise React replaces it. */
-  #boot { color: #bbb; font: 13px monospace; padding: 24px; }
-  #boot .err { color: #ff6b6b; white-space: pre-wrap; }
+  #boot { color: var(--txt2); font: var(--fs-l) var(--mono); padding: 24px; }
+  #boot .err { color: var(--err); white-space: pre-wrap; }
 </style>
 </head>
-<body>
+<body class="kit">
 
 <div id="root"><div id="boot">Loading TexGen<span id="bootErr" class="err"></span></div></div>
 
@@ -102,12 +108,56 @@
 }
 </script>
 
+<!-- Shared kit and the Studio host contract (../shared/embed.js). Classic scripts, before the module. -->
+<script src="../shared/kit.js"></script>
+<script src="../shared/embed.js"></script>
+
 <script type="module">
   import TexGen from './texgen.js';
 
   const root = document.getElementById('root');
   root.textContent = '';
   ReactDOM.createRoot(root).render(React.createElement(TexGen));
+
+  // ---- Studio host --------------------------------------------------------------------------
+  // The editor re-points window.__texgen at its current closures on every render (see "Studio host
+  // hooks" in texgen.js); the host actions below just call through it.
+  const T = (name) => function () { const h = window.__texgen; return h && h[name] ? h[name].apply(null, arguments) : undefined; };
+  const queue = [];
+  let waiting = false;
+  function drain() {            // files that arrive before the editor has mounted wait for it
+    const h = window.__texgen;
+    if (!h) { if (!waiting) { waiting = true; const iv = setInterval(function () { if (window.__texgen) { clearInterval(iv); waiting = false; drain(); } }, 100); } return; }
+    while (queue.length) h.importImage(queue.shift());
+  }
+  if (window.Embed) {
+    Embed.register({
+      id: 'texgen',
+      title: 'TexGen',
+      actions: [
+        { id: 'undo',   icon: 'undo', tip: 'Undo', key: 'Ctrl+Z', disabled: true, run: T('undo') },
+        { id: 'redo',   icon: 'redo', tip: 'Redo', key: 'Ctrl+Y', disabled: true, run: T('redo') },
+        { id: 'seed',   label: 'Randomize seed', icon: 'reset', tip: 'New random seed for the current layer', key: 'R', run: T('randomize') },
+        { id: 'save',   label: 'Save', icon: 'save', tip: 'Save the project in this app', key: 'Ctrl+S', run: T('save') },
+        { id: 'export', label: 'Export PNG', icon: 'down', primary: true, tip: 'Render the texture at the export size and save it as PNG', run: T('exportPNG') }
+      ],
+      shortcuts: [
+        ['Project', [['Ctrl+Z', 'Undo'], ['Ctrl+Y', 'Redo'], ['Ctrl+S', 'Save']]],
+        ['Layers', [['Q / W', 'Previous / next layer'], ['D', 'Duplicate layer'], ['H', 'Show / hide layer'], ['C / V', 'Copy / paste layer'],
+                    ['X', 'Reset layer'], ['S', 'Solo layer'], ['Esc', 'Leave solo']]],
+        ['Generate', [['R', 'Randomize seed'], ['A', 'Randomize all seeds'], ['Shift+B', 'Cycle blend mode']]],
+        ['View', [['1 - 6', 'Switch panel tab'], ['[ / ]', 'Previous / next tab'], ['G', 'Transform gizmo'], ['B', 'A/B compare'],
+                  ['F', 'Fit zoom'], ['+ / -', 'Zoom in / out'], ['0', 'Zoom 100%']]],
+        ['Sliders', [['Double-click', 'Reset slider'], ['Scroll', 'Nudge slider'], ['Shift+Scroll', 'Nudge 10x']]]
+      ],
+      accepts: ['image/*'],
+      // an image from the tray or a drop: image layer (new, or the current one when it is an image layer)
+      onReceive: function (files) { for (const f of files) queue.push(f); drain(); },
+      // hidden: no playback behind the user's back
+      onHide: function () { window.__tgPaused = true; },
+      onShow: function () { window.__tgPaused = false; }
+    });
+  }
 </script>
 
 <script>

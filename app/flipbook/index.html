@@ -3,344 +3,162 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>VFX Flipbook Studio v2</title>
+<title>Flipbook previewer</title>
+<link rel="stylesheet" href="../shared/kit.css">
 <style>
-/* ============================================================
-   Theme
-   ============================================================ */
-:root{
-    --bg-0:#191a1c;
-    --bg-1:#212226;
-    --bg-2:#2a2b30;
-    --bg-3:#33343a;
-    --line:#3b3c43;
-    --line-soft:#2e2f35;
-    --txt:#d6d7da;
-    --txt-dim:#8d8e97;
-    --txt-faint:#64656e;
-    --acc:#2f9bff;
-    --acc-dim:#1c6cba;
-    --warn:#ff9a3d;
-    --danger:#ff5f5f;
-    --r:6px;
-    --sidebar:322px;
-}
+/* Page furniture only: every component comes from the shared kit. */
+html,body{height:100%}
+body.kit{display:flex;flex-direction:column;overflow:hidden;user-select:none;-webkit-user-select:none}
+/* inside Studio the host header carries the title and the actions */
+body.embed .kit-head{display:none}
 
-*{box-sizing:border-box;}
-html,body{height:100%;margin:0;}
-body{
-    background:var(--bg-0);
-    color:var(--txt);
-    font:400 12px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
-    overflow:hidden;
-    user-select:none;
-    -webkit-user-select:none;
-}
-button,input,select{font-family:inherit;}
-button{cursor:pointer;}
+#app{flex:1;display:flex;min-height:0;width:100%}
 
-#app{display:flex;height:100%;width:100%;}
+/* ============================================================ stage */
+#stage{flex:1;display:flex;flex-direction:column;position:relative;min-width:0}
+#canvasWrapper{flex:1;position:relative;overflow:hidden;touch-action:none;min-height:0;background:#000}
+#mainCanvas{display:block;width:100%;height:100%}
 
-/* ============================================================
-   Stage
-   ============================================================ */
-#stage{flex:1;display:flex;flex-direction:column;position:relative;min-width:0;}
+/* floating toolbar: the kit toolbar, one group per task */
+#toolbar{position:absolute;top:10px;left:10px;z-index:10;display:flex;gap:8px;flex-wrap:wrap;
+  max-width:calc(100% - 20px);pointer-events:none}
+#stage.loaded #toolbar{max-width:calc(100% - 262px)}
+#toolbar>*{pointer-events:auto}
+#toolbar .toolbar{flex-wrap:nowrap;gap:2px;padding:3px;background:rgba(24,24,26,.94)}
+#toolbar .toolbar button.ibtn{width:30px;height:30px}
+#toolbar .toolbar .tsep{margin:0 3px}
+button.qbg{width:24px;height:24px;padding:0;border-radius:5px;border:1px solid #55555d;flex:none}
+button.qbg:hover{border-color:#fff}
+button.qbg.on{outline:1px solid #e8e8ec;outline-offset:1px}
+/* a checkerboard marks transparency; it is data, not decoration */
+.checker{background-color:#2a2a2e;background-image:
+  linear-gradient(45deg,#4a4a50 25%,transparent 25%),linear-gradient(-45deg,#4a4a50 25%,transparent 25%),
+  linear-gradient(45deg,transparent 75%,#4a4a50 75%),linear-gradient(-45deg,transparent 75%,#4a4a50 75%);
+  background-size:10px 10px;background-position:0 0,0 5px,5px -5px,-5px 0}
+#zoomBadge{display:none;align-items:center;padding:0 10px;height:36px;border-radius:9px;
+  font:600 var(--fs) var(--mono);color:var(--txt);background:rgba(24,24,26,.94);border:1px solid var(--line)}
+#zoomBadge.show{display:flex}
 
-#canvasWrapper{
-    flex:1;position:relative;overflow:hidden;touch-action:none;min-height:0;
-    background:#000;
-}
-#mainCanvas{display:block;width:100%;height:100%;}
+#stats{position:absolute;top:10px;right:10px;z-index:10;width:240px;padding:8px 11px;border-radius:9px;
+  background:rgba(24,24,26,.92);border:1px solid var(--line);font:var(--fs) var(--mono);color:var(--txt2);pointer-events:none}
+#stats.hidden{display:none}
+#stats b{display:block;color:var(--txt);font-weight:600;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#stats .sr{display:flex;justify-content:space-between;gap:10px;line-height:1.6}
+#stats .sr span:last-child{color:var(--txt)}
 
-/* Floating toolbar */
-#toolbar{
-    position:absolute;top:8px;left:8px;z-index:10;
-    display:flex;gap:6px;flex-wrap:wrap;max-width:calc(100% - 16px);
-}
-.tgroup{
-    display:flex;gap:3px;padding:3px;border-radius:var(--r);
-    background:rgba(33,34,38,.92);
-    border:1px solid var(--line);
-    backdrop-filter:blur(6px);
-    box-shadow:0 2px 10px rgba(0,0,0,.4);
-}
-.tbtn{
-    width:30px;height:30px;border-radius:4px;
-    display:flex;align-items:center;justify-content:center;
-    background:transparent;border:1px solid transparent;color:var(--txt);
-    transition:background .12s,border-color .12s,color .12s;
-}
-.tbtn:hover{background:var(--bg-3);}
-.tbtn.active{background:var(--acc);border-color:var(--acc);color:#fff;}
-.tsep{width:1px;background:var(--line);margin:2px 2px;}
-.swatch{
-    width:30px;height:30px;border-radius:4px;border:1px solid #55565d;
-    padding:0;transition:border-color .12s,transform .12s;
-}
-.swatch:hover{border-color:#fff;}
-.checker-preview{
-    background-image:
-        linear-gradient(45deg,#3a3a3a 25%,transparent 25%),
-        linear-gradient(-45deg,#3a3a3a 25%,transparent 25%),
-        linear-gradient(45deg,transparent 75%,#3a3a3a 75%),
-        linear-gradient(-45deg,transparent 75%,#3a3a3a 75%);
-    background-size:12px 12px;
-    background-position:0 0,0 6px,6px -6px,-6px 0;
-    background-color:#222;
-}
+#emptyState{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;pointer-events:none}
+#emptyState .card{pointer-events:auto;background:var(--panel2);border:1px solid #4a4a52;border-radius:12px;padding:22px 26px 20px;
+  max-width:440px;box-shadow:0 14px 40px rgba(0,0,0,.55)}
+#emptyState h2{margin:0 0 4px;font-size:15px;font-weight:600;color:var(--txt)}
+#emptyState p{margin:0 0 12px;font-size:var(--fs-l);color:var(--txt2);line-height:1.5}
+#emptyState ul{margin:0 0 16px;padding-left:18px;font-size:var(--fs);color:var(--txt2);line-height:1.9}
+#emptyState kbd{display:inline-block;font:600 var(--fs-s) var(--mono);color:var(--txt);background:var(--bg);
+  border:1px solid var(--line);border-radius:4px;padding:0 6px}
+#emptyState code{font:var(--fs) var(--mono);color:var(--txt)}
+#emptyState .acts{display:flex;gap:8px;flex-wrap:wrap}
+#emptyState.hidden{display:none}
 
-#zoomBadge{
-    display:none;align-items:center;padding:0 9px;height:36px;
-    border-radius:var(--r);font:600 11px/1 ui-monospace,Consolas,monospace;
-    background:rgba(33,34,38,.92);border:1px solid var(--line);
-    backdrop-filter:blur(6px);
-}
-#zoomBadge.show{display:flex;}
+/* timeline */
+#timeline{height:56px;flex:0 0 56px;display:none;align-items:center;gap:10px;padding:0 14px;
+  background:var(--panel);border-top:1px solid var(--line)}
+#timeline.show{display:flex}
+#timeline button.ibtn{width:34px;height:34px;flex:none;color:var(--txt)}
+#frameSlider{flex:1}
+#frameCounter{min-width:70px;text-align:right;font:var(--fs) var(--mono);color:var(--txt2)}
 
-#stats{
-    position:absolute;top:8px;right:8px;z-index:10;
-    padding:8px 10px;border-radius:var(--r);
-    background:rgba(33,34,38,.85);border:1px solid var(--line);
-    backdrop-filter:blur(6px);
-    font:400 10px/1.55 ui-monospace,Consolas,monospace;
-    text-align:right;color:var(--txt-dim);pointer-events:none;
-}
-#stats.hidden{display:none;}
-#stats b{display:block;color:var(--acc);font-weight:600;margin-bottom:3px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-#stats span{color:var(--txt);}
+/* ============================================================ sidebar */
+#sidebar{width:clamp(320px,22vw,400px);flex:0 0 auto;background:var(--panel);border-left:1px solid var(--line);
+  overflow-y:auto;overscroll-behavior:contain;padding:10px}
+.gated.disabled{opacity:.4;pointer-events:none}
+.sec .hint{margin:0 0 8px}
+.sec .row .btnrow{margin-bottom:0}
 
-#emptyState{
-    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    pointer-events:none;padding:20px;
-}
-#emptyState .card{
-    background:rgba(33,34,38,.94);border:1px solid var(--line);
-    border-radius:10px;padding:22px 26px;max-width:400px;
-    box-shadow:0 10px 40px rgba(0,0,0,.5);
-}
-#emptyState h2{margin:0 0 4px;font-size:14px;color:var(--txt);}
-#emptyState p{margin:0 0 12px;font-size:11px;color:var(--txt-dim);}
-#emptyState ul{margin:0;padding-left:16px;font-size:11px;color:var(--txt-dim);line-height:1.9;}
-#emptyState kbd{
-    display:inline-block;padding:1px 5px;border-radius:3px;
-    background:var(--bg-3);border:1px solid var(--line);
-    font:600 10px/1.4 ui-monospace,Consolas,monospace;color:var(--txt);
-}
-#emptyState.hidden{display:none;}
+/* texture strip */
+#texThumbs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+#texThumbs .none{color:var(--dim);font-size:var(--fs);padding:6px 0}
+.thumb{position:relative;width:54px;height:54px;flex:0 0 54px;border-radius:7px;overflow:hidden;
+  border:1px solid var(--line2);padding:0;background:#0c0c0e;opacity:.6;transition:opacity .12s,border-color .12s}
+.thumb:hover,.thumb:focus-within{opacity:1;border-color:#74747e;background:#0c0c0e}
+.thumb.on{opacity:1;border-color:#e6e6e8;box-shadow:0 0 0 1px #e6e6e8}
+.thumb .pick{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;border-radius:0;background:none}
+.thumb .pick:hover,.thumb .pick:active{background:none;border:0}
+.thumb .pick:focus-visible{outline-offset:-3px}
+.thumb img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
+.thumb .mini{position:absolute;top:0;width:18px;height:18px;padding:0;border:0;border-radius:0;
+  background:rgba(0,0,0,.72);color:var(--txt);display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .12s}
+.thumb .mini:focus-visible{opacity:1;outline-offset:-2px}
+.thumb .mini svg.ic{width:11px;height:11px}
+.thumb .mini.x{right:0;border-bottom-left-radius:6px}
+.thumb .mini.re{left:0;border-bottom-right-radius:6px}
+.thumb:hover .mini,.thumb:focus-within .mini{opacity:1}
+.thumb .mini:hover{background:#e6e6e8;color:#101012}
+.thumb .mini.x:hover{background:var(--err);color:#fff}
+@keyframes texFlash{from{border-color:#fff;background:#3a3a42}to{border-color:#e6e6e8;background:#0c0c0e}}
+.thumb.flash{animation:texFlash .7s ease-out}
+.thumb .tintdot{position:absolute;left:3px;bottom:3px;width:11px;height:11px;border-radius:50%;
+  border:1px solid rgba(0,0,0,.8);box-shadow:0 0 0 1px rgba(255,255,255,.4);pointer-events:none}
+.thumb.add{opacity:1;border-style:dashed;background:transparent;color:var(--txt2);display:flex;align-items:center;justify-content:center}
+.thumb.add:hover{color:var(--txt);background:var(--panel2)}
+.thumb.add svg.ic{width:16px;height:16px}
 
-#dropOverlay{
-    position:fixed;inset:0;z-index:100;display:none;
-    align-items:center;justify-content:center;flex-direction:column;gap:8px;
-    background:rgba(47,155,255,.16);
-    border:3px dashed var(--acc);
-    backdrop-filter:blur(3px);
-    pointer-events:none;
-}
-#dropOverlay.show{display:flex;}
-#dropOverlay .big{font-size:22px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#fff;}
-#dropOverlay .small{font-size:12px;color:rgba(255,255,255,.75);}
+/* restore the last scene */
+.restore{display:flex;flex-direction:column;gap:8px;padding:9px 10px 10px;margin-bottom:8px;
+  background:var(--panel2);border:1px solid var(--line2);border-radius:8px;font-size:var(--fs);color:var(--txt2);line-height:1.4}
+.restore[hidden]{display:none}
+.restore .rbtns{display:flex;gap:6px}
+.restore .rbtns button{flex:1}
 
-/* Timeline */
-#timeline{
-    height:56px;flex:0 0 56px;display:none;align-items:center;gap:12px;
-    padding:0 14px;background:var(--bg-1);border-top:1px solid var(--line);
-}
-#timeline.show{display:flex;}
-#playBtn,#restartBtn{
-    width:36px;height:36px;flex:0 0 36px;border-radius:var(--r);
-    background:var(--bg-3);border:1px solid var(--line);color:#fff;
-    display:flex;align-items:center;justify-content:center;transition:background .12s;
-}
-#playBtn:hover,#restartBtn:hover{background:var(--acc);border-color:var(--acc);}
-#restartBtn{margin-left:-6px;}
-#frameCounter{
-    min-width:66px;text-align:right;
-    font:500 11px/1 ui-monospace,Consolas,monospace;color:var(--txt-dim);
-}
+/* kit sizes, one step up where the kit would go below 11 px */
+.sec .grp2{font-size:var(--fs-s)}
+.row button.hex{font-size:var(--fs-s);line-height:20px}
 
-/* ============================================================
-   Sidebar
-   ============================================================ */
-#sidebar{
-    width:var(--sidebar);flex:0 0 var(--sidebar);
-    background:var(--bg-1);border-left:1px solid var(--line);
-    display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;
-}
+/* small buttons and check labels inside rows */
+button.sm{padding:3px 9px;font-size:var(--fs-s)}
+.chk{display:flex;align-items:center;gap:8px;font-size:var(--fs);color:var(--txt2);cursor:pointer}
+.chk:hover{color:var(--txt)}
+.rowgrid{display:flex;gap:6px;align-items:center;flex:1;min-width:0}
+.rowgrid .rtext{flex:none}
+.seg.wide{flex:1}
+.seg.wide button{flex:1}
 
-details.sec{border-bottom:1px solid var(--line-soft);}
-details.sec[hidden]{display:none;}
-details.sec>summary{
-    list-style:none;cursor:pointer;padding:11px 14px;
-    display:flex;align-items:center;gap:8px;
-    font:700 10px/1 -apple-system,'Segoe UI',sans-serif;
-    letter-spacing:.13em;text-transform:uppercase;color:var(--txt-dim);
-}
-details.sec>summary::-webkit-details-marker{display:none;}
-details.sec>summary::before{
-    content:'';width:0;height:0;flex:0 0 auto;
-    border-left:4px solid var(--txt-faint);
-    border-top:3.5px solid transparent;border-bottom:3.5px solid transparent;
-    transition:transform .15s;
-}
-details.sec[open]>summary::before{transform:rotate(90deg) translateX(-1px);}
-details.sec>summary:hover{color:var(--txt);}
-details.sec .body{padding:0 14px 16px;}
-details.sec.accent>summary{color:var(--acc);}
+/* tint / background swatches */
+.swatches .sw{width:20px;height:20px}
 
-#controlsContent.disabled{opacity:.4;pointer-events:none;}
-
-.field{margin-bottom:12px;}
-.field:last-child{margin-bottom:0;}
-.lbl{
-    display:flex;justify-content:space-between;align-items:center;gap:8px;
-    font-size:10px;color:var(--txt-dim);margin-bottom:5px;
-}
-.lbl .val{color:var(--txt);font:500 10px/1 ui-monospace,Consolas,monospace;}
-.row{display:flex;align-items:center;gap:8px;}
-.row.tight{gap:5px;}
-.grow{flex:1;min-width:0;}
-.hr{height:1px;background:var(--line-soft);margin:14px 0;}
-
-.inp{
-    background:var(--bg-3);border:1px solid transparent;color:var(--txt);
-    border-radius:4px;padding:6px 8px;font-size:11px;width:100%;
-    transition:border-color .12s;
-}
-.inp:focus{border-color:var(--acc);outline:none;}
-.inp.num{text-align:center;font-weight:600;font-family:ui-monospace,Consolas,monospace;}
-select.inp{
-    appearance:none;padding-right:22px;cursor:pointer;
-    background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%238d8e97' d='M0 0h10L5 6z'/%3E%3C/svg%3E");
-    background-repeat:no-repeat;background-position:right 8px center;
-}
-
-.btn{
-    background:var(--bg-3);border:1px solid var(--line);color:var(--txt-dim);
-    border-radius:4px;padding:6px 8px;font-size:10px;font-weight:600;
-    transition:background .12s,color .12s,border-color .12s;
-}
-.btn:hover{background:var(--acc);border-color:var(--acc);color:#fff;}
-.btn.active{background:var(--acc);border-color:var(--acc);color:#fff;}
-.btn.mini{padding:3px 6px;font-size:9px;font-weight:500;}
-.btn.danger:hover{background:var(--danger);border-color:var(--danger);}
-.btn.full{width:100%;padding:9px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt);}
-.seg{display:flex;gap:4px;}
-.seg>.btn{flex:1;}
-
-.chk{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--txt-dim);cursor:pointer;}
-.chk:hover{color:var(--txt);}
-input[type=checkbox]{accent-color:var(--acc);width:14px;height:14px;margin:0;cursor:pointer;}
-
-input[type=range]{-webkit-appearance:none;appearance:none;width:100%;background:transparent;margin:0;height:16px;cursor:pointer;}
-input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:var(--bg-3);}
-input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none;height:14px;width:14px;border-radius:50%;
-    background:var(--acc);margin-top:-5px;border:none;transition:transform .1s;
-}
-input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.15);}
-input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--bg-3);}
-input[type=range]::-moz-range-thumb{height:14px;width:14px;border-radius:50%;background:var(--acc);border:none;}
-
-input[type=color]{
-    -webkit-appearance:none;appearance:none;border:none;background:transparent;
-    width:34px;height:26px;padding:0;border-radius:4px;cursor:pointer;flex:0 0 34px;
-}
-input[type=color]::-webkit-color-swatch-wrapper{padding:0;}
-input[type=color]::-webkit-color-swatch{border:1px solid var(--line);border-radius:4px;}
-input[type=color]::-moz-color-swatch{border:1px solid var(--line);border-radius:4px;}
-
-.box{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--r);padding:11px;}
-.tag{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;}
-.tag.blue{color:var(--acc);}
-.tag.orange{color:var(--warn);}
-.muted{color:var(--txt-faint);font-size:10px;font-style:italic;}
-.dim{opacity:.4;pointer-events:none;}
-
-/* Texture strip */
-#texThumbs{
-    display:flex;gap:7px;overflow-x:auto;min-height:52px;align-items:center;
-    padding-bottom:6px;margin-bottom:10px;
-}
-.thumb{
-    position:relative;width:46px;height:46px;flex:0 0 46px;border-radius:5px;
-    overflow:hidden;border:2px solid transparent;background:#000;
-    opacity:.45;transition:opacity .12s,border-color .12s;padding:0;
-}
-.thumb:hover{opacity:1;}
-.thumb.on{opacity:1;border-color:var(--acc);}
-.thumb img{width:100%;height:100%;object-fit:contain;display:block;}
-.thumb .x{
-    position:absolute;top:0;right:0;width:15px;height:15px;line-height:13px;
-    font-size:11px;text-align:center;color:#fff;
-    background:rgba(0,0,0,.65);border:none;border-radius:0 0 0 5px;
-    opacity:0;transition:opacity .12s;padding:0;
-}
-.thumb:hover .x{opacity:1;}
-.thumb .x:hover{background:var(--danger);}
-.thumb .re{
-    position:absolute;top:0;left:0;width:15px;height:15px;line-height:14px;
-    font-size:11px;text-align:center;color:#fff;
-    background:rgba(0,0,0,.65);border:none;border-radius:0 0 5px 0;
-    opacity:0;transition:opacity .12s;padding:0;
-}
-.thumb:hover .re{opacity:1;}
-.thumb .re:hover{background:var(--acc);}
-@keyframes texFlash{
-    from{box-shadow:0 0 0 2px var(--acc), 0 0 10px 2px var(--acc);}
-    to  {box-shadow:0 0 0 2px rgba(47,155,255,0), 0 0 10px 2px rgba(47,155,255,0);}
-}
-.thumb.flash{animation:texFlash .6s ease-out;}
-.thumb .tintdot{
-    position:absolute;left:2px;bottom:2px;width:10px;height:10px;border-radius:50%;
-    border:1px solid rgba(0,0,0,.75);box-shadow:0 0 0 1px rgba(255,255,255,.35);
-    pointer-events:none;
-}
-
-/* Tint swatches */
-.tintrow{display:flex;gap:4px;margin-top:6px;}
-.tintrow .swatch{flex:1;height:16px;border-radius:3px;min-width:0;}
-.tintrow .swatch.on{border-color:#fff;box-shadow:0 0 0 1px var(--acc);}
-
-/* Texture library */
-.libfolder{
-    background:var(--bg-2);border:1px solid var(--line);border-radius:var(--r);
-    padding:8px;margin-bottom:7px;
-}
-.libfolder.stale{border-style:dashed;}
-.libname{
-    background:none;border:none;padding:0;flex:1;min-width:0;text-align:left;
-    color:var(--txt);font-size:11px;font-weight:600;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
-.libname:hover{color:var(--acc);}
-.libcount{font:500 9px/1 ui-monospace,Consolas,monospace;color:var(--txt-faint);flex:0 0 auto;}
-.libfiles{
-    margin-top:8px;padding-top:7px;border-top:1px solid var(--line-soft);
-    max-height:196px;overflow-y:auto;
-}
-.libfile{
-    display:flex;align-items:center;gap:7px;padding:2px 0;cursor:pointer;
-    font-size:10px;color:var(--txt-dim);
-}
-.libfile:hover{color:var(--txt);}
-.libfile span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.libbar{display:flex;gap:5px;margin-top:8px;}
-.libbar>.btn{flex:1;}
-
-/* Scrollbars */
-::-webkit-scrollbar{width:9px;height:7px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:#45464d;border-radius:5px;border:2px solid var(--bg-1);}
-::-webkit-scrollbar-thumb:hover{background:#55565e;}
+/* texture library */
+.libfolder{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:6px}
+.libfolder.stale{border-style:dashed}
+.libhead{display:flex;align-items:center;gap:6px}
+.libname{flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-start;gap:6px;background:none;border:0;padding:3px 0;text-align:left;
+  color:var(--txt);font-size:var(--fs);font-weight:600}
+.libname:hover{background:none;border:0;color:#fff}
+.libname span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.libcount{font:var(--fs-s) var(--mono);color:var(--dim);flex:none}
+.libfiles{margin-top:8px;padding-top:7px;border-top:1px solid var(--line);max-height:200px;overflow-y:auto}
+.libfile{display:flex;align-items:center;gap:8px;padding:3px 0;cursor:pointer;font-size:var(--fs);color:var(--txt2)}
+.libfile:hover{color:var(--txt)}
+.libfile span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.libbar{display:flex;gap:6px;margin-top:8px}
+.libbar button{flex:1;padding:4px 8px;font-size:var(--fs-s)}
+.libauto{margin-top:9px}
 
 @media (max-width:820px){
-    #app{flex-direction:column;}
-    #sidebar{width:100%;flex:0 0 45%;border-left:none;border-top:1px solid var(--line);}
-    #stage{flex:1 1 55%;}
+  #app{flex-direction:column}
+  #sidebar{width:100%;flex:0 0 45%;border-left:none;border-top:1px solid var(--line)}
+  #stage{flex:1 1 55%}
+  #stage.loaded #toolbar{max-width:calc(100% - 20px)}
 }
 </style>
 </head>
-<body>
+<body class="kit">
+
+<header class="kit-head" id="head">
+    <h1>Flipbook previewer</h1>
+    <div class="grow"></div>
+    <div id="headActions" style="display:flex;gap:6px;align-items:center"></div>
+    <div class="sep"></div>
+    <button id="hKeys" type="button" data-ic="key" title="Keyboard shortcuts">Shortcuts</button>
+</header>
 
 <div id="app">
 
@@ -348,43 +166,25 @@ input[type=color]::-moz-color-swatch{border:1px solid var(--line);border-radius:
     <main id="stage">
 
         <div id="toolbar">
-            <div class="tgroup">
-                <button class="swatch checker-preview" data-quickbg="checker" title="Checkerboard background"></button>
-                <button class="swatch" data-quickbg="#000000" style="background:#000" title="Black background"></button>
-                <button class="swatch" data-quickbg="#808080" style="background:#808080" title="50% grey background"></button>
-                <button class="swatch" data-quickbg="#ffffff" style="background:#fff" title="White background"></button>
+            <div class="toolbar" id="bgQuick" role="group" aria-label="Background">
+                <button class="qbg checker" data-quickbg="checker" title="Checkerboard background" aria-label="Checkerboard background"></button>
+                <button class="qbg" data-quickbg="#000000" style="background:#000" title="Black background" aria-label="Black background"></button>
+                <button class="qbg" data-quickbg="#808080" style="background:#808080" title="50% grey background" aria-label="Grey background"></button>
+                <button class="qbg" data-quickbg="#ffffff" style="background:#fff" title="White background" aria-label="White background"></button>
             </div>
 
-            <div class="tgroup">
-                <button id="toolPan" class="tbtn" title="Pan (H — or hold Space)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="19 9 22 12 19 15"/><polyline points="9 19 12 22 15 19"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>
-                </button>
-                <button id="toolSelect" class="tbtn active" title="Select &amp; transform (V)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>
-                </button>
-                <button id="toolScatter" class="tbtn" title="Scatter / paint (B)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-                </button>
+            <div class="toolbar" role="group" aria-label="Tools and view">
+                <button id="toolSelect" class="ibtn on" data-ic="pointer" title="Select &amp; transform (V)" aria-label="Select and transform"></button>
+                <button id="toolScatter" class="ibtn" data-ic="spray" title="Scatter / paint (B)" aria-label="Scatter"></button>
+                <button id="toolPan" class="ibtn" data-ic="pan" title="Pan (H, or hold Space)" aria-label="Pan"></button>
                 <div class="tsep"></div>
-                <button id="btnZoomIn" class="tbtn" title="Zoom in (+)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-                </button>
-                <button id="btnZoomOut" class="tbtn" title="Zoom out (−)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-                </button>
-                <button id="btnFit" class="tbtn" title="Fit content to view (F)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9V4a1 1 0 0 1 1-1h5M21 9V4a1 1 0 0 0-1-1h-5M3 15v5a1 1 0 0 0 1 1h5M21 15v5a1 1 0 0 1-1 1h-5"/></svg>
-                </button>
-                <button id="btnReset" class="tbtn" title="Reset view to 100% (0)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                </button>
+                <button id="btnZoomIn" class="ibtn" data-ic="zin" title="Zoom in (+)" aria-label="Zoom in"></button>
+                <button id="btnZoomOut" class="ibtn" data-ic="zout" title="Zoom out (-)" aria-label="Zoom out"></button>
+                <button id="btnFit" class="ibtn" data-ic="fit" title="Fit content to view (F)" aria-label="Fit content to view"></button>
+                <button id="btnReset" class="ibtn" data-ic="actual" title="Reset view to 100% (0)" aria-label="Reset view to 100%"></button>
                 <div class="tsep"></div>
-                <button id="btnGrid" class="tbtn" title="Toggle frame guides (G)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
-                </button>
-                <button id="btnPoint" class="tbtn" title="Point / nearest filtering — crisp pixels (P)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="6" height="6"/><rect x="10" y="3" width="4" height="4" opacity=".55"/><rect x="3" y="10" width="4" height="4" opacity=".55"/><rect x="11" y="11" width="10" height="10"/><rect x="15" y="7" width="3" height="3" opacity=".55"/><rect x="7" y="15" width="3" height="3" opacity=".55"/></svg>
-                </button>
+                <button id="btnGrid" class="ibtn" data-ic="grid" title="Toggle frame guides (G)" aria-label="Frame guides"></button>
+                <button id="btnPoint" class="ibtn" data-ic="pixels" title="Point filtering, crisp pixels (P)" aria-label="Point filter"></button>
             </div>
 
             <div id="zoomBadge">100%</div>
@@ -392,9 +192,9 @@ input[type=color]::-moz-color-swatch{border:1px solid var(--line);border-radius:
 
         <div id="stats" class="hidden">
             <b id="statFilename">file.png</b>
-            Source <span id="statSrcRes">0×0</span><br>
-            Frame <span id="statFrameRes">0×0</span><br>
-            Instances <span id="statInstances">0</span>
+            <div class="sr"><span>Source</span><span id="statSrcRes">0×0</span></div>
+            <div class="sr"><span>Frame</span><span id="statFrameRes">0×0</span></div>
+            <div class="sr"><span>Instances</span><span id="statInstances">0</span></div>
         </div>
 
         <div id="canvasWrapper">
@@ -402,364 +202,41 @@ input[type=color]::-moz-color-swatch{border:1px solid var(--line);border-radius:
             <div id="emptyState">
                 <div class="card">
                     <h2>Import a flipbook</h2>
-                    <p>Drag &amp; drop one or more sprite sheets anywhere, or use “Add texture”.</p>
+                    <p>Drag &amp; drop one or more sprite sheets anywhere, or use Add texture.</p>
                     <ul>
-                        <li>Grid is auto-detected from names like <code>fire_8x8.png</code></li>
+                        <li>The grid is read from names like <code>fire_8x8.png</code></li>
                         <li><kbd>V</kbd> select &amp; transform · <kbd>B</kbd> scatter · <kbd>H</kbd> pan</li>
                         <li><kbd>Space</kbd> play / pause · <kbd>R</kbd> restart · wheel to zoom · <kbd>F</kbd> fit</li>
-                        <li>Hold <kbd>Space</kbd> and drag to pan · middle mouse drags too</li>
+                        <li>Hold <kbd>Space</kbd> and drag to pan; the middle mouse button drags too</li>
                         <li><kbd>Ctrl</kbd>+<kbd>D</kbd> duplicate · <kbd>Del</kbd> remove · arrows nudge</li>
                         <li>Hold <kbd>Shift</kbd> while dropping to set a background image</li>
                         <li><kbd>I</kbd> reimports every sheet from disk after you re-export it</li>
                     </ul>
+                    <div class="acts">
+                        <button id="emptyAdd" class="primary" data-ic="plus">Add texture</button>
+                        <button id="emptyRestore" data-ic="reset" hidden>Restore last scene</button>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div id="timeline">
-            <button id="playBtn" title="Play / pause (Space or K)">
-                <svg id="playIcon" width="15" height="15" viewBox="0 0 20 20" fill="currentColor" style="margin-left:2px"><path d="M4 3l13 7-13 7z"/></svg>
-                <svg id="pauseIcon" width="15" height="15" viewBox="0 0 20 20" fill="currentColor" hidden><path d="M5 3h3v14H5zm7 0h3v14h-3z"/></svg>
-            </button>
-            <button id="restartBtn" title="Restart from frame 1 and play (R)">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 3 3 9 9 9"/></svg>
-            </button>
-            <input type="range" id="frameSlider" class="grow" min="0" max="63" value="0">
+            <button id="playBtn" class="ibtn" type="button" data-state="playing" title="Pause (Space or K)"></button>
+            <button id="restartBtn" class="ibtn" type="button" data-ic="reset" title="Restart from frame 1 and play (R)" aria-label="Restart"></button>
+            <input type="range" id="frameSlider" min="0" max="63" value="0" aria-label="Frame">
             <span id="frameCounter">1/64</span>
-            <button id="btnClear" class="btn danger" title="Delete every instance on the canvas">Clear canvas</button>
         </div>
     </main>
 
-    <!-- ================= SIDEBAR ================= -->
-    <aside id="sidebar">
-
-        <details class="sec" open>
-            <summary>Textures</summary>
-            <div class="body">
-                <div id="texThumbs"><span class="muted">No textures loaded</span></div>
-                <div class="row tight">
-                    <button class="btn full grow" id="btnAddTex">+ Add texture</button>
-                    <button class="btn full grow" id="btnReimportAll" title="Reload every texture from disk, keeping grid, tint and everything placed (I)">↻ Reimport all</button>
-                </div>
-                <input type="file" id="fileInput" accept="image/*" multiple hidden>
-                <div class="muted" id="reimportStatus" style="margin-top:8px" hidden></div>
-            </div>
-        </details>
-
-        <details class="sec" id="librarySec">
-            <summary>Texture library</summary>
-            <div class="body">
-                <div id="libList"><span class="muted">No folders saved</span></div>
-                <button class="btn full" id="btnAddFolder">+ Add folder</button>
-                <div class="muted" id="libStatus" style="margin-top:8px"></div>
-            </div>
-        </details>
-
-        <div id="controlsContent" class="disabled">
-
-            <details class="sec accent" open>
-                <summary>Active texture</summary>
-                <div class="body">
-                    <div class="row" style="margin-bottom:8px">
-                        <div class="grow">
-                            <div class="lbl">Columns (X)</div>
-                            <input type="number" id="colsInput" class="inp num" min="1" value="8">
-                        </div>
-                        <div class="grow">
-                            <div class="lbl">Rows (Y)</div>
-                            <input type="number" id="rowsInput" class="inp num" min="1" value="8">
-                        </div>
-                    </div>
-                    <div class="seg" id="presetRow" style="margin-bottom:10px">
-                        <button class="btn" data-preset="2,2">2×2</button>
-                        <button class="btn" data-preset="4,4">4×4</button>
-                        <button class="btn" data-preset="6,6">6×6</button>
-                        <button class="btn" data-preset="7,7">7×7</button>
-                        <button class="btn" data-preset="8,8">8×8</button>
-                    </div>
-                    <div class="field">
-                        <div class="lbl">Total frames</div>
-                        <input type="number" id="totalFramesInput" class="inp num" min="1" value="64">
-                    </div>
-                    <div class="field">
-                        <div class="lbl">Channel preview</div>
-                        <div class="seg" id="channelBtns">
-                            <button class="btn active" data-ch="all">RGB</button>
-                            <button class="btn" data-ch="r" style="color:#ff7a7a">R</button>
-                            <button class="btn" data-ch="g" style="color:#7ee08a">G</button>
-                            <button class="btn" data-ch="b" style="color:#7ab6ff">B</button>
-                            <button class="btn" data-ch="a">A</button>
-                        </div>
-                    </div>
-                    <div class="field">
-                        <div class="lbl">
-                            <span>Tint <span class="tag blue">this texture only</span></span>
-                            <span class="row tight">
-                                <button class="btn mini" id="btnTintAll" title="Copy this tint to every loaded texture">All</button>
-                                <button class="btn mini" id="btnResetTint">Reset</button>
-                            </span>
-                        </div>
-                        <div class="row tight">
-                            <input type="color" id="tintColor" value="#ffffff">
-                            <input type="range" id="tintSlider" class="grow" min="0" max="100" value="100">
-                            <span class="val" id="tintValue" style="width:34px;text-align:right">100%</span>
-                        </div>
-                        <div class="tintrow" id="tintSwatches">
-                            <button class="swatch" style="background:#ffffff" data-tint="#ffffff" title="Neutral"></button>
-                            <button class="swatch" style="background:#ff4423" data-tint="#ff4423" title="Fire"></button>
-                            <button class="swatch" style="background:#ffb02e" data-tint="#ffb02e" title="Ember"></button>
-                            <button class="swatch" style="background:#6cff8a" data-tint="#6cff8a" title="Toxic"></button>
-                            <button class="swatch" style="background:#4dd2ff" data-tint="#4dd2ff" title="Ice"></button>
-                            <button class="swatch" style="background:#3a6bff" data-tint="#3a6bff" title="Arcane"></button>
-                            <button class="swatch" style="background:#b46cff" data-tint="#b46cff" title="Magic"></button>
-                            <button class="swatch" style="background:#ff5fa8" data-tint="#ff5fa8" title="Candy"></button>
-                            <button class="swatch" style="background:#8a8f99" data-tint="#8a8f99" title="Smoke"></button>
-                        </div>
-                    </div>
-                </div>
-            </details>
-
-        </div>
-
-        <details class="sec" open>
-            <summary>Background</summary>
-            <div class="body">
-                <div class="seg" id="bgModeBtns" style="margin-bottom:12px">
-                    <button class="btn active" data-mode="solid">Solid</button>
-                    <button class="btn" data-mode="checker">Checker</button>
-                    <button class="btn" data-mode="image">Image</button>
-                </div>
-
-                <div class="field">
-                    <div class="lbl"><span>Colour</span></div>
-                    <div class="row tight">
-                        <input type="color" id="bgColor" value="#000000">
-                        <input type="text" id="bgHex" class="inp num grow" value="#000000" maxlength="7" spellcheck="false">
-                    </div>
-                    <div class="row tight" id="bgSwatches" style="margin-top:7px">
-                        <button class="swatch grow" style="height:20px;background:#000000" data-color="#000000" title="#000000"></button>
-                        <button class="swatch grow" style="height:20px;background:#1b1b1b" data-color="#1b1b1b" title="#1b1b1b"></button>
-                        <button class="swatch grow" style="height:20px;background:#808080" data-color="#808080" title="#808080"></button>
-                        <button class="swatch grow" style="height:20px;background:#ffffff" data-color="#ffffff" title="#ffffff"></button>
-                        <button class="swatch grow" style="height:20px;background:#0d1b2a" data-color="#0d1b2a" title="#0d1b2a"></button>
-                        <button class="swatch grow" style="height:20px;background:#2a120d" data-color="#2a120d" title="#2a120d"></button>
-                        <button class="swatch grow" style="height:20px;background:#12261a" data-color="#12261a" title="#12261a"></button>
-                    </div>
-                </div>
-
-                <div class="hr"></div>
-
-                <div class="field">
-                    <div class="lbl"><span>Image</span><span class="val" id="bgImgName">—</span></div>
-                    <div class="row tight">
-                        <label class="btn grow" style="text-align:center">
-                            Load image
-                            <input type="file" id="bgFileInput" accept="image/*" hidden>
-                        </label>
-                        <button class="btn danger" id="btnBgClear">Clear</button>
-                    </div>
-                </div>
-
-                <div class="field" id="fieldFit">
-                    <div class="lbl">Fit mode</div>
-                    <select id="bgFit" class="inp">
-                        <option value="cover">Cover (fill viewport)</option>
-                        <option value="contain">Contain (fit inside)</option>
-                        <option value="stretch">Stretch</option>
-                        <option value="tile">Tile</option>
-                    </select>
-                </div>
-
-                <div class="field" id="fieldScale" hidden>
-                    <div class="lbl"><span>Image scale</span><span class="val" id="bgScaleVal">100%</span></div>
-                    <input type="range" id="bgScale" min="5" max="400" value="100">
-                </div>
-
-                <div class="field">
-                    <div class="lbl"><span>Image opacity</span><span class="val" id="bgOpacityVal">100%</span></div>
-                    <input type="range" id="bgOpacity" min="0" max="100" value="100">
-                </div>
-
-                <label class="chk"><input type="checkbox" id="bgWorldLock"> Lock image to canvas (pans &amp; zooms)</label>
-            </div>
-        </details>
-
-        <div id="controlsContent2" class="disabled">
-
-            <details class="sec" open>
-                <summary>Playback &amp; material</summary>
-                <div class="body">
-                    <div class="field">
-                        <div class="lbl"><span>Speed</span><span class="val"><b id="fpsValue">60</b> fps</span></div>
-                        <input type="range" id="fpsSlider" min="1" max="120" value="60">
-                    </div>
-                    <div class="field">
-                        <div class="lbl">Blend mode</div>
-                        <select id="blendSelect" class="inp">
-                            <option value="source-over" selected>Normal (translucent)</option>
-                            <option value="lighter">Additive (lighter)</option>
-                            <option value="multiply">Multiply</option>
-                            <option value="screen">Screen</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <div class="muted">Tint is per texture — set it under “Active texture”.</div>
-                    </div>
-                    <label class="chk"><input type="checkbox" id="nearestCheck"> Point filter — nearest neighbour, crisp pixels (P)</label>
-                </div>
-            </details>
-
-            <details class="sec">
-                <summary>Post process</summary>
-                <div class="body">
-                    <div class="field">
-                        <div class="lbl"><span>Brightness</span><span class="val" id="brValue">100%</span></div>
-                        <input type="range" id="brSlider" min="0" max="300" step="5" value="100">
-                    </div>
-                    <div class="field">
-                        <div class="lbl"><span>Contrast</span><span class="val" id="coValue">100%</span></div>
-                        <input type="range" id="coSlider" min="0" max="300" step="5" value="100">
-                    </div>
-                    <div class="field">
-                        <div class="lbl"><span>Saturation</span><span class="val" id="satValue">100%</span></div>
-                        <input type="range" id="satSlider" min="0" max="300" step="5" value="100">
-                    </div>
-                    <div class="row" style="justify-content:space-between">
-                        <label class="chk"><input type="checkbox" id="invertCheck"> Invert colours</label>
-                        <button class="btn mini" id="btnResetPP">Reset all</button>
-                    </div>
-                </div>
-            </details>
-
-            <details class="sec">
-                <summary>Scatter &amp; emitter</summary>
-                <div class="body">
-
-                    <div class="box" style="margin-bottom:12px">
-                        <div class="row" style="justify-content:space-between;margin-bottom:9px">
-                            <span class="tag blue">Placement defaults</span>
-                            <button class="btn mini" id="btnClearManual">Clear placed</button>
-                        </div>
-                        <div class="field">
-                            <div class="lbl"><span>Base scale</span><span class="val" id="baseScaleVal">1.0×</span></div>
-                            <input type="range" id="baseScaleSlider" min="0.1" max="5" step="0.1" value="1">
-                        </div>
-                        <div class="field">
-                            <div class="lbl"><span>Scale randomness</span><span class="val" id="randScaleVal">50%</span></div>
-                            <input type="range" id="randScaleSlider" min="0" max="100" value="50">
-                        </div>
-                        <div class="field">
-                            <div class="lbl"><span>Animation duration</span><span class="val" id="manualDurVal">Global</span></div>
-                            <input type="range" id="manualDurSlider" min="0" max="10" step="0.1" value="0">
-                        </div>
-                        <div class="row" style="flex-wrap:wrap;gap:12px">
-                            <label class="chk"><input type="checkbox" id="manualLoopCheck" checked> Loop</label>
-                            <label class="chk"><input type="checkbox" id="randPhaseCheck"> Random phase</label>
-                            <label class="chk"><input type="checkbox" id="randRotCheck"> Random rotation</label>
-                        </div>
-                    </div>
-
-                    <div class="box">
-                        <div class="row" style="justify-content:space-between;margin-bottom:9px">
-                            <span class="tag orange">Auto emitter</span>
-                            <label class="chk" style="color:var(--warn);font-weight:700"><input type="checkbox" id="autoEmitCheck"> Enable</label>
-                        </div>
-                        <div id="emitterControls" class="dim">
-                            <div class="field">
-                                <div class="lbl"><span>Lifespan</span><span class="val" id="emitLifetimeVal">2.0s</span></div>
-                                <input type="range" id="emitLifetimeSlider" min="0.1" max="10" step="0.1" value="2">
-                            </div>
-                            <div class="field">
-                                <div class="lbl"><span>Spawn rate</span><span class="val" id="emitRateVal">15/s</span></div>
-                                <input type="range" id="emitRateSlider" min="1" max="60" value="15">
-                            </div>
-                            <div class="field">
-                                <div class="lbl"><span>Spawn radius</span><span class="val" id="emitRadiusVal">200px</span></div>
-                                <input type="range" id="emitRadiusSlider" min="0" max="1200" value="200">
-                            </div>
-                            <div class="field">
-                                <div class="lbl"><span>Max particles</span><span class="val" id="emitMaxVal">50</span></div>
-                                <input type="range" id="emitMaxSlider" min="1" max="400" value="50">
-                            </div>
-                            <label class="chk"><input type="checkbox" id="emitFadeCheck" checked> Fade in / out</label>
-                        </div>
-                    </div>
-
-                </div>
-            </details>
-
-        </div>
-
-        <details class="sec accent" id="selSection" open hidden>
-            <summary id="selHeader">Selection</summary>
-            <div class="body">
-                <div class="row" style="margin-bottom:12px">
-                    <div class="grow">
-                        <div class="lbl">Position X</div>
-                        <input type="number" id="selPosX" class="inp num" step="1" value="0">
-                    </div>
-                    <div class="grow">
-                        <div class="lbl">Position Y</div>
-                        <input type="number" id="selPosY" class="inp num" step="1" value="0">
-                    </div>
-                </div>
-
-                <div class="field">
-                    <div class="lbl"><span>Scale (uniform)</span><span class="val" id="selScaleUniVal">1.0×</span></div>
-                    <input type="range" id="selScaleUni" min="0.05" max="10" step="0.05" value="1">
-                </div>
-                <div class="row" style="margin-bottom:12px">
-                    <div class="grow">
-                        <div class="lbl"><span>Scale X</span><span class="val" id="selScaleXVal">1.0×</span></div>
-                        <input type="range" id="selScaleX" min="0.05" max="10" step="0.05" value="1">
-                    </div>
-                    <div class="grow">
-                        <div class="lbl"><span>Scale Y</span><span class="val" id="selScaleYVal">1.0×</span></div>
-                        <input type="range" id="selScaleY" min="0.05" max="10" step="0.05" value="1">
-                    </div>
-                </div>
-
-                <div class="field">
-                    <div class="lbl"><span>Rotation</span><span class="val" id="selRotVal">0°</span></div>
-                    <input type="range" id="selRot" min="-180" max="180" step="1" value="0">
-                </div>
-
-                <div class="row" style="gap:14px;margin-bottom:12px">
-                    <label class="chk"><input type="checkbox" id="selFlipX"> Flip X</label>
-                    <label class="chk"><input type="checkbox" id="selFlipY"> Flip Y</label>
-                </div>
-
-                <div class="hr"></div>
-
-                <div class="field">
-                    <div class="lbl"><span>Start phase</span><span class="val" id="selPhaseVal">0%</span></div>
-                    <input type="range" id="selPhase" min="0" max="100" value="0">
-                </div>
-                <div class="field">
-                    <div class="lbl"><span>Duration</span><span class="val" id="selDurVal">Global</span></div>
-                    <input type="range" id="selDur" min="0" max="10" step="0.1" value="0">
-                </div>
-                <label class="chk" style="margin-bottom:12px"><input type="checkbox" id="selLoop"> Loop animation</label>
-
-                <div class="row tight" style="margin-bottom:7px">
-                    <button class="btn grow" id="btnMoveUp">▲ Forward</button>
-                    <button class="btn grow" id="btnMoveDown">▼ Backward</button>
-                </div>
-                <div class="row tight">
-                    <button class="btn grow" id="btnDup">Duplicate</button>
-                    <button class="btn grow danger" id="btnDelete">Delete</button>
-                </div>
-            </div>
-        </details>
-
-    </aside>
+    <!-- ================= SIDEBAR (built in the script) ================= -->
+    <aside id="sidebar" aria-label="Settings"></aside>
 </div>
 
-<div id="dropOverlay">
-    <div class="big">Drop textures</div>
-    <div class="small">Hold Shift to use the image as background</div>
-</div>
+<input type="file" id="fileInput" accept="image/*" multiple hidden>
+<input type="file" id="bgFileInput" accept="image/*" hidden>
 
+<script src="../shared/kit.js"></script>
+<script src="../shared/embed.js"></script>
 <script>
 'use strict';
 
@@ -775,6 +252,19 @@ const MIN_GIZMO_HALF  = 28;   // gizmo box is padded to at least this half-size,
 const GIZMO_CORE      = 0.5;  // inner fraction of the frame reserved for moving, never a handle
 const MIN_SCALE       = 0.05;
 const MAX_SCALE       = 20;
+const BATCH_GAP       = 24;   // world units between sheets dropped together
+
+/* icons this page needs on top of the kit set */
+Kit.addIcons({
+    pan:     'M8 2v12 M2 8h12 M6 4l2-2 2 2 M6 12l2 2 2-2 M4 6L2 8l2 2 M12 6l2 2-2 2',
+    pointer: 'M3 2l10 4.5-4.3 1.3-1.4 4.7z',
+    spray:   'M8 2.5v3 M8 10.5v3 M2.5 8h3 M10.5 8h3 M4.1 4.1l2 2 M9.9 9.9l2 2 M4.1 11.9l2-2 M9.9 6.1l2-2',
+    actual:  'M2.5 2.5h11v11h-11z M7 6.3l1.5-1.1v5.6',
+    pixels:  'M2.5 2.5h4v4h-4z M9.5 9.5h4v4h-4z M9.5 2.5h2v2h-2z M2.5 9.5h2v2h-2z',
+    chevr:   'M6 3.5L10.5 8 6 12.5',
+    chevd:   'M3.5 6L8 10.5 12.5 6',
+    arrdown: 'M8 3v9 M4.5 8.5L8 12l3.5-3.5'
+});
 
 /* ============================================================
    State
@@ -808,6 +298,7 @@ const state = {
         mode: 'solid',
         color: '#000000',
         img: null,
+        file: null,
         imgName: '',
         fit: 'cover',
         opacity: 1,
@@ -817,6 +308,7 @@ const state = {
 
     // view
     scale: 1, offsetX: 0, offsetY: 0,
+    viewFit: false,          // the view came from Fit: refit when the window changes
 
     // tools
     tool: 'select',
@@ -856,73 +348,50 @@ const view = { w: 0, h: 0, dpr: 1 };
    DOM
    ============================================================ */
 const $ = id => document.getElementById(id);
+const el = (tag, cls, text) => {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+};
 
 const canvas  = $('mainCanvas');
 const ctx     = canvas.getContext('2d');
 const wrapper = $('canvasWrapper');
 
+// the settings column is built further down (buildSidebar) and adds its own fields
 const ui = {
-    emptyState:$('emptyState'), stats:$('stats'), timeline:$('timeline'),
-    controls:$('controlsContent'), controls2:$('controlsContent2'),
-    dropOverlay:$('dropOverlay'), zoomBadge:$('zoomBadge'),
-    texThumbs:$('texThumbs'), fileInput:$('fileInput'),
-    btnAddTex:$('btnAddTex'), btnReimportAll:$('btnReimportAll'), reimportStatus:$('reimportStatus'),
-    librarySec:$('librarySec'), libList:$('libList'), btnAddFolder:$('btnAddFolder'), libStatus:$('libStatus'),
+    stage:$('stage'), emptyState:$('emptyState'), stats:$('stats'), timeline:$('timeline'),
+    zoomBadge:$('zoomBadge'), fileInput:$('fileInput'), bgFileInput:$('bgFileInput'),
+    statFilename:$('statFilename'), statSrcRes:$('statSrcRes'), statFrameRes:$('statFrameRes'), statInstances:$('statInstances'),
+    emptyAdd:$('emptyAdd'), emptyRestore:$('emptyRestore'),
 
-    cols:$('colsInput'), rows:$('rowsInput'), total:$('totalFramesInput'),
-    presetRow:$('presetRow'), channelBtns:$('channelBtns'),
-
-    bgModeBtns:$('bgModeBtns'), bgColor:$('bgColor'), bgHex:$('bgHex'), bgSwatches:$('bgSwatches'),
-    bgFileInput:$('bgFileInput'), bgImgName:$('bgImgName'), btnBgClear:$('btnBgClear'),
-    bgFit:$('bgFit'), fieldFit:$('fieldFit'), fieldScale:$('fieldScale'),
-    bgScale:$('bgScale'), bgScaleVal:$('bgScaleVal'),
-    bgOpacity:$('bgOpacity'), bgOpacityVal:$('bgOpacityVal'), bgWorldLock:$('bgWorldLock'),
-
-    fpsSlider:$('fpsSlider'), fpsValue:$('fpsValue'), blendSelect:$('blendSelect'),
-    tintColor:$('tintColor'), tintSlider:$('tintSlider'), tintValue:$('tintValue'),
-    tintSwatches:$('tintSwatches'), btnResetTint:$('btnResetTint'), btnTintAll:$('btnTintAll'),
-    nearestCheck:$('nearestCheck'),
-
-    brSlider:$('brSlider'), brValue:$('brValue'), coSlider:$('coSlider'), coValue:$('coValue'),
-    satSlider:$('satSlider'), satValue:$('satValue'), invertCheck:$('invertCheck'), btnResetPP:$('btnResetPP'),
-
-    baseScaleSlider:$('baseScaleSlider'), baseScaleVal:$('baseScaleVal'),
-    randScaleSlider:$('randScaleSlider'), randScaleVal:$('randScaleVal'),
-    manualDurSlider:$('manualDurSlider'), manualDurVal:$('manualDurVal'),
-    manualLoopCheck:$('manualLoopCheck'), randPhaseCheck:$('randPhaseCheck'), randRotCheck:$('randRotCheck'),
-    btnClearManual:$('btnClearManual'),
-
-    autoEmitCheck:$('autoEmitCheck'), emitterControls:$('emitterControls'),
-    emitLifetimeSlider:$('emitLifetimeSlider'), emitLifetimeVal:$('emitLifetimeVal'),
-    emitRateSlider:$('emitRateSlider'), emitRateVal:$('emitRateVal'),
-    emitRadiusSlider:$('emitRadiusSlider'), emitRadiusVal:$('emitRadiusVal'),
-    emitMaxSlider:$('emitMaxSlider'), emitMaxVal:$('emitMaxVal'), emitFadeCheck:$('emitFadeCheck'),
-
-    selSection:$('selSection'), selHeader:$('selHeader'),
-    selPosX:$('selPosX'), selPosY:$('selPosY'),
-    selScaleUni:$('selScaleUni'), selScaleUniVal:$('selScaleUniVal'),
-    selScaleX:$('selScaleX'), selScaleXVal:$('selScaleXVal'),
-    selScaleY:$('selScaleY'), selScaleYVal:$('selScaleYVal'),
-    selRot:$('selRot'), selRotVal:$('selRotVal'),
-    selFlipX:$('selFlipX'), selFlipY:$('selFlipY'),
-    selPhase:$('selPhase'), selPhaseVal:$('selPhaseVal'),
-    selDur:$('selDur'), selDurVal:$('selDurVal'), selLoop:$('selLoop'),
-    btnMoveUp:$('btnMoveUp'), btnMoveDown:$('btnMoveDown'), btnDup:$('btnDup'), btnDelete:$('btnDelete'),
-
-    playBtn:$('playBtn'), playIcon:$('playIcon'), pauseIcon:$('pauseIcon'), restartBtn:$('restartBtn'),
-    frameSlider:$('frameSlider'), frameCounter:$('frameCounter'), btnClear:$('btnClear'),
+    playBtn:$('playBtn'), restartBtn:$('restartBtn'), frameSlider:$('frameSlider'), frameCounter:$('frameCounter'),
 
     toolPan:$('toolPan'), toolSelect:$('toolSelect'), toolScatter:$('toolScatter'),
     btnZoomIn:$('btnZoomIn'), btnZoomOut:$('btnZoomOut'), btnFit:$('btnFit'),
-    btnReset:$('btnReset'), btnGrid:$('btnGrid'), btnPoint:$('btnPoint')
+    btnReset:$('btnReset'), btnGrid:$('btnGrid'), btnPoint:$('btnPoint'),
+    quickBg: Array.from(document.querySelectorAll('[data-quickbg]'))
 };
+
+/* One place for messages: the Studio host when embedded, the kit otherwise. */
+const notify = (msg, opts) => Embed.toast(msg, opts);
+Kit.config({ stage: '#canvasWrapper' });
 
 /* ============================================================
    Small helpers
    ============================================================ */
+let sceneReady = false;          // false until the saved scene has been looked at
+let sceneTimer = 0;
+const markScene = () => {
+    if (!sceneReady) return;
+    clearTimeout(sceneTimer);
+    sceneTimer = setTimeout(() => flushScene(), 700);
+};
 const clamp = (v, lo, hi) => v < lo ? lo : v > hi ? hi : v;
-const invalidate = () => { state.dirty = true; };
+const invalidate = () => { state.dirty = true; markScene(); };
 const texById = id => state.textures.find(t => t.id === id);
+const activeTex = () => texById(state.activeTexId);
 
 function frameSize(tex){
     return { w: tex.img.width / tex.cols, h: tex.img.height / tex.rows };
@@ -978,9 +447,15 @@ function resizeCanvas(){
     if (canvas.width === w && canvas.height === h) return;
     canvas.width  = w;
     canvas.height = h;
-    invalidate();
+    state.dirty = true;
 }
-window.addEventListener('resize', resizeCanvas);
+/* A view that came from Fit stays fitted when the window changes size. A hidden
+   frame measures 0 x 0 and is ignored: the next real size refits it. */
+function onResize(){
+    resizeCanvas();
+    if (state.viewFit && state.isLoaded && view.w > 40 && view.h > 40) fitView({ quiet: true });
+}
+window.addEventListener('resize', onResize);
 
 /* The canvas is sized from its wrapper, and the wrapper changes size for
    reasons no window resize event covers — the timeline bar appearing on the
@@ -988,7 +463,7 @@ window.addEventListener('resize', resizeCanvas);
    backing store no longer matches the element and CSS quietly rescales the
    whole drawing: the gizmo is then painted tens of pixels away from where the
    hit test believes it is, and the handles stop taking. */
-if (window.ResizeObserver) new ResizeObserver(() => resizeCanvas()).observe(wrapper);
+if (window.ResizeObserver) new ResizeObserver(() => onResize()).observe(wrapper);
 
 function showZoomBadge(){
     ui.zoomBadge.textContent = Math.round(state.scale * 100) + '%';
@@ -1003,17 +478,21 @@ function zoomBy(delta, sx = view.w / 2, sy = view.h / 2){
     const k = state.scale / old - 1;
     state.offsetX -= (sx - view.w / 2 - state.offsetX) * k;
     state.offsetY -= (sy - view.h / 2 - state.offsetY) * k;
+    state.viewFit = false;
     showZoomBadge();
     invalidate();
 }
 
 function resetView(){
     state.scale = 1; state.offsetX = 0; state.offsetY = 0;
+    state.viewFit = false;
     showZoomBadge(); invalidate();
 }
 
-function fitView(){
+function fitView(opts){
     if (!state.instances.length) { resetView(); return; }
+    // a hidden frame measures nothing: fit when it has a size again
+    if (view.w < 40 || view.h < 40) { state.viewFit = true; return; }
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     state.instances.forEach(inst => {
         const { w, h } = instSize(inst);
@@ -1025,56 +504,249 @@ function fitView(){
     state.scale = clamp(Math.min(view.w / bw, view.h / bh) * 0.85, 0.05, 40);
     state.offsetX = -((minX + maxX) / 2) * state.scale;
     state.offsetY = -((minY + maxY) / 2) * state.scale;
-    showZoomBadge(); invalidate();
+    state.viewFit = true;
+    if (!(opts && opts.quiet === true)) showZoomBadge();
+    invalidate();
 }
+
+/* ============================================================
+   Persistence: one IndexedDB, three stores
+     folders  the texture library (remembered folders)
+     scene    key 'last': the whole scene, textures as file handles
+     blobs    a copy of every texture that has no handle (a drop from the
+              tray, a browser without the File System Access API), and of the
+              background image
+   ============================================================ */
+const LIB_DB = 'flipbookStudio', LIB_STORE = 'folders', LIB_KEY = 'flipbookStudio.library';
+const SCENE_STORE = 'scene', BLOB_STORE = 'blobs', DB_VERSION = 2;
+const IMAGE_RE = /\.(png|jpe?g|webp|gif|bmp)$/i;
+
+function idb(){
+    return new Promise((resolve, reject) => {
+        if (!window.indexedDB) return reject(new Error('no indexedDB'));
+        const req = indexedDB.open(LIB_DB, DB_VERSION);
+        req.onupgradeneeded = () => {
+            const db = req.result;
+            if (!db.objectStoreNames.contains(LIB_STORE))   db.createObjectStore(LIB_STORE, { keyPath:'id' });
+            if (!db.objectStoreNames.contains(SCENE_STORE)) db.createObjectStore(SCENE_STORE);
+            if (!db.objectStoreNames.contains(BLOB_STORE))  db.createObjectStore(BLOB_STORE, { keyPath:'id' });
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror   = () => reject(req.error || new Error('indexedDB unavailable'));
+        req.onblocked = () => reject(new Error('indexedDB blocked'));
+    });
+}
+
+/** One request in its own transaction; resolves with the request's result. */
+function dbDo(store, mode, fn){
+    return idb().then(db => new Promise((resolve, reject) => {
+        let req;
+        try {
+            const tx = db.transaction(store, mode);
+            req = fn(tx.objectStore(store));
+            tx.oncomplete = () => { db.close(); resolve(req ? req.result : undefined); };
+            tx.onerror    = () => { db.close(); reject(tx.error); };
+            tx.onabort    = () => { db.close(); reject(tx.error || new Error('aborted')); };
+        } catch (err) { db.close(); reject(err); }
+    }));
+}
+const dbGet  = (store, key)      => dbDo(store, 'readonly',  s => s.get(key));
+const dbKeys = store             => dbDo(store, 'readonly',  s => s.getAllKeys());
+const dbPut  = (store, val, key) => dbDo(store, 'readwrite', s => key === undefined ? s.put(val) : s.put(val, key));
+const dbDel  = (store, key)      => dbDo(store, 'readwrite', s => s.delete(key));
+
+/* ============================================================
+   Playback state and the icon that shows it
+   ============================================================ */
+function paintPlay(){
+    const on = state.isPlaying;
+    const b = ui.playBtn;
+    b.textContent = '';
+    const ic = Kit.icon(on ? 'pause' : 'play');
+    ic.classList.add('lg');
+    b.appendChild(ic);                       // exactly one icon at a time
+    b.dataset.state = on ? 'playing' : 'paused';
+    b.title = (on ? 'Pause' : 'Play') + ' (Space or K)';
+    b.setAttribute('aria-label', on ? 'Pause' : 'Play');
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    setAction('play', { label: on ? 'Pause' : 'Play', icon: on ? 'pause' : 'play' });
+}
+function setPlaying(on){
+    on = !!on;
+    if (state.isPlaying === on) { paintPlay(); return; }
+    state.isPlaying = on;
+    state.frameTimer = 0;
+    paintPlay();
+    invalidate();
+}
+function togglePlay(){ setPlaying(!state.isPlaying); }
 
 /* ============================================================
    Textures
    ============================================================ */
-/**
- * @param file    the image to load
- * @param handle  optional FileSystemFileHandle — kept so "Reimport" can pull
- *                fresh pixels off disk later without a second file dialog.
- */
-function handleTextureFile(file, handle){
-    if (!file || !file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-        const img = new Image();
-        img.onload = () => {
-            let cols = 8, rows = 8;
-            const m = file.name.match(/(\d+)\s*[xX]\s*(\d+)/);
-            if (m) { cols = Math.max(1, parseInt(m[1])); rows = Math.max(1, parseInt(m[2])); }
+const isTga   = f => /\.tga$/i.test(f.name || '');
+const isImage = f => /^image\//.test(f.type || '') || IMAGE_RE.test(f.name || '');
 
-            const tex = {
-                id: Date.now() + Math.random(),
-                img, name: file.name,
-                handle: handle || null,
-                cols, rows, totalFrames: cols * rows,
-                channel: 'all',
-                tint: state.lastTint, tintAmount: state.lastTintAmount,
-                proc: null, procCtx: null, procKey: null,
-                chan: null, chanCtx: null, chanKey: null
-            };
-            state.textures.push(tex);
-            state.activeTexId = tex.id;
-            state.absoluteFrame = 0;
-
-            if (!state.isLoaded) {
-                bootstrap();
-            } else {
-                const inst = createInstance(0, 0, false);
-                renderTextureStrip();
-                loadActiveTextureSettings();
-                if (inst) setSelection([inst]);
-                updateRanges();
-                invalidate();
-            }
+/** Decode an image file. Rejects when the browser cannot read it. */
+function decodeImage(file){
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('read failed'));
+        reader.onload = ev => {
+            const img = new Image();
+            img.onload  = () => resolve(img);
+            img.onerror = () => reject(new Error('decode failed'));
+            img.src = ev.target.result;
         };
-        img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
+        reader.readAsDataURL(file);
+    });
 }
+
+/** A small picture for the strip, made once. */
+function makeThumb(img){
+    const k = Math.min(1, 108 / Math.max(img.width, img.height));
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(img.width * k));
+    c.height = Math.max(1, Math.round(img.height * k));
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    try { return c.toDataURL('image/png'); } catch (err) { return img.src; }
+}
+
+/** Grid from a name like fire_8x8.png. Several NxN in a name: the last that divides the image. */
+function gridFromName(name, img){
+    const found = [];
+    const re = /(\d+)\s*[xX]\s*(\d+)/g;
+    let m;
+    while ((m = re.exec(name))) {
+        const c = parseInt(m[1], 10), r = parseInt(m[2], 10);
+        if (c >= 1 && r >= 1 && c <= 64 && r <= 64) found.push([c, r]);
+    }
+    if (!found.length) return [8, 8];
+    const fits = found.filter(([c, r]) => img.width % c === 0 && img.height % r === 0);
+    return (fits.length ? fits : found)[(fits.length ? fits : found).length - 1];
+}
+
+function makeTexture(file, img, handle, saved){
+    const [cols, rows] = saved ? [saved.cols, saved.rows] : gridFromName(file.name, img);
+    return {
+        id: saved ? saved.id : Date.now() + Math.random(),
+        img, name: saved ? saved.name : file.name,
+        handle: handle || null,
+        src: file,                       // kept for the saved scene (handle-less textures)
+        blobSaved: false,
+        thumb: makeThumb(img),
+        cols, rows, totalFrames: saved ? saved.totalFrames : cols * rows,
+        channel: saved ? saved.channel : 'all',
+        tint: saved ? saved.tint : state.lastTint,
+        tintAmount: saved ? saved.tintAmount : state.lastTintAmount,
+        proc: null, procCtx: null, procKey: null,
+        chan: null, chanCtx: null, chanKey: null
+    };
+}
+
+/** Show the loaded-state UI (first texture in). */
+function enterLoaded(){
+    state.isLoaded = true;
+    ui.emptyState.classList.add('hidden');
+    ui.stats.classList.remove('hidden');
+    ui.timeline.classList.add('show');
+    ui.stage.classList.add('loaded');
+    gated.forEach(s => s.classList.remove('disabled'));
+    ['reimport', 'play', 'fit', 'clear'].forEach(id => setAction(id, { disabled: false }));
+    resizeCanvas();   // after the timeline has taken its height, not before
+}
+function leaveLoaded(){
+    state.isLoaded = false;
+    ui.emptyState.classList.remove('hidden');
+    ui.stats.classList.add('hidden');
+    ui.timeline.classList.remove('show');
+    ui.stage.classList.remove('loaded');
+    gated.forEach(s => s.classList.add('disabled'));
+    ['reimport', 'play', 'fit', 'clear'].forEach(id => setAction(id, { disabled: true }));
+    Embed.status('');
+}
+
+/** Lay new instances out side by side (rows of up to 4, then a square-ish block) around (cx, cy). */
+function layoutBatch(insts, cx, cy){
+    const n = insts.length;
+    if (n === 1) { insts[0].x = cx; insts[0].y = cy; return; }
+    const perRow = n <= 4 ? n : Math.ceil(Math.sqrt(n));
+    const rows = [];
+    for (let i = 0; i < n; i += perRow) rows.push(insts.slice(i, i + perRow));
+    const dims = rows.map(r => {
+        const sizes = r.map(i => instSize(i));
+        return { sizes,
+                 w: sizes.reduce((a, s) => a + s.w, 0) + BATCH_GAP * (r.length - 1),
+                 h: Math.max(...sizes.map(s => s.h)) };
+    });
+    const totalH = dims.reduce((a, d) => a + d.h, 0) + BATCH_GAP * (rows.length - 1);
+    let y = cy - totalH / 2;
+    rows.forEach((r, ri) => {
+        let x = cx - dims[ri].w / 2;
+        r.forEach((inst, i) => {
+            const s = dims[ri].sizes[i];
+            inst.x = x + s.w / 2;
+            inst.y = y + dims[ri].h / 2;
+            x += s.w + BATCH_GAP;
+        });
+        y += dims[ri].h + BATCH_GAP;
+    });
+}
+
+/**
+ * Add sheets. items = [{file, handle}] (handle: a FileSystemFileHandle, kept so
+ * Reimport can pull fresh pixels off disk later without a second dialog).
+ * Several at once are laid out next to each other instead of stacked at the origin.
+ */
+async function addTextureItems(items){
+    await bootDone;
+    const made = [];
+    let tga = 0;
+    const bad = [];
+    for (const it of items) {
+        const f = it && it.file;
+        if (!f) continue;
+        if (isTga(f)) { tga++; continue; }
+        if (!isImage(f)) continue;
+        try { made.push(makeTexture(f, await decodeImage(f), it.handle)); }
+        catch (err) { bad.push(f.name); }
+    }
+
+    const notes = [];
+    if (tga) notes.push(tga === 1 ? 'A TGA file was skipped: it cannot be opened here, export the sheet as PNG.'
+                                  : tga + ' TGA files were skipped: they cannot be opened here, export them as PNG.');
+    if (bad.length) notes.push('Could not read ' + bad.join(', ') + '.');
+    if (!made.length) {
+        if (notes.length) notify(notes.join(' '), { kind: bad.length ? 'err' : 'warn' });
+        return [];
+    }
+
+    const first = !state.isLoaded;
+    state.absoluteFrame = 0;
+    if (first) { enterLoaded(); state.instances = []; resetView(); }
+    const c = first ? { x: 0, y: 0 } : s2w(view.w / 2, view.h / 2);
+
+    const insts = [];
+    made.forEach(tex => {
+        state.textures.push(tex);
+        state.activeTexId = tex.id;
+        const inst = createInstance(0, 0, false);
+        if (inst) insts.push(inst);
+    });
+    if (insts.length) layoutBatch(insts, c.x, c.y);
+
+    renderTextureStrip();
+    loadActiveTextureSettings();
+    setSelection(first || !insts.length ? [] : [insts[insts.length - 1]]);
+    updateRanges();
+    updateStats();
+    if (made.length > 1) fitView(); else if (first) resetView();
+    if (!state.isPlaying && first) setPlaying(true);
+    invalidate();
+    if (notes.length) notify(notes.join(' '), { kind: 'warn' });
+    return made;
+}
+const handleTextureFile = (file, handle) => addTextureItems([{ file, handle }]);
 
 function removeTexture(id){
     state.textures = state.textures.filter(t => t.id !== id);
@@ -1082,16 +754,8 @@ function removeTexture(id){
     setSelection(state.selection.filter(i => state.instances.includes(i)));
     if (state.activeTexId === id) state.activeTexId = state.textures.length ? state.textures[0].id : null;
 
-    if (!state.textures.length) {
-        state.isLoaded = false;
-        ui.emptyState.classList.remove('hidden');
-        ui.stats.classList.add('hidden');
-        ui.timeline.classList.remove('show');
-        ui.controls.classList.add('disabled');
-        ui.controls2.classList.add('disabled');
-    } else {
-        loadActiveTextureSettings();
-    }
+    if (!state.textures.length) leaveLoaded();
+    else loadActiveTextureSettings();
     renderTextureStrip();
     updateStats();
     invalidate();
@@ -1110,52 +774,35 @@ function removeTexture(id){
    fall back to asking for the file once and remembering the handle if
    one comes back.
    ------------------------------------------------------------ */
-let statusTimer = 0;
-
-function setReimportStatus(msg){
-    ui.reimportStatus.textContent = msg || '';
-    ui.reimportStatus.hidden = !msg;
-    clearTimeout(statusTimer);
-    if (msg) statusTimer = setTimeout(() => { ui.reimportStatus.hidden = true; }, 7000);
-}
-
 function flashThumb(id){
-    const el = ui.texThumbs.querySelector(`[data-texid="${id}"]`);
-    if (!el) return;
-    el.classList.remove('flash');
-    void el.offsetWidth;      // restart the animation
-    el.classList.add('flash');
+    const e = ui.texThumbs.querySelector(`[data-texid="${id}"]`);
+    if (!e) return;
+    e.classList.remove('flash');
+    void e.offsetWidth;      // restart the animation
+    e.classList.add('flash');
 }
 
 /** Swap fresh pixels into a texture already in the scene. Everything else survives. */
-function applyReloadedFile(tex, file){
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onerror = () => reject(new Error('read failed'));
-        reader.onload = ev => {
-            const img = new Image();
-            img.onerror = () => reject(new Error('decode failed'));
-            img.onload = () => {
-                tex.img = img;
-                tex.name = file.name;
-                tex.procKey = null;   // both caches were built from the old pixels
-                tex.chanKey = null;
-                renderTextureStrip();
-                if (tex.id === state.activeTexId) loadActiveTextureSettings();
-                updateStats();
-                invalidate();
-                resolve();
-            };
-            img.src = ev.target.result;
-        };
-        reader.readAsDataURL(file);
-    });
+async function applyReloadedFile(tex, file){
+    const img = await decodeImage(file);
+    tex.img = img;
+    tex.name = file.name;
+    tex.src = file;
+    tex.blobSaved = false;   // a handle-less texture saves its new bytes with the scene
+    tex.thumb = makeThumb(img);
+    tex.procKey = null;      // both caches were built from the old pixels
+    tex.chanKey = null;
+    renderTextureStrip();
+    if (tex.id === state.activeTexId) loadActiveTextureSettings();
+    updateStats();
+    invalidate();
 }
 
-async function fileFromHandle(handle){
+/** Read a handle. `interactive` may raise a permission prompt, so it needs a gesture. */
+async function fileFromHandle(handle, interactive = true){
     if (handle.queryPermission) {
         let perm = await handle.queryPermission({ mode: 'read' });
-        if (perm !== 'granted') perm = await handle.requestPermission({ mode: 'read' });
+        if (perm !== 'granted' && interactive) perm = await handle.requestPermission({ mode: 'read' });
         if (perm !== 'granted') return null;
     }
     return handle.getFile();
@@ -1202,13 +849,13 @@ async function reimportTexture(tex, silent){
 
     if (!file) return false;
     try { await applyReloadedFile(tex, file); }
-    catch (err) { setReimportStatus(`Could not read ${file.name}.`); return false; }
+    catch (err) { notify(`Could not read ${file.name}.`, { kind: 'err' }); return false; }
     flashThumb(tex.id);
     return true;
 }
 
 async function reimportAll(){
-    if (!state.textures.length) { setReimportStatus('No textures to reload.'); return; }
+    if (!state.textures.length) { notify('No textures to reload.'); return; }
 
     let done = 0;
     const manual = [];
@@ -1234,21 +881,22 @@ async function reimportAll(){
     }
 
     const time = new Date().toLocaleTimeString();
-    if (!done) setReimportStatus('Nothing reloaded.');
-    else setReimportStatus(
-        `Reloaded ${done} texture${done > 1 ? 's' : ''} at ${time}` +
-        (manual.length ? ` · ${manual.length} need the ↻ on the thumbnail` : ''));
+    if (!done) notify('Nothing reloaded.');
+    else notify(`Reloaded ${done} texture${done > 1 ? 's' : ''} at ${time}` +
+        (manual.length ? `. ${manual.length} need the reload button on the thumbnail.` : '.'));
 }
 
-/** "+ Add texture" — prefer the picker that hands back handles. */
+/** Add texture — prefer the picker that hands back handles. */
 async function addTextures(){
     if (window.showOpenFilePicker) {
         try {
             const handles = await window.showOpenFilePicker({
                 multiple: true,
-                types: [{ description: 'Images', accept: { 'image/*': ['.png','.jpg','.jpeg','.webp','.gif','.bmp','.tga'] } }]
+                types: [{ description: 'Images', accept: { 'image/*': ['.png','.jpg','.jpeg','.webp','.gif','.bmp'] } }]
             });
-            for (const h of handles) handleTextureFile(await h.getFile(), h);
+            const items = [];
+            for (const h of handles) items.push({ file: await h.getFile(), handle: h });
+            await addTextureItems(items);
             return;
         } catch (err) {
             if (err && err.name === 'AbortError') return;      // cancelled
@@ -1260,94 +908,75 @@ async function addTextures(){
 }
 
 function renderTextureStrip(){
-    ui.texThumbs.innerHTML = '';
-    if (!state.textures.length) {
-        ui.texThumbs.innerHTML = '<span class="muted">No textures loaded</span>';
-        return;
-    }
+    const box = ui.texThumbs;
+    box.textContent = '';
     state.textures.forEach(tex => {
-        const btn = document.createElement('button');
-        btn.className = 'thumb' + (tex.id === state.activeTexId ? ' on' : '');
-        btn.title = tex.name + (tex.handle ? '' : '  (reimport will ask for the file)');
-        btn.dataset.texid = tex.id;
-        btn.addEventListener('click', () => {
+        // a tile holds three real buttons: pick (the picture), reimport and remove (corners, on hover or focus)
+        const tile = document.createElement('div');
+        tile.className = 'thumb' + (tex.id === state.activeTexId ? ' on' : '');
+        tile.dataset.texid = tex.id;
+
+        const pick = document.createElement('button');
+        pick.type = 'button';
+        pick.className = 'pick';
+        pick.title = tex.name + (tex.handle ? '' : '  (reimport will ask for the file)');
+        pick.setAttribute('aria-label', tex.name);
+        pick.setAttribute('aria-pressed', tex.id === state.activeTexId ? 'true' : 'false');
+        pick.addEventListener('click', () => {
             state.activeTexId = tex.id;
             renderTextureStrip();
             loadActiveTextureSettings();
             invalidate();
         });
-
         const img = document.createElement('img');
-        img.src = tex.img.src;
-        btn.appendChild(img);
+        img.alt = '';
+        img.src = tex.thumb;
+        pick.appendChild(img);
+        tile.appendChild(pick);
 
         if (tintActive(tex)) {
             const dot = document.createElement('span');
             dot.className = 'tintdot';
             dot.style.background = tex.tint;
             dot.title = `Tint ${tex.tint} @ ${Math.round(tex.tintAmount * 100)}%`;
-            btn.appendChild(dot);
+            tile.appendChild(dot);
         }
 
-        const re = document.createElement('button');
-        re.className = 're';
-        re.textContent = '↻';
-        re.title = 'Reimport this texture from disk';
-        re.addEventListener('click', async e => {
-            e.stopPropagation();
-            if (await reimportTexture(tex, false)) setReimportStatus(`Reloaded ${tex.name} at ${new Date().toLocaleTimeString()}`);
+        const mini = (cls, title, icon, fn) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'mini ' + cls;
+            b.title = title;
+            b.setAttribute('aria-label', title);
+            b.appendChild(Kit.icon(icon));
+            b.addEventListener('click', fn);
+            tile.appendChild(b);
+        };
+        mini('re', 'Reimport this texture from disk', 'reset', async () => {
+            if (await reimportTexture(tex, false)) notify(`Reloaded ${tex.name} at ${new Date().toLocaleTimeString()}.`);
         });
-        btn.appendChild(re);
+        mini('x', 'Remove texture and its instances', 'close', () => removeTexture(tex.id));
 
-        const x = document.createElement('button');
-        x.className = 'x';
-        x.textContent = '×';
-        x.title = 'Remove texture and its instances';
-        x.addEventListener('click', e => { e.stopPropagation(); removeTexture(tex.id); });
-        btn.appendChild(x);
-
-        ui.texThumbs.appendChild(btn);
+        box.appendChild(tile);
     });
+
+    const add = document.createElement('button');
+    add.type = 'button';
+    add.className = 'thumb add';
+    add.title = 'Add texture';
+    add.setAttribute('aria-label', 'Add texture');
+    add.appendChild(Kit.icon('plus'));
+    add.addEventListener('click', addTextures);
+    box.appendChild(add);
 }
 
 function loadActiveTextureSettings(){
-    const tex = texById(state.activeTexId);
+    const tex = activeTex();
     if (!tex) return;
-    ui.cols.value  = tex.cols;
-    ui.rows.value  = tex.rows;
-    ui.total.value = tex.totalFrames;
-    $('statFilename').textContent = tex.name;
-    $('statSrcRes').textContent   = `${tex.img.width}×${tex.img.height}`;
-
-    ui.presetRow.querySelectorAll('button').forEach(b => {
-        b.classList.toggle('active', b.dataset.preset === `${tex.cols},${tex.rows}`);
-    });
-    ui.channelBtns.querySelectorAll('button').forEach(b => {
-        b.classList.toggle('active', b.dataset.ch === tex.channel);
-    });
-    syncTintUI();
+    ui.statFilename.textContent = tex.name;
+    ui.statSrcRes.textContent   = `${tex.img.width}×${tex.img.height}`;
+    if (ui.texRows) ui.texRows.sync();
     updateRanges();
-}
-
-function bootstrap(){
-    state.isLoaded = true;
-    ui.emptyState.classList.add('hidden');
-    ui.stats.classList.remove('hidden');
-    ui.timeline.classList.add('show');
-    ui.controls.classList.remove('disabled');
-    ui.controls2.classList.remove('disabled');
-    resizeCanvas();   // after the timeline has taken its height, not before
-
-    renderTextureStrip();
-    loadActiveTextureSettings();
-    resetView();
-    state.instances = [];
-    const inst = createInstance(0, 0, false);
-    if (inst) setSelection([]);
-    updateStats();
-    updateRanges();
-    if (!state.isPlaying) togglePlay();
-    invalidate();
 }
 
 /* ============================================================
@@ -1363,27 +992,10 @@ function bootstrap(){
    input; the tick list is still remembered, only the link to the folder
    has to be drawn again each session.
    ============================================================ */
-const LIB_DB = 'flipbookStudio', LIB_STORE = 'folders', LIB_KEY = 'flipbookStudio.library';
-const IMAGE_RE = /\.(png|jpe?g|webp|gif|bmp)$/i;
-
 let library = [];
 const libMode = typeof window.showDirectoryPicker === 'function' ? 'native' : 'fallback';
 let libPersist = 'none';        // 'idb' | 'ls' | 'none'
 let libStatusTimer = 0;
-
-function idb(){
-    return new Promise((resolve, reject) => {
-        if (!window.indexedDB) return reject(new Error('no indexedDB'));
-        const req = indexedDB.open(LIB_DB, 1);
-        req.onupgradeneeded = () => {
-            const db = req.result;
-            if (!db.objectStoreNames.contains(LIB_STORE)) db.createObjectStore(LIB_STORE, { keyPath:'id' });
-        };
-        req.onsuccess = () => resolve(req.result);
-        req.onerror   = () => reject(req.error || new Error('indexedDB unavailable'));
-        req.onblocked = () => reject(new Error('indexedDB blocked'));
-    });
-}
 
 function normalizeEntry(r){
     return {
@@ -1397,14 +1009,9 @@ function normalizeEntry(r){
 
 async function loadLibrary(){
     try {
-        const db = await idb();
-        const recs = await new Promise((resolve, reject) => {
-            const req = db.transaction(LIB_STORE, 'readonly').objectStore(LIB_STORE).getAll();
-            req.onsuccess = () => { resolve(req.result || []); db.close(); };
-            req.onerror   = () => { reject(req.error); db.close(); };
-        });
+        const recs = await dbDo(LIB_STORE, 'readonly', s => s.getAll());
         libPersist = 'idb';
-        return recs.map(normalizeEntry);
+        return (recs || []).map(normalizeEntry);
     } catch (err) { /* no IndexedDB here — plain metadata below */ }
 
     try {
@@ -1515,16 +1122,19 @@ async function addFolder(){
     renderLibrary();
 }
 
-async function importFolder(entry){
+/** Load the ticked sheets of a folder. `skip` names are left out (already in the scene). */
+async function importFolder(entry, skip){
     if (!entry.files && !(await refreshFolder(entry, true))) { renderLibrary(); return; }
 
-    const wanted = entry.files.filter(f => entry.picks.includes(f.name));
-    if (!wanted.length) { setLibStatus('Nothing ticked in ' + entry.name + '.'); return; }
+    const wanted = entry.files.filter(f => entry.picks.includes(f.name) && !(skip && skip.has(f.name)));
+    if (!wanted.length) { if (!skip) setLibStatus('Nothing ticked in ' + entry.name + '.'); return; }
 
+    const items = [];
     for (const f of wanted) {
         const file = f.handle ? await f.handle.getFile() : f.file;
-        handleTextureFile(file, f.handle || null);   // the handle travels along, so Reimport works
+        items.push({ file, handle: f.handle || null });   // the handle travels along, so Reimport works
     }
+    await addTextureItems(items);
     setLibStatus(`Imported ${wanted.length} sheet${wanted.length > 1 ? 's' : ''} from ${entry.name}.`);
 }
 
@@ -1535,10 +1145,12 @@ function togglePick(entry, name, on){
     saveLibrary();
 }
 
-function libBtn(label, title, fn){
+function libBtn(label, title, fn, icon){
     const b = document.createElement('button');
-    b.className = 'btn mini';
-    b.textContent = label;
+    b.type = 'button';
+    b.className = 'sm' + (icon ? ' ibtn' : '');
+    if (icon) { b.appendChild(Kit.icon(icon)); b.setAttribute('aria-label', title); }
+    else b.textContent = label;
     if (title) b.title = title;
     b.addEventListener('click', fn);
     return b;
@@ -1549,12 +1161,15 @@ function folderRow(entry){
     box.className = 'libfolder' + (entry.files ? '' : ' stale');
 
     const head = document.createElement('div');
-    head.className = 'row tight';
+    head.className = 'libhead';
 
     const name = document.createElement('button');
+    name.type = 'button';
     name.className = 'libname';
-    name.textContent = (entry.expanded ? '▾ ' : '▸ ') + entry.name;
+    name.appendChild(Kit.icon(entry.expanded ? 'chevd' : 'chevr'));
+    name.appendChild(el('span', '', entry.name));
     name.title = entry.name;
+    name.setAttribute('aria-expanded', entry.expanded ? 'true' : 'false');
     name.addEventListener('click', async () => {
         entry.expanded = !entry.expanded;
         if (entry.expanded && !entry.files) await refreshFolder(entry, true);
@@ -1574,11 +1189,11 @@ function folderRow(entry){
     };
     syncCount();
 
-    head.appendChild(libBtn('×', 'Forget this folder — nothing on disk is touched', async () => {
+    head.appendChild(libBtn('', 'Forget this folder (nothing on disk is touched)', async () => {
         library = library.filter(e => e !== entry);
         await saveLibrary();
         renderLibrary();
-    }));
+    }, 'close'));
     box.appendChild(head);
 
     if (!entry.expanded) return box;
@@ -1629,14 +1244,13 @@ function folderRow(entry){
     box.appendChild(bar);
 
     const auto = document.createElement('label');
-    auto.className = 'chk';
-    auto.style.marginTop = '9px';
+    auto.className = 'chk libauto';
     const acb = document.createElement('input');
     acb.type = 'checkbox';
     acb.checked = !!entry.auto;
     acb.addEventListener('change', () => { entry.auto = acb.checked; saveLibrary(); });
     auto.appendChild(acb);
-    auto.appendChild(document.createTextNode(' Load ticked sheets when the page opens'));
+    auto.appendChild(document.createTextNode('Load ticked sheets when the page opens'));
     box.appendChild(auto);
 
     return box;
@@ -1646,11 +1260,11 @@ function updateLibStatus(){
     const n = library.length;
     const where = libPersist === 'idb' ? 'remembered in this browser'
                 : libPersist === 'ls'  ? 'ticks remembered, folder link is not'
-                :                        'nothing can be saved — this browser blocks local storage here';
+                :                        'nothing can be saved: this browser blocks local storage here';
     const how = libMode === 'native'
         ? 'Reopen the page and click Connect once to allow reading again.'
         : 'This browser cannot keep a folder link, so pick the folder again each session.';
-    ui.libStatus.textContent = `${n} folder${n === 1 ? '' : 's'} · ${where}. ${how}`;
+    ui.libStatus.textContent = `${n} folder${n === 1 ? '' : 's'}, ${where}. ${how}`;
 }
 
 function setLibStatus(msg){
@@ -1660,9 +1274,9 @@ function setLibStatus(msg){
 }
 
 function renderLibrary(){
-    ui.libList.innerHTML = '';
+    ui.libList.textContent = '';
     if (!library.length) {
-        ui.libList.innerHTML = '<span class="muted">No folders saved</span>';
+        ui.libList.appendChild(el('div', 'hint', 'No folders saved'));
     } else {
         library.forEach(entry => ui.libList.appendChild(folderRow(entry)));
     }
@@ -1673,16 +1287,18 @@ async function initLibrary(){
     library = await loadLibrary();
     renderLibrary();
 
+    // sheets already in the scene (restored a moment ago) are not loaded twice
+    const have = new Set(state.textures.map(t => t.name));
     for (const entry of library) {
         // a permission prompt needs a gesture, so only folders the browser still
         // trusts can come back on their own; the rest wait behind Connect.
-        if (entry.auto && entry.handle && await refreshFolder(entry, false)) await importFolder(entry);
+        if (entry.auto && !pendingScene && entry.handle && await refreshFolder(entry, false)) await importFolder(entry, have);
     }
     renderLibrary();
 
     if (library.some(e => e.auto && !e.files)) {
-        ui.librarySec.open = true;
-        setLibStatus('A folder is set to load on startup — open it and click Connect to allow reading.');
+        ui.librarySec.toggle(true);
+        setLibStatus('A folder is set to load on startup. Click Connect to allow reading.');
     }
 }
 
@@ -1690,7 +1306,7 @@ async function initLibrary(){
    Instances
    ============================================================ */
 function createInstance(x, y, isAuto){
-    const tex = texById(state.activeTexId);
+    const tex = activeTex();
     if (!tex) return null;
 
     const lo = state.baseScale * (1 - state.randScaleAmt);
@@ -1914,9 +1530,9 @@ function cursorForHandle(h){
    ============================================================ */
 function setTool(tool){
     state.tool = tool;
-    ui.toolPan.classList.toggle('active', tool === 'pan');
-    ui.toolSelect.classList.toggle('active', tool === 'select');
-    ui.toolScatter.classList.toggle('active', tool === 'scatter');
+    ui.toolPan.classList.toggle('on', tool === 'pan');
+    ui.toolSelect.classList.toggle('on', tool === 'select');
+    ui.toolScatter.classList.toggle('on', tool === 'scatter');
     if (tool !== 'select') { setSelection([]); state.hovered = null; }
     applyCursor();
     invalidate();
@@ -2061,16 +1677,16 @@ window.addEventListener('pointermove', e => {
             const t = pickTarget(p, w, e.pointerType === 'touch');
 
             const key = t && t.kind === 'handle' ? t.h.type + t.h.ux + t.h.uy : null;
-            if (state.hoveredHandle !== key) { state.hoveredHandle = key; invalidate(); }
+            if (state.hoveredHandle !== key) { state.hoveredHandle = key; state.dirty = true; }
 
             const body = t && t.kind === 'body' ? t.inst : null;
-            if (state.hovered !== body) { state.hovered = body; invalidate(); }
+            if (state.hovered !== body) { state.hovered = body; state.dirty = true; }
 
             if (t && t.kind === 'handle')    applyCursor(cursorForHandle(t.h));
             else if (t && t.kind === 'move') applyCursor('move');
             else                             applyCursor();
         } else if (state.hovered || state.hoveredHandle) {
-            state.hovered = null; state.hoveredHandle = null; invalidate();
+            state.hovered = null; state.hoveredHandle = null; state.dirty = true;
         }
         return;
     }
@@ -2081,6 +1697,7 @@ window.addEventListener('pointermove', e => {
         case 'pan':
             state.offsetX = drag.startOffset.x + (p.x - drag.startScreen.x);
             state.offsetY = drag.startOffset.y + (p.y - drag.startScreen.y);
+            state.viewFit = false;
             invalidate();
             break;
 
@@ -2264,6 +1881,7 @@ function updatePinch(){
     state.offsetX += cx - pinch.cx;
     state.offsetY += cy - pinch.cy;
     if (pinch.dist > 0) zoomBy((dist - pinch.dist) * 0.01, cx, cy);
+    state.viewFit = false;
 
     pinch.dist = dist; pinch.cx = cx; pinch.cy = cy;
     invalidate();
@@ -2281,11 +1899,24 @@ wrapper.addEventListener('contextmenu', e => e.preventDefault());
    Keyboard
    ============================================================ */
 function isTyping(){
-    const el = document.activeElement;
-    return el && (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA');
+    const e = document.activeElement;
+    return e && (e.tagName === 'INPUT' || e.tagName === 'SELECT' || e.tagName === 'TEXTAREA');
 }
 
+/* A slider, tick box, colour or menu that was just used with the mouse must not keep the
+   keyboard: V, B, F, Space and the arrows would silently stop working until a click on the canvas. */
+let pointerHeld = false;
+document.addEventListener('pointerdown', () => { pointerHeld = true; }, true);
+document.addEventListener('pointerup', () => { setTimeout(() => { pointerHeld = false; }, 300); }, true);
+document.addEventListener('change', e => {
+    const t = e.target;
+    if (!pointerHeld || !t || !t.matches || !t.matches('input[type=range],input[type=checkbox],input[type=color],select')) return;
+    if (t.classList.contains('val')) return;
+    t.blur();
+}, true);
+
 window.addEventListener('keydown', e => {
+    if (Kit.dialogOpen()) return;
     state.shiftDown = e.shiftKey;
 
     if (e.code === 'Space' && !isTyping()) {
@@ -2303,7 +1934,7 @@ window.addEventListener('keydown', e => {
 
     const ctrl = e.ctrlKey || e.metaKey;
 
-    if (!ctrl) {
+    if (!ctrl && !e.altKey) {
         if (e.code === 'KeyV') { setTool('select'); return; }
         if (e.code === 'KeyB') { setTool('scatter'); return; }
         if (e.code === 'KeyH') { setTool('pan'); return; }
@@ -2354,43 +1985,36 @@ window.addEventListener('keyup', e => {
 });
 
 /* ============================================================
-   Drag & drop
+   Drag & drop (the kit draws the veil; Shift sends the image to the background)
    ============================================================ */
 let dropShift = false;
-window.addEventListener('dragover', e => {
-    e.preventDefault();
-    dropShift = e.shiftKey;
-    ui.dropOverlay.classList.add('show');
-});
-window.addEventListener('dragleave', e => {
-    if (e.relatedTarget === null) ui.dropOverlay.classList.remove('show');
-});
-window.addEventListener('drop', async e => {
-    e.preventDefault();
-    ui.dropOverlay.classList.remove('show');
-    const asBackground = e.shiftKey || dropShift;
+const dropImageType = f => isImage(f) || isTga(f);
 
-    // dataTransfer is emptied as soon as we await, so pull the files *and* ask
-    // for their handles synchronously — the handles are what makes a dropped
-    // sheet reimportable later.
-    const items = e.dataTransfer.items ? Array.from(e.dataTransfer.items) : [];
-    let dropped = items
-        .filter(it => it.kind === 'file')
-        .map(it => ({
-            file: it.getAsFile(),
-            handle: it.getAsFileSystemHandle ? it.getAsFileSystemHandle().catch(() => null) : Promise.resolve(null)
-        }));
-    if (!dropped.length) {
-        dropped = Array.from(e.dataTransfer.files).map(f => ({ file: f, handle: Promise.resolve(null) }));
-    }
-    dropped = dropped.filter(d => d.file && d.file.type.startsWith('image/'));
-    if (!dropped.length) return;
-
-    if (asBackground) { loadBackgroundImage(dropped[0].file); return; }
-    for (const d of dropped) {
-        const h = await d.handle;
-        handleTextureFile(d.file, h && h.kind === 'file' ? h : null);
-    }
+Kit.drop(document.body, {
+    accept: dropImageType,
+    overlayText: e => {
+        dropShift = !!(e && e.shiftKey);
+        return dropShift ? 'Release to use the image as the background'
+                         : 'Drop sprite sheets (hold Shift to use the image as the background)';
+    },
+    onFiles: (files, e) => {
+        const asBackground = e.shiftKey || dropShift;
+        dropShift = false;
+        // dataTransfer is emptied as soon as we await, so ask for the file handles
+        // synchronously — they are what makes a dropped sheet reimportable later.
+        const items = e.dataTransfer && e.dataTransfer.items ? Array.from(e.dataTransfer.items).filter(it => it.kind === 'file') : [];
+        const handleOf = new Map();
+        items.forEach(it => {
+            const f = it.getAsFile();
+            if (f && it.getAsFileSystemHandle) { try { handleOf.set(f.name + '|' + f.size, it.getAsFileSystemHandle().catch(() => null)); } catch (err) { /* no handle for this item */ } }
+        });
+        if (asBackground) { const img = files.filter(isImage)[0]; if (img) loadBackgroundImage(img); return; }
+        Promise.all(files.map(async f => {
+            const h = await (handleOf.get(f.name + '|' + f.size) || null);
+            return { file: f, handle: h && h.kind === 'file' ? h : null };
+        })).then(addTextureItems);
+    },
+    onReject: () => notify('Nothing to add: drop image files (PNG, JPG, WebP, GIF or BMP).')
 });
 
 /* ============================================================
@@ -2521,22 +2145,20 @@ function getCheckerPattern(){
     return checkerPattern;
 }
 
-function loadBackgroundImage(file){
-    if (!file || !file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-        const img = new Image();
-        img.onload = () => {
-            state.bg.img = img;
-            state.bg.imgName = file.name;
-            state.bg.mode = 'image';
-            ui.bgImgName.textContent = file.name.length > 22 ? file.name.slice(0, 21) + '…' : file.name;
-            syncBackgroundUI();
-            invalidate();
-        };
-        img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
+async function loadBackgroundImage(file){
+    if (!file || !isImage(file)) return;
+    try {
+        const img = await decodeImage(file);
+        state.bg.img = img;
+        state.bg.file = file;
+        state.bg.imgName = file.name;
+        state.bg.mode = 'image';
+        state.bg.blobSaved = false;
+        syncBackgroundUI();
+        invalidate();
+    } catch (err) {
+        notify(`Could not read ${file.name}.`, { kind: 'err' });
+    }
 }
 
 function drawBackground(){
@@ -2598,10 +2220,11 @@ function draw(){
     const sources = new Map();
     state.textures.forEach(t => sources.set(t.id, sourceFor(t)));
 
-    const activeTex = texById(state.activeTexId);
-    if (activeTex) {
-        const f = frameSize(activeTex);
-        $('statFrameRes').textContent = `${Math.floor(f.w)}×${Math.floor(f.h)}`;
+    const at = activeTex();
+    if (at) {
+        const f = frameSize(at);
+        const txt = `${Math.floor(f.w)}×${Math.floor(f.h)}`;
+        if (ui.statFrameRes.textContent !== txt) ui.statFrameRes.textContent = txt;
     }
 
     state.instances.forEach(inst => {
@@ -2649,33 +2272,41 @@ function currentFrame(inst, tex){
     return Math.floor(clamp(p, 0, 0.9999) * tex.totalFrames);
 }
 
+/* Overlays are white with a dark underlay, so they read on a black, grey, white or checkered background alike. */
+const INK = '#ffffff', INK_SOFT = 'rgba(255,255,255,.7)', UNDER = 'rgba(0,0,0,.6)';
+
 function drawFrameGuides(){
     ctx.save();
     ctx.globalCompositeOperation = 'source-over';
-    ctx.strokeStyle = 'rgba(80,255,140,.55)';
-    ctx.lineWidth = 1 / state.scale;
     state.instances.forEach(inst => {
         const { w, h } = instSize(inst);
         ctx.save();
         ctx.translate(inst.x, inst.y);
         ctx.rotate(inst.rotation);
-        ctx.strokeRect(-w / 2, -h / 2, w, h);
-        ctx.beginPath();
-        ctx.moveTo(0, -h / 2); ctx.lineTo(0, h / 2);
-        ctx.moveTo(-w / 2, 0); ctx.lineTo(w / 2, 0);
-        ctx.stroke();
+        [[UNDER, 3], ['rgba(255,255,255,.75)', 1]].forEach(([col, lw]) => {
+            ctx.strokeStyle = col;
+            ctx.lineWidth = lw / state.scale;
+            ctx.strokeRect(-w / 2, -h / 2, w, h);
+            ctx.beginPath();
+            ctx.moveTo(0, -h / 2); ctx.lineTo(0, h / 2);
+            ctx.moveTo(-w / 2, 0); ctx.lineTo(w / 2, 0);
+            ctx.stroke();
+        });
         ctx.restore();
     });
     ctx.restore();
 }
 
-function strokeQuad(pts, dash){
-    ctx.beginPath();
-    ctx.moveTo(pts[0].x, pts[0].y);
-    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-    ctx.closePath();
+function strokeQuad(pts, dash, color, lw){
+    const path = () => {
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.closePath();
+    };
     ctx.setLineDash(dash || []);
-    ctx.stroke();
+    ctx.strokeStyle = UNDER; ctx.lineWidth = (lw || 1.5) + 2; path(); ctx.stroke();
+    ctx.strokeStyle = color || INK; ctx.lineWidth = lw || 1.5; path(); ctx.stroke();
     ctx.setLineDash([]);
 }
 
@@ -2686,16 +2317,12 @@ function drawOverlays(){
     // hover outline
     if (state.tool === 'select' && state.hovered && !state.selection.includes(state.hovered)) {
         const pts = instCorners(state.hovered).map(p => w2s(p.x, p.y));
-        ctx.strokeStyle = 'rgba(255,255,255,.5)';
-        ctx.lineWidth = 1.5;
-        strokeQuad(pts, [4, 4]);
+        strokeQuad(pts, [4, 4], 'rgba(255,255,255,.7)', 1.5);
     }
 
     // per-instance outlines when several are selected
     if (state.selection.length > 1) {
-        ctx.strokeStyle = 'rgba(47,155,255,.65)';
-        ctx.fillStyle = 'rgba(47,155,255,.08)';
-        ctx.lineWidth = 1.5;
+        ctx.fillStyle = 'rgba(255,255,255,.07)';
         state.selection.forEach(inst => {
             const pts = instCorners(inst).map(p => w2s(p.x, p.y));
             ctx.beginPath();
@@ -2703,7 +2330,7 @@ function drawOverlays(){
             for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
             ctx.closePath();
             ctx.fill();
-            ctx.stroke();
+            strokeQuad(pts, null, INK_SOFT, 1.5);
         });
     }
 
@@ -2711,13 +2338,9 @@ function drawOverlays(){
     if (drag.kind === 'marquee' && drag.marquee) {
         const a = w2s(drag.marquee.x0, drag.marquee.y0);
         const b = w2s(drag.marquee.x1, drag.marquee.y1);
-        ctx.fillStyle = 'rgba(47,155,255,.15)';
-        ctx.strokeStyle = 'rgba(47,155,255,.85)';
-        ctx.lineWidth = 1;
-        ctx.setLineDash([5, 4]);
+        ctx.fillStyle = 'rgba(255,255,255,.10)';
         ctx.fillRect(a.x, a.y, b.x - a.x, b.y - a.y);
-        ctx.strokeRect(a.x, a.y, b.x - a.x, b.y - a.y);
-        ctx.setLineDash([]);
+        strokeQuad([{x:a.x,y:a.y},{x:b.x,y:a.y},{x:b.x,y:b.y},{x:a.x,y:b.y}], [5, 4], INK, 1);
     }
 
     // gizmo
@@ -2740,44 +2363,41 @@ function drawGizmo(){
     // real sprite bounds, when the handle box had to be padded out
     if (g.padded && !g.multi && state.selection[0]) {
         const pts = instCorners(state.selection[0]).map(p => w2s(p.x, p.y));
-        ctx.strokeStyle = 'rgba(47,155,255,.45)';
-        ctx.lineWidth = 1;
-        strokeQuad(pts, [2, 3]);
+        strokeQuad(pts, [2, 3], 'rgba(255,255,255,.6)', 1);
     }
 
     // the reserved move zone at the centre of a padded frame
     if (g.padded) {
         ctx.beginPath();
         ctx.arc(g.sx, g.sy, 4.5, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(47,155,255,.9)';
+        ctx.fillStyle = INK;
         ctx.fill();
-        ctx.strokeStyle = '#ffffff';
+        ctx.strokeStyle = '#101012';
         ctx.lineWidth = 1.5;
         ctx.stroke();
     }
 
-    ctx.strokeStyle = '#2f9bff';
-    ctx.lineWidth = 1.5;
-    strokeQuad(box, [5, 4]);
+    strokeQuad(box, [5, 4], INK, 1.5);
 
     // rotation stem + knob
     const top = gizmoPoint(g, 0, -1);
     const rp  = gizmoPoint(g, 0, -1, -ROT_OFFSET);
     ctx.beginPath();
     ctx.moveTo(top.x, top.y); ctx.lineTo(rp.x, rp.y);
-    ctx.stroke();
+    ctx.strokeStyle = UNDER; ctx.lineWidth = 3.5; ctx.stroke();
+    ctx.strokeStyle = INK; ctx.lineWidth = 1.5; ctx.stroke();
 
     const rotHot = state.hoveredHandle === 'rotate0-1' ||
                    (drag.kind === 'rotate');
     ctx.beginPath();
     ctx.arc(rp.x, rp.y, rotHot ? 9 : 7, 0, Math.PI * 2);
-    ctx.fillStyle = rotHot ? '#7dc4ff' : '#2f9bff';
+    ctx.fillStyle = rotHot ? '#ffffff' : '#d8d8de';
     ctx.fill();
-    ctx.strokeStyle = '#ffffff';
+    ctx.strokeStyle = '#101012';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // scale handles
+    // scale handles: corners white, edges grey
     HANDLES.forEach(h => {
         const p = gizmoPoint(g, h.ux, h.uy);
         const hot = state.hoveredHandle === h.type + h.ux + h.uy ||
@@ -2786,15 +2406,11 @@ function drawGizmo(){
         const s = (hot ? HANDLE_SIZE + 3 : HANDLE_SIZE);
 
         ctx.beginPath();
-        if (h.type === 'corner') {
-            ctx.rect(p.x - s / 2, p.y - s / 2, s, s);
-            ctx.fillStyle = hot ? '#ffffff' : '#e8f3ff';
-        } else {
-            ctx.rect(p.x - s / 2, p.y - s / 2, s, s);
-            ctx.fillStyle = hot ? '#ffc182' : '#ff9a3d';
-        }
+        ctx.rect(p.x - s / 2, p.y - s / 2, s, s);
+        if (h.type === 'corner') ctx.fillStyle = hot ? '#ffffff' : '#ececf0';
+        else                     ctx.fillStyle = hot ? '#d0d0d8' : '#9a9aa4';
         ctx.fill();
-        ctx.strokeStyle = h.type === 'corner' ? '#2f9bff' : '#7a4413';
+        ctx.strokeStyle = '#101012';
         ctx.lineWidth = 1.5;
         ctx.stroke();
     });
@@ -2887,198 +2503,358 @@ function deleteSelection(){
     updateStats();
 }
 
-/* ============================================================
-   Selection panel
-   ============================================================ */
-let syncing = false;
-
-function syncSelectionPanel(){
-    const sel = state.selection;
-    if (!sel.length || (state.tool !== 'select' && drag.kind !== 'spawn')) {
-        ui.selSection.hidden = true;
-        return;
-    }
-    syncing = true;
-    const p = sel[0];
-    ui.selSection.hidden = false;
-    ui.selHeader.textContent = sel.length > 1 ? `Selection — ${sel.length} instances` : 'Selection';
-
-    ui.selPosX.value = Math.round(p.x);
-    ui.selPosY.value = Math.round(p.y);
-
-    const uni = Math.max(p.scaleX, p.scaleY);
-    ui.selScaleUni.value = uni;
-    ui.selScaleUni.dataset.prev = uni;
-    ui.selScaleUniVal.textContent = uni.toFixed(2) + '×';
-    ui.selScaleX.value = p.scaleX; ui.selScaleXVal.textContent = p.scaleX.toFixed(2) + '×';
-    ui.selScaleY.value = p.scaleY; ui.selScaleYVal.textContent = p.scaleY.toFixed(2) + '×';
-
-    const deg = Math.round(((p.rotation * 180 / Math.PI) % 360 + 540) % 360 - 180);
-    ui.selRot.value = deg; ui.selRotVal.textContent = deg + '°';
-
-    ui.selFlipX.checked = p.flipX;
-    ui.selFlipY.checked = p.flipY;
-    ui.selPhase.value = Math.round(p.timeOffset * 100);
-    ui.selPhaseVal.textContent = ui.selPhase.value + '%';
-    ui.selDur.value = p.animDuration === Infinity ? 0 : p.animDuration;
-    ui.selDurVal.textContent = p.animDuration ? p.animDuration.toFixed(1) + 's' : 'Global';
-    ui.selLoop.checked = p.loop;
-    syncing = false;
+function clearCanvas(){
+    if (!state.instances.length) return;
+    const prev = state.instances.slice();
+    state.instances = [];
+    setSelection([]);
+    updateStats();
+    invalidate();
+    notify('Canvas cleared.', { undo: () => {
+        state.instances = prev.concat(state.instances);
+        updateStats();
+        invalidate();
+    } });
 }
 
-function eachSelected(fn){
+function moveSelection(toFront){
     if (!state.selection.length) return;
-    state.selection.forEach(fn);
+    const rest = state.instances.filter(i => !state.selection.includes(i));
+    state.instances = toFront ? rest.concat(state.selection) : state.selection.concat(rest);
     invalidate();
 }
 
-ui.selPosX.addEventListener('input', () => {
-    if (syncing || !state.selection.length) return;
-    const dx = (parseFloat(ui.selPosX.value) || 0) - state.selection[0].x;
-    eachSelected(i => i.x += dx);
-});
-ui.selPosY.addEventListener('input', () => {
-    if (syncing || !state.selection.length) return;
-    const dy = (parseFloat(ui.selPosY.value) || 0) - state.selection[0].y;
-    eachSelected(i => i.y += dy);
-});
+/* ============================================================
+   Settings column. Built from the kit components; every row reads
+   its value from the state (get) and writes it back (set).
+   ============================================================ */
+const gated = [];                    // sections that need a texture
+const PREF_KEY = 'flipbookStudio.ui';
+const prefs = (() => { try { const p = JSON.parse(localStorage.getItem(PREF_KEY) || '{}'); return p && typeof p === 'object' ? p : {}; } catch (e) { return {}; } })();
+prefs.open = prefs.open && typeof prefs.open === 'object' ? prefs.open : {};
+const savePrefs = () => { try { localStorage.setItem(PREF_KEY, JSON.stringify(prefs)); } catch (e) { /* private mode */ } };
 
-ui.selScaleUni.addEventListener('input', e => {
-    if (syncing || !state.selection.length) return;
-    const v = parseFloat(e.target.value);
-    const prev = parseFloat(e.target.dataset.prev || 1) || 1;
-    const r = v / prev;
-    e.target.dataset.prev = v;
-    eachSelected(i => {
-        i.scaleX = clamp(i.scaleX * r, MIN_SCALE, MAX_SCALE);
-        i.scaleY = clamp(i.scaleY * r, MIN_SCALE, MAX_SCALE);
+const NOSEL = { x:0, y:0, scaleX:1, scaleY:1, rotation:0, flipX:false, flipY:false, timeOffset:0, animDuration:0, loop:false };
+const NOTEX = { cols:8, rows:8, totalFrames:64, channel:'all', tint:'#ffffff', tintAmount:1 };
+const P = () => state.selection[0] || NOSEL;
+const T = () => activeTex() || NOTEX;
+const TINTS = [['#ffffff','Neutral'],['#ff4423','Fire'],['#ffb02e','Ember'],['#6cff8a','Toxic'],['#4dd2ff','Ice'],
+               ['#3a6bff','Arcane'],['#b46cff','Magic'],['#ff5fa8','Candy'],['#8a8f99','Smoke']];
+const BG_SWATCHES = ['#000000','#1b1b1b','#808080','#ffffff','#0d1b2a','#2a120d','#12261a'];
+
+function section(key, title, icon, open, body, gate){
+    const s = Kit.section({
+        title, icon, body,
+        open: key in prefs.open ? !!prefs.open[key] : open,
+        onToggle: v => { prefs.open[key] = v; savePrefs(); }
     });
-    ui.selScaleUniVal.textContent = v.toFixed(2) + '×';
-    const p = state.selection[0];
-    ui.selScaleX.value = p.scaleX; ui.selScaleXVal.textContent = p.scaleX.toFixed(2) + '×';
-    ui.selScaleY.value = p.scaleY; ui.selScaleYVal.textContent = p.scaleY.toFixed(2) + '×';
-});
-ui.selScaleX.addEventListener('input', e => {
-    if (syncing) return;
-    const v = parseFloat(e.target.value);
-    eachSelected(i => i.scaleX = v);
-    ui.selScaleXVal.textContent = v.toFixed(2) + '×';
-});
-ui.selScaleY.addEventListener('input', e => {
-    if (syncing) return;
-    const v = parseFloat(e.target.value);
-    eachSelected(i => i.scaleY = v);
-    ui.selScaleYVal.textContent = v.toFixed(2) + '×';
-});
-ui.selRot.addEventListener('input', e => {
-    if (syncing) return;
-    const rad = e.target.value * Math.PI / 180;
-    eachSelected(i => i.rotation = rad);
-    ui.selRotVal.textContent = e.target.value + '°';
-});
-ui.selFlipX.addEventListener('change', e => eachSelected(i => i.flipX = e.target.checked));
-ui.selFlipY.addEventListener('change', e => eachSelected(i => i.flipY = e.target.checked));
-ui.selPhase.addEventListener('input', e => {
-    if (syncing) return;
-    const v = e.target.value / 100;
-    eachSelected(i => i.timeOffset = v);
-    ui.selPhaseVal.textContent = e.target.value + '%';
-});
-ui.selDur.addEventListener('input', e => {
-    if (syncing) return;
-    const v = parseFloat(e.target.value);
-    eachSelected(i => { i.animDuration = v; i.age = 0; });
-    ui.selDurVal.textContent = v ? v.toFixed(1) + 's' : 'Global';
-});
-ui.selLoop.addEventListener('change', e => eachSelected(i => {
-    i.loop = e.target.checked;
-    if (!e.target.checked) i.age = 0;
-}));
+    s.dataset.key = key;
+    if (gate) { gated.push(s); s.classList.add('gated', 'disabled'); }
+    return s;
+}
 
-ui.btnMoveUp.addEventListener('click', () => {
-    if (!state.selection.length) return;
-    const rest = state.instances.filter(i => !state.selection.includes(i));
-    state.instances = rest.concat(state.selection);
-    invalidate();
-});
-ui.btnMoveDown.addEventListener('click', () => {
-    if (!state.selection.length) return;
-    const rest = state.instances.filter(i => !state.selection.includes(i));
-    state.instances = state.selection.concat(rest);
-    invalidate();
-});
-ui.btnDup.addEventListener('click', duplicateSelection);
-ui.btnDelete.addEventListener('click', deleteSelection);
+/** A row that holds hand-made controls but answers .sync() like a kit row. */
+function customRow(label, build, sync){
+    const r = el('div', 'row');
+    if (label) r.appendChild(el('label', '', label));
+    build(r);
+    r.sync = sync || (() => {});
+    return r;
+}
 
-/* ============================================================
-   Panel bindings
-   ============================================================ */
-ui.fileInput.addEventListener('change', e => {
-    Array.from(e.target.files).forEach(f => handleTextureFile(f));
-    e.target.value = '';
-});
-ui.btnAddTex.addEventListener('click', addTextures);
-ui.btnReimportAll.addEventListener('click', reimportAll);
-ui.btnAddFolder.addEventListener('click', addFolder);
-ui.restartBtn.addEventListener('click', restartPlayback);
+function buildSidebar(){
+    const sb = $('sidebar');
 
-function updateLayout(){
-    const tex = texById(state.activeTexId);
-    if (!tex) return;
-    tex.cols = Math.max(1, parseInt(ui.cols.value) || 1);
-    tex.rows = Math.max(1, parseInt(ui.rows.value) || 1);
-    tex.totalFrames = Math.max(1, parseInt(ui.total.value) || tex.cols * tex.rows);
-    ui.presetRow.querySelectorAll('button').forEach(b =>
-        b.classList.toggle('active', b.dataset.preset === `${tex.cols},${tex.rows}`));
+    /* --- Textures --- */
+    const texBody = el('div');
+    ui.restoreBar = el('div', 'restore');
+    ui.restoreBar.hidden = true;
+    ui.restoreText = el('span');
+    ui.restoreBtn = el('button', 'sm primary', 'Restore last scene');
+    ui.restoreBtn.type = 'button';
+    ui.restoreDismiss = el('button', 'sm', 'Dismiss');
+    ui.restoreDismiss.type = 'button';
+    const rbtns = el('div', 'rbtns');
+    rbtns.append(ui.restoreBtn, ui.restoreDismiss);
+    ui.restoreBar.append(ui.restoreText, rbtns);
+    ui.texThumbs = el('div');
+    ui.texThumbs.id = 'texThumbs';
+    texBody.append(ui.restoreBar, ui.texThumbs);
+    sb.appendChild(section('textures', 'Textures', 'image', true, texBody));
+
+    /* --- Library --- */
+    const libBody = el('div');
+    ui.libList = el('div');
+    ui.libList.id = 'libList';
+    const addFolderRow = Kit.row({ type: 'button', buttons: [{ text: 'Add folder', icon: 'folderopen', click: addFolder }] });
+    ui.libStatus = el('div', 'hint');
+    ui.libStatus.style.marginTop = '8px';
+    libBody.append(ui.libList, addFolderRow, ui.libStatus);
+    ui.librarySec = section('library', 'Texture library', 'folder', false, libBody);
+    sb.appendChild(ui.librarySec);
+
+    /* --- Active texture --- */
+    const gridRow = customRow('Grid', r => {
+        const mk = (id, label) => {
+            const i = el('input'); i.type = 'number'; i.id = id; i.min = 1; i.step = 1;
+            i.title = label; i.setAttribute('aria-label', label);
+            return i;
+        };
+        ui.cols = mk('colsInput', 'Columns (X)');
+        ui.rows = mk('rowsInput', 'Rows (Y)');
+        const x = el('span', 'rtext', '×');
+        r.append(ui.cols, x, ui.rows);
+        const onGrid = () => {
+            if (ui.cols.value === '' || ui.rows.value === '') return;
+            applyGrid({ cols: parseInt(ui.cols.value, 10) || 1, rows: parseInt(ui.rows.value, 10) || 1 });
+        };
+        [ui.cols, ui.rows].forEach(i => {
+            i.addEventListener('input', onGrid);
+            i.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') i.blur(); });
+            i.addEventListener('change', () => { ui.texRows.sync(); });
+        });
+    }, () => {
+        const t = T();
+        if (document.activeElement !== ui.cols) ui.cols.value = t.cols;
+        if (document.activeElement !== ui.rows) ui.rows.value = t.rows;
+    });
+
+    ui.presetRow = customRow(null, r => {
+        const seg = el('div', 'seg wide');
+        seg.setAttribute('role', 'group');
+        seg.setAttribute('aria-label', 'Grid presets');
+        ['2,2', '4,4', '6,6', '7,7', '8,8'].forEach(p => {
+            const b = el('button', '', p.replace(',', '×'));
+            b.type = 'button';
+            b.dataset.preset = p;
+            b.addEventListener('click', () => {
+                const [c, rr] = p.split(',').map(Number);
+                applyGrid({ cols: c, rows: rr });
+            });
+            seg.appendChild(b);
+        });
+        r.appendChild(seg);
+    }, () => {
+        const t = T();
+        ui.presetRow.querySelectorAll('button').forEach(b => {
+            const on = b.dataset.preset === `${t.cols},${t.rows}`;
+            b.classList.toggle('on', on);
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+    });
+
+    ui.presetRow.id = 'presetRow';
+    const swRow = customRow('Colours', r => {
+        const box = el('div', 'swatches');
+        TINTS.forEach(([hex, name]) => {
+            const b = el('button', 'sw'); b.type = 'button';
+            b.style.background = hex; b.dataset.tint = hex; b.title = name; b.setAttribute('aria-label', name + ' tint');
+            b.addEventListener('click', () => {
+                // picking a colour with the amount at zero would look like nothing happened
+                const t = activeTex();
+                setTint({ color: hex, amount: t && t.tintAmount === 0 ? 1 : undefined });
+            });
+            box.appendChild(b);
+        });
+        r.appendChild(box);
+        ui.tintSwatches = box;
+    }, () => {
+        const t = T();
+        ui.tintSwatches.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.tint.toLowerCase() === t.tint.toLowerCase()));
+    });
+
+    ui.texRows = Kit.rows([
+        gridRow,
+        ui.presetRow,
+        { type: 'number', label: 'Total frames', id: 'totalFramesInput', min: 1, step: 1,
+          get: () => T().totalFrames, set: v => applyGrid({ total: v }) },
+        { type: 'seg', label: 'Channel', options: [['all', 'RGB'], ['r', 'R'], ['g', 'G'], ['b', 'B'], ['a', 'A']],
+          get: () => T().channel, set: v => { const t = activeTex(); if (t) { t.channel = v; invalidate(); } } },
+        { type: 'group', label: 'Tint (this texture only)' },
+        { type: 'color', label: 'Colour', id: 'tintColor', get: () => T().tint, set: v => setTint({ color: v }) },
+        { type: 'range', label: 'Strength', id: 'tintSlider', min: 0, max: 100, step: 1, hard: true,
+          get: () => Math.round(T().tintAmount * 100), set: v => setTint({ amount: v / 100 }) },
+        swRow,
+        { type: 'button', buttons: [
+            { text: 'Apply to all', tip: 'Copy this tint to every loaded texture', click: () => {
+                const t = activeTex(); if (t) setTint({ color: t.tint, amount: t.tintAmount, all: true }); } },
+            { text: 'Reset tint', click: () => setTint({ color: '#ffffff', amount: 1 }) } ] }
+    ]);
+    sb.appendChild(section('texture', 'Active texture', 'flipbook', true, ui.texRows, true));
+
+    /* --- Background --- */
+    const imgName = el('div', 'hint');
+    imgName.sync = () => { imgName.textContent = state.bg.imgName ? 'Image: ' + state.bg.imgName : 'No background image loaded'; };
+    const swBg = customRow('Presets', r => {
+        const box = el('div', 'swatches');
+        BG_SWATCHES.forEach(hex => {
+            const b = el('button', 'sw'); b.type = 'button';
+            b.style.background = hex; b.dataset.color = hex; b.title = hex; b.setAttribute('aria-label', 'Background ' + hex);
+            b.addEventListener('click', () => {
+                setBgColor(hex);
+                if (state.bg.mode === 'image') state.bg.mode = 'solid';
+                syncBackgroundUI();
+            });
+            box.appendChild(b);
+        });
+        r.appendChild(box);
+        ui.bgSwatches = box;
+    }, () => {
+        ui.bgSwatches.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.color === state.bg.color));
+    });
+    const isImg = () => state.bg.mode === 'image';
+    ui.bgRows = Kit.rows([
+        { type: 'seg', label: 'Mode', options: [['solid', 'Solid'], ['checker', 'Checker'], ['image', 'Image']],
+          get: () => state.bg.mode, set: v => { state.bg.mode = v; syncBackgroundUI(); } },
+        { type: 'color', label: 'Colour', id: 'bgColor', get: () => state.bg.color, set: v => setBgColor(v) },
+        swBg,
+        { type: 'group', label: 'Image' },
+        { type: 'button', buttons: [
+            { text: 'Load image', icon: 'image', click: () => ui.bgFileInput.click() },
+            { text: 'Clear', icon: 'trash', click: () => clearBackgroundImage() } ] },
+        imgName,
+        { type: 'select', label: 'Fit', id: 'bgFit', options: [['cover', 'Cover (fill viewport)'], ['contain', 'Contain (fit inside)'], ['stretch', 'Stretch'], ['tile', 'Tile']],
+          get: () => state.bg.fit, set: v => { state.bg.fit = v; invalidate(); }, when: () => isImg() && !state.bg.worldLock },
+        { type: 'range', label: 'Image scale (%)', id: 'bgScale', min: 5, max: 400, step: 1,
+          get: () => Math.round(state.bg.scale * 100), set: v => { state.bg.scale = v / 100; invalidate(); }, when: () => isImg() && state.bg.worldLock },
+        { type: 'range', label: 'Image opacity (%)', id: 'bgOpacity', min: 0, max: 100, step: 1, hard: true,
+          get: () => Math.round(state.bg.opacity * 100), set: v => { state.bg.opacity = v / 100; invalidate(); } },
+        { type: 'check', label: 'Lock to canvas', id: 'bgWorldLock', text: 'Pans and zooms with the canvas',
+          get: () => state.bg.worldLock, set: v => { state.bg.worldLock = v; syncBackgroundUI(); } }
+    ]);
+    sb.appendChild(section('background', 'Background', 'layers', false, ui.bgRows));
+
+    /* --- Playback & material --- */
+    ui.playRows = Kit.rows([
+        { type: 'range', label: 'Speed (fps)', id: 'fpsSlider', min: 1, max: 120, step: 1, hard: true, def: 60,
+          get: () => state.fps, set: v => { state.fps = Math.round(v); markScene(); } },
+        { type: 'select', label: 'Blend mode', id: 'blendSelect',
+          options: [['source-over', 'Normal (translucent)'], ['lighter', 'Additive (lighter)'], ['multiply', 'Multiply'], ['screen', 'Screen']],
+          get: () => state.blendMode, set: v => { state.blendMode = v; invalidate(); } },
+        { type: 'check', label: 'Point filter', id: 'nearestCheck', text: 'Crisp pixels (P)', tip: 'Nearest-neighbour filtering (P)',
+          get: () => state.nearest, set: v => setPointFilter(v) }
+    ]);
+    sb.appendChild(section('playback', 'Playback & material', 'play', true, ui.playRows, true));
+
+    /* --- Post process --- */
+    ui.ppRows = Kit.rows([
+        { type: 'range', label: 'Brightness (%)', id: 'brSlider', min: 0, max: 300, step: 5, hard: true, def: 100,
+          get: () => Math.round(state.brightness * 100), set: v => { state.brightness = v / 100; invalidate(); } },
+        { type: 'range', label: 'Contrast (%)', id: 'coSlider', min: 0, max: 300, step: 5, hard: true, def: 100,
+          get: () => Math.round(state.contrast * 100), set: v => { state.contrast = v / 100; invalidate(); } },
+        { type: 'range', label: 'Saturation (%)', id: 'satSlider', min: 0, max: 300, step: 5, hard: true, def: 100,
+          get: () => Math.round(state.saturation * 100), set: v => { state.saturation = v / 100; invalidate(); } },
+        { type: 'check', label: 'Invert colours', id: 'invertCheck',
+          get: () => state.invert, set: v => { state.invert = v; invalidate(); } },
+        { type: 'button', buttons: [{ text: 'Reset all', icon: 'reset', click: () => {
+            state.brightness = state.contrast = state.saturation = 1;
+            state.invert = false;
+            ui.ppRows.sync();
+            invalidate();
+        } }] }
+    ]);
+    sb.appendChild(section('post', 'Post process', 'sliders', false, ui.ppRows, true));
+
+    /* --- Scatter & emitter --- */
+    const emitOff = () => !state.autoEmit;
+    ui.scatterRows = Kit.rows([
+        { type: 'group', label: 'Placement defaults' },
+        { type: 'range', label: 'Base scale', id: 'baseScaleSlider', min: 0.1, max: 5, step: 0.1, def: 1,
+          get: () => state.baseScale, set: v => { state.baseScale = v; markScene(); } },
+        { type: 'range', label: 'Random scale (%)', id: 'randScaleSlider', min: 0, max: 100, step: 1, hard: true, def: 50,
+          get: () => Math.round(state.randScaleAmt * 100), set: v => { state.randScaleAmt = v / 100; markScene(); } },
+        { type: 'range', label: 'Duration (s)', id: 'manualDurSlider', min: 0, max: 10, step: 0.1, def: 0,
+          tip: '0 follows the global speed', get: () => state.manualDuration, set: v => { state.manualDuration = v; markScene(); } },
+        { type: 'note', text: 'A duration of 0 follows the global speed.' },
+        { type: 'check', label: 'Loop', id: 'manualLoopCheck', get: () => state.manualLoop, set: v => { state.manualLoop = v; markScene(); } },
+        { type: 'check', label: 'Random phase', id: 'randPhaseCheck', get: () => state.randPhase, set: v => { state.randPhase = v; markScene(); } },
+        { type: 'check', label: 'Random rotation', id: 'randRotCheck', get: () => state.randRot, set: v => { state.randRot = v; markScene(); } },
+        { type: 'button', buttons: [{ text: 'Clear placed', icon: 'trash', tip: 'Remove the sprites you placed, keep the emitted ones', click: () => {
+            state.instances = state.instances.filter(i => i.lifespan !== Infinity);
+            setSelection(state.selection.filter(i => state.instances.includes(i)));
+            updateStats();
+            invalidate();
+        } }] },
+        { type: 'group', label: 'Auto emitter' },
+        { type: 'check', label: 'Enable', id: 'autoEmitCheck',
+          get: () => state.autoEmit, set: v => { state.autoEmit = v; markScene(); ui.scatterRows.sync(); } },
+        { type: 'range', label: 'Lifespan (s)', id: 'emitLifetimeSlider', min: 0.1, max: 10, step: 0.1, def: 2, disabled: emitOff,
+          get: () => state.emitLifetime, set: v => { state.emitLifetime = v; markScene(); } },
+        { type: 'range', label: 'Spawn rate (/s)', id: 'emitRateSlider', min: 1, max: 60, step: 1, def: 15, disabled: emitOff,
+          get: () => state.emitRate, set: v => { state.emitRate = Math.round(v); markScene(); } },
+        { type: 'range', label: 'Spawn radius (px)', id: 'emitRadiusSlider', min: 0, max: 1200, step: 1, def: 200, disabled: emitOff,
+          get: () => state.emitRadius, set: v => { state.emitRadius = Math.round(v); markScene(); } },
+        { type: 'range', label: 'Max particles', id: 'emitMaxSlider', min: 1, max: 400, step: 1, def: 50, disabled: emitOff,
+          get: () => state.emitMax, set: v => { state.emitMax = Math.round(v); markScene(); } },
+        { type: 'check', label: 'Fade in / out', id: 'emitFadeCheck', disabled: emitOff,
+          get: () => state.emitFade, set: v => { state.emitFade = v; invalidate(); } }
+    ]);
+    sb.appendChild(section('scatter', 'Scatter & emitter', 'sparkle', false, ui.scatterRows, true));
+
+    /* --- Selection --- */
+    let uniPrev = 1;
+    const each = fn => { if (state.selection.length) { state.selection.forEach(fn); invalidate(); } };
+    const clampS = v => clamp(v, MIN_SCALE, MAX_SCALE);
+    ui.selRows = Kit.rows([
+        { type: 'number', label: 'Position X', id: 'selPosX', step: 1, get: () => Math.round(P().x),
+          set: v => { const dx = v - P().x; each(i => { i.x += dx; }); } },
+        { type: 'number', label: 'Position Y', id: 'selPosY', step: 1, get: () => Math.round(P().y),
+          set: v => { const dy = v - P().y; each(i => { i.y += dy; }); } },
+        { type: 'range', label: 'Scale (uniform)', id: 'selScaleUni', min: 0.05, max: 10, step: 0.05, def: 1,
+          get: () => (uniPrev = Math.max(P().scaleX, P().scaleY)),
+          set: v => {
+              const r = v / (uniPrev || 1);
+              each(i => { i.scaleX = clampS(i.scaleX * r); i.scaleY = clampS(i.scaleY * r); });
+              ui.selRows.sync();
+          } },
+        { type: 'range', label: 'Scale X', id: 'selScaleX', min: 0.05, max: 10, step: 0.05, def: 1,
+          get: () => P().scaleX, set: v => each(i => { i.scaleX = clampS(v); }) },
+        { type: 'range', label: 'Scale Y', id: 'selScaleY', min: 0.05, max: 10, step: 0.05, def: 1,
+          get: () => P().scaleY, set: v => each(i => { i.scaleY = clampS(v); }) },
+        { type: 'range', label: 'Rotation (deg)', id: 'selRot', min: -180, max: 180, step: 1, def: 0,
+          get: () => Math.round(((P().rotation * 180 / Math.PI) % 360 + 540) % 360 - 180),
+          set: v => { const rad = v * Math.PI / 180; each(i => { i.rotation = rad; }); } },
+        { type: 'check', label: 'Flip X', id: 'selFlipX', get: () => P().flipX, set: v => each(i => { i.flipX = v; }) },
+        { type: 'check', label: 'Flip Y', id: 'selFlipY', get: () => P().flipY, set: v => each(i => { i.flipY = v; }) },
+        { type: 'range', label: 'Start phase (%)', id: 'selPhase', min: 0, max: 100, step: 1, hard: true, def: 0,
+          get: () => Math.round(P().timeOffset * 100), set: v => each(i => { i.timeOffset = v / 100; }) },
+        { type: 'range', label: 'Duration (s)', id: 'selDur', min: 0, max: 10, step: 0.1, def: 0, tip: '0 follows the global speed',
+          get: () => P().animDuration === Infinity ? 0 : P().animDuration,
+          set: v => each(i => { i.animDuration = v; i.age = 0; }) },
+        { type: 'check', label: 'Loop animation', id: 'selLoop', get: () => P().loop,
+          set: v => each(i => { i.loop = v; if (!v) i.age = 0; }) },
+        { type: 'button', buttons: [
+            { text: 'Forward', icon: 'up', tip: 'Draw on top', click: () => moveSelection(true) },
+            { text: 'Backward', icon: 'arrdown', tip: 'Draw underneath', click: () => moveSelection(false) } ] },
+        { type: 'button', buttons: [
+            { text: 'Duplicate', icon: 'copy', click: duplicateSelection },
+            { text: 'Delete', icon: 'trash', danger: true, click: deleteSelection } ] }
+    ]);
+    ui.selSection = Kit.section({ title: 'Selection', icon: 'pointer', open: true, body: ui.selRows });
+    ui.selSection.hidden = true;
+    ui.selTitle = ui.selSection.querySelector('.hd b');
+    sb.appendChild(ui.selSection);
+
+    Kit.paintIcons(document);
+}
+
+/* Texture grid: any of cols / rows / total can change. */
+function applyGrid({ cols, rows, total }){
+    const t = activeTex();
+    if (!t) return;
+    if (cols !== undefined)  t.cols = Math.max(1, Math.round(cols) || 1);
+    if (rows !== undefined)  t.rows = Math.max(1, Math.round(rows) || 1);
+    if (total !== undefined) t.totalFrames = Math.max(1, Math.round(total) || 1);
+    else                     t.totalFrames = t.cols * t.rows;
+    if (total === undefined) ui.texRows.sync();
+    else ui.presetRow.sync();
     updateRanges();
     invalidate();
-}
-ui.cols.addEventListener('input', () => {
-    const tex = texById(state.activeTexId);
-    if (tex) ui.total.value = (parseInt(ui.cols.value) || 1) * (parseInt(ui.rows.value) || 1);
-    updateLayout();
-});
-ui.rows.addEventListener('input', () => {
-    const tex = texById(state.activeTexId);
-    if (tex) ui.total.value = (parseInt(ui.cols.value) || 1) * (parseInt(ui.rows.value) || 1);
-    updateLayout();
-});
-ui.total.addEventListener('input', updateLayout);
-
-ui.presetRow.addEventListener('click', e => {
-    const btn = e.target.closest('button');
-    if (!btn) return;
-    const [c, r] = btn.dataset.preset.split(',').map(Number);
-    ui.cols.value = c; ui.rows.value = r; ui.total.value = c * r;
-    updateLayout();
-});
-
-ui.channelBtns.addEventListener('click', e => {
-    const btn = e.target.closest('button');
-    if (!btn) return;
-    const tex = texById(state.activeTexId);
-    if (!tex) return;
-    ui.channelBtns.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    tex.channel = btn.dataset.ch;
-    invalidate();
-});
-
-/* --- tint (per texture) --- */
-function syncTintUI(){
-    const tex = texById(state.activeTexId);
-    const tint = tex ? tex.tint : '#ffffff';
-    const amt  = tex ? tex.tintAmount : 1;
-    ui.tintColor.value = tint;
-    ui.tintSlider.value = Math.round(amt * 100);
-    ui.tintValue.textContent = Math.round(amt * 100) + '%';
-    ui.tintSwatches.querySelectorAll('button').forEach(b =>
-        b.classList.toggle('on', b.dataset.tint.toLowerCase() === tint.toLowerCase()));
 }
 
 /** Write a tint onto the active texture (or onto all of them) and refresh. */
 function setTint({ color, amount, all = false }){
-    const active = texById(state.activeTexId);
+    const active = activeTex();
     if (!active) return;
     if (color  !== undefined) state.lastTint = color;
     if (amount !== undefined) state.lastTintAmount = amount;
@@ -3089,190 +2865,76 @@ function setTint({ color, amount, all = false }){
         tex.procKey = null;   // its cached sheet is stale now
     });
 
-    syncTintUI();
+    ui.texRows.sync();
     renderTextureStrip();
     invalidate();
 }
 
-ui.tintColor.addEventListener('input', e => setTint({ color: e.target.value }));
-ui.tintSlider.addEventListener('input', e => setTint({ amount: e.target.value / 100 }));
-
-ui.tintSwatches.addEventListener('click', e => {
-    const btn = e.target.closest('button');
-    if (!btn) return;
-    // picking a colour with the amount at zero would look like nothing happened
-    const tex = texById(state.activeTexId);
-    const amount = tex && tex.tintAmount === 0 ? 1 : undefined;
-    setTint({ color: btn.dataset.tint, amount });
-});
-
-ui.btnResetTint.addEventListener('click', () => setTint({ color: '#ffffff', amount: 1 }));
-ui.btnTintAll.addEventListener('click', () => {
-    const tex = texById(state.activeTexId);
-    if (!tex) return;
-    setTint({ color: tex.tint, amount: tex.tintAmount, all: true });
-});
-
 /* --- background --- */
 function syncBackgroundUI(){
-    ui.bgModeBtns.querySelectorAll('button').forEach(b =>
-        b.classList.toggle('active', b.dataset.mode === state.bg.mode));
-    const imgMode = state.bg.mode === 'image';
-    ui.fieldFit.hidden   = !imgMode || state.bg.worldLock;
-    ui.fieldScale.hidden = !imgMode || !state.bg.worldLock;
-}
-
-ui.bgModeBtns.addEventListener('click', e => {
-    const btn = e.target.closest('button');
-    if (!btn) return;
-    state.bg.mode = btn.dataset.mode;
-    syncBackgroundUI();
+    ui.bgRows.sync();
+    ui.quickBg.forEach(b => {
+        const v = b.dataset.quickbg;
+        const on = v === 'checker' ? state.bg.mode === 'checker' : state.bg.mode === 'solid' && state.bg.color === v;
+        b.classList.toggle('on', on);
+    });
     invalidate();
-});
-
+}
 function setBgColor(hex){
     if (!/^#[0-9a-f]{6}$/i.test(hex)) return;
     state.bg.color = hex.toLowerCase();
-    ui.bgColor.value = state.bg.color;
-    ui.bgHex.value = state.bg.color;
     checkerPattern = null;
-    invalidate();
+    syncBackgroundUI();
 }
-ui.bgColor.addEventListener('input', e => setBgColor(e.target.value));
-ui.bgHex.addEventListener('input', e => {
-    let v = e.target.value.trim();
-    if (v && v[0] !== '#') v = '#' + v;
-    if (/^#[0-9a-f]{6}$/i.test(v)) setBgColor(v);
-});
-ui.bgSwatches.addEventListener('click', e => {
-    const btn = e.target.closest('button');
-    if (!btn) return;
-    setBgColor(btn.dataset.color);
-    if (state.bg.mode === 'image') { state.bg.mode = 'solid'; syncBackgroundUI(); }
-});
-
-document.querySelectorAll('[data-quickbg]').forEach(btn => {
+function clearBackgroundImage(){
+    state.bg.img = null;
+    state.bg.file = null;
+    state.bg.imgName = '';
+    if (state.bg.mode === 'image') state.bg.mode = 'solid';
+    syncBackgroundUI();
+}
+ui.quickBg.forEach(btn => {
     btn.addEventListener('click', () => {
         const v = btn.dataset.quickbg;
-        if (v === 'checker') { state.bg.mode = 'checker'; }
+        if (v === 'checker') { state.bg.mode = 'checker'; syncBackgroundUI(); }
         else { state.bg.mode = 'solid'; setBgColor(v); }
-        syncBackgroundUI();
-        invalidate();
     });
 });
-
 ui.bgFileInput.addEventListener('change', e => {
     if (e.target.files[0]) loadBackgroundImage(e.target.files[0]);
     e.target.value = '';
 });
-ui.btnBgClear.addEventListener('click', () => {
-    state.bg.img = null;
-    state.bg.imgName = '';
-    ui.bgImgName.textContent = '—';
-    if (state.bg.mode === 'image') state.bg.mode = 'solid';
-    syncBackgroundUI();
-    invalidate();
-});
-ui.bgFit.addEventListener('change', e => { state.bg.fit = e.target.value; invalidate(); });
-ui.bgOpacity.addEventListener('input', e => {
-    state.bg.opacity = e.target.value / 100;
-    ui.bgOpacityVal.textContent = e.target.value + '%';
-    invalidate();
-});
-ui.bgScale.addEventListener('input', e => {
-    state.bg.scale = e.target.value / 100;
-    ui.bgScaleVal.textContent = e.target.value + '%';
-    invalidate();
-});
-ui.bgWorldLock.addEventListener('change', e => {
-    state.bg.worldLock = e.target.checked;
-    syncBackgroundUI();
-    invalidate();
-});
 
-/* --- playback & material --- */
-ui.fpsSlider.addEventListener('input', e => {
-    state.fps = parseInt(e.target.value);
-    ui.fpsValue.textContent = state.fps;
+/* --- selection panel --- */
+function syncSelectionPanel(){
+    const sel = state.selection;
+    if (!ui.selSection) return;
+    if (!sel.length || (state.tool !== 'select' && drag.kind !== 'spawn')) {
+        ui.selSection.hidden = true;
+        return;
+    }
+    ui.selSection.hidden = false;
+    ui.selTitle.textContent = sel.length > 1 ? `Selection (${sel.length} instances)` : 'Selection';
+    ui.selRows.sync();
+}
+
+/* --- panel bindings --- */
+ui.fileInput.addEventListener('change', e => {
+    addTextureItems(Array.from(e.target.files).map(file => ({ file, handle: null })));
+    e.target.value = '';
 });
-ui.blendSelect.addEventListener('change', e => { state.blendMode = e.target.value; invalidate(); });
+ui.emptyAdd.addEventListener('click', addTextures);
+ui.restartBtn.addEventListener('click', restartPlayback);
 
 function setPointFilter(on){
     state.nearest = on;
-    ui.nearestCheck.checked = on;
-    ui.btnPoint.classList.toggle('active', on);
+    ui.btnPoint.classList.toggle('on', on);
+    if (ui.playRows) ui.playRows.sync();
     invalidate();
 }
-ui.nearestCheck.addEventListener('change', e => setPointFilter(e.target.checked));
 ui.btnPoint.addEventListener('click', () => setPointFilter(!state.nearest));
 
-/* --- post process --- */
-ui.brSlider.addEventListener('input', e => { state.brightness = e.target.value / 100; ui.brValue.textContent = e.target.value + '%'; invalidate(); });
-ui.coSlider.addEventListener('input', e => { state.contrast   = e.target.value / 100; ui.coValue.textContent = e.target.value + '%'; invalidate(); });
-ui.satSlider.addEventListener('input', e => { state.saturation= e.target.value / 100; ui.satValue.textContent = e.target.value + '%'; invalidate(); });
-ui.invertCheck.addEventListener('change', e => { state.invert = e.target.checked; invalidate(); });
-ui.btnResetPP.addEventListener('click', () => {
-    state.brightness = state.contrast = state.saturation = 1;
-    state.invert = false;
-    ui.brSlider.value = ui.coSlider.value = ui.satSlider.value = 100;
-    ui.brValue.textContent = ui.coValue.textContent = ui.satValue.textContent = '100%';
-    ui.invertCheck.checked = false;
-    invalidate();
-});
-
-/* --- scatter & emitter --- */
-ui.baseScaleSlider.addEventListener('input', e => {
-    state.baseScale = parseFloat(e.target.value);
-    ui.baseScaleVal.textContent = state.baseScale.toFixed(1) + '×';
-});
-ui.randScaleSlider.addEventListener('input', e => {
-    state.randScaleAmt = e.target.value / 100;
-    ui.randScaleVal.textContent = e.target.value + '%';
-});
-ui.manualDurSlider.addEventListener('input', e => {
-    state.manualDuration = parseFloat(e.target.value);
-    ui.manualDurVal.textContent = state.manualDuration ? state.manualDuration.toFixed(1) + 's' : 'Global';
-});
-ui.manualLoopCheck.addEventListener('change', e => state.manualLoop = e.target.checked);
-ui.randPhaseCheck.addEventListener('change', e => state.randPhase = e.target.checked);
-ui.randRotCheck.addEventListener('change', e => state.randRot = e.target.checked);
-ui.btnClearManual.addEventListener('click', () => {
-    state.instances = state.instances.filter(i => i.lifespan !== Infinity);
-    setSelection(state.selection.filter(i => state.instances.includes(i)));
-    updateStats();
-    invalidate();
-});
-
-ui.autoEmitCheck.addEventListener('change', e => {
-    state.autoEmit = e.target.checked;
-    ui.emitterControls.classList.toggle('dim', !state.autoEmit);
-});
-ui.emitLifetimeSlider.addEventListener('input', e => {
-    state.emitLifetime = parseFloat(e.target.value);
-    ui.emitLifetimeVal.textContent = state.emitLifetime.toFixed(1) + 's';
-});
-ui.emitRateSlider.addEventListener('input', e => {
-    state.emitRate = parseInt(e.target.value);
-    ui.emitRateVal.textContent = state.emitRate + '/s';
-});
-ui.emitRadiusSlider.addEventListener('input', e => {
-    state.emitRadius = parseInt(e.target.value);
-    ui.emitRadiusVal.textContent = state.emitRadius + 'px';
-});
-ui.emitMaxSlider.addEventListener('input', e => {
-    state.emitMax = parseInt(e.target.value);
-    ui.emitMaxVal.textContent = state.emitMax;
-});
-ui.emitFadeCheck.addEventListener('change', e => { state.emitFade = e.target.checked; invalidate(); });
-
 /* --- timeline --- */
-function togglePlay(){
-    state.isPlaying = !state.isPlaying;
-    ui.playIcon.hidden = state.isPlaying;
-    ui.pauseIcon.hidden = !state.isPlaying;
-    state.frameTimer = 0;
-    invalidate();
-}
 ui.playBtn.addEventListener('click', togglePlay);
 
 /**
@@ -3292,7 +2954,7 @@ function restartPlayback(){
     state.instances.forEach(i => { i.age = 0; });
     if (state.instances.length !== before) setSelection(state.selection.filter(i => state.instances.includes(i)));
 
-    if (!state.isPlaying) togglePlay();
+    if (!state.isPlaying) setPlaying(true);
     updateStats();
     updateTimelineUI();
     invalidate();
@@ -3312,15 +2974,9 @@ function updateRanges(){
     updateTimelineUI();
 }
 ui.frameSlider.addEventListener('input', e => {
-    if (state.isPlaying) togglePlay();
+    if (state.isPlaying) setPlaying(false);
     state.absoluteFrame = parseInt(e.target.value);
     updateTimelineUI();
-    invalidate();
-});
-ui.btnClear.addEventListener('click', () => {
-    state.instances = [];
-    setSelection([]);
-    updateStats();
     invalidate();
 });
 
@@ -3330,29 +2986,363 @@ ui.toolSelect.addEventListener('click', () => setTool('select'));
 ui.toolScatter.addEventListener('click', () => setTool('scatter'));
 ui.btnZoomIn.addEventListener('click', () => zoomBy(0.15));
 ui.btnZoomOut.addEventListener('click', () => zoomBy(-0.15));
-ui.btnFit.addEventListener('click', fitView);
-ui.btnReset.addEventListener('click', resetView);
+ui.btnFit.addEventListener('click', () => fitView());
+ui.btnReset.addEventListener('click', () => resetView());
 
 function toggleGrid(){
     state.showGrid = !state.showGrid;
-    ui.btnGrid.classList.toggle('active', state.showGrid);
+    ui.btnGrid.classList.toggle('on', state.showGrid);
     invalidate();
 }
 ui.btnGrid.addEventListener('click', toggleGrid);
 
 function updateStats(){
-    $('statInstances').textContent = state.instances.length;
+    ui.statInstances.textContent = state.instances.length;
+    const n = state.textures.length;
+    Embed.status(n ? `${n} sheet${n === 1 ? '' : 's'}, ${state.instances.length} instance${state.instances.length === 1 ? '' : 's'}` : '');
 }
+
+/* ============================================================
+   Saved scene
+   Everything needed to come back to the same canvas: the sheets (as file
+   handles where the browser gave us one, otherwise a stored copy), their
+   grid / channel / tint, the placed instances, background, playback, post
+   process, defaults, emitter and the view. The emitter's short-lived
+   particles are not saved.
+   ============================================================ */
+let pendingScene = null;         // a saved scene that still needs a click (read permission)
+let previousSaved = false;
+let sceneSig = '';
+let sceneQueue = Promise.resolve();
+
+function buildScene(){
+    return {
+        v: 1, savedAt: Date.now(),
+        textures: state.textures.map(t => ({
+            id: t.id, name: t.name, cols: t.cols, rows: t.rows, totalFrames: t.totalFrames,
+            channel: t.channel, tint: t.tint, tintAmount: t.tintAmount,
+            handle: t.handle || null
+        })),
+        activeTexId: state.activeTexId,
+        instances: state.instances.filter(i => i.lifespan === Infinity).map(i => ({
+            texId: i.texId, x: i.x, y: i.y, scaleX: i.scaleX, scaleY: i.scaleY, rotation: i.rotation,
+            flipX: i.flipX, flipY: i.flipY, timeOffset: i.timeOffset, animDuration: i.animDuration, loop: i.loop
+        })),
+        settings: {
+            fps: state.fps, blendMode: state.blendMode, nearest: state.nearest, showGrid: state.showGrid,
+            brightness: state.brightness, contrast: state.contrast, saturation: state.saturation, invert: state.invert,
+            lastTint: state.lastTint, lastTintAmount: state.lastTintAmount,
+            baseScale: state.baseScale, randScaleAmt: state.randScaleAmt, randRot: state.randRot,
+            manualDuration: state.manualDuration, manualLoop: state.manualLoop, randPhase: state.randPhase,
+            autoEmit: state.autoEmit, emitRate: state.emitRate, emitRadius: state.emitRadius, emitMax: state.emitMax,
+            emitLifetime: state.emitLifetime, emitFade: state.emitFade
+        },
+        bg: {
+            mode: state.bg.mode, color: state.bg.color, fit: state.bg.fit, opacity: state.bg.opacity,
+            worldLock: state.bg.worldLock, scale: state.bg.scale, imgName: state.bg.imgName, hasImg: !!state.bg.img
+        },
+        view: { scale: state.scale, offsetX: state.offsetX, offsetY: state.offsetY, fitted: state.viewFit }
+    };
+}
+/** What changed, without the handles and the time: a save is skipped when this is the same. */
+const sceneKey = sc => JSON.stringify(Object.assign({}, sc, { savedAt: 0,
+    textures: sc.textures.map(t => Object.assign({}, t, { handle: !!t.handle })) }));
+
+async function writeScene(){
+    if (!sceneReady) return;
+    const sc = buildScene();
+
+    if (!sc.textures.length) {
+        if (sceneSig === '') return;
+        sceneSig = '';
+        await dbDel(SCENE_STORE, 'last');
+        await cleanBlobs([]);
+        return;
+    }
+    const key = sceneKey(sc);
+    if (key === sceneSig) return;
+
+    // the old scene waits in 'previous' while the user has not decided about it
+    if (pendingScene && !previousSaved) {
+        await dbPut(SCENE_STORE, pendingScene, 'previous');
+        previousSaved = true;
+    }
+    // handle-less sheets and the background image are kept as files
+    for (const t of state.textures) {
+        if (!t.handle && !t.blobSaved && t.src) {
+            await dbPut(BLOB_STORE, { id: t.id, blob: t.src, name: t.name });
+            t.blobSaved = true;
+        }
+    }
+    if (state.bg.img && state.bg.file && !state.bg.blobSaved) {
+        await dbPut(BLOB_STORE, { id: 'bg', blob: state.bg.file, name: state.bg.imgName });
+        state.bg.blobSaved = true;
+    }
+    try {
+        await dbPut(SCENE_STORE, sc, 'last');
+    } catch (err) {
+        // a handle that cannot be stored: keep copies of those sheets instead
+        for (const t of state.textures) {
+            if (t.handle && t.src) await dbPut(BLOB_STORE, { id: t.id, blob: t.src, name: t.name });
+        }
+        sc.textures.forEach(t => { t.handle = null; });
+        await dbPut(SCENE_STORE, sc, 'last');
+    }
+    sceneSig = key;
+    await cleanBlobs(sc.textures.map(t => t.id).concat(sc.bg.hasImg ? ['bg'] : []));
+}
+/** Drop stored files no scene (the saved one, or the one waiting in 'previous') refers to any more. */
+async function cleanBlobs(keep){
+    const used = new Set(keep);
+    if (pendingScene) {
+        pendingScene.textures.forEach(t => used.add(t.id));
+        if (pendingScene.bg && pendingScene.bg.hasImg) used.add('bg');
+    }
+    const keys = await dbKeys(BLOB_STORE);
+    for (const k of keys) if (!used.has(k)) await dbDel(BLOB_STORE, k);
+}
+
+function flushScene(){
+    clearTimeout(sceneTimer);
+    sceneQueue = sceneQueue.then(writeScene).catch(() => { /* no IndexedDB: the scene is simply not kept */ });
+    return sceneQueue;
+}
+window.addEventListener('pagehide', () => { flushScene(); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushScene(); });
+
+/** Read the saved sheets. interactive: may ask the browser for read access (needs a click). */
+async function loadSceneTextures(rec, interactive){
+    const textures = [], missing = [];
+    for (const st of rec.textures) {
+        let file = null;
+        if (st.handle) {
+            try { file = await fileFromHandle(st.handle, interactive); } catch (err) { file = null; }
+        } else {
+            try { const b = await dbGet(BLOB_STORE, st.id); file = b && b.blob; } catch (err) { file = null; }
+        }
+        if (!file) { missing.push(st.name); continue; }
+        try {
+            const tex = makeTexture(file, await decodeImage(file), st.handle, st);
+            tex.blobSaved = !st.handle;
+            textures.push(tex);
+        } catch (err) { missing.push(st.name); }
+    }
+    return { textures, missing };
+}
+
+async function restoreScene(rec, interactive){
+    const { textures, missing } = await loadSceneTextures(rec, interactive);
+    if (!textures.length) {
+        notify('The saved scene could not be restored: ' + (missing.length ? missing.join(', ') + ' not found.' : 'nothing was saved.'), { kind: 'err' });
+        return false;
+    }
+
+    // wipe the canvas, then apply
+    state.instances = []; state.selection = []; state.hovered = null;
+    state.textures = textures;
+    const wasLoaded = state.isLoaded;
+    const s = rec.settings || {};
+    Object.keys(s).forEach(k => { if (k in state) state[k] = s[k]; });
+    state.emitAccumulator = 0;
+    state.activeTexId = (textures.find(t => t.id === rec.activeTexId) || textures[0]).id;
+    const ids = new Set(textures.map(t => t.id));
+    state.instances = (rec.instances || []).filter(i => ids.has(i.texId)).map(i => Object.assign({}, i, { age: 0, lifespan: Infinity }));
+
+    const b = rec.bg || {};
+    Object.assign(state.bg, { mode: b.mode || 'solid', color: b.color || '#000000', fit: b.fit || 'cover',
+        opacity: b.opacity === undefined ? 1 : b.opacity, worldLock: !!b.worldLock, scale: b.scale || 1,
+        img: null, file: null, imgName: '', blobSaved: false });
+    checkerPattern = null;
+    if (b.hasImg) {
+        try {
+            const rb = await dbGet(BLOB_STORE, 'bg');
+            if (rb && rb.blob) {
+                state.bg.img = await decodeImage(rb.blob);
+                state.bg.file = rb.blob; state.bg.imgName = b.imgName || rb.name || 'background'; state.bg.blobSaved = true;
+            }
+        } catch (err) { /* the colour stays */ }
+    }
+    if (state.bg.mode === 'image' && !state.bg.img) state.bg.mode = 'solid';
+
+    if (!wasLoaded) enterLoaded();
+    const v = rec.view || {};
+    state.scale = v.scale || 1; state.offsetX = v.offsetX || 0; state.offsetY = v.offsetY || 0;
+    state.viewFit = false;
+    resizeCanvas();
+    if (v.fitted) { state.viewFit = true; if (view.w > 40 && view.h > 40) fitView({ quiet: true }); }
+
+    renderTextureStrip();
+    loadActiveTextureSettings();
+    syncAllUi();
+    updateRanges();
+    updateStats();
+    invalidate();
+    if (missing.length) notify('Not found: ' + missing.join(', ') + '.', { kind: 'warn' });
+    return true;
+}
+
+/** Every control reads the state again. */
+function syncAllUi(){
+    ['texRows', 'bgRows', 'playRows', 'ppRows', 'scatterRows', 'selRows'].forEach(k => ui[k] && ui[k].sync());
+    ui.btnPoint.classList.toggle('on', state.nearest);
+    ui.btnGrid.classList.toggle('on', state.showGrid);
+    ui.quickBg.forEach(b => {
+        const v = b.dataset.quickbg;
+        b.classList.toggle('on', v === 'checker' ? state.bg.mode === 'checker' : state.bg.mode === 'solid' && state.bg.color === v);
+    });
+    syncSelectionPanel();
+}
+
+function renderPending(){
+    const on = !!pendingScene;
+    ui.restoreBar.hidden = !on;
+    ui.emptyRestore.hidden = !on;
+    if (on) {
+        const n = pendingScene.textures.length;
+        ui.restoreText.textContent = `Last scene: ${n} sheet${n === 1 ? '' : 's'}. Reading the files needs your OK.`;
+    }
+}
+async function restorePending(){
+    const rec = pendingScene;
+    if (!rec) return;
+    if (state.textures.length && !(await Embed.confirm('Restoring replaces what is on the canvas now. Continue?', { title: 'Restore last scene', ok: 'Restore' }))) return;
+    if (await restoreScene(rec, true)) {
+        pendingScene = null; previousSaved = false;
+        renderPending();
+        try { await dbDel(SCENE_STORE, 'previous'); } catch (err) { /* nothing stored */ }
+        flushScene();
+    }
+}
+async function dismissPending(){
+    pendingScene = null;
+    renderPending();
+    try { await dbDel(SCENE_STORE, 'previous'); } catch (err) { /* nothing stored */ }
+    previousSaved = false;
+    flushScene();
+}
+
+async function initScene(){
+    let rec = null;
+    try {
+        rec = await dbGet(SCENE_STORE, 'last');
+        await dbDel(SCENE_STORE, 'previous');
+    } catch (err) { rec = null; }
+    if (rec && Array.isArray(rec.textures) && rec.textures.length) {
+        // any sheet behind a handle that is not readable without a click: wait for the click
+        let ask = false;
+        for (const t of rec.textures) {
+            if (!t.handle) continue;
+            try { if (!t.handle.queryPermission || await t.handle.queryPermission({ mode: 'read' }) !== 'granted') ask = true; }
+            catch (err) { ask = true; }
+        }
+        if (ask) { pendingScene = rec; renderPending(); }
+        else { try { await restoreScene(rec, false); } catch (err) { /* damaged scene: start empty */ } }
+    }
+    sceneReady = true;
+    sceneSig = state.textures.length ? sceneKey(buildScene()) : '';
+}
+
+/* ============================================================
+   Studio host (Embed) and the page's own header
+   ============================================================ */
+const ACTIONS = [
+    { id: 'add',      label: 'Add texture',   icon: 'plus',  tip: 'Add sprite sheets', run: () => addTextures() },
+    { id: 'reimport', label: 'Reimport all',  icon: 'reset', tip: 'Reload every texture from disk, keeping grid, tint and everything placed', key: 'I', disabled: true, run: () => reimportAll() },
+    { sep: true },
+    { id: 'play',     label: 'Pause',         icon: 'pause', tip: 'Play or pause', key: 'Space', disabled: true, run: () => togglePlay() },
+    { id: 'fit',      label: 'Fit',           icon: 'fit',   tip: 'Fit all sprites in the view', key: 'F', disabled: true, run: () => fitView() },
+    { id: 'clear',    label: 'Clear canvas',  icon: 'trash', tip: 'Remove every sprite from the canvas', disabled: true, run: () => clearCanvas() }
+];
+let registered = false;      // Embed.action only after Embed.register
+const A = {};
+ACTIONS.forEach(a => { if (a.id) A[a.id] = a; });
+
+const SHORTCUTS = [
+    ['Tools', [['V', 'Select and transform'], ['B', 'Scatter: click to place, drag to rotate'], ['H', 'Pan (or hold Space and drag)']]],
+    ['Playback', [['Space / K', 'Play or pause (tap Space)'], ['R', 'Restart from frame 1'], ['I', 'Reimport every sheet from disk']]],
+    ['View', [['F', 'Fit all sprites in the view'], ['0', 'Reset the view to 100%'], ['+ / -', 'Zoom in and out'],
+              ['Wheel', 'Zoom at the pointer'], ['G', 'Frame guides'], ['P', 'Point filter, crisp pixels']]],
+    ['Selection', [['Ctrl+A', 'Select all'], ['Ctrl+D', 'Duplicate'], ['Del', 'Delete'], ['Arrows', 'Nudge (Shift: 10 steps)'],
+                   ['Esc', 'Deselect'], ['Ctrl+click', 'Add or remove from the selection'], ['Shift+drag', 'Free aspect / 15 degree rotation']]],
+    ['Files', [['Drop', 'Add sprite sheets next to each other'], ['Shift+drop', 'Use the image as the background']]]
+];
+
+function paintHeaderButton(a){
+    const b = a._btn;
+    if (!b) return;
+    b.textContent = '';
+    if (a.icon) b.appendChild(Kit.icon(a.icon));
+    b.appendChild(el('span', '', a.label));
+    b.disabled = !!a.disabled;
+    b.title = (a.tip || a.label) + (a.key ? '  (' + a.key + ')' : '');
+    b.classList.toggle('ib', !!a.icon);
+}
+function setAction(id, patch){
+    const a = A[id];
+    if (!a) return;
+    Object.assign(a, patch);
+    paintHeaderButton(a);
+    if (registered) Embed.action(id, patch);
+}
+(function buildHeader(){
+    const box = $('headActions');
+    ACTIONS.forEach(a => {
+        if (a.sep) { box.appendChild(el('div', 'sep')); return; }
+        const b = el('button'); b.type = 'button';
+        a._btn = b;
+        b.addEventListener('click', () => { a.run(); });
+        paintHeaderButton(a);
+        box.appendChild(b);
+    });
+    const keysBtn = $('hKeys');
+    keysBtn.addEventListener('click', () => Kit.keys(SHORTCUTS, { button: keysBtn, title: 'Shortcuts: Flipbook previewer' }));
+})();
 
 /* ============================================================
    Boot
    ============================================================ */
-syncBackgroundUI();
+buildSidebar();
+ui.restoreBtn.addEventListener('click', restorePending);
+ui.emptyRestore.addEventListener('click', restorePending);
+ui.restoreDismiss.addEventListener('click', dismissPending);
 setTool(state.tool);
 resizeCanvas();
 applyCursor();
-initLibrary();
+paintPlay();
+renderTextureStrip();
+renderLibrary();
+syncAllUi();
 requestAnimationFrame(loop);
+
+/* the saved scene first, then the remembered folders; files that arrive meanwhile wait for it */
+const bootDone = (async () => {
+    try { await initScene(); } catch (err) { sceneReady = true; }
+    try { await initLibrary(); } catch (err) { /* the library is optional */ }
+})();
+
+/* The host pauses a hidden mode and resumes it when it comes back. */
+let pausedByHost = false;
+Embed.register({
+    id: 'flipbook',
+    title: 'Flipbook previewer',
+    actions: ACTIONS.map(a => {
+        const c = Object.assign({}, a);
+        delete c._btn;
+        return c;
+    }),
+    shortcuts: SHORTCUTS,
+    accepts: ['image/*'],
+    onReceive: files => { addTextureItems(Array.from(files).map(file => ({ file, handle: null }))); },
+    onHide: () => {
+        if (state.isPlaying) { pausedByHost = true; setPlaying(false); }
+        flushScene();
+    },
+    onShow: () => {
+        if (pausedByHost) { pausedByHost = false; setPlaying(true); }
+        onResize();
+    }
+});
+registered = true;
 </script>
 </body>
 </html>

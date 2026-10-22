@@ -2097,7 +2097,7 @@ function Histogram(p){
     var cv=canvasRef.current;if(!cv)return;
     cv.width=148;cv.height=48;
     var ctx=cv.getContext("2d");
-    ctx.fillStyle="#0d0d0d";ctx.fillRect(0,0,148,48);
+    ctx.fillStyle="#101012";ctx.fillRect(0,0,148,48);
     var bw=148/64;
     // Channel colors
     var draws=chanMode==="r"?[{h:_lastHistR,c:"rgba(255,100,100,0.75)"}]:
@@ -2109,14 +2109,14 @@ function Histogram(p){
       ctx.fillStyle=d.c;
       for(var i=0;i<64;i++){var h=d.h[i]*44;ctx.fillRect(i*bw,48-h,Math.max(1,bw-1),h);}
     });
-    ctx.strokeStyle="#1c1c1c";ctx.lineWidth=1;
+    ctx.strokeStyle="#2e2e33";ctx.lineWidth=1;
     ctx.beginPath();ctx.moveTo(0,47);ctx.lineTo(148,47);ctx.stroke();
   },[tick,chanMode]);
   return React.createElement("div",{style:{marginBottom:10}},
-    React.createElement("span",{style:{fontSize:9,color:"#555",textTransform:"uppercase",letterSpacing:1.2,display:"block",marginBottom:4}},
+    React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",textTransform:"uppercase",letterSpacing:1.2,display:"block",marginBottom:4}},
       chanMode?chanMode.toUpperCase()+" Channel — Histogram":"Histogram"
     ),
-    React.createElement("canvas",{ref:canvasRef,style:{display:"block",width:148,height:48,borderRadius:3,border:"1px solid #1c1c1c",imageRendering:"auto"}})
+    React.createElement("canvas",{ref:canvasRef,style:{display:"block",width:148,height:48,borderRadius:3,border:"1px solid var(--line)",imageRendering:"auto"}})
   );
 }
 
@@ -2214,7 +2214,7 @@ function SeedHistory(p){
   return React.createElement("div",{style:{
     display:"flex",gap:2,flexWrap:"wrap",marginTop:4,marginBottom:2
   }},
-    React.createElement("span",{style:{fontSize:7,color:"#333",letterSpacing:0.8,
+    React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:0.8,
       textTransform:"uppercase",alignSelf:"center",marginRight:2}},"History:"),
     visible.map(function(s,i){
       var isCur=s===current;
@@ -2222,15 +2222,15 @@ function SeedHistory(p){
         onClick:function(){p.onChange(s);},
         title:"Restore seed "+s,
         style:{
-          padding:"2px 5px",fontSize:8,fontFamily:"monospace",
-          background:isCur?"#e8900a":"#141414",
-          color:isCur?"#000":"#555",
-          border:"1px solid "+(isCur?"#e8900a":"#1e1e1e"),
+          padding:"2px 5px",fontSize:"var(--fs-s)",fontFamily:"var(--mono)",
+          background:isCur?"var(--panel3)":"var(--panel)",
+          color:isCur?"#fff":"var(--tg-dim)",
+          border:"1px solid "+(isCur?"#8a8a94":"var(--line)"),
           borderRadius:2,cursor:"pointer",lineHeight:1,
           transition:"all 0.08s"
         },
-        onMouseEnter:isCur?null:function(e){e.currentTarget.style.borderColor="#e8900a";e.currentTarget.style.color="#e8900a";},
-        onMouseLeave:isCur?null:function(e){e.currentTarget.style.borderColor="#1e1e1e";e.currentTarget.style.color="#555";}
+        onMouseEnter:isCur?null:function(e){e.currentTarget.style.borderColor="#8a8a94";e.currentTarget.style.color="var(--txt)";},
+        onMouseLeave:isCur?null:function(e){e.currentTarget.style.borderColor="var(--line)";e.currentTarget.style.color="var(--tg-dim)";}
       },s);
     })
   );
@@ -4081,7 +4081,7 @@ function mkState(){return{layers:[mkL(0,42)],exportSize:512,exportDither:1,blurR
 var ZOOM_STEPS=[0.25,0.5,0.75,1,1.5,2,3,4];
 
 // 8-color palette for layer color coding — used in NoisePanel, quick strip, nav bar
-var LC8=["#e8900a","#4ab4ff","#a0e060","#ff6699","#cc88ff","#ffdd44","#44ddcc","#ff8844"];
+var LC8=["#d2d2d8","#d2d2d8","#d2d2d8","#d2d2d8","#d2d2d8","#d2d2d8","#d2d2d8","#d2d2d8"]; // neutral: the kit has no per-layer hues
 
 // Tiny haptic tap on devices that support it (Android Chrome; iOS Safari ignores it).
 // Used on slider commit, long-press menu, layer reorder, divider release.
@@ -4241,16 +4241,12 @@ function injectSpinnerCSS(){
     // ── Range: strip native appearance completely ────────────
     "input[type=range]{-webkit-appearance:none;appearance:none;outline:none;border:none;background:transparent;cursor:pointer;}",
     // Track WebKit — filled via --fill / --fc custom props set inline
-    "input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:linear-gradient(to right,var(--fc,#e8900a) var(--fill,0%),#1c1c1c var(--fill,0%));}",
-    // Track Firefox
-    "input[type=range]::-moz-range-track{height:3px;border-radius:2px;background:linear-gradient(to right,var(--fc,#e8900a) var(--fill,0%),#1c1c1c var(--fill,0%));}",
+    // (kit look: thin grey track, grey fill, plain round thumb; no halo)
+    "input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:linear-gradient(to right,var(--fc,#b4b4bb) var(--fill,0%),#3a3a42 var(--fill,0%));}",
     // Thumb WebKit
-    "input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--fc,#e8900a);cursor:pointer;margin-top:-4.5px;border:1.5px solid #080808;box-shadow:0 0 0 0px var(--fc,#e8900a);transition:box-shadow 0.15s,transform 0.12s;}",
-    "input[type=range]:hover::-webkit-slider-thumb{box-shadow:0 0 0 5px rgba(232,144,10,0.18);}",
-    "input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2);box-shadow:0 0 0 7px rgba(232,144,10,0.14);}",
-    // Thumb Firefox
-    "input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--fc,#e8900a);cursor:pointer;border:1.5px solid #080808;transition:box-shadow 0.15s;}",
-    "input[type=range]::-moz-range-thumb:hover{box-shadow:0 0 0 5px rgba(232,144,10,0.18);}",
+    "input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#d2d2d8;cursor:pointer;margin-top:-4.5px;border:0;}",
+    "input[type=range]:hover::-webkit-slider-thumb{background:#f0f0f4;}",
+    "input[type=range]:focus-visible::-webkit-slider-thumb{outline:1px solid #8a8a94;outline-offset:2px;}",
     // Touch mode — bigger targets (manual .tm class)
     ".tm input[type=range]{height:30px;padding:0;box-sizing:content-box;}",
     ".tm input[type=range]::-webkit-slider-runnable-track{height:5px;}",
@@ -4263,30 +4259,15 @@ function injectSpinnerCSS(){
     "  input[type=range]{height:32px;padding:0;box-sizing:content-box;}",
     "  input[type=range]::-webkit-slider-runnable-track{height:6px;}",
     "  input[type=range]::-webkit-slider-thumb{width:28px;height:28px;margin-top:-11px;}",
-    "  input[type=range]::-moz-range-thumb{width:28px;height:28px;}",
-    "  input[type=range]::-moz-range-track{height:6px;}",
     "  input[type=color]{min-width:40px;min-height:32px;}",
     "  input[type=text],input[type=number],textarea,select{min-height:36px;font-size:12px;}",
     "  button{min-height:30px;}",
     "}",
     // Touch devices have no hover: make the :active state the visible feedback.
     "@media (hover: none){",
-    "  button:active{filter:brightness(1.55);transform:scale(0.94);}",
-    "  input[type=range]:active::-webkit-slider-thumb{transform:scale(1.15);}",
+    "  button:active{filter:brightness(1.55);}",
     "}",
-    // ── Buttons ─────────────────────────────────────────────
-    "button{transition:filter 0.07s,transform 0.07s;}",
-    "button:active{filter:brightness(1.45);transform:scale(0.93);}",
-    // ── Scrollbar ───────────────────────────────────────────
-    "::-webkit-scrollbar{width:3px;height:3px;}",
-    "::-webkit-scrollbar-track{background:transparent;}",
-    "::-webkit-scrollbar-thumb{background:#1e1e1e;border-radius:3px;}",
-    "::-webkit-scrollbar-thumb:hover{background:#2c2c2c;}",
-    "::-webkit-scrollbar-button{display:none;height:0;width:0;}",
-    "::-webkit-scrollbar-corner{background:transparent;}",
-    "*{scrollbar-width:thin;scrollbar-color:#1e1e1e transparent;}",
-    // ── Select ──────────────────────────────────────────────
-    "select:focus{outline:1px solid rgba(232,144,10,0.3);}",
+    // Scrollbars, buttons and selects come from the shared kit (../shared/kit.css).
   ].join("");
   document.head.appendChild(s);
 }
@@ -6192,8 +6173,12 @@ function makeNodeEvaluator(size){
 }
 
 // ═══ UI ATOMS ═══════════════════════════════════════════════════
-var LS={fontSize:9,color:"#555",letterSpacing:1.2,textTransform:"uppercase",marginBottom:3,display:"block"};
-var SS={width:"100%",background:"#161616",border:"1px solid #252525",color:"#ccc",padding:"6px 8px",fontSize:12,fontFamily:"monospace",borderRadius:3,boxSizing:"border-box"};
+// Theme: every colour and size below is a kit token (../shared/kit.css): --bg --panel --panel2 --panel3
+// --line --line2 --txt --txt2 --dim --err, --fs-s (11px) --fs --fs-l. Nothing here picks its own hue.
+// Studio host: embedded, the host header carries Undo / Redo / Randomize seed / Save / Export PNG.
+var EMBED=typeof window!=="undefined"&&!!(window.Embed&&window.Embed.active);
+var LS={fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1.2,textTransform:"uppercase",marginBottom:3,display:"block"};
+var SS={width:"100%",background:"var(--panel)",border:"1px solid var(--line)",color:"var(--txt)",padding:"6px 8px",fontSize:"var(--fs)",fontFamily:"inherit",borderRadius:3,boxSizing:"border-box"};
 
 // ─── Per-slider custom bounds (double-click label to edit) ──────
 var _gBounds={};
@@ -6268,29 +6253,29 @@ function Slider(p){
         onPointerDown:lpStart(function(){setSliderMenu(true);}),
         onPointerMove:lpMove, onPointerUp:lpEnd, onPointerCancel:lpEnd, onPointerLeave:lpEnd,
         title:"Double-click (or press and hold) for range and reset",
-        style:{fontSize:9,color:hasCustom?"#ffdd44":"#555",letterSpacing:1.2,textTransform:"uppercase",
+        style:{fontSize:"var(--fs-s)",color:hasCustom?"var(--txt)":"var(--tg-dim)",letterSpacing:1.2,textTransform:"uppercase",
           cursor:"pointer",userSelect:"none",touchAction:"none",padding:"3px 0"}
       },p.label+(hasCustom?" *":"")),
       addToAnim&&p.animParam?React.createElement("span",{
         onClick:function(){addToAnim(p.animParam,val);},
         title:"Add to animation track",
-        style:{cursor:"pointer",fontSize:7,color:"#2a2a2a",padding:"1px 4px",lineHeight:1,
-          letterSpacing:0.3,fontFamily:"monospace",borderRadius:2,
-          border:"1px solid #222",background:"#111",
+        style:{cursor:"pointer",fontSize:"var(--fs-s)",color:"var(--tg-dim)",padding:"1px 4px",lineHeight:1,
+          letterSpacing:0.3,fontFamily:"inherit",borderRadius:2,
+          border:"1px solid var(--line)",background:"var(--bg)",
           transition:"all 0.1s",flexShrink:0,userSelect:"none"},
-        onMouseEnter:function(e){e.currentTarget.style.color="#e8900a";e.currentTarget.style.borderColor="#e8900a";},
-        onMouseLeave:function(e){e.currentTarget.style.color="#2a2a2a";e.currentTarget.style.borderColor="#222";}
+        onMouseEnter:function(e){e.currentTarget.style.color="var(--txt)";e.currentTarget.style.borderColor="#8a8a94";},
+        onMouseLeave:function(e){e.currentTarget.style.color="var(--tg-dim)";e.currentTarget.style.borderColor="var(--line)";}
       },"+ anim"):null,
       typingVal
         ?React.createElement("input",{type:"number",value:typeStr,step:s,autoFocus:true,
             onChange:function(e){setTypeStr(e.target.value);},
             onBlur:commitTypeVal,
             onKeyDown:function(e){if(e.key==="Enter")commitTypeVal();if(e.key==="Escape")setTypingVal(false);},
-            style:{width:52,background:"#0e0e0e",border:"1px solid #e8900a",color:"#e8900a",padding:"1px 4px",fontSize:10,fontFamily:"monospace",borderRadius:2,textAlign:"right",outline:"none",WebkitAppearance:"none",MozAppearance:"textfield"}})
+            style:{width:52,background:"var(--bg)",border:"1px solid #8a8a94",color:"var(--txt)",padding:"1px 4px",fontSize:"var(--fs-s)",fontFamily:"var(--mono)",borderRadius:2,textAlign:"right",outline:"none",WebkitAppearance:"none",MozAppearance:"textfield"}})
         :React.createElement("span",{
             onClick:startTypeVal,
             title:"Click to type value",
-            style:{fontSize:11,color:"#e8900a",fontFamily:"monospace",cursor:"text",minWidth:36,textAlign:"right",userSelect:"none",flexShrink:0}
+            style:{fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"var(--mono)",fontVariantNumeric:"tabular-nums",cursor:"text",minWidth:36,textAlign:"right",userSelect:"none",flexShrink:0}
           },d),
       (function(){
         var rt=p.resetTo!=null?p.resetTo:0;
@@ -6299,9 +6284,9 @@ function Slider(p){
           onClick:function(){p.onChange(rt);if(p.onCommit)p.onCommit();_recordEdit(key,p.label,rt);},
           title:"Reset to "+(p.fmt?p.fmt(rt):rt),
           style:{width:15,height:15,padding:0,flexShrink:0,marginLeft:1,background:"none",border:"none",
-            color:"#3a3a3a",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"},
-          onMouseEnter:function(e){e.currentTarget.style.color="#e8900a";},
-          onMouseLeave:function(e){e.currentTarget.style.color="#3a3a3a";}
+            color:"var(--tg-dim)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"},
+          onMouseEnter:function(e){e.currentTarget.style.color="var(--txt)";},
+          onMouseLeave:function(e){e.currentTarget.style.color="var(--tg-dim)";}
         },React.createElement("svg",{width:10,height:10,viewBox:"0 0 12 12",fill:"none",stroke:"currentColor",strokeWidth:1.4,strokeLinecap:"round",strokeLinejoin:"round"},
           React.createElement("path",{d:"M2.5 6a3.5 3.5 0 1 1 1 2.5"}),
           React.createElement("polyline",{points:"1.2,5.2 2.6,6.2 3.6,4.6"})
@@ -6311,11 +6296,11 @@ function Slider(p){
     React.createElement("div",{style:{display:"flex",alignItems:"center",gap:4}},
       React.createElement("button",{
         onClick:contractMax,title:"Halve ceiling  "+fmtB(bMax)+" → "+fmtB(Math.max(bMin+(p.step||0.01)*4,bMax*0.5)),
-        style:{width:16,height:16,padding:0,flexShrink:0,background:"#111",border:"1px solid #222",
-               color:"#3a3a3a",cursor:"pointer",borderRadius:3,display:"flex",alignItems:"center",justifyContent:"center",
+        style:{width:16,height:16,padding:0,flexShrink:0,background:"var(--bg)",border:"1px solid var(--line)",
+               color:"var(--tg-dim)",cursor:"pointer",borderRadius:3,display:"flex",alignItems:"center",justifyContent:"center",
                transition:"color 0.08s,border-color 0.08s,background 0.08s"},
-        onMouseEnter:function(e){e.currentTarget.style.color="#ff9966";e.currentTarget.style.borderColor="#ff9966";e.currentTarget.style.background="#1e1a17";},
-        onMouseLeave:function(e){e.currentTarget.style.color="#3a3a3a";e.currentTarget.style.borderColor="#222";e.currentTarget.style.background="#111";}
+        onMouseEnter:function(e){e.currentTarget.style.color="var(--txt)";e.currentTarget.style.borderColor="#8a8a94";e.currentTarget.style.background="var(--panel)";},
+        onMouseLeave:function(e){e.currentTarget.style.color="var(--tg-dim)";e.currentTarget.style.borderColor="var(--line)";e.currentTarget.style.background="var(--bg)";}
       },React.createElement("svg",{width:7,height:7,viewBox:"0 0 7 7",fill:"none",stroke:"currentColor",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round"},
         React.createElement("polyline",{points:"1,2.5 3.5,5 6,2.5"})
       )),
@@ -6334,21 +6319,21 @@ function Slider(p){
         onPointerUp:function(){if(p.onCommit)p.onCommit();haptic(8);_onSliderEnd(p._bumpEpoch);_recordEdit(key,p.label,p.value);},
         onPointerDown:function(){_onSliderStart();},
         onKeyUp:function(){if(p.onCommit)p.onCommit();_onSliderEnd(p._bumpEpoch);_recordEdit(key,p.label,p.value);},
-        style:{"--fill":(bMax>bMin?Math.max(0,Math.min(100,(val-bMin)/(bMax-bMin)*100)).toFixed(1):"0")+"%","--fc":hasCustom?"#ffdd44":"#e8900a",flex:1,height:3,cursor:"pointer"}}),
+        style:{"--fill":(bMax>bMin?Math.max(0,Math.min(100,(val-bMin)/(bMax-bMin)*100)).toFixed(1):"0")+"%","--fc":hasCustom?"#b4b4bb":"#b4b4bb",flex:1,height:3,cursor:"pointer"}}),
       React.createElement("button",{
         onClick:expandMax,title:"Double ceiling  "+fmtB(bMax)+" → "+fmtB(bMax<=0?1:bMax*2),
-        style:{width:16,height:16,padding:0,flexShrink:0,background:"#111",border:"1px solid #222",
-               color:"#3a3a3a",cursor:"pointer",borderRadius:3,display:"flex",alignItems:"center",justifyContent:"center",
+        style:{width:16,height:16,padding:0,flexShrink:0,background:"var(--bg)",border:"1px solid var(--line)",
+               color:"var(--tg-dim)",cursor:"pointer",borderRadius:3,display:"flex",alignItems:"center",justifyContent:"center",
                transition:"color 0.08s,border-color 0.08s,background 0.08s"},
-        onMouseEnter:function(e){e.currentTarget.style.color="#a0e060";e.currentTarget.style.borderColor="#a0e060";e.currentTarget.style.background="#131a10";},
-        onMouseLeave:function(e){e.currentTarget.style.color="#3a3a3a";e.currentTarget.style.borderColor="#222";e.currentTarget.style.background="#111";}
+        onMouseEnter:function(e){e.currentTarget.style.color="var(--txt)";e.currentTarget.style.borderColor="#8a8a94";e.currentTarget.style.background="var(--panel)";},
+        onMouseLeave:function(e){e.currentTarget.style.color="var(--tg-dim)";e.currentTarget.style.borderColor="var(--line)";e.currentTarget.style.background="var(--bg)";}
       },React.createElement("svg",{width:7,height:7,viewBox:"0 0 7 7",fill:"none",stroke:"currentColor",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round"},
         React.createElement("polyline",{points:"1,4.5 3.5,2 6,4.5"})
       ))
     ),
     React.createElement("div",{style:{display:"flex",justifyContent:"space-between",marginTop:2,padding:"0 20px"}},
-      React.createElement("span",{style:{fontSize:7,color:"#252525",fontFamily:"monospace",letterSpacing:0.3}},fmtB(bMin)),
-      React.createElement("span",{style:{fontSize:7,color:hasCustom?"rgba(255,221,68,0.45)":"#252525",fontFamily:"monospace",letterSpacing:0.3}},fmtB(bMax))
+      React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",letterSpacing:0.3}},fmtB(bMin)),
+      React.createElement("span",{style:{fontSize:"var(--fs-s)",color:hasCustom?"var(--txt)":"var(--tg-dim)",fontFamily:"inherit",letterSpacing:0.3}},fmtB(bMax))
     ),
     // Quick-set preset chips (e.g. rotation 45/90/180). Each sets the value and
     // commits. Active chip highlights when the value matches.
@@ -6359,38 +6344,38 @@ function Slider(p){
         var on=Math.abs(p.value-pv)<(s||0.01)*0.5;
         return React.createElement("button",{key:pl,
           onClick:function(){p.onChange(pv);if(p.onCommit)p.onCommit();_recordEdit(key,p.label,pv);haptic(8);},
-          style:{padding:"2px 7px",fontSize:8,fontFamily:"monospace",cursor:"pointer",borderRadius:3,
-            background:on?"#e8900a":"#161616",color:on?"#000":"#777",
-            border:"1px solid "+(on?"#e8900a":"#282828")}},pl);
+          style:{padding:"2px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",cursor:"pointer",borderRadius:3,
+            background:on?"var(--panel3)":"var(--panel)",color:on?"#fff":"var(--txt2)",
+            border:"1px solid "+(on?"#8a8a94":"var(--line)")}},pl);
       })
     ):null,
     sliderMenu?React.createElement("div",{style:{display:"flex",gap:5,marginTop:5,alignItems:"center",
-      background:"#141414",borderRadius:6,padding:"6px 7px",border:"1px solid #333",flexWrap:"wrap"}},
+      background:"var(--bg)",borderRadius:6,padding:"6px 7px",border:"1px solid var(--line2)",flexWrap:"wrap"}},
       React.createElement("button",{onClick:function(){setSliderMenu(false);doResetValue();},
-        style:{minHeight:30,padding:"0 10px",fontSize:9,fontFamily:"monospace",fontWeight:700,background:"#1c1c1c",
-          color:"#cbb",border:"1px solid #333",borderRadius:5,cursor:"pointer",touchAction:"manipulation"}},"Reset value"),
+        style:{minHeight:30,padding:"0 10px",fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,background:"var(--panel2)",
+          color:"var(--txt)",border:"1px solid var(--line2)",borderRadius:5,cursor:"pointer",touchAction:"manipulation"}},"Reset value"),
       React.createElement("button",{onClick:function(){setSliderMenu(false);openEdit();},
-        style:{minHeight:30,padding:"0 10px",fontSize:9,fontFamily:"monospace",fontWeight:700,background:"#1c1c1c",
-          color:"#ffdd44",border:"1px solid #4a4020",borderRadius:5,cursor:"pointer",touchAction:"manipulation"}},"Custom range"),
+        style:{minHeight:30,padding:"0 10px",fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,background:"var(--panel2)",
+          color:"var(--txt)",border:"1px solid #8a8a94",borderRadius:5,cursor:"pointer",touchAction:"manipulation"}},"Custom range"),
       hasCustom?React.createElement("button",{onClick:function(){setSliderMenu(false);resetEdit();},
-        style:{minHeight:30,padding:"0 10px",fontSize:9,fontFamily:"monospace",background:"none",
-          color:"#999",border:"1px solid #333",borderRadius:5,cursor:"pointer",touchAction:"manipulation"}},"Default range"):null,
+        style:{minHeight:30,padding:"0 10px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:"none",
+          color:"var(--txt2)",border:"1px solid var(--line2)",borderRadius:5,cursor:"pointer",touchAction:"manipulation"}},"Default range"):null,
       React.createElement("button",{onClick:function(){setSliderMenu(false);},
-        style:{marginLeft:"auto",minHeight:30,minWidth:30,fontSize:12,fontFamily:"monospace",background:"none",
-          color:"#888",border:"1px solid #333",borderRadius:5,cursor:"pointer",touchAction:"manipulation"}},"\u00d7")):null,
-    editing?React.createElement("div",{style:{display:"flex",gap:4,marginTop:5,alignItems:"center",background:"#141414",borderRadius:3,padding:"5px 6px",border:"1px solid #252525"}},
-      React.createElement("span",{style:{fontSize:8,color:"#555",flexShrink:0}},"Min"),
+        style:{marginLeft:"auto",minHeight:30,minWidth:30,fontSize:"var(--fs)",fontFamily:"inherit",background:"none",
+          color:"var(--txt2)",border:"1px solid var(--line2)",borderRadius:5,cursor:"pointer",touchAction:"manipulation"}},"\u00d7")):null,
+    editing?React.createElement("div",{style:{display:"flex",gap:4,marginTop:5,alignItems:"center",background:"var(--bg)",borderRadius:3,padding:"5px 6px",border:"1px solid var(--line)"}},
+      React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",flexShrink:0}},"Min"),
       React.createElement("input",{type:"number",value:editMin,step:s,
         onChange:function(e){setEditMin(parseFloat(e.target.value));},
-        style:{flex:1,background:"#0e0e0e",border:"1px solid #2a2a2a",color:"#ffdd44",padding:"2px 4px",fontSize:9,fontFamily:"monospace",borderRadius:2,textAlign:"center"}}),
-      React.createElement("span",{style:{fontSize:8,color:"#555",flexShrink:0}},"Max"),
+        style:{flex:1,background:"var(--bg)",border:"1px solid var(--line)",color:"var(--txt)",padding:"2px 4px",fontSize:"var(--fs-s)",fontFamily:"inherit",borderRadius:2,textAlign:"center"}}),
+      React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",flexShrink:0}},"Max"),
       React.createElement("input",{type:"number",value:editMax,step:s,
         onChange:function(e){setEditMax(parseFloat(e.target.value));},
-        style:{flex:1,background:"#0e0e0e",border:"1px solid #2a2a2a",color:"#ffdd44",padding:"2px 4px",fontSize:9,fontFamily:"monospace",borderRadius:2,textAlign:"center"}}),
+        style:{flex:1,background:"var(--bg)",border:"1px solid var(--line)",color:"var(--txt)",padding:"2px 4px",fontSize:"var(--fs-s)",fontFamily:"inherit",borderRadius:2,textAlign:"center"}}),
       React.createElement("button",{onClick:applyEdit,
-        style:{padding:"2px 7px",background:"#ffdd44",border:"none",color:"#000",fontFamily:"monospace",fontSize:8,fontWeight:700,cursor:"pointer",borderRadius:2,flexShrink:0}},"OK"),
+        style:{padding:"2px 7px",background:"var(--txt)",border:"none",color:"var(--bg)",fontFamily:"inherit",fontSize:"var(--fs-s)",fontWeight:700,cursor:"pointer",borderRadius:2,flexShrink:0}},"OK"),
       hasCustom?React.createElement("button",{onClick:resetEdit,
-        style:{padding:"2px 6px",background:"none",border:"1px solid #333",color:"#888",fontFamily:"monospace",fontSize:8,cursor:"pointer",borderRadius:2,flexShrink:0}},"↺"):null
+        style:{padding:"2px 6px",background:"none",border:"1px solid var(--line2)",color:"var(--txt2)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:2,flexShrink:0}},"↺"):null
     ):null
   );
 }
@@ -6401,8 +6386,7 @@ function Sel(p){
     return{v:v,l:l};
   });
   var useGrid=p.grid===true||(opts.length>=4&&opts.some(function(o){return o.l.length>8;}));
-  var col=p.color||"#e8900a";
-  var hr=parseInt(col.slice(1,3),16)||232,hg=parseInt(col.slice(3,5),16)||144,hb=parseInt(col.slice(5,7),16)||10;
+  // Selected = the kit "on" look (raised grey, light border, white text); p.color is accepted and ignored.
   return React.createElement("div",{style:{marginBottom:10}},
     p.label?React.createElement("span",{style:LS},p.label):null,
     React.createElement("div",{style:{display:useGrid?"grid":"flex",gridTemplateColumns:useGrid?("repeat("+(p.cols||2)+",1fr)"):null,flexWrap:useGrid?null:"wrap",gap:3}},
@@ -6411,23 +6395,21 @@ function Sel(p){
         return React.createElement("button",{key:o.v,onClick:function(){p.onChange(o.v);},title:o.l,
           style:{
             flex:useGrid?null:"1 0 auto",
-            padding:"5px 8px",fontSize:9,fontFamily:"monospace",
-            background:active?col:"#111",
-            color:active?"#000":"#484848",
-            border:"1px solid "+(active?col:"#191919"),
+            padding:"5px 8px",fontSize:"var(--fs-s)",fontFamily:"inherit",
+            background:active?"var(--panel3)":"var(--bg)",
+            color:active?"#fff":"var(--tg-dim)",
+            border:"1px solid "+(active?"#8a8a94":"var(--line)"),
             borderRadius:3,cursor:"pointer",textAlign:"center",lineHeight:1.25,
-            whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",
+            whiteSpace:"normal",overflowWrap:"anywhere",
             transition:"background 0.1s,color 0.1s,border-color 0.1s"
           },
           onMouseEnter:active?null:function(e){
             var s=e.currentTarget.style;
-            s.background="rgba("+hr+","+hg+","+hb+",0.13)";
-            s.borderColor="rgba("+hr+","+hg+","+hb+",0.4)";
-            s.color=col;
+            s.background="#26262b";s.borderColor="var(--line2)";s.color="var(--txt)";
           },
           onMouseLeave:active?null:function(e){
             var s=e.currentTarget.style;
-            s.background="#111";s.borderColor="#191919";s.color="#484848";
+            s.background="var(--bg)";s.borderColor="var(--line)";s.color="var(--tg-dim)";
           }
         },o.l);
       })
@@ -6444,66 +6426,59 @@ function Collapse(p){
     return p.defaultOpen!==false;
   });
   var open=_o[0],setOpen=_o[1];
-  var color=p.color||"#e8900a";
   function toggle(){var next=!open;setOpen(next);_collapseState[storageKey]=next;}
+  // The kit section (.sec): bordered box, raised header with a bold title and a turning arrow.
+  // No coloured left bar, no per-section colour (p.color is accepted and ignored).
+  var hdBg=open?"var(--panel3)":"var(--panel2)",hdHover=open?"#31313a":"#2b2b31";
   return React.createElement("div",{style:{
-    background:"#111",
-    border:"1px solid #1a1a1a",
-    borderLeft:"2px solid "+(open?color:"#1e1e1e"),
-    borderRadius:4,marginBottom:8,overflow:"hidden",
-    transition:"border-left-color 0.18s"
+    background:"var(--bg)",border:"1px solid var(--line)",borderRadius:8,marginBottom:6,overflow:"hidden"
   }},
-    React.createElement("div",{onClick:toggle,
-      style:{display:"flex",justifyContent:"space-between",alignItems:"center",
-             padding:"7px 10px 7px 8px",cursor:"pointer",userSelect:"none",
-             background:open?"rgba(255,255,255,0.015)":"transparent",transition:"background 0.1s"},
-      onMouseEnter:function(e){e.currentTarget.style.background="rgba(255,255,255,0.025)";},
-      onMouseLeave:function(e){e.currentTarget.style.background=open?"rgba(255,255,255,0.015)":"transparent";}
+    React.createElement("div",{onClick:toggle,role:"button",tabIndex:0,"aria-expanded":open,
+      onKeyDown:function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();toggle();}},
+      style:{display:"flex",alignItems:"center",gap:8,padding:"0 11px",minHeight:34,cursor:"pointer",userSelect:"none",
+             background:hdBg,transition:"background 0.12s"},
+      onMouseEnter:function(e){e.currentTarget.style.background=hdHover;},
+      onMouseLeave:function(e){e.currentTarget.style.background=hdBg;}
     },
-      React.createElement("div",{style:{display:"flex",alignItems:"center",gap:6,flex:1,minWidth:0}},
-        React.createElement("span",{style:{fontSize:9,color:open?color:"#3a3a3a",letterSpacing:1.5,
-          textTransform:"uppercase",transition:"color 0.12s",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},
-          p.title),
-        p.badge?React.createElement("span",{style:{
-          fontSize:7,color:open?color:"#3a3a3a",fontFamily:"monospace",flexShrink:0,
-          background:"rgba(255,255,255,0.04)",padding:"1px 6px",borderRadius:8,
-          border:"1px solid rgba(255,255,255,0.06)",letterSpacing:0.3
-        }},p.badge):null
-      ),
-      React.createElement("svg",{width:9,height:9,viewBox:"0 0 9 9",fill:"none",
-        stroke:open?color:"#2e2e2e",strokeWidth:1.8,strokeLinecap:"round",strokeLinejoin:"round",
-        style:{flexShrink:0,transition:"transform 0.18s,stroke 0.12s",transform:open?"rotate(0deg)":"rotate(-90deg)"}},
-        React.createElement("polyline",{points:"1.5,3 4.5,6.5 7.5,3"})
-      )
+      React.createElement("span",{style:{flex:1,minWidth:0,fontSize:"var(--fs)",fontWeight:600,letterSpacing:0.1,
+        color:open?"var(--txt)":"var(--txt2)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},
+        p.title),
+      p.badge?React.createElement("span",{style:{
+        flexShrink:0,fontSize:"var(--fs-s)",color:"var(--tg-dim)",background:"var(--bg)",
+        lineHeight:"16px",padding:"0 6px",borderRadius:8,fontVariantNumeric:"tabular-nums"
+      }},p.badge):null,
+      React.createElement("span",{style:{flexShrink:0,width:7,height:7,margin:open?"0 3px 3px 0":"0 3px 0 0",
+        border:"solid "+(open?"var(--txt2)":"var(--tg-dim)"),borderWidth:"0 1.5px 1.5px 0",
+        transform:open?"rotate(45deg)":"rotate(-45deg)",transition:"transform 0.12s"}})
     ),
-    open?React.createElement("div",{style:{padding:"4px 10px 10px 10px"}},p.children):null
+    open?React.createElement("div",{style:{padding:"10px 11px 6px"}},p.children):null
   );
 }
 // Module-level persistence for collapse state across re-renders
 var _collapseState={};
 function Tog(p){
-  var col=p.color||"#e8900a";
+  var col="#c8c8ce"; // kit checked grey; p.color is accepted and ignored
   var on=!!p.value;
   return React.createElement("div",{
     onClick:function(){p.onChange(!p.value);},
     style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,cursor:"pointer",userSelect:"none",gap:10},
-    onMouseEnter:function(e){var t=e.currentTarget.children[1];if(t)t.style.boxShadow="0 0 0 4px rgba(232,144,10,0.15)";},
+    onMouseEnter:function(e){var t=e.currentTarget.children[1];if(t)t.style.boxShadow="0 0 0 4px transparent";},
     onMouseLeave:function(e){var t=e.currentTarget.children[1];if(t)t.style.boxShadow="none";}
   },
     React.createElement("span",{style:{
-      fontSize:9,letterSpacing:1.2,textTransform:"uppercase",flex:1,
-      color:on?col:"#484848",transition:"color 0.18s"
+      fontSize:"var(--fs-s)",letterSpacing:1.2,textTransform:"uppercase",flex:1,
+      color:on?col:"var(--tg-dim)",transition:"color 0.18s"
     }},p.label),
     React.createElement("div",{style:{
       width:38,height:22,borderRadius:11,flexShrink:0,position:"relative",
-      background:on?col:"#161616",
-      border:"1px solid "+(on?col:"#222"),
+      background:on?col:"var(--panel)",
+      border:"1px solid "+(on?col:"var(--line)"),
       transition:"background 0.2s,border-color 0.2s,box-shadow 0.15s",
       boxShadow:"inset 0 1px 4px rgba(0,0,0,0.45)"
     }},
       React.createElement("div",{style:{
         position:"absolute",width:16,height:16,borderRadius:8,
-        background:on?"#fff":"#2e2e2e",
+        background:on?"var(--bg)":"#5a5a64",
         top:2,left:on?19:2,
         transition:"left 0.2s,background 0.2s",
         boxShadow:"0 1px 4px rgba(0,0,0,0.55),0 0 0 0.5px rgba(0,0,0,0.15)"
@@ -6511,17 +6486,16 @@ function Tog(p){
     )
   );
 }
-function Sep(){return React.createElement("div",{style:{height:1,background:"linear-gradient(to right,transparent,#252525 20%,#252525 80%,transparent)",margin:"10px 0"}});}
-function TBtn(p){return React.createElement("button",{onClick:p.onClick,style:{padding:p.small?"4px 7px":"6px 8px",fontSize:11,fontFamily:"monospace",background:p.active?(p.color||"#e8900a"):"#141414",color:p.active?"#000":"#555",border:"1px solid "+(p.active?(p.color||"#e8900a"):"#222"),borderRadius:3,cursor:"pointer",transition:"all 0.12s",whiteSpace:"nowrap"}},p.children);}
+function Sep(){return React.createElement("div",{style:{height:1,background:"var(--line)",margin:"10px 0"}});}
+function TBtn(p){return React.createElement("button",{onClick:p.onClick,style:{padding:p.small?"4px 7px":"6px 8px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:p.active?(p.color||"var(--txt)"):"var(--bg)",color:p.active?"var(--bg)":"var(--tg-dim)",border:"1px solid "+(p.active?(p.color||"#8a8a94"):"var(--line)"),borderRadius:3,cursor:"pointer",transition:"all 0.12s",whiteSpace:"nowrap"}},p.children);}
 function SHead(p){
-  var col=p.color||"#e8900a";
+  // Kit group title (.grp2): small, dim, uppercase, a hairline under it. p.color is accepted and ignored.
   return React.createElement("div",{style:{
-    fontSize:9,color:col,letterSpacing:2,textTransform:"uppercase",marginBottom:8,paddingBottom:5,
-    backgroundImage:"linear-gradient(to right,"+col+"44,transparent 70%)",
-    backgroundSize:"100% 1px",backgroundRepeat:"no-repeat",backgroundPosition:"bottom"
+    fontSize:"var(--fs-s)",fontWeight:600,color:"var(--tg-dim)",letterSpacing:1.2,textTransform:"uppercase",marginBottom:8,paddingBottom:5,
+    borderBottom:"1px solid var(--line)"
   }},p.children);
 }
-function SmBtn(p){return React.createElement("button",{onClick:p.onClick,title:p.title,style:{padding:"3px 7px",fontSize:10,fontFamily:"monospace",background:"#141414",color:p.color||"#555",border:"1px solid #1e1e1e",borderRadius:3,cursor:"pointer",lineHeight:1,transition:"all 0.08s"},onMouseEnter:function(e){e.currentTarget.style.borderColor=p.color||"#444";e.currentTarget.style.color=p.color||"#aaa";},onMouseLeave:function(e){e.currentTarget.style.borderColor="#1e1e1e";e.currentTarget.style.color=p.color||"#555";}},p.children);}
+function SmBtn(p){return React.createElement("button",{onClick:p.onClick,title:p.title,style:{padding:"3px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:"var(--bg)",color:p.color||"var(--tg-dim)",border:"1px solid var(--line)",borderRadius:3,cursor:"pointer",lineHeight:1,transition:"all 0.08s"},onMouseEnter:function(e){e.currentTarget.style.borderColor=p.color||"#4a4a52";e.currentTarget.style.color=p.color||"var(--txt2)";},onMouseLeave:function(e){e.currentTarget.style.borderColor="var(--line)";e.currentTarget.style.color=p.color||"var(--tg-dim)";}},p.children);}
 
 // ═══ LAYER THUMBNAIL ════════════════════════════════════════════
 function LayerThumb(p){
@@ -6598,7 +6572,7 @@ function ShapePreviewGrid(p){
   var canvases=useRef({});
   var prevActive=useRef(null);
   var activeKind=p.value||"circle";
-  var activeCol=p.col||"#e8900a";
+  var activeCol=p.col||"#c8c8ce";
   var activeRGB=hexF(activeCol);
 
   function paintShape(c,id,sp,isActive){
@@ -6647,7 +6621,7 @@ function ShapePreviewGrid(p){
       var grpShapes=SHAPES.filter(function(sh){return grp.ids.indexOf(sh.id)>=0;});
       if(!grpShapes.length)return null;
       return React.createElement("div",{key:grp.label,style:{marginBottom:8}},
-        React.createElement("span",{style:{fontSize:7,color:"#2a2a2a",letterSpacing:1.5,textTransform:"uppercase",display:"block",marginBottom:4}},grp.label),
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1.5,textTransform:"uppercase",display:"block",marginBottom:4}},grp.label),
         React.createElement("div",{style:{display:"flex",flexWrap:"wrap",gap:3}},
           grpShapes.map(function(sh){
             var isActive=activeKind===sh.id;
@@ -6655,17 +6629,17 @@ function ShapePreviewGrid(p){
               onClick:function(){p.onChange(sh.id);},
               title:sh.l,
               style:{display:"flex",flexDirection:"column",alignItems:"center",gap:2,
-                padding:2,background:"#080808",
-                border:"2px solid "+(isActive?activeCol:"#1c1c1c"),
+                padding:2,background:"var(--bg)",
+                border:"2px solid "+(isActive?activeCol:"var(--line)"),
                 borderRadius:3,cursor:"pointer"},
-              onMouseEnter:function(e){if(!isActive)e.currentTarget.style.borderColor="#333";},
-              onMouseLeave:function(e){if(!isActive)e.currentTarget.style.borderColor="#1c1c1c";}
+              onMouseEnter:function(e){if(!isActive)e.currentTarget.style.borderColor="var(--line2)";},
+              onMouseLeave:function(e){if(!isActive)e.currentTarget.style.borderColor="var(--line)";}
             },
               React.createElement("canvas",{
                 ref:function(el){if(el)canvases.current[sh.id]=el;},
                 style:{width:sz,height:sz,display:"block",imageRendering:"pixelated",borderRadius:2}
               }),
-              React.createElement("span",{style:{fontSize:7,fontFamily:"monospace",color:isActive?activeCol:"#444",lineHeight:1,textAlign:"center",maxWidth:sz+4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},sh.l)
+              React.createElement("span",{style:{fontSize:"var(--fs-s)",fontFamily:"inherit",color:isActive?activeCol:"var(--tg-dim)",lineHeight:1,textAlign:"center",whiteSpace:"nowrap"}},sh.l)
             );
           })
         )
@@ -6692,31 +6666,31 @@ function EditHistoryPanel(p){
     onClick:function(){setOpen(true);},
     title:"Recent edits — re-tweak recent properties",
     style:{position:"absolute",top:8,right:8,zIndex:8,width:28,height:24,
-      background:"rgba(10,10,10,0.92)",border:"1px solid #232323",borderRadius:5,
-      color:rows.length?"#999":"#555",cursor:"pointer",backdropFilter:"blur(3px)",
-      display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,
+      background:"color-mix(in srgb,var(--bg) 92%,transparent)",border:"1px solid var(--line)",borderRadius:5,
+      color:rows.length?"var(--txt2)":"var(--tg-dim)",cursor:"pointer",backdropFilter:"blur(3px)",
+      display:"flex",alignItems:"center",justifyContent:"center",fontSize:"var(--fs)",
       boxShadow:"0 4px 16px rgba(0,0,0,0.5)"}},
     "\u270e");
   return React.createElement("div",{style:{
     position:"absolute",top:8,right:8,width:isMobile?150:182,zIndex:8,
     maxWidth:isMobile?"60%":"none",
-    background:"rgba(10,10,10,0.92)",border:"1px solid #232323",borderRadius:5,
-    fontFamily:"monospace",backdropFilter:"blur(3px)",boxShadow:"0 4px 16px rgba(0,0,0,0.5)"}},
+    background:"color-mix(in srgb,var(--bg) 92%,transparent)",border:"1px solid var(--line)",borderRadius:5,
+    fontFamily:"inherit",backdropFilter:"blur(3px)",boxShadow:"0 4px 16px rgba(0,0,0,0.5)"}},
     React.createElement("div",{
       onClick:function(){setOpen(function(v){return!v;});},
       title:"Recently edited properties — re-tweak any of them here",
       style:{display:"flex",justifyContent:"space-between",alignItems:"center",
-        padding:"5px 8px",cursor:"pointer",borderBottom:open&&rows.length?"1px solid #1d1d1d":"none"}},
-      React.createElement("span",{style:{fontSize:8,color:"#888",textTransform:"uppercase",letterSpacing:1}},"\u270e Recent Edits"),
+        padding:"5px 8px",cursor:"pointer",borderBottom:open&&rows.length?"1px solid var(--line)":"none"}},
+      React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",textTransform:"uppercase",letterSpacing:1}},"\u270e Recent Edits"),
       React.createElement("div",{style:{display:"flex",gap:6,alignItems:"center"}},
         rows.length?React.createElement("span",{title:"Clear history",
           onClick:function(e){e.stopPropagation();_editHistory=[];_editHistNotify();},
-          style:{fontSize:9,color:"#555",cursor:"pointer"}},"clear"):null,
-        React.createElement("span",{style:{fontSize:9,color:"#555"}},open?"\u25be":"\u25b8")
+          style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",cursor:"pointer"}},"clear"):null,
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)"}},open?"\u25be":"\u25b8")
       )
     ),
     open?React.createElement("div",{style:{maxHeight:isMobile?150:230,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:rows.length?"4px 0":"0"}},
-      rows.length===0?React.createElement("div",{style:{padding:"8px 10px",fontSize:8,color:"#444",lineHeight:1.5}},
+      rows.length===0?React.createElement("div",{style:{padding:"8px 10px",fontSize:"var(--fs-s)",color:"var(--tg-dim)",lineHeight:1.5}},
         "Move any slider and it shows up here for quick re-tweaking."):
       rows.map(function(row){
         var live=_editLive[row.key];
@@ -6724,10 +6698,10 @@ function EditHistoryPanel(p){
         var mn=live.min,mx=live.max,st=live.step;
         var cur=live.value;
         var disp=live.fmt?live.fmt(cur):(st<1?cur.toFixed(2):""+Math.round(cur));
-        return React.createElement("div",{key:row.key,style:{padding:"4px 8px",borderBottom:"1px solid #161616"}},
+        return React.createElement("div",{key:row.key,style:{padding:"4px 8px",borderBottom:"1px solid var(--line)"}},
           React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:2}},
-            React.createElement("span",{style:{fontSize:8,color:"#aaa",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:120},title:row.label},row.label),
-            React.createElement("span",{style:{fontSize:8,color:"#e8900a"}},disp)
+            React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",minWidth:0,overflowWrap:"anywhere"},title:row.label},row.label),
+            React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt)"}},disp)
           ),
           React.createElement("input",{type:"range",min:mn,max:mx,step:st,value:cur<mn?mn:cur>mx?mx:cur,
             onChange:function(e){
@@ -6740,7 +6714,7 @@ function EditHistoryPanel(p){
               row.value=nv;
               _editHistNotify();
             },
-            style:{width:"100%",height:3,cursor:"pointer",accentColor:"#e8900a"}})
+            style:{width:"100%",height:3,cursor:"pointer",accentColor:"#9a9aa2"}})
         );
       })
     ):null
@@ -6929,38 +6903,39 @@ function VariationsExplorer(p){
     variants.push(jitterLayers(p.layers||[],vi+1+roll*COUNT,amt));
   }
   var cell=120;
-  return React.createElement("div",{style:{position:"absolute",inset:0,zIndex:8,background:"rgba(8,8,8,0.97)",
-    display:"flex",flexDirection:"column",alignItems:"center",padding:14,overflow:"auto"}},
+  // top padding clears the LAYERS / NODES pill and the Gizmo button that float over the canvas
+  return React.createElement("div",{style:{position:"absolute",inset:0,zIndex:8,background:"var(--bg)",
+    display:"flex",flexDirection:"column",alignItems:"center",padding:"58px 14px 14px",overflow:"auto"}},
     React.createElement("div",{style:{display:"flex",alignItems:"center",gap:12,marginBottom:12,flexWrap:"wrap",justifyContent:"center"}},
-      React.createElement("span",{style:{fontSize:11,color:"#e8900a",fontFamily:"monospace",letterSpacing:1}},"VARIATIONS"),
+      React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"inherit",letterSpacing:1}},"VARIATIONS"),
       React.createElement("div",{style:{display:"flex",alignItems:"center",gap:6}},
-        React.createElement("span",{style:{fontSize:8,color:"#777",fontFamily:"monospace"}},"Amount"),
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit"}},"Amount"),
         React.createElement("input",{type:"range",min:0.1,max:1,step:0.05,value:amt,
           onChange:function(e){setAmt(parseFloat(e.target.value));},
-          style:{width:100,accentColor:"#e8900a"}}),
-        React.createElement("span",{style:{fontSize:8,color:"#999",fontFamily:"monospace",width:28}},Math.round(amt*100)+"%")
+          style:{width:100,accentColor:"#9a9aa2"}}),
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",width:28}},Math.round(amt*100)+"%")
       ),
       React.createElement("button",{onClick:function(){setRoll(function(v){return v+1;});},
-        style:{padding:"5px 12px",fontSize:9,fontFamily:"monospace",background:"#1a1a1a",color:"#e8900a",
-          border:"1px solid #e8900a",borderRadius:3,cursor:"pointer"}},"⟳ Re-roll"),
+        style:{padding:"5px 12px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:"var(--panel)",color:"var(--txt)",
+          border:"1px solid #8a8a94",borderRadius:3,cursor:"pointer"}},"⟳ Re-roll"),
       React.createElement("button",{onClick:p.onClose,
-        style:{padding:"5px 12px",fontSize:9,fontFamily:"monospace",background:"#1a1a1a",color:"#888",
-          border:"1px solid #333",borderRadius:3,cursor:"pointer"}},"✕ Close")
+        style:{padding:"5px 12px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:"var(--panel)",color:"var(--txt2)",
+          border:"1px solid var(--line2)",borderRadius:3,cursor:"pointer"}},"✕ Close")
     ),
     React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(3,auto)",gap:8,justifyContent:"center"}},
       variants.map(function(vl,vi){
         return React.createElement("div",{key:vi,style:{display:"flex",flexDirection:"column",alignItems:"center",gap:3,
-          cursor:"pointer",padding:4,borderRadius:5,border:"1px solid #1c1c1c",background:"#0c0c0c"},
+          cursor:"pointer",padding:4,borderRadius:5,border:"1px solid var(--line)",background:"var(--bg)"},
           title:"Click to apply this variation",
           onClick:function(){p.onApply(vl);},
-          onMouseEnter:function(e){e.currentTarget.style.borderColor="#e8900a";},
-          onMouseLeave:function(e){e.currentTarget.style.borderColor="#1c1c1c";}},
+          onMouseEnter:function(e){e.currentTarget.style.borderColor="#8a8a94";},
+          onMouseLeave:function(e){e.currentTarget.style.borderColor="var(--line)";}},
           React.createElement(StackPreview,{layers:vl,upto:vl.length-1,size:cell}),
-          React.createElement("span",{style:{fontSize:7,color:"#555",fontFamily:"monospace"}},"#"+(vi+1))
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit"}},"#"+(vi+1))
         );
       })
     ),
-    React.createElement("div",{style:{marginTop:10,fontSize:8,color:"#555",fontFamily:"monospace",textAlign:"center"}},
+    React.createElement("div",{style:{marginTop:10,fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",textAlign:"center"}},
       "Click a tile to apply it · Amount controls how different they are · Re-roll for a new batch")
   );
 }
@@ -6969,22 +6944,22 @@ function VariationsExplorer(p){
 function LayerCompareGrid(p){
   var _m=useState("solo"); var mode=_m[0],setMode=_m[1];
   var layers=(p.layers||[]).map(function(L,i){return {L:L,i:i};}).filter(function(o){return o.L.enabled;});
-  if(layers.length===0)return React.createElement("div",{style:{padding:20,fontSize:10,color:"#555",fontFamily:"monospace"}},"No enabled layers to compare.");
+  if(layers.length===0)return React.createElement("div",{style:{padding:20,fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit"}},"No enabled layers to compare.");
   // Fit a square-ish grid; cap cell size so many layers still fit.
   var n=layers.length;
   var cols=Math.ceil(Math.sqrt(n));
   var cell=Math.max(64,Math.min(150,Math.floor(440/cols)));
   return React.createElement("div",{style:{
-    position:"absolute",inset:0,zIndex:6,background:"rgba(8,8,8,0.96)",
+    position:"absolute",inset:0,zIndex:6,background:"color-mix(in srgb,var(--bg) 96%,transparent)",
     display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-    padding:12,overflow:"auto"}},
+    padding:"58px 12px 12px",overflow:"auto"}},
     React.createElement("div",{style:{display:"flex",gap:6,marginBottom:10}},
       [["solo","Each Layer Alone"],["stack","Progressive Stack"]].map(function(o){
         var act=mode===o[0];
         return React.createElement("button",{key:o[0],onClick:function(){setMode(o[0]);},
           title:o[0]==="solo"?"Each layer rendered by itself (ignores blend & opacity)":"Cumulative composite: layer 1, then 1+2, then 1+2+3...",
-          style:{padding:"4px 10px",fontSize:9,fontFamily:"monospace",background:act?"#e8900a":"#161616",
-            color:act?"#000":"#777",border:"1px solid "+(act?"#e8900a":"#252525"),borderRadius:3,cursor:"pointer"}},o[1]);
+          style:{padding:"4px 10px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:act?"var(--panel3)":"var(--panel)",
+            color:act?"#fff":"var(--txt2)",border:"1px solid "+(act?"#8a8a94":"var(--line)"),borderRadius:3,cursor:"pointer"}},o[1]);
       })
     ),
     React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat("+cols+",auto)",gap:8,justifyContent:"center"}},
@@ -6992,18 +6967,18 @@ function LayerCompareGrid(p){
         var L=o.L,i=o.i;
         var labelTxt=(i+1)+": "+(L.label||L.type||"Layer")+(mode==="stack"&&i>0&&L.blendMode&&L.blendMode!=="normal"?" ["+L.blendMode+"]":"");
         return React.createElement("div",{key:i,style:{display:"flex",flexDirection:"column",alignItems:"center",gap:3,
-          cursor:"pointer",padding:4,borderRadius:4,border:"1px solid "+(p.activeIdx===i?"#e8900a":"#1c1c1c"),
-          background:p.activeIdx===i?"rgba(232,144,10,0.08)":"transparent"},
+          cursor:"pointer",padding:4,borderRadius:4,border:"1px solid "+(p.activeIdx===i?"#8a8a94":"var(--line)"),
+          background:p.activeIdx===i?"var(--panel3)":"transparent"},
           onClick:function(){p.onPick&&p.onPick(i);}},
           mode==="stack"
             ?React.createElement(StackPreview,{layers:p.layers,upto:i,size:cell})
             :React.createElement(SoloPreview,{layer:L,size:cell,allLayers:p.layers}),
-          React.createElement("span",{style:{fontSize:8,fontFamily:"monospace",color:p.activeIdx===i?"#e8900a":"#888",
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",fontFamily:"inherit",color:p.activeIdx===i?"var(--txt)":"var(--txt2)",
             maxWidth:cell,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},labelTxt)
         );
       })
     ),
-    React.createElement("div",{style:{marginTop:10,fontSize:8,color:"#555",fontFamily:"monospace"}},
+    React.createElement("div",{style:{marginTop:10,fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit"}},
       n+" layer"+(n>1?"s":"")+" · click one to edit it · press the ▥ button again to close")
   );
 }
@@ -7105,7 +7080,7 @@ function CurveEditor(p){
       var lut=evalCurveLUT(sorted,curveMode);
       // Step mode: draw as horizontal lines
       if(curveMode==="step"){
-        ctx.strokeStyle="#e8900a";ctx.lineWidth=2;
+        ctx.strokeStyle="rgba(230,230,232,0.9)";ctx.lineWidth=2;
         ctx.beginPath();
         for(var si2=0;si2<256;si2++){
           var px2=(si2/255)*sz,py2=(1-lut[si2])*sz;
@@ -7113,14 +7088,14 @@ function CurveEditor(p){
         }
         ctx.stroke();
         // Draw step risers
-        ctx.strokeStyle="rgba(232,144,10,0.3)";ctx.lineWidth=1;ctx.setLineDash([2,2]);
+        ctx.strokeStyle="rgba(230,230,232,0.3)";ctx.lineWidth=1;ctx.setLineDash([2,2]);
         for(var pi3=1;pi3<sorted.length-1;pi3++){
           var sx3=sorted[pi3].x*sz,sy3=(1-sorted[pi3].y)*sz,prev3=(1-sorted[pi3-1].y)*sz;
           ctx.beginPath();ctx.moveTo(sx3,prev3);ctx.lineTo(sx3,sy3);ctx.stroke();
         }
         ctx.setLineDash([]);
       } else {
-        ctx.strokeStyle="#e8900a";ctx.lineWidth=2;
+        ctx.strokeStyle="rgba(230,230,232,0.9)";ctx.lineWidth=2;
         ctx.beginPath();
         for(var li=0;li<256;li++){
           var px2=(li/255)*sz,py2=(1-lut[li])*sz;
@@ -7137,14 +7112,14 @@ function CurveEditor(p){
       var isHov=hoverPt===pi2&&!isDrag;
       ctx.beginPath();
       ctx.arc(pt.x*sz,(1-pt.y)*sz,isDrag?ptRdrag:isHov?ptRhover:ptR,0,6.2831853);
-      ctx.fillStyle=isDrag?"#fff":isEnd?"#e8900a":"#ffcc44";
+      ctx.fillStyle=isDrag?"#fff":isEnd?"rgba(230,230,232,0.9)":"rgba(230,230,232,0.9)";
       ctx.globalAlpha=isHov&&!isDrag?0.85:1;
       ctx.fill();
       ctx.strokeStyle="#0d0d0d";ctx.lineWidth=1.5;ctx.stroke();
       ctx.globalAlpha=1;
     }
     // Axis labels
-    ctx.fillStyle="#2a2a2a";ctx.font="8px monospace";ctx.textAlign="left";
+    ctx.fillStyle="#9a9aa2";ctx.font="11px ui-monospace,Consolas,monospace";ctx.textAlign="left";
     ctx.fillText("0",2,sz-2);ctx.textAlign="right";ctx.fillText("1",sz-2,sz-2);
     ctx.fillText("1",sz-2,10);
   },[points,bump,sz,curveMode,hoverPt]);
@@ -7280,24 +7255,24 @@ function CurveEditor(p){
     return d;
   }
 
-  var b0={background:"none",border:"none",cursor:"pointer",padding:0,fontFamily:"monospace"};
-  var bMd={fontSize:8,padding:"3px 8px",borderRadius:2,cursor:"pointer",fontFamily:"monospace"};
+  var b0={background:"none",border:"none",cursor:"pointer",padding:0,fontFamily:"inherit"};
+  var bMd={fontSize:"var(--fs-s)",padding:"3px 8px",borderRadius:2,cursor:"pointer",fontFamily:"inherit"};
 
   return React.createElement("div",{style:{marginBottom:10}},
 
     // ── Row 1: label/coords + expand + reset ────────────────
     React.createElement("div",{style:{display:"flex",alignItems:"center",marginBottom:5}},
-      React.createElement("span",{style:{fontSize:9,color:"#555",textTransform:"uppercase",letterSpacing:1.2,flex:1}},
+      React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",textTransform:"uppercase",letterSpacing:1.2,flex:1}},
         dragCoord?"("+dragCoord.x.toFixed(2)+","+dragCoord.y.toFixed(2)+")":"Curve"
       ),
       React.createElement("button",{onClick:invertCurve,title:"Invert Y — flip curve vertically",
-        style:{fontSize:11,background:"none",border:"none",color:"#555",cursor:"pointer",padding:"0 5px",lineHeight:1}},"↕"),
+        style:{fontSize:"var(--fs-s)",background:"none",border:"none",color:"var(--tg-dim)",cursor:"pointer",padding:"0 5px",lineHeight:1}},"↕"),
       React.createElement("button",{onClick:mirrorCurve,title:"Mirror X — flip curve horizontally",
-        style:{fontSize:11,background:"none",border:"none",color:"#555",cursor:"pointer",padding:"0 5px",lineHeight:1}},"↔"),
+        style:{fontSize:"var(--fs-s)",background:"none",border:"none",color:"var(--tg-dim)",cursor:"pointer",padding:"0 5px",lineHeight:1}},"↔"),
       React.createElement("button",{onClick:resetCurve,title:"Reset to linear",
-        style:{fontSize:10,background:"none",border:"none",color:"#555",cursor:"pointer",padding:"0 5px",lineHeight:1}},"↺"),
+        style:{fontSize:"var(--fs-s)",background:"none",border:"none",color:"var(--tg-dim)",cursor:"pointer",padding:"0 5px",lineHeight:1}},"↺"),
       React.createElement("button",{onClick:function(){setBig(function(v){return!v;});},title:big?"Collapse":"Expand",
-        style:{fontSize:10,background:"none",border:"none",color:big?"#e8900a":"#555",cursor:"pointer",padding:"0 3px",lineHeight:1}},big?"⊟":"⊞")
+        style:{fontSize:"var(--fs-s)",background:"none",border:"none",color:big?"var(--txt)":"var(--tg-dim)",cursor:"pointer",padding:"0 3px",lineHeight:1}},big?"⊟":"⊞")
     ),
 
     // ── Row 2: interp mode pills ─────────────────────────────
@@ -7308,9 +7283,9 @@ function CurveEditor(p){
         return React.createElement("button",{key:m,
           onClick:function(){onModeChange&&onModeChange(m);},
           style:Object.assign({},bMd,{
-            background:active?"#e8900a":"#161616",
-            color:active?"#000":"#555",
-            border:"1px solid "+(active?"#e8900a":"#1e1e1e")
+            background:active?"var(--panel3)":"var(--panel)",
+            color:active?"#fff":"var(--tg-dim)",
+            border:"1px solid "+(active?"#8a8a94":"var(--line)")
           })
         },lbl);
       }),
@@ -7327,21 +7302,21 @@ function CurveEditor(p){
           title:pr.label,
           style:{
             display:"flex",flexDirection:"column",alignItems:"center",gap:2,
-            background:"#111",border:"1px solid #222",borderRadius:3,
+            background:"var(--bg)",border:"1px solid var(--line)",borderRadius:3,
             padding:"4px 4px 3px",cursor:"pointer",
             transition:"border-color 0.1s"
           },
-          onMouseEnter:function(e){e.currentTarget.style.borderColor="#e8900a";},
-          onMouseLeave:function(e){e.currentTarget.style.borderColor="#222";}
+          onMouseEnter:function(e){e.currentTarget.style.borderColor="#8a8a94";},
+          onMouseLeave:function(e){e.currentTarget.style.borderColor="var(--line)";}
         },
           React.createElement("svg",{width:pw,height:ph,style:{display:"block",overflow:"visible"}},
             React.createElement("rect",{x:0,y:0,width:pw,height:ph,fill:"#0d0d0d",rx:1}),
             // identity diagonal (faint)
             React.createElement("line",{x1:0,y1:ph,x2:pw,y2:0,stroke:"#1e1e1e",strokeWidth:1,strokeDasharray:"2 2"}),
             // curve
-            React.createElement("path",{d:path,fill:"none",stroke:"#e8900a",strokeWidth:1.5,strokeLinecap:"round",strokeLinejoin:"round"})
+            React.createElement("path",{d:path,fill:"none",stroke:"#c8c8ce",strokeWidth:1.5,strokeLinecap:"round",strokeLinejoin:"round"})
           ),
-          React.createElement("span",{style:{fontSize:7,color:"#555",fontFamily:"monospace",letterSpacing:0.3,whiteSpace:"nowrap"}},
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",letterSpacing:0.3,whiteSpace:"nowrap"}},
             pr.label
           )
         );
@@ -7351,17 +7326,17 @@ function CurveEditor(p){
     // ── Canvas ──────────────────────────────────────────────
     // Coordinate tooltip during drag
     dragCoord?React.createElement("div",{style:{
-      fontSize:8,color:"#e8900a",fontFamily:"monospace",textAlign:"center",
+      fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"inherit",textAlign:"center",
       marginBottom:3,letterSpacing:0.5,minHeight:12
     }},"x:"+dragCoord.x.toFixed(3)+"y:"+dragCoord.y.toFixed(3)):React.createElement("div",{style:{minHeight:12}}),
     React.createElement("canvas",{ref:canvasRef,
       style:{display:"block",width:sz+"px",height:sz+"px",cursor:"crosshair",borderRadius:3,
-             border:"1px solid #252525",imageRendering:"auto",touchAction:"none"},
+             border:"1px solid var(--line)",imageRendering:"auto",touchAction:"none"},
       onMouseDown:onDown,onMouseMove:onMove,onMouseUp:onUp,onMouseLeave:onLeave,
       onTouchStart:onTouchStart,onTouchMove:onTouchMove,onTouchEnd:onTouchEnd,
       onContextMenu:function(e){e.preventDefault();onDown(e);}
     }),
-    React.createElement("div",{style:{fontSize:7,color:"#2a2a2a",marginTop:3}},
+    React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginTop:3}},
       "Tap add  ·  Drag move  ·  Hold to delete"
     )
   );
@@ -7382,9 +7357,9 @@ function LayerLabel(p){
       onBlur:function(){p.onChange(val||p.label);setEditing(false);},
       onKeyDown:function(e){if(e.key==="Enter"){p.onChange(val||p.label);setEditing(false);}if(e.key==="Escape"){setVal(p.label);setEditing(false);}e.stopPropagation();},
       style:{
-        fontSize:8,color:p.color||"#e8900a",letterSpacing:0.5,
-        background:"#1a1a1a",border:"1px solid "+(p.color||"#e8900a"),
-        borderRadius:2,padding:"1px 3px",width:36,fontFamily:"monospace",
+        fontSize:"var(--fs-s)",color:p.color||"var(--txt)",letterSpacing:0.5,
+        background:"var(--panel)",border:"1px solid "+(p.color||"#8a8a94"),
+        borderRadius:2,padding:"1px 3px",width:36,fontFamily:"inherit",
         outline:"none",textAlign:"center"
       }
     });
@@ -7410,7 +7385,7 @@ function LayerLabel(p){
     onPointerUp:function(){ if(_rnLp.current){clearTimeout(_rnLp.current);_rnLp.current=null;} },
     onPointerCancel:function(){ if(_rnLp.current){clearTimeout(_rnLp.current);_rnLp.current=null;} },
     title:"Double-click or press and hold to rename",
-    style:{fontSize:8,color:p.color||"#e8900a",letterSpacing:0.5,cursor:"text",userSelect:"none",
+    style:{fontSize:"var(--fs-s)",color:p.color||"var(--txt)",letterSpacing:0.5,cursor:"text",userSelect:"none",
       touchAction:"none",padding:"2px 0"}
   },p.label);
 }
@@ -7428,16 +7403,16 @@ function UVDistStack(p){
     id:"uvdist_stack",
     title:"UV Distortion"+(hasActive?" ●":""),
     defaultOpen:hasActive,
-    color:hasActive?"#e8900a":"#555",
+    color:hasActive?"var(--txt)":"var(--tg-dim)",
     badge:hasActive?(dists.filter(function(d){return d.type&&d.type!=="none"&&d.amt>0;}).length+" active"):null
   },
-    React.createElement("div",{style:{fontSize:8,color:"#444",marginBottom:8,lineHeight:1.5}},"Distorts UVs before noise sampling. Multiple dists add together."),
+    React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:8,lineHeight:1.5}},"Distorts UVs before noise sampling. Multiple dists add together."),
     dists.map(function(d,i){
       var isNoise=NOISE_T.indexOf(d.type||"none")!==-1;
       var isFBM=FBM_T.indexOf(d.type||"none")!==-1;
-      return React.createElement("div",{key:i,style:{marginBottom:i<dists.length-1?12:0,paddingBottom:i<dists.length-1?12:0,borderBottom:i<dists.length-1?"1px solid #1e1e1e":"none"}},
+      return React.createElement("div",{key:i,style:{marginBottom:i<dists.length-1?12:0,paddingBottom:i<dists.length-1?12:0,borderBottom:i<dists.length-1?"1px solid var(--line)":"none"}},
         React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}},
-          React.createElement("span",{style:{fontSize:9,color:"#555",letterSpacing:1}},"DIST "+(i+1)),
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1}},"DIST "+(i+1)),
           dists.length>1?React.createElement(SmBtn,{onClick:function(){rem(i);}},"×"):null
         ),
         React.createElement(Sel,{value:d.type||"none",opts:UVT,onChange:function(v){upd(i,"type",v);},grid:true,cols:3}),
@@ -7447,18 +7422,18 @@ function UVDistStack(p){
           React.createElement(Sel,{label:"Source Layer",value:d.sourceLayerIdx!=null?d.sourceLayerIdx:0,
             opts:p.layers.map(function(ll,idx){return{v:idx,l:(idx+1)+": "+(ll.label||"L"+(idx+1))+(idx===p.si?" (self)":"")};}),
             onChange:function(v){upd(i,"sourceLayerIdx",v);},grid:true,cols:2}),
-          React.createElement("div",{style:{fontSize:8,color:"#444",lineHeight:1.5}},
+          React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",lineHeight:1.5}},
             "Uses the source layer's luminance as a displacement map. Selecting the layer itself does nothing (self-warp is skipped).")
         ):null,
         (d.type==="swirl"||d.type==="twist")?React.createElement("div",{style:{marginBottom:8}},
-          React.createElement("span",{style:{fontSize:9,color:"#555",letterSpacing:1.2,textTransform:"uppercase",display:"block",marginBottom:4}},"Falloff"),
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1.2,textTransform:"uppercase",display:"block",marginBottom:4}},"Falloff"),
           React.createElement("div",{style:{display:"flex",gap:4,marginBottom:6}},
             [{v:"center",l:"Center"},{v:"edge",l:"Edge"}].map(function(opt){
               var active=(d.falloff||"center")===opt.v;
               return React.createElement("button",{key:opt.v,onClick:function(){upd(i,"falloff",opt.v);},
-                style:{flex:1,padding:"4px 0",fontSize:9,fontFamily:"monospace",
-                  background:active?"#e8900a":"#161616",color:active?"#000":"#555",
-                  border:"1px solid "+(active?"#e8900a":"#252525"),borderRadius:2,cursor:"pointer"}},opt.l);
+                style:{flex:1,padding:"4px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",
+                  background:active?"var(--panel3)":"var(--panel)",color:active?"#fff":"var(--tg-dim)",
+                  border:"1px solid "+(active?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}},opt.l);
             })
           ),
           React.createElement(Slider,{label:"Falloff Radius",value:d.falloffRadius!=null?d.falloffRadius:0.5,min:0.05,max:1.5,step:0.01,
@@ -7467,14 +7442,14 @@ function UVDistStack(p){
         // ── Radial polar displacement controls ───────────────
         d.type==="radial"?React.createElement("div",{style:{marginBottom:8}},
           // Mode selector
-          React.createElement("span",{style:{fontSize:9,color:"#555",letterSpacing:1.2,textTransform:"uppercase",display:"block",marginBottom:4}},"Mode"),
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1.2,textTransform:"uppercase",display:"block",marginBottom:4}},"Mode"),
           React.createElement("div",{style:{display:"flex",gap:3,marginBottom:8}},
             [{v:"radial",l:"Radial"},{v:"tangential",l:"Tangential"},{v:"spiral",l:"Spiral"}].map(function(opt){
               var active=(d.mode||"radial")===opt.v;
               return React.createElement("button",{key:opt.v,onClick:function(){upd(i,"mode",opt.v);},
-                style:{flex:1,padding:"5px 0",fontSize:9,fontFamily:"monospace",
-                  background:active?"#e8900a":"#161616",color:active?"#000":"#555",
-                  border:"1px solid "+(active?"#e8900a":"#252525"),borderRadius:2,cursor:"pointer"}
+                style:{flex:1,padding:"5px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",
+                  background:active?"var(--panel3)":"var(--panel)",color:active?"#fff":"var(--tg-dim)",
+                  border:"1px solid "+(active?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}
               },opt.l);
             })
           ),
@@ -7486,33 +7461,33 @@ function UVDistStack(p){
           }):null,
           // Direction (only for radial mode)
           (d.mode==="radial"||!d.mode)?React.createElement("div",null,
-            React.createElement("span",{style:{fontSize:9,color:"#555",letterSpacing:1.2,textTransform:"uppercase",display:"block",marginBottom:4}},"Direction"),
+            React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1.2,textTransform:"uppercase",display:"block",marginBottom:4}},"Direction"),
             React.createElement("div",{style:{display:"flex",gap:4,marginBottom:8}},
               [{v:"outward",l:"Push Out"},{v:"inward",l:"Pull In"}].map(function(opt){
                 var active=(d.direction||"outward")===opt.v;
                 return React.createElement("button",{key:opt.v,onClick:function(){upd(i,"direction",opt.v);},
-                  style:{flex:1,padding:"4px 0",fontSize:9,fontFamily:"monospace",
-                    background:active?"#e8900a":"#161616",color:active?"#000":"#555",
-                    border:"1px solid "+(active?"#e8900a":"#252525"),borderRadius:2,cursor:"pointer"}},opt.l);
+                  style:{flex:1,padding:"4px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",
+                    background:active?"var(--panel3)":"var(--panel)",color:active?"#fff":"var(--tg-dim)",
+                    border:"1px solid "+(active?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}},opt.l);
               })
             )
           ):null,
           // Falloff profile
-          React.createElement("span",{style:{fontSize:9,color:"#555",letterSpacing:1.2,textTransform:"uppercase",display:"block",marginBottom:4}},"Falloff Profile"),
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1.2,textTransform:"uppercase",display:"block",marginBottom:4}},"Falloff Profile"),
           React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3,marginBottom:8}},
             [{v:"linear",l:"Linear"},{v:"inverse",l:"Inverse (center)"},{v:"flat",l:"Flat (uniform)"},{v:"gauss",l:"Gaussian"},{v:"ring",l:"Ring"}].map(function(opt){
               var active=(d.profile||"linear")===opt.v;
               return React.createElement("button",{key:opt.v,onClick:function(){upd(i,"profile",opt.v);},
-                style:{padding:"4px 4px",fontSize:9,fontFamily:"monospace",textAlign:"center",
-                  background:active?"#e8900a":"#161616",color:active?"#000":"#555",
-                  border:"1px solid "+(active?"#e8900a":"#252525"),borderRadius:2,cursor:"pointer"}},opt.l);
+                style:{padding:"4px 4px",fontSize:"var(--fs-s)",fontFamily:"inherit",textAlign:"center",
+                  background:active?"var(--panel3)":"var(--panel)",color:active?"#fff":"var(--tg-dim)",
+                  border:"1px solid "+(active?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}},opt.l);
             })
           ),
           React.createElement(Slider,{label:"Falloff Radius",value:d.falloffRadius!=null?d.falloffRadius:0.4,min:0.05,max:1.5,step:0.01,
             fmt:function(v){return v.toFixed(2);},onChange:function(v){upd(i,"falloffRadius",v);}}),
           // Noise modulation
           React.createElement(Tog,{label:"Noise modulation",value:!!d.modulate,onChange:function(v){upd(i,"modulate",v);}}),
-          d.modulate?React.createElement("div",{style:{paddingTop:8,marginTop:4,borderTop:"1px solid #1e1e1e"}},
+          d.modulate?React.createElement("div",{style:{paddingTop:8,marginTop:4,borderTop:"1px solid var(--line)"}},
             React.createElement(Slider,{label:"Noise Amount",value:d.noiseAmt!=null?d.noiseAmt:0.7,min:0,max:1.5,step:0.02,onChange:function(v){upd(i,"noiseAmt",v);}}),
             React.createElement(Slider,{label:"Frequency",value:d.freq||3,min:0.2,max:20,step:0.1,onChange:function(v){upd(i,"freq",v);}}),
             React.createElement(Sel,{label:"Mode",value:d.noiseMode||"normal",
@@ -7536,14 +7511,14 @@ function UVDistStack(p){
           React.createElement(Slider,{label:"Spread",value:d.spread!=null?d.spread:1,min:0,max:1,step:0.01,
             fmt:function(v){return v===0?"0 (parallel)":v===1?"1 (full 360°)":v.toFixed(2);},
             onChange:function(v){upd(i,"spread",v);}}),
-          React.createElement("span",{style:{fontSize:9,color:"#555",letterSpacing:1.2,textTransform:"uppercase",display:"block",marginBottom:4}},"Falloff"),
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1.2,textTransform:"uppercase",display:"block",marginBottom:4}},"Falloff"),
           React.createElement("div",{style:{display:"flex",gap:3,marginBottom:6}},
             [{v:"none",l:"None"},{v:"center",l:"Center"},{v:"edge",l:"Edge"}].map(function(opt){
               var active=(d.falloff||"none")===opt.v;
               return React.createElement("button",{key:opt.v,onClick:function(){upd(i,"falloff",opt.v);},
-                style:{flex:1,padding:"4px 0",fontSize:9,fontFamily:"monospace",
-                  background:active?"#e8900a":"#161616",color:active?"#000":"#555",
-                  border:"1px solid "+(active?"#e8900a":"#252525"),borderRadius:2,cursor:"pointer"}},opt.l);
+                style:{flex:1,padding:"4px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",
+                  background:active?"var(--panel3)":"var(--panel)",color:active?"#fff":"var(--tg-dim)",
+                  border:"1px solid "+(active?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}},opt.l);
             })
           ),
           (d.falloff==="center"||d.falloff==="edge")?React.createElement(Slider,{label:"Falloff Radius",value:d.falloffRadius!=null?d.falloffRadius:0.5,min:0.05,max:1.5,step:0.01,
@@ -7565,7 +7540,7 @@ function UVDistStack(p){
         ):null
       );
     }),
-    dists.length<3?React.createElement("button",{onClick:add,style:{marginTop:8,padding:"5px 10px",background:"#1a1a1a",border:"1px solid #282828",color:"#777",fontFamily:"monospace",fontSize:10,cursor:"pointer",borderRadius:3,width:"100%"}},"+  Add distortion"):null
+    dists.length<3?React.createElement("button",{onClick:add,style:{marginTop:8,padding:"5px 10px",background:"var(--panel)",border:"1px solid var(--line)",color:"var(--txt2)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3,width:"100%"}},"+  Add distortion"):null
   );
 }
 
@@ -7586,7 +7561,7 @@ function GradientPreviewGrid(p){
   var canvases=useRef({});
   var prevActive=useRef(null);
   var activeKind=p.value||"radial";
-  var activeCol=p.col||"#e8900a";
+  var activeCol=p.col||"#c8c8ce";
   var activeRGB=hexF(activeCol);
   function paintGrad(c,id,isActive){
     c.width=c.height=sz;
@@ -7623,14 +7598,14 @@ function GradientPreviewGrid(p){
       GRAD_TYPES.map(function(g){
         var isActive=activeKind===g.id;
         return React.createElement("button",{key:g.id,onClick:function(){p.onChange(g.id);},title:g.l,
-          style:{display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:2,background:"#080808",
-            border:"2px solid "+(isActive?activeCol:"#1c1c1c"),borderRadius:3,cursor:"pointer"},
-          onMouseEnter:function(e){if(!isActive)e.currentTarget.style.borderColor="#333";},
-          onMouseLeave:function(e){if(!isActive)e.currentTarget.style.borderColor="#1c1c1c";}
+          style:{display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:2,background:"var(--bg)",
+            border:"2px solid "+(isActive?activeCol:"var(--line)"),borderRadius:3,cursor:"pointer"},
+          onMouseEnter:function(e){if(!isActive)e.currentTarget.style.borderColor="var(--line2)";},
+          onMouseLeave:function(e){if(!isActive)e.currentTarget.style.borderColor="var(--line)";}
         },
           React.createElement("canvas",{ref:function(el){if(el)canvases.current[g.id]=el;},
             style:{width:sz,height:sz,display:"block",imageRendering:"pixelated",borderRadius:2}}),
-          React.createElement("span",{style:{fontSize:7,fontFamily:"monospace",color:isActive?activeCol:"#444",lineHeight:1,textAlign:"center",maxWidth:sz+4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},g.l)
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",fontFamily:"inherit",color:isActive?activeCol:"var(--tg-dim)",lineHeight:1,textAlign:"center",whiteSpace:"nowrap"}},g.l)
         );
       })
     )
@@ -7641,12 +7616,12 @@ function GradientPreviewGrid(p){
 // Live thumbnails showing what each blend mode would produce if user added
 // a new layer with that blend. Debounced so slider drags don't recompute.
 var BLEND_PREVIEW_LIST=[
-  {bm:"normal",   l:"Normal",  col:"#e8900a", icon:"+"},
-  {bm:"add",      l:"Add",     col:"#44ddcc", icon:"＋"},
-  {bm:"subtract", l:"Sub",     col:"#ff6699", icon:"−"},
-  {bm:"multiply", l:"Mul",     col:"#cc88ff", icon:"×"},
-  {bm:"screen",   l:"Scr",     col:"#ffdd44", icon:"S"},
-  {bm:"overlay",  l:"Ovl",     col:"#a0e060", icon:"Ov"}
+  {bm:"normal",   l:"Normal",  col:"#c8c8ce", icon:"+"},
+  {bm:"add",      l:"Add",     col:"#c8c8ce", icon:"＋"},
+  {bm:"subtract", l:"Sub",     col:"#c8c8ce", icon:"−"},
+  {bm:"multiply", l:"Mul",     col:"#c8c8ce", icon:"×"},
+  {bm:"screen",   l:"Scr",     col:"#c8c8ce", icon:"S"},
+  {bm:"overlay",  l:"Ovl",     col:"#c8c8ce", icon:"Ov"}
 ];
 
 function BlendPreviewRow(p){
@@ -7709,9 +7684,9 @@ function BlendPreviewRow(p){
   },[layers,p.canvasEpoch]);
 
   return React.createElement("div",{style:{marginBottom:8}},
-    React.createElement("div",{style:{fontSize:7,color:"#333",letterSpacing:1,textTransform:"uppercase",marginBottom:4,display:"flex",alignItems:"center",gap:6}},
+    React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1,textTransform:"uppercase",marginBottom:4,display:"flex",alignItems:"center",gap:6}},
       React.createElement("span",null,"Quick Add with Blend"),
-      !canAdd?React.createElement("span",{style:{color:"#664400"}},"(max 8 layers)"):null
+      !canAdd?React.createElement("span",{style:{color:"var(--txt)"}},"(max 8 layers)"):null
     ),
     React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:3}},
       BLEND_PREVIEW_LIST.map(function(b,idx){
@@ -7720,8 +7695,8 @@ function BlendPreviewRow(p){
           disabled:!canAdd,
           title:"Add new layer with "+b.l+" blend\n(preview shows actual result with a "+(b.bm==="subtract"||b.bm==="multiply"?"shape":"fbm noise")+" layer)",
           style:{
-            padding:3,background:"#0a0a0a",
-            border:"1px solid "+(canAdd?(b.col+"66"):"#1a1a1a"),
+            padding:3,background:"var(--bg)",
+            border:"1px solid "+(canAdd?(b.col+"66"):"var(--line)"),
             borderRadius:3,cursor:canAdd?"pointer":"not-allowed",
             display:"flex",flexDirection:"column",alignItems:"center",gap:2,
             opacity:canAdd?1:0.4,
@@ -7735,7 +7710,7 @@ function BlendPreviewRow(p){
             style:{width:size,height:size,display:"block",imageRendering:"pixelated",borderRadius:2}
           }),
           React.createElement("span",{style:{
-            fontSize:8,color:b.col,fontFamily:"monospace",
+            fontSize:"var(--fs-s)",color:b.col,fontFamily:"inherit",
             letterSpacing:0.3,fontWeight:600,lineHeight:1
           }},b.l)
         );
@@ -7764,7 +7739,7 @@ function BlendModePicker(props){
   var sz=32; // thumbnail size
   var value=props.value||"normal";
   var canvases=useRef({});
-  var activeCol=props.col||"#e8900a";
+  var activeCol=props.col||"#c8c8ce";
 
   useEffect(function(){
     if(_isSliderActive)return;
@@ -7815,7 +7790,7 @@ function BlendModePicker(props){
     BM_GROUPS_FULL.map(function(grp){
       return React.createElement("div",{key:grp.label,style:{marginBottom:8}},
         React.createElement("span",{style:{
-          fontSize:7,color:"#2a2a2a",letterSpacing:1.5,textTransform:"uppercase",
+          fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1.5,textTransform:"uppercase",
           display:"block",marginBottom:4
         }},grp.label),
         React.createElement("div",{style:{display:"flex",flexWrap:"wrap",gap:3}},
@@ -7827,14 +7802,14 @@ function BlendModePicker(props){
               style:{
                 display:"flex",flexDirection:"column",alignItems:"center",gap:2,
                 padding:3,
-                background:isActive?"rgba(232,144,10,0.12)":"#0a0a0a",
-                border:"2px solid "+(isActive?activeCol:"#1c1c1c"),
+                background:isActive?"var(--panel3)":"var(--bg)",
+                border:"2px solid "+(isActive?activeCol:"var(--line)"),
                 borderRadius:3,cursor:"pointer",
                 transition:"border-color 0.1s,transform 0.1s",
                 minWidth:sz+6
               },
-              onMouseEnter:function(e){if(!isActive){e.currentTarget.style.borderColor="#3a3a3a";e.currentTarget.style.transform="translateY(-1px)";}},
-              onMouseLeave:function(e){if(!isActive){e.currentTarget.style.borderColor="#1c1c1c";e.currentTarget.style.transform="none";}}
+              onMouseEnter:function(e){if(!isActive){e.currentTarget.style.borderColor="var(--line2)";e.currentTarget.style.transform="translateY(-1px)";}},
+              onMouseLeave:function(e){if(!isActive){e.currentTarget.style.borderColor="var(--line)";e.currentTarget.style.transform="none";}}
             },
               React.createElement("canvas",{
                 ref:function(el){if(el)canvases.current[bm]=el;},
@@ -7842,10 +7817,9 @@ function BlendModePicker(props){
                   outline:isActive?"2px solid "+activeCol+"88":"none"}
               }),
               React.createElement("span",{style:{
-                fontSize:7,fontFamily:"monospace",
-                color:isActive?activeCol:"#444",
-                letterSpacing:0.2,lineHeight:1,textAlign:"center",
-                maxWidth:sz+6,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"
+                fontSize:"var(--fs-s)",fontFamily:"inherit",
+                color:isActive?activeCol:"var(--tg-dim)",
+                letterSpacing:0.2,lineHeight:1,textAlign:"center",whiteSpace:"nowrap"
               }},label)
             );
           })
@@ -7933,8 +7907,8 @@ function CollapsibleTypeSelector(p){
     React.createElement("div",{style:{position:"relative",marginBottom:6}},
       React.createElement("input",{type:"text",placeholder:"Search types…",value:typeSearch,
         onChange:function(e){setTypeSearch(e.target.value);},
-        style:{width:"100%",background:"#111",border:"1px solid #252525",color:"#ccc",
-          padding:"5px 24px 5px 8px",fontSize:9,fontFamily:"monospace",borderRadius:3,
+        style:{width:"100%",background:"var(--bg)",border:"1px solid var(--line)",color:"var(--txt)",
+          padding:"5px 24px 5px 8px",fontSize:"var(--fs-s)",fontFamily:"inherit",borderRadius:3,
           boxSizing:"border-box",outline:"none"},
         onKeyDown:function(e){
           if(e.key==="Escape"){setTypeSearch("");e.preventDefault();}
@@ -7945,10 +7919,10 @@ function CollapsibleTypeSelector(p){
       }),
       typeSearch?React.createElement("span",{onClick:function(){setTypeSearch("");},style:{
         position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",
-        cursor:"pointer",fontSize:11,color:"#555",lineHeight:1
+        cursor:"pointer",fontSize:"var(--fs-s)",color:"var(--tg-dim)",lineHeight:1
       }},"×"):null
     ),
-    filteredTG.length===0?React.createElement("div",{style:{padding:"12px 8px",fontSize:9,color:"#444",textAlign:"center",fontFamily:"monospace"}},'No types match "'+typeSearch+'"'):null,
+    filteredTG.length===0?React.createElement("div",{style:{padding:"12px 8px",fontSize:"var(--fs-s)",color:"var(--tg-dim)",textAlign:"center",fontFamily:"inherit"}},'No types match "'+typeSearch+'"'):null,
     filteredTG.map(function(g){
       var isOpen=typeSearch?true:!!collapsed[g.label];
       var hasActive=g.types.some(function(t){return t.id===L.type;});
@@ -7959,28 +7933,28 @@ function CollapsibleTypeSelector(p){
           style:{
             display:"flex",justifyContent:"space-between",alignItems:"center",
             padding:"4px 5px",cursor:"pointer",borderRadius:2,
-            background:hasActive?"rgba(232,144,10,0.07)":"transparent",
+            background:hasActive?"var(--panel3)":"transparent",
             userSelect:"none"
           }
         },
           React.createElement("span",{style:{
-            fontSize:8,color:hasActive?"#e8900a":"#3a3a3a",
+            fontSize:"var(--fs-s)",color:hasActive?"var(--txt)":"var(--tg-dim)",
             letterSpacing:1.5,textTransform:"uppercase"
           }},
             hasActive?React.createElement("span",null,"● ",g.label):g.label
           ),
-          React.createElement("span",{style:{fontSize:9,color:"#333",lineHeight:1}},isOpen?"▾":"▸")
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",lineHeight:1}},isOpen?"▾":"▸")
         ),
         // Buttons — only shown when open
         isOpen?React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:2,marginTop:3,marginBottom:3}},
           g.types.map(function(t){
             var isActive=L.type===t.id;
             return React.createElement("button",{key:t.id,onClick:function(){selectType(t.id);},style:{
-              padding:"4px 2px 5px",fontSize:8,fontFamily:"monospace",textAlign:"center",
+              padding:"4px 2px 5px",fontSize:"var(--fs-s)",fontFamily:"inherit",textAlign:"center",
               lineHeight:1.15,
-              background:isActive?"#e8900a":"#161616",
-              color:isActive?"#000":"#888",
-              border:"1px solid "+(isActive?"#e8900a":"#1e1e1e"),
+              background:isActive?"var(--panel3)":"var(--panel)",
+              color:isActive?"#fff":"var(--txt2)",
+              border:"1px solid "+(isActive?"#8a8a94":"var(--line)"),
               borderRadius:3,cursor:"pointer",
               display:"flex",flexDirection:"column",alignItems:"center",
               transition:"background 0.08s,color 0.08s"
@@ -8019,13 +7993,13 @@ function NoisePanel(p){
   // Solo preview strip: shows below layer tabs when soloMode is on
   var thumbSz=p.soloThumbSize||128;
   var soloPanel=soloMode?React.createElement("div",{style:{
-    background:"#0d0d0d",border:"1px solid #1e1e1e",borderRadius:4,
+    background:"var(--bg)",border:"1px solid var(--line)",borderRadius:4,
     padding:8,marginBottom:8
   }},
     // Size controls
     React.createElement("div",{style:{display:"flex",gap:4,marginBottom:6,alignItems:"center"}},
-      React.createElement("span",{style:{fontSize:8,color:"#555",letterSpacing:1,textTransform:"uppercase",flex:1}},"Preview Size"),
-      [64,128,256].map(function(sz){return React.createElement("button",{key:sz,onClick:function(){p.setSoloThumbSize&&p.setSoloThumbSize(sz);},style:{padding:"2px 6px",fontSize:8,fontFamily:"monospace",background:thumbSz===sz?"#e8900a":"#1a1a1a",color:thumbSz===sz?"#000":"#666",border:"1px solid "+(thumbSz===sz?"#e8900a":"#282828"),borderRadius:2,cursor:"pointer"}},sz+"px");})
+      React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1,textTransform:"uppercase",flex:1}},"Preview Size"),
+      [64,128,256].map(function(sz){return React.createElement("button",{key:sz,onClick:function(){p.setSoloThumbSize&&p.setSoloThumbSize(sz);},style:{padding:"2px 6px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:thumbSz===sz?"var(--panel3)":"var(--panel)",color:thumbSz===sz?"#fff":"var(--tg-dim)",border:"1px solid "+(thumbSz===sz?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}},sz+"px");})
     ),
     React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax("+(thumbSz+8)+"px,1fr))",gap:6}},
     layers.map(function(lay,i){
@@ -8034,7 +8008,7 @@ function NoisePanel(p){
         style:{
           cursor:"pointer",
           borderRadius:3,
-          border:"2px solid "+(si===i?LC8[i%8]:"#252525"),
+          border:"2px solid "+(si===i?LC8[i%8]:"var(--line)"),
           overflow:"hidden",
           position:"relative",
           opacity:lay.enabled?1:0.4
@@ -8042,8 +8016,8 @@ function NoisePanel(p){
         React.createElement(SoloPreview,{layer:lay,size:thumbSz,allLayers:curLayers}),
         React.createElement("div",{style:{
           position:"absolute",bottom:0,left:0,right:0,
-          background:"rgba(0,0,0,0.72)",
-          fontSize:8,color:si===i?LC8[i%8]:"#888",
+          background:"color-mix(in srgb,var(--bg) 72%,transparent)",
+          fontSize:"var(--fs-s)",color:si===i?LC8[i%8]:"var(--txt2)",
           textAlign:"center",padding:"2px 0",letterSpacing:0.5
         }},lay.label||("L"+(i+1)))
       );
@@ -8073,7 +8047,7 @@ function NoisePanel(p){
               display:"flex",flexDirection:"column",alignItems:"center",gap:3,
               cursor:"pointer",opacity:lay.enabled?1:0.5,
               padding:"3px 4px",borderRadius:3,
-              background:si===i?"#1e1e1e":"transparent",
+              background:si===i?"var(--panel2)":"transparent",
               border:"1px solid "+(si===i?col:"transparent"),
               position:"relative"
             }},
@@ -8083,8 +8057,8 @@ function NoisePanel(p){
               style:{
                 position:"absolute",top:0,right:0,
                 width:14,height:14,borderRadius:"50%",
-                background:col,color:"#000",
-                fontSize:9,fontWeight:700,fontFamily:"monospace",
+                background:col,color:"var(--bg)",
+                fontSize:"var(--fs-s)",fontWeight:700,fontFamily:"inherit",
                 display:"flex",alignItems:"center",justifyContent:"center",
                 zIndex:2,lineHeight:1
               }
@@ -8098,10 +8072,10 @@ function NoisePanel(p){
               onClick:function(e){e.stopPropagation();p.setSoloIdx(isSolo?-1:i);},
               title:isSolo?"Exit solo":"Solo this layer (hide others)",
               style:{
-                padding:"1px 6px",fontSize:7,fontFamily:"monospace",letterSpacing:0.5,
-                background:isSolo?"#ffdd44":"transparent",
-                color:isSolo?"#000":"#555",
-                border:"1px solid "+(isSolo?"#ffdd44":"#2a2a2a"),
+                padding:"1px 6px",fontSize:"var(--fs-s)",fontFamily:"inherit",letterSpacing:0.5,
+                background:isSolo?"var(--panel3)":"transparent",
+                color:isSolo?"#fff":"var(--tg-dim)",
+                border:"1px solid "+(isSolo?"#8a8a94":"var(--line)"),
                 borderRadius:2,cursor:"pointer",marginTop:1,
                 fontWeight:isSolo?700:400
               }
@@ -8113,35 +8087,35 @@ function NoisePanel(p){
     // ── Dependency graph — draws arrow from current layer to layer below ──
     // Only shown when current layer has non-normal blend mode
     L.blendMode&&L.blendMode!=="normal"&&si>0?React.createElement("div",{style:{
-      fontSize:8,color:"#888",fontFamily:"monospace",
+      fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",
       padding:"5px 8px",marginBottom:5,
-      background:"rgba(74,180,255,0.05)",border:"1px solid rgba(74,180,255,0.2)",
+      background:"var(--panel3)",border:"1px solid #8a8a94",
       borderRadius:3,lineHeight:1.4
     }},
       React.createElement("span",{style:{color:LC8[si%8],fontWeight:700}},(L.label||"L"+(si+1))),
-      React.createElement("span",{style:{color:"#4ab4ff"}}," ─["+L.blendMode.toUpperCase()+"]→ "),
+      React.createElement("span",{style:{color:"var(--txt)"}}," ─["+L.blendMode.toUpperCase()+"]→ "),
       "accumulated stack of ",
-      React.createElement("span",{style:{color:"#888"}},si+" layer"+(si>1?"s":"")," below")
+      React.createElement("span",{style:{color:"var(--txt2)"}},si+" layer"+(si>1?"s":"")," below")
     ):null,
   // ─── Action bar: Copy button was removed accidentally — restore it ──
   // Plus: randomize all seeds shortcut
-  React.createElement("div",{style:{display:"flex",gap:3,flexWrap:"wrap",borderTop:"1px solid #1c1c1c",paddingTop:6,marginBottom:6}},
+  React.createElement("div",{style:{display:"flex",gap:3,flexWrap:"wrap",borderTop:"1px solid var(--line)",paddingTop:6,marginBottom:6}},
     // Quick-add with blend preset
     React.createElement("div",{style:{display:"flex",gap:2,alignItems:"center",flexWrap:"wrap"}},
-      React.createElement("span",{style:{fontSize:7,color:"#2a2a2a",letterSpacing:0.8,marginRight:2}},"Add:"),
+      React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:0.8,marginRight:2}},"Add:"),
       [
-        {bm:"normal",l:"+",col:"#e8900a"},
-        {bm:"add",l:"Add",col:"#44ddcc"},
-        {bm:"subtract",l:"Sub",col:"#ff6699"},
-        {bm:"multiply",l:"Mul",col:"#cc88ff"},
-        {bm:"screen",l:"Scr",col:"#ffdd44"},
-        {bm:"overlay",l:"Ovl",col:"#a0e060"}
+        {bm:"normal",l:"+",col:"#c8c8ce"},
+        {bm:"add",l:"Add",col:"#c8c8ce"},
+        {bm:"subtract",l:"Sub",col:"#c8c8ce"},
+        {bm:"multiply",l:"Mul",col:"#c8c8ce"},
+        {bm:"screen",l:"Scr",col:"#c8c8ce"},
+        {bm:"overlay",l:"Ovl",col:"#c8c8ce"}
       ].map(function(pr){
         return React.createElement("button",{key:pr.bm,
           onClick:function(){p.addLayerWithBlend(pr.bm);},
           disabled:layers.length>=8,
           title:"Add layer with "+pr.bm+" blend",
-          style:{padding:"3px 7px",fontSize:8,fontFamily:"monospace",
+          style:{padding:"3px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",
             background:"transparent",color:pr.col,
             border:"1px solid "+pr.col+"55",
             borderRadius:2,cursor:layers.length>=8?"not-allowed":"pointer",
@@ -8150,14 +8124,14 @@ function NoisePanel(p){
       })
     ),
     React.createElement("div",{style:{flex:1}}),
-    layers.length>1?React.createElement("button",{onClick:p.removeLayer,title:"Remove active layer",style:{padding:"4px 7px",background:"#1a1a1a",border:"1px solid #282828",color:"#555",fontFamily:"monospace",fontSize:9,cursor:"pointer",borderRadius:3}},"✕"):null,
-    layers.length<8?React.createElement("button",{onClick:p.duplicateLayer,title:"Duplicate (D)",style:{padding:"4px 7px",background:"#1a1a1a",border:"1px solid #282828",color:"#666",fontFamily:"monospace",fontSize:9,cursor:"pointer",borderRadius:3}},"⧉"):null,
+    layers.length>1?React.createElement("button",{onClick:p.removeLayer,title:"Remove active layer",style:{padding:"4px 7px",background:"var(--panel)",border:"1px solid var(--line)",color:"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3}},"✕"):null,
+    layers.length<8?React.createElement("button",{onClick:p.duplicateLayer,title:"Duplicate (D)",style:{padding:"4px 7px",background:"var(--panel)",border:"1px solid var(--line)",color:"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3}},"⧉"):null,
     // Copy/Paste
-    React.createElement("button",{onClick:p.copyLayer,title:"Copy layer (C)",style:{padding:"4px 7px",background:"#1a1a1a",border:"1px solid #282828",color:"#888",fontFamily:"monospace",fontSize:9,cursor:"pointer",borderRadius:3}},"Copy"),
-    p.hasCopied?React.createElement("button",{onClick:p.pasteLayer,title:"Paste (V)",style:{padding:"4px 7px",background:"#1a1a1a",border:"1px solid #4ab4ff",color:"#4ab4ff",fontFamily:"monospace",fontSize:9,cursor:"pointer",borderRadius:3}},"Paste"):null,
-    React.createElement("button",{onClick:function(){p.setL("seed",Math.random()*99999|0);},title:"Randomize seed (R)",style:{padding:"4px 7px",background:"#1a1a1a",border:"1px solid #282828",color:"#555",fontFamily:"monospace",fontSize:9,cursor:"pointer",borderRadius:3}},"⟳"),
-          React.createElement("button",{onClick:p.randomizeAll,title:"Randomize ALL layer seeds (A)",style:{padding:"4px 7px",background:"#1a1a1a",border:"1px solid #282828",color:"#444",fontFamily:"monospace",fontSize:9,cursor:"pointer",borderRadius:3}},"All ⟳"),
-    React.createElement("button",{onClick:p.resetLayer,title:"Reset to defaults (X)",style:{padding:"4px 7px",background:"#1a1a1a",border:"1px solid #282828",color:"#444",fontFamily:"monospace",fontSize:9,cursor:"pointer",borderRadius:3}},"↺")
+    React.createElement("button",{onClick:p.copyLayer,title:"Copy layer (C)",style:{padding:"4px 7px",background:"var(--panel)",border:"1px solid var(--line)",color:"var(--txt2)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3}},"Copy"),
+    p.hasCopied?React.createElement("button",{onClick:p.pasteLayer,title:"Paste (V)",style:{padding:"4px 7px",background:"var(--panel)",border:"1px solid #8a8a94",color:"var(--txt)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3}},"Paste"):null,
+    React.createElement("button",{onClick:function(){p.setL("seed",Math.random()*99999|0);},title:"Randomize seed (R)",style:{padding:"4px 7px",background:"var(--panel)",border:"1px solid var(--line)",color:"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3}},"⟳"),
+          React.createElement("button",{onClick:p.randomizeAll,title:"Randomize ALL layer seeds (A)",style:{padding:"4px 7px",background:"var(--panel)",border:"1px solid var(--line)",color:"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3}},"All ⟳"),
+    React.createElement("button",{onClick:p.resetLayer,title:"Reset to defaults (X)",style:{padding:"4px 7px",background:"var(--panel)",border:"1px solid var(--line)",color:"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3}},"↺")
   )
   );
 
@@ -8166,57 +8140,57 @@ function NoisePanel(p){
     var groups=p.groups||[];
     var curGroupId=L.groupId!=null?L.groupId:null;
     if(!grpOpen)return null; // panel shown only when the Groups button is active
-    return React.createElement("div",{style:{marginBottom:8,padding:8,background:"#0e0e0e",border:"1px solid #1c1c1c",borderRadius:4}},
+    return React.createElement("div",{style:{marginBottom:8,padding:8,background:"var(--bg)",border:"1px solid var(--line)",borderRadius:4}},
       React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:groups.length?6:0}},
-        React.createElement("span",{style:{fontSize:8,color:"#888",textTransform:"uppercase",letterSpacing:1,fontFamily:"monospace"}},"Groups"),
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",textTransform:"uppercase",letterSpacing:1,fontFamily:"inherit"}},"Groups"),
         React.createElement("button",{onClick:p.addGroup,title:"Create a group and put this layer in it",
-          style:{padding:"2px 8px",fontSize:8,fontFamily:"monospace",background:"#1a1a1a",color:"#a0e060",border:"1px solid #2a2a2a",borderRadius:3,cursor:"pointer"}},"+ Group")
+          style:{padding:"2px 8px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:"var(--panel)",color:"var(--txt)",border:"1px solid var(--line)",borderRadius:3,cursor:"pointer"}},"+ Group")
       ),
       groups.map(function(g){
-        return React.createElement("div",{key:g.id,style:{marginBottom:5,padding:6,background:"#131313",borderRadius:3,border:"1px solid "+(curGroupId===g.id?"#3a5a3a":"#1a1a1a")}},
+        return React.createElement("div",{key:g.id,style:{marginBottom:5,padding:6,background:"var(--bg)",borderRadius:3,border:"1px solid "+(curGroupId===g.id?"#8a8a94":"var(--line)")}},
           React.createElement("div",{style:{display:"flex",alignItems:"center",gap:6,marginBottom:4}},
             // enable toggle
             React.createElement("div",{onClick:function(){p.updGroup(g.id,"enabled",g.enabled===false);p.onCommit&&p.onCommit();},
               title:"Show/hide all layers in this group",
-              style:{width:24,height:14,borderRadius:7,background:g.enabled===false?"#252525":"#a0e060",cursor:"pointer",position:"relative",flexShrink:0}},
-              React.createElement("div",{style:{position:"absolute",width:10,height:10,borderRadius:5,background:"#fff",top:2,left:g.enabled===false?2:12,transition:"left 0.12s"}})),
+              style:{width:24,height:14,borderRadius:7,background:g.enabled===false?"var(--panel3)":"var(--txt)",cursor:"pointer",position:"relative",flexShrink:0}},
+              React.createElement("div",{style:{position:"absolute",width:10,height:10,borderRadius:5,background:g.enabled===false?"#8a8a94":"var(--bg)",top:2,left:g.enabled===false?2:12,transition:"left 0.12s"}})),
             React.createElement("input",{type:"text",value:g.name,
               onChange:function(e){p.updGroup(g.id,"name",e.target.value);},
-              style:{flex:1,minWidth:0,background:"#0a0a0a",border:"1px solid #222",color:"#bbb",fontSize:9,fontFamily:"monospace",padding:"2px 5px",borderRadius:2}}),
+              style:{flex:1,minWidth:0,background:"var(--bg)",border:"1px solid var(--line)",color:"var(--txt2)",fontSize:"var(--fs-s)",fontFamily:"inherit",padding:"2px 5px",borderRadius:2}}),
             React.createElement("button",{onClick:function(){p.removeGroup(g.id);},title:"Delete group (layers kept, ungrouped)",
-              style:{padding:"1px 5px",fontSize:9,background:"none",border:"1px solid #2a2a2a",color:"#a55",borderRadius:2,cursor:"pointer"}},"✕")
+              style:{padding:"1px 5px",fontSize:"var(--fs-s)",background:"none",border:"1px solid var(--line)",color:"var(--err)",borderRadius:2,cursor:"pointer"}},"✕")
           ),
           React.createElement("div",{style:{display:"flex",alignItems:"center",gap:6}},
-            React.createElement("span",{style:{fontSize:7,color:"#555",fontFamily:"monospace",width:34}},"Opacity"),
+            React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",width:34}},"Opacity"),
             React.createElement("input",{type:"range",min:0,max:1,step:0.01,value:g.opacity!=null?g.opacity:1,
               onChange:function(e){p.updGroup(g.id,"opacity",parseFloat(e.target.value));},
-              style:{flex:1,accentColor:"#a0e060"}}),
+              style:{flex:1,accentColor:"#9a9aa2"}}),
             // assign current layer toggle
             React.createElement("button",{onClick:function(){p.setLayerGroup(si,curGroupId===g.id?null:g.id);p.onCommit&&p.onCommit();},
               title:curGroupId===g.id?"Remove this layer from the group":"Add this layer to the group",
-              style:{padding:"2px 6px",fontSize:8,fontFamily:"monospace",background:curGroupId===g.id?"#a0e060":"#1a1a1a",color:curGroupId===g.id?"#000":"#777",border:"1px solid "+(curGroupId===g.id?"#a0e060":"#2a2a2a"),borderRadius:2,cursor:"pointer",whiteSpace:"nowrap"}},
+              style:{padding:"2px 6px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:curGroupId===g.id?"var(--panel3)":"var(--panel)",color:curGroupId===g.id?"#fff":"var(--txt2)",border:"1px solid "+(curGroupId===g.id?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer",whiteSpace:"nowrap"}},
               curGroupId===g.id?"✓ in":"+ add")
           ),
           // Members: show which layers are in this group
           (function(){
             var members=[]; (p.layers||[]).forEach(function(ly,idx){if(ly.groupId===g.id)members.push(ly.label||("L"+(idx+1)));});
             return React.createElement("div",{style:{marginTop:5,display:"flex",flexWrap:"wrap",gap:3,alignItems:"center"}},
-              React.createElement("span",{style:{fontSize:7,color:"#444",fontFamily:"monospace"}},members.length+" layer"+(members.length===1?"":"s")+":"),
+              React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit"}},members.length+" layer"+(members.length===1?"":"s")+":"),
               members.length?members.map(function(nm,k){
-                return React.createElement("span",{key:k,style:{fontSize:7,fontFamily:"monospace",color:"#8a8",background:"#16201a",padding:"1px 5px",borderRadius:2}},nm);
-              }):React.createElement("span",{style:{fontSize:7,color:"#555",fontStyle:"italic"}},"empty")
+                return React.createElement("span",{key:k,style:{fontSize:"var(--fs-s)",fontFamily:"inherit",color:"var(--txt)",background:"var(--panel)",padding:"1px 5px",borderRadius:2}},nm);
+              }):React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontStyle:"italic"}},"empty")
             );
           })(),
           // Group-level adjustments (applied to all layers in the group)
           React.createElement("div",{style:{marginTop:6,display:"flex",gap:6,alignItems:"center"}},
-            React.createElement("span",{style:{fontSize:7,color:"#555",fontFamily:"monospace",width:34}},"Bright"),
+            React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",width:34}},"Bright"),
             React.createElement("input",{type:"range",min:-1,max:1,step:0.02,value:g.brightness||0,
               onChange:function(e){p.updGroup(g.id,"brightness",parseFloat(e.target.value));},
-              style:{flex:1,accentColor:"#66ccff"}}),
-            React.createElement("span",{style:{fontSize:7,color:"#555",fontFamily:"monospace",width:34}},"Contr"),
+              style:{flex:1,accentColor:"#9a9aa2"}}),
+            React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",width:34}},"Contr"),
             React.createElement("input",{type:"range",min:0,max:3,step:0.02,value:g.contrast!=null?g.contrast:1,
               onChange:function(e){p.updGroup(g.id,"contrast",parseFloat(e.target.value));},
-              style:{flex:1,accentColor:"#66ccff"}})
+              style:{flex:1,accentColor:"#9a9aa2"}})
           )
         );
       })
@@ -8230,68 +8204,68 @@ function NoisePanel(p){
       // Compact tool buttons: Groups + Chain (hidden in node mode)
       p.nodeMode?null:React.createElement("div",{style:{display:"flex",gap:5,marginBottom:8}},
         (p.groupsEnabled)?React.createElement("button",{onClick:function(){setGrpOpen(function(v){return!v;});},
-          style:{flex:1,padding:"5px 0",fontSize:8,fontFamily:"monospace",letterSpacing:0.5,cursor:"pointer",borderRadius:3,
-            background:grpOpen?"#1d2a1a":"#141414",color:grpOpen?"#a0e060":"#777",
-            border:"1px solid "+(grpOpen?"#3a5a2a":"#252525")}},
+          style:{flex:1,padding:"5px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",letterSpacing:0.5,cursor:"pointer",borderRadius:3,
+            background:grpOpen?"var(--panel3)":"var(--bg)",color:grpOpen?"var(--txt)":"var(--txt2)",
+            border:"1px solid "+(grpOpen?"#8a8a94":"var(--line)")}},
           "\u229e Groups"+((p.groups&&p.groups.length)?" ("+p.groups.length+")":"")):null,
         (p.runChainOp)?React.createElement("button",{onClick:function(){setChainOpen(function(v){return!v;});},
-          style:{flex:1,padding:"5px 0",fontSize:8,fontFamily:"monospace",letterSpacing:0.5,cursor:"pointer",borderRadius:3,
-            background:chainOpen?"#1a1525":"#141414",color:chainOpen?"#cc88ff":"#777",
-            border:"1px solid "+(chainOpen?"#3a2a55":"#252525")}},
-          "\u26a1 Chain"+((customChain&&customChain.length)?" ("+customChain.length+")":"")):null
+          style:{flex:1,padding:"5px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",letterSpacing:0.5,cursor:"pointer",borderRadius:3,
+            background:chainOpen?"var(--panel3)":"var(--bg)",color:chainOpen?"var(--txt)":"var(--txt2)",
+            border:"1px solid "+(chainOpen?"#8a8a94":"var(--line)")}},
+          "Chain"+((customChain&&customChain.length)?" ("+customChain.length+")":"")):null
       ),
       groupsUI,
       // ── Chained Operations (shown only when the Chain button is active) ──
-      (p.runChainOp&&chainOpen)?React.createElement("div",{style:{marginBottom:8,padding:8,background:"#0e0e0e",border:"1px solid #1c1c1c",borderRadius:4}},
-        React.createElement("div",{style:{fontSize:8,color:"#cc88ff",textTransform:"uppercase",letterSpacing:1,fontFamily:"monospace",marginBottom:8}},"\u26a1 Chained Ops"),
+      (p.runChainOp&&chainOpen)?React.createElement("div",{style:{marginBottom:8,padding:8,background:"var(--bg)",border:"1px solid var(--line)",borderRadius:4}},
+        React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--txt)",textTransform:"uppercase",letterSpacing:1,fontFamily:"inherit",marginBottom:8}},"Chained Ops"),
         React.createElement("div",null,
-          React.createElement("div",{style:{fontSize:7,color:"#555",marginBottom:6,lineHeight:1.5}},"Tap operations to build a chain, then run it on the active layer:"),
+          React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:6,lineHeight:1.5}},"Tap operations to build a chain, then run it on the active layer:"),
           CHAIN_OP_GROUPS.map(function(grp){
             return React.createElement("div",{key:grp.label,style:{marginBottom:7}},
-              React.createElement("div",{style:{fontSize:7,color:"#444",marginBottom:3,letterSpacing:0.5,fontFamily:"monospace"}},grp.label),
+              React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:3,letterSpacing:0.5,fontFamily:"inherit"}},grp.label),
               React.createElement("div",{style:{display:"flex",flexWrap:"wrap",gap:3}},
                 grp.ops.map(function(opId){
                   return React.createElement("button",{key:opId,
                     onClick:function(){setCustomChain(function(c){return c.concat([opId]);});},
                     title:CHAIN_OPS[opId].hint,
-                    style:{padding:"3px 6px",fontSize:8,fontFamily:"monospace",background:"#161616",color:"#888",border:"1px solid #282828",borderRadius:3,cursor:"pointer"},
-                    onMouseEnter:function(e){e.currentTarget.style.borderColor="#cc88ff";e.currentTarget.style.color="#ddd";},
-                    onMouseLeave:function(e){e.currentTarget.style.borderColor="#282828";e.currentTarget.style.color="#888";}},
+                    style:{padding:"3px 6px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:"var(--panel)",color:"var(--txt2)",border:"1px solid var(--line)",borderRadius:3,cursor:"pointer"},
+                    onMouseEnter:function(e){e.currentTarget.style.borderColor="#8a8a94";e.currentTarget.style.color="var(--txt)";},
+                    onMouseLeave:function(e){e.currentTarget.style.borderColor="var(--line)";e.currentTarget.style.color="var(--txt2)";}},
                     "+ "+CHAIN_OPS[opId].label);
                 })
               )
             );
           }),
           // Current chain preview
-          customChain.length?React.createElement("div",{style:{display:"flex",flexWrap:"wrap",gap:3,alignItems:"center",marginBottom:8,padding:6,background:"#131313",borderRadius:3}},
+          customChain.length?React.createElement("div",{style:{display:"flex",flexWrap:"wrap",gap:3,alignItems:"center",marginBottom:8,padding:6,background:"var(--bg)",borderRadius:3}},
             customChain.map(function(opId,i){
-              return React.createElement("span",{key:i,style:{fontSize:8,fontFamily:"monospace",color:"#cc88ff",background:"#1d1526",padding:"2px 6px",borderRadius:3,whiteSpace:"nowrap"}},
+              return React.createElement("span",{key:i,style:{fontSize:"var(--fs-s)",fontFamily:"inherit",color:"var(--txt)",background:"var(--panel3)",padding:"2px 6px",borderRadius:3,whiteSpace:"nowrap"}},
                 (i>0?"→ ":"")+CHAIN_OPS[opId].label);
             })
-          ):React.createElement("div",{style:{fontSize:8,color:"#444",marginBottom:8,fontStyle:"italic"}},"Tap operations above to build a chain…"),
+          ):React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:8,fontStyle:"italic"}},"Tap operations above to build a chain…"),
           React.createElement("div",{style:{display:"flex",gap:4}},
             React.createElement("button",{
               onClick:function(){if(customChain.length)p.runChainOp(customChain);},
               disabled:!customChain.length,
-              style:{flex:1,padding:"7px 0",fontSize:10,fontWeight:700,fontFamily:"monospace",
-                background:customChain.length?"#cc88ff":"#1a1a1a",color:customChain.length?"#000":"#444",
+              style:{flex:1,padding:"7px 0",fontSize:"var(--fs-s)",fontWeight:700,fontFamily:"inherit",
+                background:customChain.length?"var(--panel3)":"var(--panel)",color:customChain.length?"#fff":"var(--tg-dim)",
                 border:"none",borderRadius:4,cursor:customChain.length?"pointer":"default",letterSpacing:1}},
-              "⚡ Run Chain ("+customChain.length+")"),
+              "Run Chain ("+customChain.length+")"),
             React.createElement("button",{
               onClick:function(){setCustomChain(function(c){return c.slice(0,-1);});},
               disabled:!customChain.length,
               title:"Remove last step",
-              style:{padding:"7px 11px",fontSize:11,fontFamily:"monospace",background:"#1a1a1a",color:customChain.length?"#888":"#444",border:"1px solid #2a2a2a",borderRadius:4,cursor:customChain.length?"pointer":"default"}},
+              style:{padding:"7px 11px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:"var(--panel)",color:customChain.length?"var(--txt2)":"var(--tg-dim)",border:"1px solid var(--line)",borderRadius:4,cursor:customChain.length?"pointer":"default"}},
               "⌫"),
             React.createElement("button",{
               onClick:function(){setCustomChain([]);},
-              style:{padding:"7px 12px",fontSize:9,fontFamily:"monospace",background:"#1a1a1a",color:"#888",border:"1px solid #2a2a2a",borderRadius:4,cursor:"pointer"}},
+              style:{padding:"7px 12px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:"var(--panel)",color:"var(--txt2)",border:"1px solid var(--line)",borderRadius:4,cursor:"pointer"}},
               "Clear")
           )
         )
       ):null,
       // Divider between layer tools (groups/chain) and this layer's settings
-      React.createElement("div",{style:{height:1,background:"#161616",margin:"4px 0 10px"}}),
+      React.createElement("div",{style:{height:1,background:"var(--panel)",margin:"4px 0 10px"}}),
       soloPanel,
       // ── Layer Reference ──────────────────────────────────────────
       p.nodeMode?null:(function(){
@@ -8304,21 +8278,21 @@ function NoisePanel(p){
         var srcLabel="";
         if(isRef){var s=allL.find(function(ly){return ly.uid===L.refUid;});srcLabel=s?(s.label||"a layer"):"(missing)";}
         if(!isRef&&!candidates.length)return null; // nothing to reference yet
-        return React.createElement("div",{style:{marginBottom:8,padding:"6px 8px",background:isRef?"#15101d":"#0e0e0e",border:"1px solid "+(isRef?"#3a2a55":"#1c1c1c"),borderRadius:4}},
+        return React.createElement("div",{style:{marginBottom:8,padding:"6px 8px",background:isRef?"var(--panel)":"var(--bg)",border:"1px solid "+(isRef?"#8a8a94":"var(--line)"),borderRadius:4}},
           React.createElement("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",gap:6}},
-            React.createElement("span",{style:{fontSize:8,color:isRef?"#cc88ff":"#666",textTransform:"uppercase",letterSpacing:1,fontFamily:"monospace"}},
+            React.createElement("span",{style:{fontSize:"var(--fs-s)",color:isRef?"var(--txt)":"var(--tg-dim)",textTransform:"uppercase",letterSpacing:1,fontFamily:"inherit"}},
               isRef?("\u26ad Mirrors: "+srcLabel):"\u26ad Reference"),
             isRef?React.createElement("button",{onClick:function(){setL("refUid",null);if(onCommit)onCommit();},
-              style:{padding:"2px 8px",fontSize:8,fontFamily:"monospace",background:"#1a1a1a",color:"#c88",border:"1px solid #3a2a2a",borderRadius:3,cursor:"pointer"}},"Detach")
+              style:{padding:"2px 8px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:"var(--panel)",color:"var(--txt)",border:"1px solid #8a8a94",borderRadius:3,cursor:"pointer"}},"Detach")
             :React.createElement("select",{value:"",
               onChange:function(e){if(e.target.value){setL("refUid",e.target.value);if(onCommit)onCommit();}},
-              style:{background:"#161616",color:"#aaa",border:"1px solid #2a2a2a",borderRadius:3,fontSize:8,fontFamily:"monospace",padding:"2px 4px",cursor:"pointer"}},
+              style:{background:"var(--panel)",color:"var(--txt2)",border:"1px solid var(--line)",borderRadius:3,fontSize:"var(--fs-s)",fontFamily:"inherit",padding:"2px 4px",cursor:"pointer"}},
               React.createElement("option",{value:""},"Mirror a layer\u2026"),
               candidates.map(function(o){return React.createElement("option",{key:o.ly.uid,value:o.ly.uid},o.ly.label||("L"+(o.idx+1)));})
             )
           ),
           isRef?React.createElement("div",{style:{marginTop:6}},
-            React.createElement("div",{style:{fontSize:7,color:"#777",marginBottom:5,lineHeight:1.4}},
+            React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",marginBottom:5,lineHeight:1.4}},
               "Copies from "+srcLabel+", live. Toggle off a group to keep it local and edit it here:"),
             React.createElement("div",{style:{display:"flex",flexWrap:"wrap",gap:4}},
               [["refLocalXform","Transform"],["refLocalBlend","Blend/Opacity"],["refLocalAdjust","Adjust"]].map(function(t){
@@ -8326,9 +8300,9 @@ function NoisePanel(p){
                 return React.createElement("button",{key:t[0],
                   onClick:function(){setL(t[0],!local);if(onCommit)onCommit();},
                   title:local?"Local — edit this group on the reference":"Inherited from source — click to keep local",
-                  style:{padding:"3px 7px",fontSize:7,fontFamily:"monospace",cursor:"pointer",borderRadius:3,letterSpacing:0.3,
-                    background:local?"#1d2a1a":"#161616",color:local?"#a0e060":"#666",
-                    border:"1px solid "+(local?"#3a5a2a":"#282828")}},
+                  style:{padding:"3px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",cursor:"pointer",borderRadius:3,letterSpacing:0.3,
+                    background:local?"var(--panel3)":"var(--panel)",color:local?"var(--txt)":"var(--tg-dim)",
+                    border:"1px solid "+(local?"#8a8a94":"var(--line)")}},
                   (local?"\u25c9 ":"\u25cb ")+t[1]);
               })
             )
@@ -8339,7 +8313,7 @@ function NoisePanel(p){
       // Reference WITH local groups → show only those groups\' controls (handled
       // by per-section gating: _refHide(group) returns true when inherited).
       (L.refUid!=null&&!L.refLocalXform&&!L.refLocalBlend&&!L.refLocalAdjust)?
-        React.createElement("div",{style:{fontSize:8,color:"#555",fontStyle:"italic",padding:"8px 4px",textAlign:"center"}},
+        React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontStyle:"italic",padding:"8px 4px",textAlign:"center"}},
         "All parameters inherited from the source. Toggle a group above to edit it here."):
       React.createElement("div",null,
       // Enabled + Opacity on one compact row
@@ -8348,32 +8322,32 @@ function NoisePanel(p){
         React.createElement("div",{
           onClick:function(){setL("enabled",!L.enabled);},
           title:L.enabled?"Enabled (click to disable)":"Disabled (click to enable)",
-          style:{width:30,height:16,borderRadius:8,background:L.enabled?LC8[si%8]:"#252525",cursor:"pointer",position:"relative",flexShrink:0,transition:"background 0.15s"}
-        },React.createElement("div",{style:{position:"absolute",width:12,height:12,borderRadius:6,background:"#fff",top:2,left:L.enabled?16:2,transition:"left 0.15s"}})),
+          style:{width:30,height:16,borderRadius:8,background:L.enabled?LC8[si%8]:"var(--panel3)",cursor:"pointer",position:"relative",flexShrink:0,transition:"background 0.15s"}
+        },React.createElement("div",{style:{position:"absolute",width:12,height:12,borderRadius:6,background:L.enabled?"var(--bg)":"#5a5a64",top:2,left:L.enabled?16:2,transition:"left 0.15s"}})),
         // Opacity slider — takes rest of row
         React.createElement("div",{style:{flex:1}},
           React.createElement("input",{type:"range",min:0,max:1,step:0.01,value:L.opacity!=null?L.opacity:1,
             onChange:function(e){setL("opacity",parseFloat(e.target.value));},
             style:{width:"100%",accentColor:LC8[si%8],height:3,cursor:"pointer",display:"block"}})
         ),
-        React.createElement("span",{style:{fontSize:10,color:LC8[si%8],fontFamily:"monospace",minWidth:28,textAlign:"right",flexShrink:0}},
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:LC8[si%8],fontFamily:"inherit",minWidth:28,textAlign:"right",flexShrink:0}},
           Math.round((L.opacity!=null?L.opacity:1)*100)+"%"
         )
       ),
       // Blend mode + Channel — now as expandable pill group
       React.createElement("div",{style:{marginBottom:8}},
-        React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}},
-          React.createElement("span",{style:{fontSize:9,color:"#555",letterSpacing:1.2,textTransform:"uppercase"}},
+        React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:4,marginBottom:5}},
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1.2,textTransform:"uppercase",whiteSpace:"nowrap"}},
             "Blend: ",
             React.createElement("span",{style:{color:LC8[si%8],fontWeight:700}},(L.blendMode||"normal").toUpperCase())
           ),
           // Channel pills
           React.createElement("div",{style:{display:"flex",gap:2}},
             CH.map(function(c){return React.createElement("button",{key:c,onClick:function(){setL("channels",c);},title:"Channels: "+CHL[c],style:{
-              padding:"3px 6px",fontSize:8,fontFamily:"monospace",
-              background:L.channels===c?LC8[si%8]:"#161616",
-              color:L.channels===c?"#000":"#444",
-              border:"1px solid "+(L.channels===c?LC8[si%8]:"#1e1e1e"),
+              padding:"3px 6px",fontSize:"var(--fs-s)",fontFamily:"inherit",
+              background:L.channels===c?"var(--panel3)":"var(--panel)",
+              color:L.channels===c?"#fff":"var(--tg-dim)",
+              border:"1px solid "+(L.channels===c?"#8a8a94":"var(--line)"),
               borderRadius:2,cursor:"pointer"
             }},CHL[c]);})
           )
@@ -8397,7 +8371,7 @@ function NoisePanel(p){
     // Image upload
     L.type==="image"?React.createElement("div",{style:{marginBottom:10}},
       React.createElement("span",{style:LS},"Source Image"),
-      L.imageData?React.createElement("img",{src:L.imageData,style:{width:"100%",height:60,objectFit:"cover",borderRadius:3,marginBottom:6,border:"1px solid #252525"}}):null,
+      L.imageData?React.createElement("img",{src:L.imageData,style:{width:"100%",height:60,objectFit:"cover",borderRadius:3,marginBottom:6,border:"1px solid var(--line)"}}):null,
       React.createElement("input",{type:"file",accept:"image/*",onChange:function(e){
         var file=e.target.files[0];if(!file)return;
         var reader=new FileReader();
@@ -8406,45 +8380,45 @@ function NoisePanel(p){
           preDecodeImage(data,function(){setL("imageData",data);});
         };
         reader.readAsDataURL(file);
-      },style:{fontSize:10,color:"#888",fontFamily:"monospace",width:"100%",marginBottom:8}}),
+      },style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",width:"100%",marginBottom:8}}),
       // Color mode toggle
       React.createElement("div",{style:{display:"flex",gap:6,marginBottom:6}},
         React.createElement("div",{style:{flex:1}},
-          React.createElement("span",{style:{fontSize:8,color:"#555",textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:4}},"Color Mode"),
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:4}},"Color Mode"),
           React.createElement("div",{style:{display:"flex",gap:3}},
             React.createElement("button",{onClick:function(){setL("imageColorMode","luma");},
-              style:{flex:1,padding:"4px 0",fontSize:9,fontFamily:"monospace",
-                background:(L.imageColorMode||"luma")==="luma"?"#e8900a":"#1a1a1a",
-                color:(L.imageColorMode||"luma")==="luma"?"#000":"#666",
-                border:"1px solid "+((L.imageColorMode||"luma")==="luma"?"#e8900a":"#282828"),
+              style:{flex:1,padding:"4px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",
+                background:(L.imageColorMode||"luma")==="luma"?"var(--panel3)":"var(--panel)",
+                color:(L.imageColorMode||"luma")==="luma"?"#fff":"var(--tg-dim)",
+                border:"1px solid "+((L.imageColorMode||"luma")==="luma"?"#8a8a94":"var(--line)"),
                 borderRadius:2,cursor:"pointer"}},"Luma"),
             React.createElement("button",{onClick:function(){setL("imageColorMode","rgb");},
-              style:{flex:1,padding:"4px 0",fontSize:9,fontFamily:"monospace",
-                background:L.imageColorMode==="rgb"?"#e8900a":"#1a1a1a",
-                color:L.imageColorMode==="rgb"?"#000":"#666",
-                border:"1px solid "+(L.imageColorMode==="rgb"?"#e8900a":"#282828"),
+              style:{flex:1,padding:"4px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",
+                background:L.imageColorMode==="rgb"?"var(--panel3)":"var(--panel)",
+                color:L.imageColorMode==="rgb"?"#fff":"var(--tg-dim)",
+                border:"1px solid "+(L.imageColorMode==="rgb"?"#8a8a94":"var(--line)"),
                 borderRadius:2,cursor:"pointer"}},"RGB")
           )
         ),
         React.createElement("div",{style:{flex:1}},
-          React.createElement("span",{style:{fontSize:8,color:"#555",textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:4}},"Sampling"),
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:4}},"Sampling"),
           React.createElement("div",{style:{display:"flex",gap:3}},
             React.createElement("button",{onClick:function(){setL("imageBilinear",true);},
-              style:{flex:1,padding:"4px 0",fontSize:9,fontFamily:"monospace",
-                background:L.imageBilinear!==false?"#e8900a":"#1a1a1a",
-                color:L.imageBilinear!==false?"#000":"#666",
-                border:"1px solid "+(L.imageBilinear!==false?"#e8900a":"#282828"),
+              style:{flex:1,padding:"4px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",
+                background:L.imageBilinear!==false?"var(--panel3)":"var(--panel)",
+                color:L.imageBilinear!==false?"#fff":"var(--tg-dim)",
+                border:"1px solid "+(L.imageBilinear!==false?"#8a8a94":"var(--line)"),
                 borderRadius:2,cursor:"pointer"}},"Bilin."),
             React.createElement("button",{onClick:function(){setL("imageBilinear",false);},
-              style:{flex:1,padding:"4px 0",fontSize:9,fontFamily:"monospace",
-                background:L.imageBilinear===false?"#e8900a":"#1a1a1a",
-                color:L.imageBilinear===false?"#000":"#666",
-                border:"1px solid "+(L.imageBilinear===false?"#e8900a":"#282828"),
+              style:{flex:1,padding:"4px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",
+                background:L.imageBilinear===false?"var(--panel3)":"var(--panel)",
+                color:L.imageBilinear===false?"#fff":"var(--tg-dim)",
+                border:"1px solid "+(L.imageBilinear===false?"#8a8a94":"var(--line)"),
                 borderRadius:2,cursor:"pointer"}},"Nearest")
           )
         )
       ),
-      L.imageColorMode==="rgb"?React.createElement("div",{style:{fontSize:8,color:"#555",lineHeight:1.5,padding:"4px 6px",background:"#141414",borderRadius:3}},
+      L.imageColorMode==="rgb"?React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",lineHeight:1.5,padding:"4px 6px",background:"var(--bg)",borderRadius:3}},
         "RGB mode: samples image colors directly. Color ramp ignored. Adjust/Hue/Sat still apply."
       ):null
     ):null,
@@ -8484,20 +8458,20 @@ function NoisePanel(p){
       React.createElement(Tog,{label:"Seamless tiling",value:!!L.seamless,onChange:function(v){setL("seamless",v);if(v&&p.onSeamlessOn)p.onSeamlessOn();onCommit();}}),
       // Seamless mode — only shown when seamless is on
       L.seamless?React.createElement("div",{style:{marginBottom:8}},
-        React.createElement("div",{style:{fontSize:8,color:"#444",marginBottom:5,lineHeight:1.5}},
-          React.createElement("span",{style:{color:"#a0e060",fontWeight:700}},"Mirror"),": perfect seams, any scale. ",
-          React.createElement("span",{style:{color:"#e8900a",fontWeight:700}},"Math"),": integer scale, zero blur. ",
-          React.createElement("span",{style:{color:"#4ab4ff",fontWeight:700}},"Blend"),": any noise, slight blur."
+        React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:5,lineHeight:1.5}},
+          React.createElement("span",{style:{color:"var(--txt)",fontWeight:700}},"Mirror"),": perfect seams, any scale. ",
+          React.createElement("span",{style:{color:"var(--txt)",fontWeight:700}},"Math"),": integer scale, zero blur. ",
+          React.createElement("span",{style:{color:"var(--txt)",fontWeight:700}},"Blend"),": any noise, slight blur."
         ),
         React.createElement("div",{style:{display:"flex",gap:3}},
-          [{v:"mirror",l:"Mirror",c:"#a0e060"},{v:"math",l:"Math",c:"#e8900a"},{v:"blend",l:"Blend",c:"#4ab4ff"}].map(function(opt){
+          [{v:"mirror",l:"Mirror",c:"#c8c8ce"},{v:"math",l:"Math",c:"#c8c8ce"},{v:"blend",l:"Blend",c:"#c8c8ce"}].map(function(opt){
             var active=(L.seamlessMode||"math")===opt.v;
             return React.createElement("button",{key:opt.v,
               onClick:function(){setL("seamlessMode",opt.v);onCommit();},
-              style:{flex:1,padding:"5px 0",fontSize:9,fontFamily:"monospace",
-                background:active?opt.c:"#161616",
-                color:active?"#000":"#555",
-                border:"1px solid "+(active?opt.c:"#252525"),
+              style:{flex:1,padding:"5px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",
+                background:active?opt.c:"var(--panel)",
+                color:active?"var(--bg)":"var(--tg-dim)",
+                border:"1px solid "+(active?opt.c:"var(--line)"),
                 borderRadius:3,cursor:"pointer",fontWeight:active?700:400}},opt.l);
           })
         ),
@@ -8508,8 +8482,8 @@ function NoisePanel(p){
           var blocker=mathTileBlocker(L);
           if(!blocker)return null;
           return React.createElement("div",{style:{
-            marginTop:6,padding:"6px 8px",background:"#1a1408",border:"1px solid #3d2e0a",
-            borderRadius:3,fontSize:8,color:"#c9952c",lineHeight:1.5}},
+            marginTop:6,padding:"6px 8px",background:"var(--panel3)",border:"1px solid #8a8a94",
+            borderRadius:3,fontSize:"var(--fs-s)",color:"var(--txt)",lineHeight:1.5}},
             "Math tiling isn't possible with "+blocker+" — edges are auto-blended instead (still seamless). Use Mirror mode or remove the blocker for exact lattice tiling.");
         })()
       ):null
@@ -8523,9 +8497,9 @@ function NoisePanel(p){
         [{k:"flipH",l:"Flip H"},{k:"flipV",l:"Flip V"},{k:"mirrorH",l:"Mirror H"},{k:"mirrorV",l:"Mirror V"}].map(function(btn){
           var active=!!L[btn.k];
           return React.createElement("button",{key:btn.k,onClick:function(){setL(btn.k,!active);onCommit();},style:{
-            flex:1,padding:"5px 4px",fontSize:9,fontFamily:"monospace",
-            background:active?"#e8900a":"#161616",color:active?"#000":"#555",
-            border:"1px solid "+(active?"#e8900a":"#252525"),borderRadius:3,cursor:"pointer"
+            flex:1,padding:"5px 4px",fontSize:"var(--fs-s)",fontFamily:"inherit",
+            background:active?"var(--panel3)":"var(--panel)",color:active?"#fff":"var(--tg-dim)",
+            border:"1px solid "+(active?"#8a8a94":"var(--line)"),borderRadius:3,cursor:"pointer"
           }},btn.l);
         })
       )
@@ -8537,7 +8511,7 @@ function NoisePanel(p){
       badge:L.radialTile?"active":null},
       React.createElement(Tog,{label:"Enable",value:!!L.radialTile,onChange:function(v){setL("radialTile",v);onCommit();}}),
       L.radialTile?React.createElement("div",null,
-        React.createElement("div",{style:{fontSize:8,color:"#444",marginBottom:8,lineHeight:1.5}},"Repeats the layer N times around a center point. Mirror per sector for kaleidoscope look."),
+        React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:8,lineHeight:1.5}},"Repeats the layer N times around a center point. Mirror per sector for kaleidoscope look."),
         SliderC({label:"Count",value:L.radialCount||6,min:2,max:24,step:1,fmt:Math.round,onChange:function(v){setL("radialCount",Math.round(v));}}),
         SliderC({label:"Ring Radius",value:L.radialRadius!=null?L.radialRadius:0.25,min:0,max:0.5,step:0.005,
           fmt:function(v){return v===0?"0 (center)":v.toFixed(3);},
@@ -8552,7 +8526,7 @@ function NoisePanel(p){
 
     // Type-specific params — wrapped in a collapsible section
     // key=L.type forces React to remount when type changes → always opens fresh
-    React.createElement(Collapse,{key:"tp_"+L.type,id:"noise_type_"+L.type,title:"Type Parameters",defaultOpen:true,color:"#4ab4ff"},
+    React.createElement(Collapse,{key:"tp_"+L.type,id:"noise_type_"+L.type,title:"Type Parameters",defaultOpen:true,color:"var(--txt)"},
     (L.type==="fbm"||L.type==="domainWarp")?React.createElement("div",null,
       React.createElement(Sel,{label:"Base Fn",value:L.fbmBase||"perlin",opts:[{v:"perlin",l:"Perlin"},{v:"value",l:"Value"},{v:"simplex",l:"Simplex"}],onChange:function(v){setL("fbmBase",v);}}),
       L.type==="fbm"?React.createElement(Sel,{label:"Mode",value:L.fbmMode||"normal",opts:[{v:"normal",l:"Normal"},{v:"ridged",l:"Ridged"},{v:"turbulence",l:"Turbulence"},{v:"billow",l:"Billow"}],onChange:function(v){setL("fbmMode",v);}}):null,
@@ -8600,24 +8574,24 @@ function NoisePanel(p){
     L.type==="dust"?React.createElement("div",null,
       SliderC({label:"Coverage",value:L.dustCoverage!=null?L.dustCoverage:0.5,min:0,max:1,step:0.01,fmt:function(v){return Math.round(v*100)+"%";},onChange:function(v){setL("dustCoverage",v);}}),
       SliderC({label:"Speck Size",value:L.dustSize!=null?L.dustSize:0.5,min:0.05,max:1,step:0.01,onChange:function(v){setL("dustSize",v);}}),
-      React.createElement("div",{style:{fontSize:8,color:"#666",lineHeight:1.5,marginTop:4}},"Fine sparse specks. Raise Scale (transform) for finer dust. Layer with low opacity for dirt.")
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",lineHeight:1.5,marginTop:4}},"Fine sparse specks. Raise Scale (transform) for finer dust. Layer with low opacity for dirt.")
     ):null,
     L.type==="debris"?React.createElement("div",null,
       SliderC({label:"Density",value:L.debrisDensity!=null?L.debrisDensity:0.5,min:0,max:1,step:0.01,fmt:function(v){return Math.round(v*100)+"%";},onChange:function(v){setL("debrisDensity",v);}}),
       SliderC({label:"Edge Sharpness",value:L.debrisSharp||2,min:0.5,max:6,step:0.1,onChange:function(v){setL("debrisSharp",v);}}),
-      React.createElement("div",{style:{fontSize:8,color:"#666",lineHeight:1.5,marginTop:4}},"Irregular fragments at mixed sizes. Good for chips, flakes, rubble.")
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",lineHeight:1.5,marginTop:4}},"Irregular fragments at mixed sizes. Good for chips, flakes, rubble.")
     ):null,
     L.type==="grain"?React.createElement("div",null,
       SliderC({label:"Roughness",value:L.grainRough!=null?L.grainRough:0.5,min:0,max:1,step:0.01,fmt:function(v){return Math.round(v*100)+"%";},onChange:function(v){setL("grainRough",v);}}),
       SliderC({label:"Contrast",value:L.grainContrast||1.5,min:0.5,max:4,step:0.05,onChange:function(v){setL("grainContrast",v);}}),
-      React.createElement("div",{style:{fontSize:8,color:"#666",lineHeight:1.5,marginTop:4}},"Fine fractal grain — film grain, fine dirt, surface tooth. Crank Scale for finer grain.")
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",lineHeight:1.5,marginTop:4}},"Fine fractal grain — film grain, fine dirt, surface tooth. Crank Scale for finer grain.")
     ):null,
 
     L.type==="hex"?React.createElement("div",null,
       React.createElement(Sel,{label:"Mode",value:L.hexMode||"edges",opts:[{v:"edges",l:"Honeycomb (edges)"},{v:"cells",l:"Filled Cells"},{v:"value",l:"Random Tone/Cell"},{v:"dots",l:"Center Dots"}],onChange:function(v){setL("hexMode",v);}}),
       SliderC({label:"Thickness",value:L.hexThick!=null?L.hexThick:0.12,min:0.02,max:0.5,step:0.01,onChange:function(v){setL("hexThick",v);}}),
       SliderC({label:"Jitter",value:L.hexJitter||0,min:0,max:1,step:0.01,fmt:function(v){return v<0.02?"perfect":Math.round(v*100)+"%";},onChange:function(v){setL("hexJitter",v);}}),
-      React.createElement("div",{style:{fontSize:8,color:"#666",lineHeight:1.5,marginTop:4}},"Seamless on any scale. Row height auto-fits the tile; for the roundest hexagons keep Scale X and Y close.")
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",lineHeight:1.5,marginTop:4}},"Seamless on any scale. Row height auto-fits the tile; for the roundest hexagons keep Scale X and Y close.")
     ):null,
     L.type==="scratches"?React.createElement("div",null,
       SliderC({label:"Density",value:L.scrDensity!=null?L.scrDensity:0.5,min:0,max:1,step:0.01,fmt:function(v){return Math.round(v*100)+"%";},onChange:function(v){setL("scrDensity",v);}}),
@@ -8637,7 +8611,7 @@ function NoisePanel(p){
     L.type==="truchet"?React.createElement("div",null,
       React.createElement(Sel,{label:"Mode",value:L.truMode||"arcs",opts:[{v:"arcs",l:"Arcs (curved)"},{v:"lines",l:"Lines (straight)"},{v:"maze",l:"Maze (solid)"}],onChange:function(v){setL("truMode",v);}}),
       SliderC({label:"Thickness",value:L.truThick!=null?L.truThick:0.18,min:0.03,max:0.5,step:0.01,onChange:function(v){setL("truThick",v);}}),
-      React.createElement("div",{style:{fontSize:8,color:"#666",lineHeight:1.5,marginTop:4}},"Tiles connect into continuous paths — circuits, mazes, woven networks.")
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",lineHeight:1.5,marginTop:4}},"Tiles connect into continuous paths — circuits, mazes, woven networks.")
     ):null,
 
     L.type==="cloud"?React.createElement("div",null,
@@ -8672,7 +8646,7 @@ function NoisePanel(p){
         fmt:function(v){return v.toFixed(2);},onChange:function(v){setL("gradPow",v);}}),
       // Intensity remap curve, right here for convenience (same curve as ADJUST)
       React.createElement("div",{style:{marginTop:8}},
-        React.createElement("div",{style:{fontSize:7,color:"#555",marginBottom:4,letterSpacing:1,textTransform:"uppercase"}},"Intensity Remap"),
+        React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:4,letterSpacing:1,textTransform:"uppercase"}},"Intensity Remap"),
         React.createElement(CurveEditor,{
           points:(L.curvePoints&&L.curvePoints.length>=2)?L.curvePoints:DEFAULT_CURVE,
           onChange:function(pts){setL("curvePoints",pts);},
@@ -8720,7 +8694,7 @@ function NoisePanel(p){
       SliderC({label:"Edge Soft",value:L.shapeP.soft,min:0.001,max:0.15,step:0.001,onChange:function(v){setLSP("soft",v);}}),
       React.createElement(Sep,null),
       React.createElement(SHead,null,"Size Curve"),
-      React.createElement("div",{style:{fontSize:8,color:"#444",marginBottom:6,lineHeight:1.5}},"Remaps the shape SDF output. Left = inside (0), right = outside (1). Use to create halos, rings, or non-linear falloffs."),
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:6,lineHeight:1.5}},"Remaps the shape SDF output. Left = inside (0), right = outside (1). Use to create halos, rings, or non-linear falloffs."),
       React.createElement(CurveEditor,{
         points:L.shapeCurvePoints||DEFAULT_CURVE,
         mode:L.shapeCurveMode||"smooth",
@@ -8730,7 +8704,7 @@ function NoisePanel(p){
       }),
       React.createElement(Sep,null),
       React.createElement(SHead,null,"Width Curve (by Angle)"),
-      React.createElement("div",{style:{fontSize:8,color:"#444",marginBottom:6,lineHeight:1.5}},"Modulates shape width based on angle (0°=right, going clockwise). Pull down to narrow at that angle."),
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:6,lineHeight:1.5}},"Modulates shape width based on angle (0°=right, going clockwise). Pull down to narrow at that angle."),
       React.createElement(CurveEditor,{
         points:L.shapeWidthCurvePoints||DEFAULT_CURVE,
         mode:L.shapeWidthCurveMode||"smooth",
@@ -8808,7 +8782,7 @@ function NoisePanel(p){
       SliderC({label:"Scale Y (across)",value:L.dirScaleY!=null?L.dirScaleY:1,min:0.1,max:32,step:0.1,onChange:function(v){setL("dirScaleY",v);}})
     ):null,
     L.type==="waveStroke"?React.createElement("div",null,
-      React.createElement("div",{style:{fontSize:8,color:"#444",marginBottom:8,lineHeight:1.5}},"Single wave/trail line. Use with layer opacity + blend to stack multiple trails."),
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:8,lineHeight:1.5}},"Single wave/trail line. Use with layer opacity + blend to stack multiple trails."),
       SliderC({label:"Angle",value:L.fiberAngle||0,min:-180,max:180,step:1,fmt:function(v){return Math.round(v)+"°";},onChange:function(v){setL("fiberAngle",v);},presets:[{v:0,l:"0°"},{v:45,l:"45°"},{v:90,l:"90°"},{v:135,l:"135°"},{v:180,l:"180°"}]}),
       SliderC({label:"Amplitude",value:L.waveAmp!=null?L.waveAmp:0.35,min:0,max:0.5,step:0.005,
         fmt:function(v){return v===0?"0 (straight)":v.toFixed(3);},onChange:function(v){setL("waveAmp",v);}}),
@@ -8858,19 +8832,19 @@ function NoisePanel(p){
       React.createElement(Sep,null),
       React.createElement(SHead,null,"Randomization"),
       // Horizontal scale range
-      React.createElement("div",{style:{fontSize:8,color:"#666",marginBottom:2}},"Horizontal Scale"),
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:2}},"Horizontal Scale"),
       SliderC({label:"  Min",value:L.scScaleXMin!=null?L.scScaleXMin:1,min:0.1,max:2,step:0.01,onChange:function(v){setL("scScaleXMin",v);}}),
       SliderC({label:"  Max",value:L.scScaleXMax!=null?L.scScaleXMax:1,min:0.1,max:2,step:0.01,onChange:function(v){setL("scScaleXMax",v);}}),
-      React.createElement("div",{style:{fontSize:8,color:"#666",marginBottom:2,marginTop:4}},"Vertical Scale"),
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:2,marginTop:4}},"Vertical Scale"),
       SliderC({label:"  Min",value:L.scScaleYMin!=null?L.scScaleYMin:1,min:0.1,max:2,step:0.01,onChange:function(v){setL("scScaleYMin",v);}}),
       SliderC({label:"  Max",value:L.scScaleYMax!=null?L.scScaleYMax:1,min:0.1,max:2,step:0.01,onChange:function(v){setL("scScaleYMax",v);}}),
-      React.createElement("div",{style:{fontSize:8,color:"#666",marginBottom:2,marginTop:4}},"Rotation Range"),
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:2,marginTop:4}},"Rotation Range"),
       SliderC({label:"  Min",value:L.scRotMin||0,min:0,max:1,step:0.005,fmt:function(v){return Math.round(v*360)+"°";},onChange:function(v){setL("scRotMin",v);}}),
       SliderC({label:"  Max",value:L.scRotMax!=null?L.scRotMax:0,min:0,max:1,step:0.005,fmt:function(v){return Math.round(v*360)+"°";},onChange:function(v){setL("scRotMax",v);}}),
-      React.createElement("div",{style:{fontSize:8,color:"#666",marginBottom:2,marginTop:4}},"Intensity Range"),
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:2,marginTop:4}},"Intensity Range"),
       SliderC({label:"  Min",value:L.scIntMin!=null?L.scIntMin:1,min:0,max:1,step:0.01,onChange:function(v){setL("scIntMin",v);}}),
       SliderC({label:"  Max",value:L.scIntMax!=null?L.scIntMax:1,min:0,max:1,step:0.01,onChange:function(v){setL("scIntMax",v);}}),
-      React.createElement("div",{style:{fontSize:8,color:"#4a8",marginTop:6,marginBottom:4,lineHeight:1.5}},"Seamless: tiles edge-to-edge automatically at any setting."),
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--txt)",marginTop:6,marginBottom:4,lineHeight:1.5}},"Seamless: tiles edge-to-edge automatically at any setting."),
       // Source layer picker for "Another Layer" mode
       (L.scMode==="sample")?React.createElement("div",null,
         React.createElement(Sep,null),
@@ -8878,7 +8852,7 @@ function NoisePanel(p){
         React.createElement(Sel,{label:"Use Layer",value:String(L.scSourceIdx!=null?L.scSourceIdx:-1),
           opts:[{v:"-1",l:"(select a layer)"}].concat((p.layers||[]).map(function(ll,idx){return {v:String(idx),l:(idx+1)+": "+(ll.label||ll.type||"Layer")};}).filter(function(o,idx){return idx!==si;})),
           onChange:function(v){setL("scSourceIdx",parseInt(v));}}),
-        React.createElement("div",{style:{fontSize:8,color:"#888",lineHeight:1.5}},"Scatters copies of another layer in this stack. That layer keeps rendering normally too — disable it if you only want the scattered copies.")
+        React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",lineHeight:1.5}},"Scatters copies of another layer in this stack. That layer keeps rendering normally too — disable it if you only want the scattered copies.")
       ):null,
       // Shape picker only in shape mode
       (L.scMode==="shape")?React.createElement("div",null,
@@ -8975,7 +8949,7 @@ function GradientRamp(p){
         var pos=(e.clientX-rect.left)/rect.width;
         addStop(pos);onCommit();
       },
-      style:{position:"relative",height:barH,borderRadius:4,background:gradCSS,cursor:"crosshair",marginBottom:6,border:"1px solid #252525",userSelect:"none"}},
+      style:{position:"relative",height:barH,borderRadius:4,background:gradCSS,cursor:"crosshair",marginBottom:6,border:"1px solid var(--line)",userSelect:"none"}},
       stops.map(function(s,i){
         return React.createElement("div",{key:i,
           onPointerDown:function(e){e.stopPropagation();setDragging(i);e.currentTarget.setPointerCapture(e.pointerId);},
@@ -9004,9 +8978,9 @@ function GradientRamp(p){
             onClick:function(){p.onChange(pr.stops.slice());onCommit();},
             title:pr.label,
             style:{width:48,height:14,borderRadius:2,background:gradCSS,cursor:"pointer",
-              border:"1px solid #252525",flexShrink:0,transition:"transform 0.1s"},
+              border:"1px solid var(--line)",flexShrink:0,transition:"transform 0.1s"},
             onMouseEnter:function(e){e.currentTarget.style.transform="scaleY(1.3)";e.currentTarget.style.borderColor="#888";},
-            onMouseLeave:function(e){e.currentTarget.style.transform="scaleY(1)";e.currentTarget.style.borderColor="#252525";}
+            onMouseLeave:function(e){e.currentTarget.style.transform="scaleY(1)";e.currentTarget.style.borderColor="var(--line)";}
           });
         })
       ),
@@ -9014,19 +8988,19 @@ function GradientRamp(p){
         RAMP_PRESETS.map(function(pr){
           return React.createElement("span",{key:pr.label,
             onClick:function(){p.onChange(pr.stops.slice());onCommit();},
-            style:{fontSize:6,color:"#333",cursor:"pointer",fontFamily:"monospace",
-              padding:"1px 0",width:48,textAlign:"center",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}
+            style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",cursor:"pointer",fontFamily:"inherit",
+              padding:"1px 0",minWidth:48,textAlign:"center",whiteSpace:"nowrap"}
           },pr.label);
         })
       )
     ),
     React.createElement("div",{style:{display:"flex",gap:4,flexWrap:"wrap"}},
       stops.map(function(s,i){
-        return React.createElement("div",{key:i,style:{display:"flex",gap:3,alignItems:"center",background:"#141414",border:"1px solid #252525",borderRadius:3,padding:"3px 5px"}},
+        return React.createElement("div",{key:i,style:{display:"flex",gap:3,alignItems:"center",background:"var(--bg)",border:"1px solid var(--line)",borderRadius:3,padding:"3px 5px"}},
           React.createElement("input",{type:"color",value:s.color,onChange:function(e){updStop(i,"color",e.target.value);},
             style:{width:22,height:22,border:"none",padding:0,cursor:"pointer",background:"none"}}),
-          React.createElement("span",{style:{fontSize:8,color:"#555",fontFamily:"monospace"}},Math.round(s.pos*100)+"%"),
-          stops.length>2?React.createElement("span",{onClick:function(){remStop(i);onCommit();},style:{fontSize:10,color:"#444",cursor:"pointer",lineHeight:1,padding:"0 2px"}},"×"):null
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit"}},Math.round(s.pos*100)+"%"),
+          stops.length>2?React.createElement("span",{onClick:function(){remStop(i);onCommit();},style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",cursor:"pointer",lineHeight:1,padding:"0 2px"}},"×"):null
         );
       })
     )
@@ -9073,10 +9047,10 @@ function AdjPanel(p){
 
   return React.createElement("div",null,
     React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}},
-      React.createElement("span",{style:{fontSize:9,color:"#555",letterSpacing:1.5,textTransform:"uppercase",fontFamily:"monospace"}},"Adjustments"),
+      React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1.5,textTransform:"uppercase",fontFamily:"inherit"}},"Adjustments"),
       React.createElement("button",{onClick:resetAdj,title:"Reset all adjust values to defaults",
-        style:{padding:"3px 8px",background:"#141414",border:"1px solid #252525",color:"#555",
-          fontFamily:"monospace",fontSize:8,cursor:"pointer",borderRadius:3}},
+        style:{padding:"3px 8px",background:"var(--bg)",border:"1px solid var(--line)",color:"var(--tg-dim)",
+          fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3}},
         "Reset")
     ),
 
@@ -9086,26 +9060,26 @@ function AdjPanel(p){
     (p.applyAdjustTo&&p.layerCount>1)?React.createElement("div",{style:{display:"flex",gap:5,marginBottom:10,marginTop:2}},
       React.createElement("button",{onClick:function(){p.applyAdjustTo("all");if(onCommit)onCommit();},
         title:"Copy this layer's Tone + Curve to every layer",
-        style:{flex:1,padding:"6px 0",fontSize:8,fontFamily:"monospace",background:"#161616",color:"#88bbff",
-          border:"1px solid #25303d",borderRadius:3,cursor:"pointer",letterSpacing:0.3}},
+        style:{flex:1,padding:"6px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",background:"var(--panel)",color:"var(--txt)",
+          border:"1px solid #8a8a94",borderRadius:3,cursor:"pointer",letterSpacing:0.3}},
         "Apply to ALL layers"),
       React.createElement("button",{onClick:function(){p.applyAdjustTo("others");if(onCommit)onCommit();},
         title:"Copy this layer's Tone + Curve to the OTHER layers (keep this one)",
-        style:{flex:1,padding:"6px 0",fontSize:8,fontFamily:"monospace",background:"#161616",color:"#88bbff",
-          border:"1px solid #25303d",borderRadius:3,cursor:"pointer",letterSpacing:0.3}},
+        style:{flex:1,padding:"6px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",background:"var(--panel)",color:"var(--txt)",
+          border:"1px solid #8a8a94",borderRadius:3,cursor:"pointer",letterSpacing:0.3}},
         "Apply to others")
     ):null,
 
     // ── Tone (contrast, gamma, brightness) ──────────────────
     React.createElement(Collapse,{id:"adj_tone",title:"Tone",defaultOpen:true},
       React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}},
-        React.createElement("span",{style:{fontSize:9,color:"#888",letterSpacing:1,textTransform:"uppercase"}},"Contrast Mode"),
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",letterSpacing:1,textTransform:"uppercase"}},"Contrast Mode"),
         React.createElement("div",{style:{display:"flex",gap:3}},
-          React.createElement("button",{onClick:function(){setL("contrastMode","power");},style:{padding:"3px 8px",fontSize:9,fontFamily:"monospace",background:cmode==="power"?"#e8900a":"#1a1a1a",color:cmode==="power"?"#000":"#666",border:"1px solid "+(cmode==="power"?"#e8900a":"#282828"),borderRadius:2,cursor:"pointer"}},"Power"),
-          React.createElement("button",{onClick:function(){setL("contrastMode","scurve");},style:{padding:"3px 8px",fontSize:9,fontFamily:"monospace",background:cmode==="scurve"?"#e8900a":"#1a1a1a",color:cmode==="scurve"?"#000":"#666",border:"1px solid "+(cmode==="scurve"?"#e8900a":"#282828"),borderRadius:2,cursor:"pointer"}},"S-Curve")
+          React.createElement("button",{onClick:function(){setL("contrastMode","power");},style:{padding:"3px 8px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:cmode==="power"?"var(--panel3)":"var(--panel)",color:cmode==="power"?"#fff":"var(--tg-dim)",border:"1px solid "+(cmode==="power"?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}},"Power"),
+          React.createElement("button",{onClick:function(){setL("contrastMode","scurve");},style:{padding:"3px 8px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:cmode==="scurve"?"var(--panel3)":"var(--panel)",color:cmode==="scurve"?"#fff":"var(--tg-dim)",border:"1px solid "+(cmode==="scurve"?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}},"S-Curve")
         )
       ),
-      React.createElement("div",{style:{fontSize:8,color:"#444",marginBottom:6}},
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:6}},
         cmode==="power"?"v^gamma  —  1=neutral  <1 brighten  >1 darken":"Symmetric sigmoid  —  1=neutral  higher=steeper"
       ),
       SliderC({label:"Gamma / Strength",value:L.contrast!=null?L.contrast:1,min:0.01,max:8,step:0.02,onChange:function(v){setL("contrast",v);}}),
@@ -9130,13 +9104,13 @@ function AdjPanel(p){
 
     // ── Levels ──────────────────────────────────────────────
     React.createElement(Collapse,{id:"adj_levels",title:"Levels",defaultOpen:!!levelsBadge,badge:levelsBadge},
-      React.createElement("div",{style:{fontSize:8,color:"#444",marginBottom:6}},"Input: clips/expands range. Output: remaps to [Lo, Hi]."),
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:6}},"Input: clips/expands range. Output: remaps to [Lo, Hi]."),
       SliderC({label:"Input Lo",value:ri0,min:-0.5,max:0.99,step:0.01,onChange:function(v){setL("remapIn0",Math.min(v,ri1-0.01));}}),
       SliderC({label:"Input Hi",value:ri1,min:0.01,max:1.5,step:0.01,onChange:function(v){setL("remapIn1",Math.max(v,ri0+0.01));}}),
-      React.createElement("div",{style:{position:"relative",height:8,borderRadius:2,background:"linear-gradient(to right,#000,#fff)",marginBottom:8}},
-        React.createElement("div",{style:{position:"absolute",left:(clamp(ri0)*100)+"%",top:0,bottom:0,width:2,background:"#e8900a"}}),
-        React.createElement("div",{style:{position:"absolute",left:(clamp(ri1)*100)+"%",top:0,bottom:0,width:2,background:"#e8900a"}}),
-        React.createElement("div",{style:{position:"absolute",left:(clamp(ri0)*100)+"%",right:((1-clamp(ri1))*100)+"%",top:0,bottom:0,background:"rgba(232,144,10,0.18)"}})
+      React.createElement("div",{style:{position:"relative",height:8,borderRadius:2,background:"linear-gradient(to right,var(--bg),#fff)",marginBottom:8}},
+        React.createElement("div",{style:{position:"absolute",left:(clamp(ri0)*100)+"%",top:0,bottom:0,width:2,background:"var(--txt)"}}),
+        React.createElement("div",{style:{position:"absolute",left:(clamp(ri1)*100)+"%",top:0,bottom:0,width:2,background:"var(--txt)"}}),
+        React.createElement("div",{style:{position:"absolute",left:(clamp(ri0)*100)+"%",right:((1-clamp(ri1))*100)+"%",top:0,bottom:0,background:"var(--panel3)"}})
       ),
       SliderC({label:"Output Lo",value:outLo,min:-0.5,max:0.99,step:0.01,onChange:function(v){setL("outputLo",Math.min(v,outHi-0.01));}}),
       SliderC({label:"Output Hi",value:outHi,min:0.01,max:1.5,step:0.01,onChange:function(v){setL("outputHi",Math.max(v,outLo+0.01));}}),
@@ -9147,16 +9121,16 @@ function AdjPanel(p){
     ),
 
     // ── Blur / Glow ─────────────────────────────────────────
-    React.createElement(Collapse,{id:"adj_blur",title:"Blur / Glow",defaultOpen:!!blurBadge,badge:blurBadge,color:"#ffcc44"},
+    React.createElement(Collapse,{id:"adj_blur",title:"Blur / Glow",defaultOpen:!!blurBadge,badge:blurBadge,color:"var(--txt)"},
       SliderC({label:"Layer Blur",value:L.layerBlur||0,min:0,max:20,step:0.5,fmt:function(v){return v===0?"off":v.toFixed(1)+"px";},onChange:function(v){setL("layerBlur",v);}}),
       SliderC({label:"Layer Glow",value:L.layerGlow||0,min:0,max:20,step:0.5,fmt:function(v){return v===0?"off":v.toFixed(1)+"px";},onChange:function(v){setL("layerGlow",v);}}),
       (L.layerGlow||0)>0?SliderC({label:"Glow Intensity",value:L.layerGlowIntensity!=null?L.layerGlowIntensity:0.5,min:0,max:3,step:0.02,onChange:function(v){setL("layerGlowIntensity",v);}}):null
     ),
 
     // ── Color Ramp ──────────────────────────────────────────
-    React.createElement(Collapse,{id:"adj_color",title:"Color Ramp",defaultOpen:!!colorBadge,badge:colorBadge,color:"#ff6699"},
+    React.createElement(Collapse,{id:"adj_color",title:"Color Ramp",defaultOpen:!!colorBadge,badge:colorBadge,color:"var(--txt)"},
       React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}},
-        React.createElement("span",{style:{fontSize:8,color:"#444",lineHeight:1.5}},"Click bar to add stop. Drag to move."),
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",lineHeight:1.5}},"Click bar to add stop. Drag to move."),
         React.createElement("div",{style:{display:"flex",gap:4}},
           React.createElement(SmBtn,{title:"Reverse gradient",onClick:function(){
             var rev=(L.colorStops||[]).map(function(s){return Object.assign({},s,{pos:1-s.pos});}).reverse();
@@ -9186,8 +9160,8 @@ function AdjPanel(p){
     ),
 
     // ── Post Transform ──────────────────────────────────────
-    React.createElement(Collapse,{id:"adj_post",title:"Post Transform",defaultOpen:!!postBadge,badge:postBadge,color:"#4ab4ff"},
-      React.createElement("div",{style:{fontSize:8,color:"#444",marginBottom:8,lineHeight:1.6}},
+    React.createElement(Collapse,{id:"adj_post",title:"Post Transform",defaultOpen:!!postBadge,badge:postBadge,color:"var(--txt)"},
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:8,lineHeight:1.6}},
         "Applied after all noise, adjust and effects. Scales, rotates and positions the layer output."
       ),
       React.createElement("div",{style:{display:"flex",gap:8}},
@@ -9201,7 +9175,7 @@ function AdjPanel(p){
       SliderC({label:"Rotation",value:L.postRot||0,min:-180,max:180,step:0.5,fmt:function(v){return v===0?"0° (none)":Math.round(v)+"°";},onChange:function(v){setL("postRot",v);}}),
       React.createElement("button",{
         onClick:function(){setL("postTX",0);setL("postTY",0);setL("postSX",1);setL("postSY",1);setL("postRot",0);},
-        style:{width:"100%",padding:"5px",marginTop:4,background:"#1a1a1a",border:"1px solid #282828",color:"#666",fontFamily:"monospace",fontSize:9,cursor:"pointer",borderRadius:3,letterSpacing:0.5}
+        style:{width:"100%",padding:"5px",marginTop:4,background:"var(--panel)",border:"1px solid var(--line)",color:"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3,letterSpacing:0.5}
       },"↺ Reset Post Transform")
     )
   );
@@ -9240,12 +9214,12 @@ function FiltersPanel(p){
     nm[k]=v; p.setLayerMask(nm.type==="none"?null:nm);
   }
   var lmActive=lmask.type&&lmask.type!=="none";
-  var maskSection=React.createElement("div",{style:{marginBottom:12,padding:10,background:"#111",border:"1px solid "+(lmActive?"#3a5a3a":"#1c1c1c"),borderRadius:4}},
+  var maskSection=React.createElement("div",{style:{marginBottom:12,padding:10,background:"var(--bg)",border:"1px solid "+(lmActive?"#8a8a94":"var(--line)"),borderRadius:4}},
     React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:lmActive?8:0}},
-      React.createElement("span",{title:"Mask THIS layer only (the Global panel has a separate whole-image mask)",style:{fontSize:9,color:lmActive?"#a0e060":"#888",textTransform:"uppercase",letterSpacing:1,fontFamily:"monospace"}},"Layer Mask"),
+      React.createElement("span",{title:"Mask THIS layer only (the Global panel has a separate whole-image mask)",style:{fontSize:"var(--fs-s)",color:lmActive?"var(--txt)":"var(--txt2)",textTransform:"uppercase",letterSpacing:1,fontFamily:"inherit"}},"Layer Mask"),
       React.createElement("select",{value:lmask.type||"none",
         onChange:function(e){updLMask("type",e.target.value);p.onCommit&&p.onCommit();},
-        style:{background:"#0e0e0e",color:lmActive?"#a0e060":"#888",border:"1px solid #2a2a2a",borderRadius:3,fontSize:9,fontFamily:"monospace",padding:"3px 6px",cursor:"pointer"}},
+        style:{background:"var(--bg)",color:lmActive?"var(--txt)":"var(--txt2)",border:"1px solid var(--line)",borderRadius:3,fontSize:"var(--fs-s)",fontFamily:"inherit",padding:"3px 6px",cursor:"pointer"}},
         [["none","None"],["vignette","Vignette"],["ellipse","Ellipse"],["box","Box"],["diamond","Diamond"],["radial","Radial"],["linear","Linear"],["edge","Edge"]].map(function(o){
           return React.createElement("option",{key:o[0],value:o[0]},o[1]);
         })
@@ -9268,41 +9242,41 @@ function FiltersPanel(p){
         [["both","RGBA"],["color","RGB"],["alpha","A"]].map(function(o){
           var act=(lmask.apply||"both")===o[0];
           return React.createElement("button",{key:o[0],onClick:function(){updLMask("apply",o[0]);p.onCommit&&p.onCommit();},
-            style:{padding:"3px 8px",fontSize:8,fontFamily:"monospace",background:act?"#a0e060":"#161616",color:act?"#000":"#666",border:"1px solid "+(act?"#a0e060":"#252525"),borderRadius:3,cursor:"pointer"}},o[1]);
+            style:{padding:"3px 8px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:act?"var(--panel3)":"var(--panel)",color:act?"#fff":"var(--tg-dim)",border:"1px solid "+(act?"#8a8a94":"var(--line)"),borderRadius:3,cursor:"pointer"}},o[1]);
         })
       )
     ):null
   );
   return React.createElement("div",null,
-    React.createElement(SHead,{color:"#88ddff"},"Filters"),
+    React.createElement(SHead,{color:"var(--txt)"},"Filters"),
     maskSection,
     // Section tabs
     React.createElement("div",{style:{display:"flex",gap:4,marginBottom:8}},
-      React.createElement("button",{onClick:function(){setSection("this");},style:{flex:1,padding:"5px 0",fontSize:9,fontFamily:"monospace",background:section==="this"?"#e8900a":"#161616",color:section==="this"?"#000":"#555",border:"1px solid "+(section==="this"?"#e8900a":"#252525"),borderRadius:3,cursor:"pointer"}},
+      React.createElement("button",{onClick:function(){setSection("this");},style:{flex:1,padding:"5px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",background:section==="this"?"var(--panel3)":"var(--panel)",color:section==="this"?"#fff":"var(--tg-dim)",border:"1px solid "+(section==="this"?"#8a8a94":"var(--line)"),borderRadius:3,cursor:"pointer"}},
         "◈ "+layerName+(filters.length>0?" ("+filters.length+")":"")),
-      React.createElement("button",{onClick:function(){setSection("all");},style:{flex:1,padding:"5px 0",fontSize:9,fontFamily:"monospace",background:section==="all"?"#4ab4ff":"#161616",color:section==="all"?"#000":"#555",border:"1px solid "+(section==="all"?"#4ab4ff":"#252525"),borderRadius:3,cursor:"pointer"}},
+      React.createElement("button",{onClick:function(){setSection("all");},style:{flex:1,padding:"5px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",background:section==="all"?"var(--panel3)":"var(--panel)",color:section==="all"?"#fff":"var(--tg-dim)",border:"1px solid "+(section==="all"?"#8a8a94":"var(--line)"),borderRadius:3,cursor:"pointer"}},
         "⊞ All Layers"+(globalFilters.length>0?" ("+globalFilters.length+")":""))
     ),
-    section==="all"?React.createElement("div",{style:{fontSize:8,color:"#4ab4ff",marginBottom:8,padding:"4px 8px",background:"rgba(74,180,255,0.07)",borderRadius:3,lineHeight:1.5}},"Applied to every layer before compositing. Persists when you switch layers."):null,
-    section==="this"&&globalFilters.length>0?React.createElement("div",{style:{fontSize:8,color:"#555",marginBottom:8,padding:"3px 8px",background:"#111",borderRadius:3}},globalFilters.length+" filter"+(globalFilters.length>1?"s":"")+" active on all layers. Switch to All Layers tab to edit."):null,
+    section==="all"?React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--txt)",marginBottom:8,padding:"4px 8px",background:"var(--panel3)",borderRadius:3,lineHeight:1.5}},"Applied to every layer before compositing. Persists when you switch layers."):null,
+    section==="this"&&globalFilters.length>0?React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:8,padding:"3px 8px",background:"var(--bg)",borderRadius:3}},globalFilters.length+" filter"+(globalFilters.length>1?"s":"")+" active on all layers. Switch to All Layers tab to edit."):null,
     activeFilters.map(function(f,i){
       var info=FT.find(function(x){return x.v===f.type;});
-      return React.createElement("div",{key:i,style:{background:"#141414",border:"1px solid "+(f.enabled?"#252525":"#1a1a1a"),borderRadius:4,padding:10,marginBottom:8,opacity:f.enabled?1:0.55}},
+      return React.createElement("div",{key:i,style:{background:"var(--bg)",border:"1px solid "+(f.enabled?"var(--line)":"var(--line)"),borderRadius:4,padding:10,marginBottom:8,opacity:f.enabled?1:0.55}},
         React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}},
           React.createElement("div",{style:{display:"flex",alignItems:"center",gap:6}},
-            React.createElement("div",{onClick:function(){upd(i,"enabled",!f.enabled);onCommit();},style:{width:28,height:16,borderRadius:8,background:f.enabled?"#e8900a":"#252525",cursor:"pointer",position:"relative",transition:"background 0.15s",flexShrink:0}},React.createElement("div",{style:{position:"absolute",width:12,height:12,borderRadius:6,background:"#fff",top:2,left:f.enabled?14:2,transition:"left 0.15s"}})),
-            React.createElement("span",{style:{fontSize:10,color:"#ccc",fontFamily:"monospace"}},info?info.l:f.type)
+            React.createElement("div",{onClick:function(){upd(i,"enabled",!f.enabled);onCommit();},style:{width:28,height:16,borderRadius:8,background:f.enabled?"var(--txt)":"var(--panel3)",cursor:"pointer",position:"relative",transition:"background 0.15s",flexShrink:0}},React.createElement("div",{style:{position:"absolute",width:12,height:12,borderRadius:6,background:f.enabled?"var(--bg)":"#8a8a94",top:2,left:f.enabled?14:2,transition:"left 0.15s"}})),
+            React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"inherit"}},info?info.l:f.type)
           ),
           React.createElement("div",{style:{display:"flex",gap:3}},
             React.createElement(SmBtn,{onClick:function(){move(i,-1);}},"▲"),
             React.createElement(SmBtn,{onClick:function(){move(i,1);}},"▼"),
-            section==="this"?React.createElement(SmBtn,{onClick:function(){promoteToAll(i);},title:"Move to All Layers",color:"#4ab4ff"},"→⊞"):null,
-            section==="all"?React.createElement(SmBtn,{onClick:function(){demoteToLayer(i);},title:"Move to current layer only",color:"#e8900a"},"→◈"):null,
-            React.createElement(SmBtn,{onClick:function(){rem(i);},color:"#888"},"×")
+            section==="this"?React.createElement(SmBtn,{onClick:function(){promoteToAll(i);},title:"Move to All Layers",color:"var(--txt)"},"→⊞"):null,
+            section==="all"?React.createElement(SmBtn,{onClick:function(){demoteToLayer(i);},title:"Move to current layer only",color:"var(--txt)"},"→◈"):null,
+            React.createElement(SmBtn,{onClick:function(){rem(i);},color:"var(--txt2)"},"×")
           ),
           // UV distortion pre-filter
           React.createElement("div",{style:{marginTop:8}},
-            React.createElement("span",{style:{fontSize:8,color:"#444",letterSpacing:1,textTransform:"uppercase",display:"block",marginBottom:4}},"Pre-Filter UV Warp"),
+            React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1,textTransform:"uppercase",display:"block",marginBottom:4}},"Pre-Filter UV Warp"),
             React.createElement("select",{value:f.uvDistType||"none",onChange:function(e){upd(i,"uvDistType",e.target.value);},style:Object.assign({},SS,{marginBottom:4})},
               UVT.map(function(o){return React.createElement("option",{key:o.v,value:o.v},o.l);})
             ),
@@ -9331,7 +9305,7 @@ function FiltersPanel(p){
           React.createElement(Sel,{label:"Mode",value:f.caMode||"barrel",opts:[{v:"barrel",l:"Radial (Barrel)"},{v:"lateral",l:"Lateral"}],onChange:function(v){upd(i,"caMode",v);}})
         ):null,
         f.type==="makeTileable"?React.createElement("div",null,
-          React.createElement("div",{style:{fontSize:8,color:"#444",marginBottom:8,lineHeight:1.5}},
+          React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:8,lineHeight:1.5}},
             "4-way quintic blend. Pass 2 smooths residual 1/4-point artifacts."
           ),
           SliderC({label:"Blend Width (0=auto 32%)",value:f.blendWidth||0,min:0,max:128,step:1,
@@ -9341,9 +9315,9 @@ function FiltersPanel(p){
             [{v:1,l:"1 Pass"},{v:2,l:"2 Passes (slower, better)"}].map(function(opt){
               var active=(f.passes||1)===opt.v;
               return React.createElement("button",{key:opt.v,onClick:function(){upd(i,"passes",opt.v);onCommit();},
-                style:{flex:1,padding:"5px 0",fontSize:9,fontFamily:"monospace",
-                  background:active?"#e8900a":"#161616",color:active?"#000":"#555",
-                  border:"1px solid "+(active?"#e8900a":"#252525"),borderRadius:2,cursor:"pointer"}},opt.l);
+                style:{flex:1,padding:"5px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",
+                  background:active?"var(--panel3)":"var(--panel)",color:active?"#fff":"var(--tg-dim)",
+                  border:"1px solid "+(active?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}},opt.l);
             })
           )
         ):null,
@@ -9390,7 +9364,7 @@ function FiltersPanel(p){
       );
     }),
     React.createElement("div",{style:{marginTop:8}},
-      React.createElement("span",{style:{fontSize:8,color:"#444",textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:6}},"Add Filter"),
+      React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:6}},"Add Filter"),
       [
         {group:"Detect",types:[{v:"edgeDetect",l:"Edge"},{v:"normalMap",l:"Normal"},{v:"curvature",l:"Curve"},{v:"emboss",l:"Emboss"}]},
         {group:"Blur",types:[{v:"gaussBlur",l:"Gaussian"},{v:"boxBlur",l:"Box"},{v:"directionalBlur",l:"Direction"},{v:"radialBlur",l:"Radial"},{v:"zoomBlur",l:"Zoom"},{v:"spinBlur",l:"Spin"},{v:"slopeBlur",l:"Slope"}]},
@@ -9399,17 +9373,17 @@ function FiltersPanel(p){
         {group:"FX",types:[{v:"chromatic",l:"Chromatic"},{v:"fxaa",l:"FXAA"},{v:"makeTileable",l:"Tileable"},{v:"polarWrap",l:"Polar"},{v:"pixelize",l:"Pixelize"},{v:"quantize",l:"Quantize"}]}
       ].map(function(grp){
         return React.createElement("div",{key:grp.group,style:{marginBottom:8}},
-          React.createElement("span",{style:{fontSize:7,color:"#333",textTransform:"uppercase",letterSpacing:1.5,display:"block",marginBottom:4}},grp.group),
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",textTransform:"uppercase",letterSpacing:1.5,display:"block",marginBottom:4}},grp.group),
           React.createElement("div",{style:{display:"flex",flexWrap:"wrap",gap:3}},
             grp.types.map(function(ft){
               return React.createElement("button",{key:ft.v,
                 onClick:function(){setActiveFilters(activeFilters.concat([mkFilter(ft.v)]));onCommit();},
                 title:"Add "+ft.l+" filter",
-                style:{padding:"4px 7px",fontSize:8,fontFamily:"monospace",
-                  background:"#141414",border:"1px solid #252525",color:"#666",
+                style:{padding:"4px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",
+                  background:"var(--bg)",border:"1px solid var(--line)",color:"var(--tg-dim)",
                   borderRadius:3,cursor:"pointer",transition:"all 0.08s"},
-                onMouseEnter:function(e){e.currentTarget.style.borderColor="#e8900a";e.currentTarget.style.color="#e8900a";},
-                onMouseLeave:function(e){e.currentTarget.style.borderColor="#252525";e.currentTarget.style.color="#666";}
+                onMouseEnter:function(e){e.currentTarget.style.borderColor="#8a8a94";e.currentTarget.style.color="var(--txt)";},
+                onMouseLeave:function(e){e.currentTarget.style.borderColor="var(--line)";e.currentTarget.style.color="var(--tg-dim)";}
               },ft.l);
             })
           )
@@ -9447,17 +9421,17 @@ function GlobalPanel(p){
     // ── EXPORT (primary action, always visible) ───────────────
     React.createElement("div",{style:{marginBottom:10}},
       React.createElement("button",{onClick:p.onExportPng,
-        style:{width:"100%",padding:"11px 0",background:"#e8900a",border:"none",color:"#000",
-          fontFamily:"monospace",fontSize:12,fontWeight:700,cursor:"pointer",borderRadius:4,letterSpacing:1}},
+        style:{width:"100%",padding:"11px 0",background:"var(--txt)",border:"none",color:"var(--bg)",
+          fontFamily:"inherit",fontSize:"var(--fs)",fontWeight:700,cursor:"pointer",borderRadius:4,letterSpacing:1}},
         "↓ Export PNG ("+(state.exportSize||512)+"px)"),
-      saveStatus?React.createElement("div",{style:{fontSize:9,color:"#a0e060",letterSpacing:1,marginTop:6,textAlign:"center"}},saveStatus):null
+      saveStatus?React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--txt)",letterSpacing:1,marginTop:6,textAlign:"center"}},saveStatus):null
     ),
 
     // ── BATCH EXPORT (multi-resolution) ───────────────────────
-    React.createElement(Collapse,{id:"global_batch",title:"Batch Export (variants)",defaultOpen:false,color:"#44ddcc"},
-      React.createElement("div",{style:{fontSize:8,color:"#555",lineHeight:1.6,marginBottom:8}},
+    React.createElement(Collapse,{id:"global_batch",title:"Batch Export (variants)",defaultOpen:false,color:"var(--txt)"},
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",lineHeight:1.6,marginBottom:8}},
         "Export variants of your current work in one click. A is the texture as-is; B, C, D re-seed every layer for fresh variations. Each saves as its own PNG."),
-      React.createElement("div",{style:{fontSize:7,color:"#444",marginBottom:4,letterSpacing:0.5,textTransform:"uppercase"}},"Variants"),
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:4,letterSpacing:0.5,textTransform:"uppercase"}},"Variants"),
       React.createElement("div",{style:{display:"flex",gap:6,marginBottom:10}},
         ["A","B","C","D"].map(function(lbl,vi){
           var sel=(p.state._batchVariants||[0,1,2,3]).indexOf(vi)!==-1;
@@ -9469,66 +9443,66 @@ function GlobalPanel(p){
               cur.sort(function(a,b){return a-b;});
               setS("_batchVariants",cur);
             },
-            style:{flex:1,padding:"8px 0",fontSize:11,fontFamily:"monospace",fontWeight:700,
-              background:sel?"#44ddcc":"#161616",color:sel?"#000":"#666",
-              border:"1px solid "+(sel?"#44ddcc":"#252525"),borderRadius:3,cursor:"pointer"}},
+            style:{flex:1,padding:"8px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,
+              background:sel?"var(--panel3)":"var(--panel)",color:sel?"#fff":"var(--tg-dim)",
+              border:"1px solid "+(sel?"#8a8a94":"var(--line)"),borderRadius:3,cursor:"pointer"}},
             lbl);
         })
       ),
-      React.createElement("div",{style:{fontSize:7,color:"#444",marginBottom:4,letterSpacing:0.5,textTransform:"uppercase"}},"Size"),
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:4,letterSpacing:0.5,textTransform:"uppercase"}},"Size"),
       React.createElement("div",{style:{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}},
         [256,512,1024,2048].map(function(sz){
           var sel=(p.state._batchSize||1024)===sz;
           return React.createElement("button",{key:sz,
             onClick:function(){setS("_batchSize",sz);},
-            style:{flex:"1 1 22%",padding:"7px 0",fontSize:9,fontFamily:"monospace",
-              background:sel?"#2a6a64":"#161616",color:sel?"#9fe":"#666",
-              border:"1px solid "+(sel?"#44ddcc":"#252525"),borderRadius:3,cursor:"pointer"}},
+            style:{flex:"1 1 22%",padding:"7px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",
+              background:sel?"var(--panel3)":"var(--panel)",color:sel?"var(--txt)":"var(--tg-dim)",
+              border:"1px solid "+(sel?"#8a8a94":"var(--line)"),borderRadius:3,cursor:"pointer"}},
             sz>=1024?(sz/1024)+"k":sz);
         })
       ),
       React.createElement("button",{
         onClick:function(){var v=(p.state._batchVariants||[0,1,2,3]);if(v.length&&p.onBatchExport)p.onBatchExport(v,p.state._batchSize||1024);},
-        style:{width:"100%",padding:"9px 0",background:(p.state._batchVariants||[0,1,2,3]).length?"#44ddcc":"#222",
-          border:"none",color:(p.state._batchVariants||[0,1,2,3]).length?"#000":"#555",
-          fontFamily:"monospace",fontSize:11,fontWeight:700,cursor:"pointer",borderRadius:4,letterSpacing:1}},
+        style:{width:"100%",padding:"9px 0",background:(p.state._batchVariants||[0,1,2,3]).length?"var(--panel3)":"var(--panel2)",
+          border:"none",color:(p.state._batchVariants||[0,1,2,3]).length?"#fff":"var(--tg-dim)",
+          fontFamily:"inherit",fontSize:"var(--fs-s)",fontWeight:700,cursor:"pointer",borderRadius:4,letterSpacing:1}},
         "↓ Export "+((p.state._batchVariants||[0,1,2,3]).length)+" variants")
     ),
 
     // ── NORMAL MAP EXPORT ─────────────────────────────────────
-    React.createElement(Collapse,{id:"global_normal",title:"Normal Map Export",defaultOpen:false,color:"#cc88ff"},
-      React.createElement("div",{style:{fontSize:8,color:"#555",lineHeight:1.6,marginBottom:8}},
+    React.createElement(Collapse,{id:"global_normal",title:"Normal Map Export",defaultOpen:false,color:"var(--txt)"},
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",lineHeight:1.6,marginBottom:8}},
         "Converts the final composite (as height) to a tangent-space normal map. Wrap-around sampling keeps tiling textures seamless. OpenGL convention (Unity default)."),
       React.createElement(Slider,{label:"Bump Strength",value:state.normalStrength!=null?state.normalStrength:2,min:0.2,max:10,step:0.05,
         fmt:function(v){return v.toFixed(2);},onChange:function(v){setS("normalStrength",v);}}),
       React.createElement("button",{onClick:function(){p.onExportNormal&&p.onExportNormal(state.normalStrength!=null?state.normalStrength:2);},
-        style:{width:"100%",padding:"9px 0",background:"#cc88ff",border:"none",color:"#000",
-          fontFamily:"monospace",fontSize:11,fontWeight:700,cursor:"pointer",borderRadius:4,letterSpacing:1}},
+        style:{width:"100%",padding:"9px 0",background:"var(--txt)",border:"none",color:"var(--bg)",
+          fontFamily:"inherit",fontSize:"var(--fs-s)",fontWeight:700,cursor:"pointer",borderRadius:4,letterSpacing:1}},
         "↓ Export Normal Map ("+(state.exportSize||512)+"px)")
     ),
 
     // ── PROJECT FILE (collapsed by default — rare actions) ───
-    React.createElement(Collapse,{id:"global_project",title:"Project File",defaultOpen:false,color:"#a0e060"},
-      React.createElement("div",{style:{fontSize:8,color:"#555",lineHeight:1.6,marginBottom:8}},
+    React.createElement(Collapse,{id:"global_project",title:"Project File",defaultOpen:false,color:"var(--txt)"},
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",lineHeight:1.6,marginBottom:8}},
         "Save/load to browser storage, or export/import as .texgen file."
       ),
       React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5,marginBottom:5}},
-        React.createElement("button",{onClick:onSave,style:{padding:"7px 0",background:"#1a1a1a",border:"1px solid #2a2a2a",color:"#a0e060",fontFamily:"monospace",fontSize:9,cursor:"pointer",borderRadius:3}},"💾 Save"),
-        React.createElement("button",{onClick:onLoad,style:{padding:"7px 0",background:"#1a1a1a",border:"1px solid #2a2a2a",color:"#a0e060",fontFamily:"monospace",fontSize:9,cursor:"pointer",borderRadius:3}},"📂 Load")
+        React.createElement("button",{onClick:onSave,style:{padding:"7px 0",background:"var(--panel)",border:"1px solid var(--line)",color:"var(--txt)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3}},"Save"),
+        React.createElement("button",{onClick:onLoad,style:{padding:"7px 0",background:"var(--panel)",border:"1px solid var(--line)",color:"var(--txt)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3}},"Load")
       ),
       React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5,marginBottom:5}},
-        React.createElement("button",{onClick:p.onExportProject,style:{padding:"7px 0",background:"#1a1a1a",border:"1px solid #4ab4ff",color:"#4ab4ff",fontFamily:"monospace",fontSize:9,cursor:"pointer",borderRadius:3}},"↓ Export .texgen"),
-        React.createElement("button",{onClick:p.onImportProject,style:{padding:"7px 0",background:"#1a1a1a",border:"1px solid #4ab4ff",color:"#4ab4ff",fontFamily:"monospace",fontSize:9,cursor:"pointer",borderRadius:3}},"↑ Import .texgen")
+        React.createElement("button",{onClick:p.onExportProject,style:{padding:"7px 0",background:"var(--panel)",border:"1px solid #8a8a94",color:"var(--txt)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3}},"↓ Export .texgen"),
+        React.createElement("button",{onClick:p.onImportProject,style:{padding:"7px 0",background:"var(--panel)",border:"1px solid #8a8a94",color:"var(--txt)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3}},"↑ Import .texgen")
       ),
       React.createElement("button",{onClick:onNew,
-        style:{width:"100%",padding:"6px 0",background:"none",border:"1px solid #333",color:"#666",fontFamily:"monospace",fontSize:9,cursor:"pointer",borderRadius:3,marginTop:3}},
+        style:{width:"100%",padding:"6px 0",background:"none",border:"1px solid var(--line2)",color:"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3,marginTop:3}},
         "✕ New project")
     ),
 
     // ── EXPORT SETTINGS ──────────────────────────────────────
     React.createElement(Collapse,{id:"global_settings",title:"Output Settings",defaultOpen:false},
       React.createElement(Sel,{label:"Export Size",value:state.exportSize||512,opts:[{v:256,l:"256 px"},{v:512,l:"512 px"},{v:1024,l:"1024 px"},{v:2048,l:"2048 px"}],onChange:function(v){setS("exportSize",parseInt(v));}}),
-      React.createElement("div",{style:{fontSize:8,color:"#444",marginBottom:10,lineHeight:1.5}},"Preview always renders at the selected resolution above the canvas. Export uses this size."),
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:10,lineHeight:1.5}},"Preview always renders at the selected resolution above the canvas. Export uses this size."),
       // Anti-banding dither
       React.createElement("div",{style:{marginBottom:10}},
         React.createElement("span",{style:LS},"Anti-Banding Dither"),
@@ -9538,11 +9512,11 @@ function GlobalPanel(p){
             return React.createElement("button",{key:o[0],
               title:"TPDF dither: adds "+o[1]+" LSB of triangular noise before 8-bit quantization to remove banding in smooth gradients",
               onClick:function(){setS("exportDither",o[1]);},
-              style:{flex:1,padding:"5px 0",fontSize:9,fontFamily:"monospace",background:act?"#44ddcc":"#161616",
-                color:act?"#000":"#666",border:"1px solid "+(act?"#44ddcc":"#252525"),borderRadius:3,cursor:"pointer"}},o[0]);
+              style:{flex:1,padding:"5px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",background:act?"var(--panel3)":"var(--panel)",
+                color:act?"#fff":"var(--tg-dim)",border:"1px solid "+(act?"#8a8a94":"var(--line)"),borderRadius:3,cursor:"pointer"}},o[0]);
           })
         ),
-        React.createElement("div",{style:{fontSize:8,color:"#444",lineHeight:1.5}},"Applied on PNG export only (not normal maps). Removes hard steps in very smooth gradients. \"Normal\" suits most cases.")
+        React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",lineHeight:1.5}},"Applied on PNG export only (not normal maps). Removes hard steps in very smooth gradients. \"Normal\" suits most cases.")
       ),
       React.createElement("div",{style:{marginBottom:10}},
         React.createElement("span",{style:LS},"Color Space"),
@@ -9556,7 +9530,7 @@ function GlobalPanel(p){
     // ── GLOBAL BLUR (collapsed if inactive) ─────────────────
     React.createElement(Collapse,{id:"global_blur",title:"Global Blur",defaultOpen:blurActive,
       badge:blurActive?(state.blurRadius.toFixed(1)+"px"):null},
-      React.createElement("div",{style:{fontSize:8,color:"#444",marginBottom:6}},"Applied to the entire composited image after all layers."),
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:6}},"Applied to the entire composited image after all layers."),
       SliderC({label:"Radius",value:state.blurRadius||0,min:0,max:30,step:0.5,
         fmt:function(v){return v===0?"off":v.toFixed(1)+"px";},
         onChange:function(v){setS("blurRadius",v);}})
@@ -9564,8 +9538,8 @@ function GlobalPanel(p){
 
     // ── GLOBAL GLOW (collapsed if inactive) ─────────────────
     React.createElement(Collapse,{id:"global_glow",title:"Glow / Bloom",defaultOpen:glowActive,
-      badge:glowActive?"active":null,color:"#ffcc44"},
-      React.createElement("div",{style:{fontSize:8,color:"#444",marginBottom:6}},"Bloom on composited image. Simulates emissive light spread."),
+      badge:glowActive?"active":null,color:"var(--txt)"},
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:6}},"Bloom on composited image. Simulates emissive light spread."),
       SliderC({label:"Radius",value:state.glowRadius||0,min:0,max:30,step:0.5,
         fmt:function(v){return v===0?"off":v.toFixed(1)+"px";},
         onChange:function(v){setS("glowRadius",v);}}),
@@ -9578,8 +9552,8 @@ function GlobalPanel(p){
         React.createElement("div",{style:{marginBottom:8}},
           React.createElement("span",{style:LS},"Blend"),
           React.createElement("div",{style:{display:"flex",gap:4}},
-            React.createElement("button",{onClick:function(){setS("glowBlend","add");onCommit();},style:{flex:1,padding:"5px 0",fontSize:9,fontFamily:"monospace",background:(state.glowBlend||"add")==="add"?"#ffcc44":"#1a1a1a",color:(state.glowBlend||"add")==="add"?"#000":"#666",border:"1px solid "+((state.glowBlend||"add")==="add"?"#ffcc44":"#282828"),borderRadius:3,cursor:"pointer"}},"Add (Emissive)"),
-            React.createElement("button",{onClick:function(){setS("glowBlend","screen");onCommit();},style:{flex:1,padding:"5px 0",fontSize:9,fontFamily:"monospace",background:state.glowBlend==="screen"?"#ffcc44":"#1a1a1a",color:state.glowBlend==="screen"?"#000":"#666",border:"1px solid "+(state.glowBlend==="screen"?"#ffcc44":"#282828"),borderRadius:3,cursor:"pointer"}},"Screen (Soft)")
+            React.createElement("button",{onClick:function(){setS("glowBlend","add");onCommit();},style:{flex:1,padding:"5px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",background:(state.glowBlend||"add")==="add"?"var(--panel3)":"var(--panel)",color:(state.glowBlend||"add")==="add"?"#fff":"var(--tg-dim)",border:"1px solid "+((state.glowBlend||"add")==="add"?"#8a8a94":"var(--line)"),borderRadius:3,cursor:"pointer"}},"Add (Emissive)"),
+            React.createElement("button",{onClick:function(){setS("glowBlend","screen");onCommit();},style:{flex:1,padding:"5px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",background:state.glowBlend==="screen"?"var(--panel3)":"var(--panel)",color:state.glowBlend==="screen"?"#fff":"var(--tg-dim)",border:"1px solid "+(state.glowBlend==="screen"?"#8a8a94":"var(--line)"),borderRadius:3,cursor:"pointer"}},"Screen (Soft)")
           )
         ),
         React.createElement("div",{style:{marginBottom:6}},
@@ -9597,8 +9571,8 @@ function GlobalPanel(p){
     // ── GLOBAL ADJUSTMENTS (tone/color on the whole composite) ──
     React.createElement(Collapse,{id:"global_adjust",title:"Global Adjustments",
       defaultOpen:!!(state.gBrightness||state.gContrast&&state.gContrast!==1||state.gSaturation&&state.gSaturation!==1||state.gVignette||state.gHue),
-      badge:(state.gBrightness||(state.gContrast&&state.gContrast!==1)||(state.gSaturation&&state.gSaturation!==1)||state.gVignette||state.gHue)?"active":null,color:"#66ccff"},
-      React.createElement("div",{style:{fontSize:8,color:"#444",marginBottom:6}},"Tone and color applied to the whole image, after glow."),
+      badge:(state.gBrightness||(state.gContrast&&state.gContrast!==1)||(state.gSaturation&&state.gSaturation!==1)||state.gVignette||state.gHue)?"active":null,color:"var(--txt)"},
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:6}},"Tone and color applied to the whole image, after glow."),
       SliderC({label:"Brightness",value:state.gBrightness||0,min:-1,max:1,step:0.01,resetTo:0,
         fmt:function(v){return v===0?"0":(v>0?"+":"")+v.toFixed(2);},onChange:function(v){setS("gBrightness",v);}}),
       SliderC({label:"Contrast",value:state.gContrast!=null?state.gContrast:1,min:0,max:3,step:0.02,resetTo:1,
@@ -9635,14 +9609,14 @@ function GlobalPanel(p){
         React.createElement(Slider,{label:"Strength",value:state.mask.strength!=null?state.mask.strength:1,min:0,max:2,step:0.01,onChange:function(v){updMask("strength",v);}}),
         React.createElement(Tog,{label:"Invert",value:!!state.mask.invert,onChange:function(v){updMask("invert",v);}}),
         React.createElement("div",{style:{marginBottom:10}},
-          React.createElement("span",{style:{fontSize:9,color:"#555",letterSpacing:1.2,textTransform:"uppercase",display:"block",marginBottom:6}},"Apply To"),
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1.2,textTransform:"uppercase",display:"block",marginBottom:6}},"Apply To"),
           React.createElement("div",{style:{display:"flex",gap:4}},
             [{v:"both",l:"RGB + Alpha"},{v:"color",l:"RGB only"},{v:"alpha",l:"Alpha only"}].map(function(o){
               var active=(state.mask.apply||"both")===o.v;
               return React.createElement("button",{key:o.v,onClick:function(){updMask("apply",o.v);},style:{
-                flex:1,padding:"5px 4px",fontSize:9,fontFamily:"monospace",textAlign:"center",
-                background:active?"#e8900a":"#161616",color:active?"#000":"#555",
-                border:"1px solid "+(active?"#e8900a":"#252525"),borderRadius:3,cursor:"pointer"
+                flex:1,padding:"5px 4px",fontSize:"var(--fs-s)",fontFamily:"inherit",textAlign:"center",
+                background:active?"var(--panel3)":"var(--panel)",color:active?"#fff":"var(--tg-dim)",
+                border:"1px solid "+(active?"#8a8a94":"var(--line)"),borderRadius:3,cursor:"pointer"
               }},o.l);
             })
           )
@@ -9658,7 +9632,7 @@ function GlobalPanel(p){
         ):null,
         (state.mask.type==="linear"||state.mask.type==="diamond")?React.createElement(Slider,{label:"Angle",value:state.mask.angle||0,min:-180,max:180,step:1,fmt:function(v){return Math.round(v)+"°";},onChange:function(v){updMask("angle",v);}}):null,
         React.createElement(SHead,null,"UV Distortion"),
-        React.createElement("select",{value:state.mask.uvDistType||"none",onChange:function(e){updMask("uvDistType",e.target.value);},style:{width:"100%",background:"#161616",border:"1px solid #252525",color:"#ccc",padding:"6px 8px",fontSize:12,fontFamily:"monospace",borderRadius:3,boxSizing:"border-box",marginBottom:8}},
+        React.createElement("select",{value:state.mask.uvDistType||"none",onChange:function(e){updMask("uvDistType",e.target.value);},style:{width:"100%",background:"var(--panel)",border:"1px solid var(--line)",color:"var(--txt)",padding:"6px 8px",fontSize:"var(--fs)",fontFamily:"inherit",borderRadius:3,boxSizing:"border-box",marginBottom:8}},
           [{v:"none",l:"None"},{v:"noise",l:"Noise Warp"},{v:"fbmNoise",l:"fBm Warp"},{v:"swirl",l:"Swirl"},{v:"twist",l:"Twist"},{v:"pinch",l:"Pinch"},{v:"bulge",l:"Bulge"},{v:"ripple",l:"Ripple"},{v:"fisheye",l:"Fisheye"}].map(function(o){return React.createElement("option",{key:o.v,value:o.v},o.l);})
         ),
         state.mask.uvDistType&&state.mask.uvDistType!=="none"?React.createElement("div",null,
@@ -9670,10 +9644,10 @@ function GlobalPanel(p){
 
     // ── KEYBOARD SHORTCUTS (collapsed by default) ───────────
     React.createElement(Collapse,{id:"global_kbd",title:"Keyboard Shortcuts",defaultOpen:false},
-      React.createElement("div",{style:{display:"grid",gridTemplateColumns:"auto 1fr",gap:"3px 12px",fontSize:9,lineHeight:1.8}},
+      React.createElement("div",{style:{display:"grid",gridTemplateColumns:"auto 1fr",gap:"3px 12px",fontSize:"var(--fs-s)",lineHeight:1.8}},
         ["Ctrl+Z","Undo","Ctrl+Y","Redo","Ctrl+S","Save",
          "1–6","Switch tab","[ ]","Prev/next tab",
-         "Alt+1–8","Select layer","Q W","Prev/next layer",
+         "Alt+1–8",(EMBED?"Switch Studio mode":"Select layer"),"Q W","Prev/next layer",
          "R","Randomize seed","A","Randomize all seeds",
          "D","Duplicate layer","H","Toggle enabled","C","Copy layer","V","Paste layer",
          "X","Reset layer","S","Solo/unsolo layer","Esc","Exit solo",
@@ -9683,10 +9657,10 @@ function GlobalPanel(p){
          "2×click","Reset slider","Scroll","Nudge slider","R-click","Context menu"
         ].map(function(txt,i){
           return React.createElement("span",{key:i,style:{
-            color:i%2===0?"#e8900a":"#666",
-            fontFamily:"monospace",
+            color:i%2===0?"var(--txt)":"var(--tg-dim)",
+            fontFamily:"inherit",
             fontWeight:i%2===0?"700":"400",
-            fontSize:i%2===0?10:9
+            fontSize:i%2===0?"var(--fs-s)":"var(--fs-s)"
           }},txt);
         })
       )
@@ -9697,39 +9671,39 @@ function GlobalPanel(p){
 // ═══ SPRITE PANEL ═══════════════════════════════════════════════
 function SpritePanel(p){
   var state=p.state,setS=p.setS,copyLayersToSlot=p.copyLayersToSlot;
-  var sc=["#e8900a","#4ab4ff","#a0e060","#ff6699"];
+  var sc=["#e6e6e8","#b4b4bb","#8a8a94","#6a6a74"];
   return React.createElement("div",null,
-    React.createElement(SHead,{color:"#ff6699"},"⊞ Spritesheet 2×2"),
-    React.createElement("div",{style:{fontSize:8,color:"#444",lineHeight:1.6,marginBottom:12}},"Pack 4 independent textures into a single atlas. Useful for flipbook VFX, material channels, or Illugen-style channel-packed maps."),
+    React.createElement(SHead,{color:"var(--txt)"},"⊞ Spritesheet 2×2"),
+    React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",lineHeight:1.6,marginBottom:12}},"Pack 4 independent textures into a single atlas. Useful for flipbook VFX, material channels, or Illugen-style channel-packed maps."),
     React.createElement(Tog,{label:"Spritesheet Mode",value:!!state.spritesheetMode,onChange:function(v){setS("spritesheetMode",v);}}),
     state.spritesheetMode?React.createElement("div",null,
       React.createElement(Sep,null),
       React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:12}},
         ["1","2","3","4"].map(function(lbl,i){
           var act=state.activeSlotIdx===i;
-          return React.createElement("div",{key:i,onClick:function(){setS("activeSlotIdx",i);},style:{padding:"12px 8px",textAlign:"center",cursor:"pointer",background:act?"#1e1e1e":"#141414",border:"2px solid "+(act?sc[i]:"#252525"),borderRadius:4,transition:"all 0.12s"}},
-            React.createElement("div",{style:{fontSize:20,fontWeight:700,color:act?sc[i]:"#444",marginBottom:4}},lbl),
-            React.createElement("div",{style:{fontSize:9,color:"#555"}},state.slots[i].layers.length+" layer"+(state.slots[i].layers.length!==1?"s":"")),
-            act?React.createElement("div",{style:{fontSize:8,color:sc[i],marginTop:3,letterSpacing:1}},"● ACTIVE"):null
+          return React.createElement("div",{key:i,onClick:function(){setS("activeSlotIdx",i);},style:{padding:"12px 8px",textAlign:"center",cursor:"pointer",background:act?"var(--panel2)":"var(--bg)",border:"2px solid "+(act?sc[i]:"var(--line)"),borderRadius:4,transition:"all 0.12s"}},
+            React.createElement("div",{style:{fontSize:20,fontWeight:700,color:act?sc[i]:"var(--tg-dim)",marginBottom:4}},lbl),
+            React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)"}},state.slots[i].layers.length+" layer"+(state.slots[i].layers.length!==1?"s":"")),
+            act?React.createElement("div",{style:{fontSize:"var(--fs-s)",color:sc[i],marginTop:3,letterSpacing:1}},"● ACTIVE"):null
           );
         })
       ),
       React.createElement("div",{style:{display:"flex",gap:6}},
-        React.createElement("button",{onClick:function(){copyLayersToSlot(state.activeSlotIdx);},style:{flex:1,padding:"7px",background:"#161616",border:"1px solid #282828",color:"#888",fontFamily:"monospace",fontSize:10,cursor:"pointer",borderRadius:3}},"Copy main→slot"),
-        React.createElement("button",{onClick:function(){var ns=state.slots.slice();ns[state.activeSlotIdx]=mkSlot(state.activeSlotIdx,Math.random()*99999|0);setS("slots",ns);},style:{flex:1,padding:"7px",background:"#161616",border:"1px solid #282828",color:"#666",fontFamily:"monospace",fontSize:10,cursor:"pointer",borderRadius:3}},"Reset slot")
+        React.createElement("button",{onClick:function(){copyLayersToSlot(state.activeSlotIdx);},style:{flex:1,padding:"7px",background:"var(--panel)",border:"1px solid var(--line)",color:"var(--txt2)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3}},"Copy main→slot"),
+        React.createElement("button",{onClick:function(){var ns=state.slots.slice();ns[state.activeSlotIdx]=mkSlot(state.activeSlotIdx,Math.random()*99999|0);setS("slots",ns);},style:{flex:1,padding:"7px",background:"var(--panel)",border:"1px solid var(--line)",color:"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3}},"Reset slot")
       ),
       React.createElement(Sep,null),
       // ── Channel-packed export: slot N -> channel N ──
-      React.createElement("div",{style:{fontSize:8,color:"#555",lineHeight:1.6,marginBottom:8}},
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",lineHeight:1.6,marginBottom:8}},
         "Channel packing: exports the 4 slots as ONE texture at full resolution — slot 1 luminance → ",
-        React.createElement("span",{style:{color:"#ff6666"}},"R"),", slot 2 → ",
-        React.createElement("span",{style:{color:"#66dd66"}},"G"),", slot 3 → ",
-        React.createElement("span",{style:{color:"#4ab4ff"}},"B"),", slot 4 → ",
-        React.createElement("span",{style:{color:"#cc88ff"}},"A"),
+        React.createElement("span",{style:{color:"var(--err)"}},"R"),", slot 2 → ",
+        React.createElement("span",{style:{color:"var(--txt)"}},"G"),", slot 3 → ",
+        React.createElement("span",{style:{color:"var(--txt)"}},"B"),", slot 4 → ",
+        React.createElement("span",{style:{color:"var(--txt)"}},"A"),
         ". The standard packed-mask workflow for shader channels (erosion, dissolve, detail, alpha)."),
       React.createElement("button",{onClick:function(){p.onExportPacked&&p.onExportPacked();},
-        style:{width:"100%",padding:"9px 0",background:"#ff6699",border:"none",color:"#000",
-          fontFamily:"monospace",fontSize:11,fontWeight:700,cursor:"pointer",borderRadius:4,letterSpacing:1}},
+        style:{width:"100%",padding:"9px 0",background:"var(--txt)",border:"none",color:"var(--bg)",
+          fontFamily:"inherit",fontSize:"var(--fs-s)",fontWeight:700,cursor:"pointer",borderRadius:4,letterSpacing:1}},
         "↓ Export Packed RGBA ("+(state.exportSize||512)+"px)")
     ):null
   );
@@ -9780,13 +9754,13 @@ function FavoritesPanel(p){
   function rem(i){var nf=favs.slice();nf.splice(i,1);setFavs(nf);}
 
   return React.createElement("div",null,
-    React.createElement(SHead,{color:"#ffdd44"},"★ Favorites"),
-    React.createElement("div",{style:{fontSize:8,color:"#444",marginBottom:10,lineHeight:1.6}},
+    React.createElement(SHead,{color:"var(--txt)"},"★ Favorites"),
+    React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:10,lineHeight:1.6}},
       "Pin any parameter for quick access. Changes here update the layer in real-time."
     ),
     // Add new favorite
-    React.createElement("div",{style:{background:"#141414",border:"1px solid #1e1e1e",borderRadius:4,padding:8,marginBottom:12}},
-      React.createElement("span",{style:{fontSize:8,color:"#555",textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:6}},"Pin parameter"),
+    React.createElement("div",{style:{background:"var(--bg)",border:"1px solid var(--line)",borderRadius:4,padding:8,marginBottom:12}},
+      React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:6}},"Pin parameter"),
       React.createElement("div",{style:{display:"flex",gap:5,marginBottom:5}},
         React.createElement("select",{value:addFavLayer,onChange:function(e){setAddFavLayer(parseInt(e.target.value));},style:Object.assign({},SS,{flex:1,marginBottom:0})},
           layers.map(function(l,i){return React.createElement("option",{key:i,value:i},l.label||"L"+(i+1));})
@@ -9801,26 +9775,26 @@ function FavoritesPanel(p){
         // Avoid duplicate
         var exists=favs.some(function(f){return f.layerIdx===addFavLayer&&f.param===addFavParam;});
         if(!exists)setFavs(favs.concat([{layerIdx:addFavLayer,param:addFavParam,label:label}]));
-      },style:{width:"100%",padding:"6px",background:"#ffdd44",border:"none",color:"#000",fontFamily:"monospace",fontSize:10,fontWeight:700,cursor:"pointer",borderRadius:3}},"★ Pin")
+      },style:{width:"100%",padding:"6px",background:"var(--txt)",border:"none",color:"var(--bg)",fontFamily:"inherit",fontSize:"var(--fs-s)",fontWeight:700,cursor:"pointer",borderRadius:3}},"★ Pin")
     ),
     // Favorites list
-    favs.length===0?React.createElement("div",{style:{fontSize:9,color:"#333",textAlign:"center",padding:20}},"No favorites yet. Pin parameters above."):null,
+    favs.length===0?React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",textAlign:"center",padding:20}},"No favorites yet. Pin parameters above."):null,
     favs.map(function(fav,i){
       var layer=layers[fav.layerIdx];
       if(!layer)return null;
       var def=FAV_PARAMS.find(function(x){return x.id===fav.param;})||{id:fav.param,label:fav.param,min:0,max:1,step:0.01};
       var val=layer[def.id];
       if(val==null)val=(def.min+def.max)*0.5;
-      return React.createElement("div",{key:i,style:{background:"#141414",border:"1px solid #1e1e1e",borderRadius:4,padding:"8px 10px",marginBottom:6}},
+      return React.createElement("div",{key:i,style:{background:"var(--bg)",border:"1px solid var(--line)",borderRadius:4,padding:"8px 10px",marginBottom:6}},
         React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}},
-          React.createElement("span",{style:{fontSize:9,color:"#ffdd44",fontFamily:"monospace"}},fav.label),
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"inherit"}},fav.label),
           React.createElement(SmBtn,{onClick:function(){rem(i);}},"✕")
         ),
         React.createElement("div",{style:{display:"flex",gap:6,alignItems:"center"}},
           React.createElement("input",{type:"range",min:def.min,max:def.max,step:def.step,value:val,
             onChange:function(e){updL(fav.layerIdx,def.id,parseFloat(e.target.value));},
-            style:{flex:1,accentColor:"#ffdd44",height:3,cursor:"pointer"}}),
-          React.createElement("span",{style:{fontSize:10,color:"#ffdd44",fontFamily:"monospace",minWidth:36,textAlign:"right"}},
+            style:{flex:1,accentColor:"#9a9aa2",height:3,cursor:"pointer"}}),
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"inherit",minWidth:36,textAlign:"right"}},
             def.step>=1?Math.round(val):val.toFixed(2))
         )
       );
@@ -10092,39 +10066,39 @@ function ImportFlipbookUI(p){
     setPendingFile(null);
   }
 
-  return React.createElement("div",{style:{background:compact?"#0e0e0e":"#141414",border:"1px dashed "+(compact?"#1e1e1e":"#2a2a2a"),borderRadius:4,padding:compact?8:12,marginBottom:10}},
-    compact?null:React.createElement("div",{style:{fontSize:8,color:"#555",marginBottom:10,lineHeight:1.6}},
+  return React.createElement("div",{style:{background:compact?"var(--bg)":"var(--bg)",border:"1px dashed "+(compact?"var(--line)":"var(--line)"),borderRadius:4,padding:compact?8:12,marginBottom:10}},
+    compact?null:React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:10,lineHeight:1.6}},
       "Import a sprite sheet to play it back with live post-processing. Filters apply per-frame."),
     // Grid size
     // Grid size with stepper buttons (mobile-friendly)
     React.createElement("div",{style:{marginBottom:10}},
-      React.createElement("div",{style:{fontSize:7,color:"#555",marginBottom:6,textTransform:"uppercase",letterSpacing:1}},"Grid Layout"),
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:6,textTransform:"uppercase",letterSpacing:1}},"Grid Layout"),
       React.createElement("div",{style:{display:"flex",gap:6,alignItems:"center"}},
         // Cols stepper
-        React.createElement("div",{style:{flex:1,background:"#111",border:"1px solid #2a2a2a",borderRadius:4,padding:6}},
-          React.createElement("div",{style:{fontSize:7,color:"#444",textAlign:"center",marginBottom:4}},"Columns"),
+        React.createElement("div",{style:{flex:1,background:"var(--bg)",border:"1px solid var(--line)",borderRadius:4,padding:6}},
+          React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",textAlign:"center",marginBottom:4}},"Columns"),
           React.createElement("div",{style:{display:"flex",alignItems:"center",justifyContent:"center",gap:6}},
             React.createElement("button",{onClick:function(){setCols(function(v){return Math.max(1,v-1);});},
-              style:{width:32,height:32,background:"#1a1a1a",border:"1px solid #333",color:"#888",borderRadius:3,cursor:"pointer",fontSize:18,lineHeight:1,padding:0}},"-"),
-            React.createElement("span",{style:{fontSize:18,fontFamily:"monospace",color:"#ccc",minWidth:28,textAlign:"center",fontWeight:700}},cols),
+              style:{width:32,height:32,background:"var(--panel)",border:"1px solid var(--line2)",color:"var(--txt2)",borderRadius:3,cursor:"pointer",fontSize:18,lineHeight:1,padding:0}},"-"),
+            React.createElement("span",{style:{fontSize:18,fontFamily:"inherit",color:"var(--txt)",minWidth:28,textAlign:"center",fontWeight:700}},cols),
             React.createElement("button",{onClick:function(){setCols(function(v){return Math.min(32,v+1);});},
-              style:{width:32,height:32,background:"#1a1a1a",border:"1px solid #333",color:"#888",borderRadius:3,cursor:"pointer",fontSize:18,lineHeight:1,padding:0}},"+")
+              style:{width:32,height:32,background:"var(--panel)",border:"1px solid var(--line2)",color:"var(--txt2)",borderRadius:3,cursor:"pointer",fontSize:18,lineHeight:1,padding:0}},"+")
           )
         ),
-        React.createElement("span",{style:{color:"#333",fontSize:16,fontWeight:700}},"×"),
+        React.createElement("span",{style:{color:"var(--tg-dim)",fontSize:16,fontWeight:700}},"×"),
         // Rows stepper
-        React.createElement("div",{style:{flex:1,background:"#111",border:"1px solid #2a2a2a",borderRadius:4,padding:6}},
-          React.createElement("div",{style:{fontSize:7,color:"#444",textAlign:"center",marginBottom:4}},"Rows"),
+        React.createElement("div",{style:{flex:1,background:"var(--bg)",border:"1px solid var(--line)",borderRadius:4,padding:6}},
+          React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",textAlign:"center",marginBottom:4}},"Rows"),
           React.createElement("div",{style:{display:"flex",alignItems:"center",justifyContent:"center",gap:6}},
             React.createElement("button",{onClick:function(){setRows(function(v){return Math.max(1,v-1);});},
-              style:{width:32,height:32,background:"#1a1a1a",border:"1px solid #333",color:"#888",borderRadius:3,cursor:"pointer",fontSize:18,lineHeight:1,padding:0}},"-"),
-            React.createElement("span",{style:{fontSize:18,fontFamily:"monospace",color:"#ccc",minWidth:28,textAlign:"center",fontWeight:700}},rows),
+              style:{width:32,height:32,background:"var(--panel)",border:"1px solid var(--line2)",color:"var(--txt2)",borderRadius:3,cursor:"pointer",fontSize:18,lineHeight:1,padding:0}},"-"),
+            React.createElement("span",{style:{fontSize:18,fontFamily:"inherit",color:"var(--txt)",minWidth:28,textAlign:"center",fontWeight:700}},rows),
             React.createElement("button",{onClick:function(){setRows(function(v){return Math.min(32,v+1);});},
-              style:{width:32,height:32,background:"#1a1a1a",border:"1px solid #333",color:"#888",borderRadius:3,cursor:"pointer",fontSize:18,lineHeight:1,padding:0}},"+")
+              style:{width:32,height:32,background:"var(--panel)",border:"1px solid var(--line2)",color:"var(--txt2)",borderRadius:3,cursor:"pointer",fontSize:18,lineHeight:1,padding:0}},"+")
           )
         ),
-        React.createElement("div",{style:{textAlign:"center",color:"#555",fontSize:8,fontFamily:"monospace",lineHeight:1.4}},
-          React.createElement("span",{style:{display:"block",fontSize:14,color:"#888",fontWeight:700}},cols*rows),
+        React.createElement("div",{style:{textAlign:"center",color:"var(--tg-dim)",fontSize:"var(--fs-s)",fontFamily:"inherit",lineHeight:1.4}},
+          React.createElement("span",{style:{display:"block",fontSize:"var(--fs-l)",color:"var(--txt2)",fontWeight:700}},cols*rows),
           "frames")
       )
     ),
@@ -10148,11 +10122,11 @@ function ImportFlipbookUI(p){
               setPendingFile(f);setErr("");
             }
           },
-          style:{padding:"10px 12px",background:"#111",border:"2px dashed "+(pendingFile?"#ff9966":"#252525"),
+          style:{padding:"10px 12px",background:"var(--bg)",border:"2px dashed "+(pendingFile?"#8a8a94":"var(--line)"),
           borderRadius:4,textAlign:"center",transition:"border-color 0.15s"}},
-          React.createElement("div",{style:{fontSize:9,color:pendingFile?"#ff9966":"#444",fontFamily:"monospace",marginBottom:pendingFile?2:0}},
+          React.createElement("div",{style:{fontSize:"var(--fs-s)",color:pendingFile?"var(--txt)":"var(--tg-dim)",fontFamily:"inherit",marginBottom:pendingFile?2:0}},
             pendingFile?"File: "+pendingFile.name:"Tap to select — or drag & drop the sheet here"),
-          pendingFile?React.createElement("div",{style:{fontSize:7,color:"#555"}},
+          pendingFile?React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)"}},
             "PNG or JPG · "+cols+"×"+rows+" grid · "+cols*rows+" frames"):null
         ),
         React.createElement("input",{ref:fileRef,type:"file",accept:"image/*",
@@ -10160,13 +10134,13 @@ function ImportFlipbookUI(p){
           style:{position:"absolute",width:"1px",height:"1px",opacity:0,overflow:"hidden",clip:"rect(0,0,0,0)"}})
       )
     ),
-    err?React.createElement("div",{style:{fontSize:8,color:"#ff6666",marginBottom:6}},err):null,
+    err?React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--err)",marginBottom:6}},err):null,
     React.createElement("button",{
       onClick:doImport,
       disabled:!pendingFile,
-      style:{width:"100%",padding:"9px 0",background:pendingFile?"#ff9966":"#1a1a1a",
-        border:"1px solid "+(pendingFile?"#ff9966":"#252525"),
-        color:pendingFile?"#000":"#444",fontFamily:"monospace",fontSize:10,
+      style:{width:"100%",padding:"9px 0",background:pendingFile?"var(--panel3)":"var(--panel)",
+        border:"1px solid "+(pendingFile?"#8a8a94":"var(--line)"),
+        color:pendingFile?"#fff":"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",
         fontWeight:pendingFile?700:400,cursor:pendingFile?"pointer":"default",borderRadius:3}
     },pendingFile?"Import "+cols*rows+" Frames":"Select a file above")
   );
@@ -10241,7 +10215,7 @@ function AnimPanel(p){
   // Playback
   useEffect(function(){
     if(!playing){if(playTimer.current)clearInterval(playTimer.current);return;}
-    playTimer.current=setInterval(function(){setFrame(function(f){return(f+1)%totalFramesActual;});},Math.round(1000/fps));
+    playTimer.current=setInterval(function(){if(window.__tgPaused)return;setFrame(function(f){return(f+1)%totalFramesActual;});},Math.round(1000/fps));
     return function(){clearInterval(playTimer.current);};
   },[playing,fps,totalFrames]);
 
@@ -10254,19 +10228,19 @@ function AnimPanel(p){
   var groups=["All"].concat(Array.from(new Set(ANIM_PARAMS.map(function(x){return x.group||"Other";}))));
   var filteredParams=filterGroup==="All"?ANIM_PARAMS:ANIM_PARAMS.filter(function(x){return x.group===filterGroup;});
 
-  var iconStyle={padding:"4px 8px",background:"none",border:"none",cursor:"pointer",fontFamily:"monospace",fontSize:11};
+  var iconStyle={padding:"4px 8px",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit",fontSize:"var(--fs-s)"};
 
   return React.createElement("div",null,
-    React.createElement(SHead,{color:"#ff9966"},"Flipbook Animation"),
+    React.createElement(SHead,{color:"var(--txt)"},"Flipbook Animation"),
 
     // ── IMPORT FLIPBOOK ──────────────────────────────────────
-    p.importedFB?React.createElement("div",{style:{background:"#141414",border:"1px solid #2a1a00",borderRadius:4,padding:10,marginBottom:10}},
+    p.importedFB?React.createElement("div",{style:{background:"var(--bg)",border:"1px solid #8a8a94",borderRadius:4,padding:10,marginBottom:10}},
       React.createElement("div",{style:{marginBottom:8}},
         React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}},
-          React.createElement("span",{style:{fontSize:9,color:"#ff9966",fontFamily:"monospace",fontWeight:700}},
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"inherit",fontWeight:700}},
             p.importedFB.totalFrames+" frames · "+p.importedFB.frameSize+"px"),
           React.createElement("button",{onClick:function(){p.setImportedFB(null);},
-            style:{padding:"3px 7px",background:"none",border:"1px solid #333",color:"#555",fontFamily:"monospace",fontSize:8,cursor:"pointer",borderRadius:3}},
+            style:{padding:"3px 7px",background:"none",border:"1px solid var(--line2)",color:"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3}},
             "Clear")
         ),
         // Re-slice controls — change grid after import
@@ -10279,19 +10253,19 @@ function AnimPanel(p){
       ),
       // FPS for imported flipbook
       React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:8}},
-        React.createElement("span",{style:{fontSize:8,color:"#555",minWidth:30}},"FPS"),
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",minWidth:30}},"FPS"),
         React.createElement("input",{type:"range",min:1,max:120,step:1,
           value:p.importedFB.fps||24,
           onChange:function(e){p.setImportedFB(Object.assign({},p.importedFB,{fps:parseInt(e.target.value)}));},
-          style:{flex:1,accentColor:"#ff9966",height:3,cursor:"pointer"}}),
-        React.createElement("span",{title:"Playback speed in frames per second",style:{fontSize:9,color:"#ff9966",fontFamily:"monospace",minWidth:28}},
+          style:{flex:1,accentColor:"#9a9aa2",height:3,cursor:"pointer"}}),
+        React.createElement("span",{title:"Playback speed in frames per second",style:{fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"inherit",minWidth:28}},
           (p.importedFB.fps||24)+"fps")
       ),
       // ── RETIMING ──────────────────────────────────────────
-      React.createElement("div",{style:{marginBottom:8,padding:8,background:"#101010",border:"1px solid #221a10",borderRadius:4}},
+      React.createElement("div",{style:{marginBottom:8,padding:8,background:"var(--bg)",border:"1px solid #8a8a94",borderRadius:4}},
         React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}},
-          React.createElement("span",{title:"Trim, resample and reorder the imported frames",style:{fontSize:8,color:"#888",textTransform:"uppercase",letterSpacing:1}},"Retiming"),
-          React.createElement("span",{title:"Source frames → effective frames after retiming",style:{fontSize:8,color:"#ff9966",fontFamily:"monospace"}},
+          React.createElement("span",{title:"Trim, resample and reorder the imported frames",style:{fontSize:"var(--fs-s)",color:"var(--txt2)",textTransform:"uppercase",letterSpacing:1}},"Retiming"),
+          React.createElement("span",{title:"Source frames → effective frames after retiming",style:{fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"inherit"}},
             p.importedFB.totalFrames+" src → "+totalFramesActual+" frames")
         ),
         // Trim range
@@ -10306,38 +10280,38 @@ function AnimPanel(p){
           }
           return React.createElement("div",null,
             React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:4}},
-              React.createElement("span",{title:"First source frame of the playback range",style:{fontSize:8,color:"#555",minWidth:30}},"In"),
+              React.createElement("span",{title:"First source frame of the playback range",style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",minWidth:30}},"In"),
               React.createElement("input",{title:"Trim: first frame to play",type:"range",min:0,max:p.importedFB.totalFrames-1,step:1,value:_ri,
                 onChange:function(e){_setR("rangeIn",parseInt(e.target.value));},
-                style:{flex:1,accentColor:"#4ab4ff",height:3,cursor:"pointer"}}),
-              React.createElement("span",{style:{fontSize:9,color:"#4ab4ff",fontFamily:"monospace",minWidth:24,textAlign:"right"}},_ri)
+                style:{flex:1,accentColor:"#9a9aa2",height:3,cursor:"pointer"}}),
+              React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"inherit",minWidth:24,textAlign:"right"}},_ri)
             ),
             React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:6}},
-              React.createElement("span",{title:"Last source frame of the playback range",style:{fontSize:8,color:"#555",minWidth:30}},"Out"),
+              React.createElement("span",{title:"Last source frame of the playback range",style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",minWidth:30}},"Out"),
               React.createElement("input",{title:"Trim: last frame to play",type:"range",min:0,max:p.importedFB.totalFrames-1,step:1,value:_ro,
                 onChange:function(e){_setR("rangeOut",parseInt(e.target.value));},
-                style:{flex:1,accentColor:"#a0e060",height:3,cursor:"pointer"}}),
-              React.createElement("span",{style:{fontSize:9,color:"#a0e060",fontFamily:"monospace",minWidth:24,textAlign:"right"}},_ro)
+                style:{flex:1,accentColor:"#9a9aa2",height:3,cursor:"pointer"}}),
+              React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"inherit",minWidth:24,textAlign:"right"}},_ro)
             )
           );
         })(),
         // Frame step + play mode
         React.createElement("div",{style:{display:"flex",gap:6,alignItems:"center"}},
-          React.createElement("span",{title:"Keep one frame every N: 2 halves the frame count",style:{fontSize:8,color:"#555"}},"Step"),
+          React.createElement("span",{title:"Keep one frame every N: 2 halves the frame count",style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)"}},"Step"),
           [1,2,3,4].map(function(s){
             var act=(p.importedFB.frameStep||1)===s;
             return React.createElement("button",{key:s,title:"Keep 1 frame every "+s,
               onClick:function(){p.setImportedFB(Object.assign({},p.importedFB,{frameStep:s}));setFrame(0);},
-              style:{padding:"3px 8px",fontSize:9,fontFamily:"monospace",background:act?"#ff9966":"#161616",
-                color:act?"#000":"#555",border:"1px solid "+(act?"#ff9966":"#252525"),borderRadius:3,cursor:"pointer"}},s);
+              style:{padding:"3px 8px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:act?"var(--panel3)":"var(--panel)",
+                color:act?"#fff":"var(--tg-dim)",border:"1px solid "+(act?"#8a8a94":"var(--line)"),borderRadius:3,cursor:"pointer"}},s);
           }),
           React.createElement("div",{style:{flex:1}}),
           [{v:"forward",l:"→",tt:"Play forward"},{v:"reverse",l:"←",tt:"Play backward"},{v:"pingpong",l:"↔",tt:"Forward then backward (no duplicated endpoints)"}].map(function(md){
             var act=(p.importedFB.playMode||"forward")===md.v;
             return React.createElement("button",{key:md.v,title:md.tt,
               onClick:function(){p.setImportedFB(Object.assign({},p.importedFB,{playMode:md.v}));setFrame(0);},
-              style:{padding:"3px 9px",fontSize:11,fontFamily:"monospace",background:act?"#ff9966":"#161616",
-                color:act?"#000":"#555",border:"1px solid "+(act?"#ff9966":"#252525"),borderRadius:3,cursor:"pointer"}},md.l);
+              style:{padding:"3px 9px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:act?"var(--panel3)":"var(--panel)",
+                color:act?"#fff":"var(--tg-dim)",border:"1px solid "+(act?"#8a8a94":"var(--line)"),borderRadius:3,cursor:"pointer"}},md.l);
           })
         ),
         // ── Time remap curve — the same CurveEditor used everywhere else ──
@@ -10345,7 +10319,7 @@ function AnimPanel(p){
           var tc=p.importedFB.timeCurve;
           return React.createElement("div",{style:{marginTop:8}},
             React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}},
-              React.createElement("span",{title:"Curve-based retiming: X = playback time, Y = source frame position",style:{fontSize:8,color:"#888",textTransform:"uppercase",letterSpacing:1}},"Time Remap"),
+              React.createElement("span",{title:"Curve-based retiming: X = playback time, Y = source frame position",style:{fontSize:"var(--fs-s)",color:"var(--txt2)",textTransform:"uppercase",letterSpacing:1}},"Time Remap"),
               tc?React.createElement("div",{style:{display:"flex",gap:4,flexWrap:"wrap",justifyContent:"flex-end"}},
                 // Quick presets — tooltips describe the motion feel
                 [["Linear",[{x:0,y:0},{x:1,y:1}],"Constant speed (identity)"],
@@ -10358,11 +10332,11 @@ function AnimPanel(p){
                  ["Boomerang",[{x:0,y:0},{x:0.5,y:1},{x:1,y:0}],"Forward then backward in one cycle"]].map(function(pr){
                   return React.createElement("button",{key:pr[0],title:pr[2],
                     onClick:function(){p.setImportedFB(Object.assign({},p.importedFB,{timeCurve:pr[1]}));},
-                    style:{fontSize:7,padding:"2px 6px",background:"#161616",border:"1px solid #252525",color:"#777",fontFamily:"monospace",borderRadius:3,cursor:"pointer"}},pr[0]);
+                    style:{fontSize:"var(--fs-s)",padding:"2px 6px",background:"var(--panel)",border:"1px solid var(--line)",color:"var(--txt2)",fontFamily:"inherit",borderRadius:3,cursor:"pointer"}},pr[0]);
                 }).concat([
                   React.createElement("button",{key:"off",title:"Disable curve retiming (back to linear playback)",
                     onClick:function(){var nfb=Object.assign({},p.importedFB);nfb.timeCurve=null;p.setImportedFB(nfb);},
-                    style:{fontSize:7,padding:"2px 6px",background:"#2a1414",border:"1px solid #3d1d1d",color:"#cc6666",fontFamily:"monospace",borderRadius:3,cursor:"pointer"}},"Off")
+                    style:{fontSize:"var(--fs-s)",padding:"2px 6px",background:"var(--panel3)",border:"1px solid #8a8a94",color:"var(--err)",fontFamily:"inherit",borderRadius:3,cursor:"pointer"}},"Off")
                 ])
               ):null
             ),
@@ -10374,12 +10348,12 @@ function AnimPanel(p){
                 onChange:function(pts){p.setImportedFB(Object.assign({},p.importedFB,{timeCurve:pts}));},
                 size:140
               }),
-              React.createElement("div",{style:{fontSize:7,color:"#555",lineHeight:1.5,marginTop:2}},
+              React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",lineHeight:1.5,marginTop:2}},
                 "X = playback time, Y = source frame position. Flat segment = freeze frame, steep = fast-forward. Duration stays the same — also baked into Export.")
             ):React.createElement("button",{
               title:"Add a speed curve: reshape WHEN each source frame plays, duration unchanged",
               onClick:function(){p.setImportedFB(Object.assign({},p.importedFB,{timeCurve:[{x:0,y:0},{x:1,y:1}]}));},
-              style:{width:"100%",padding:"6px 0",fontSize:9,fontFamily:"monospace",background:"#161616",border:"1px dashed #2a2a2a",color:"#777",borderRadius:3,cursor:"pointer"}},
+              style:{width:"100%",padding:"6px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",background:"var(--panel)",border:"1px dashed var(--line)",color:"var(--txt2)",borderRadius:3,cursor:"pointer"}},
               "+ Curve retiming (time remap)")
           );
         })()
@@ -10387,9 +10361,9 @@ function AnimPanel(p){
       // Post-process filters
       React.createElement("div",{style:{marginBottom:6}},
         React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}},
-          React.createElement("span",{style:{fontSize:8,color:"#888",textTransform:"uppercase",letterSpacing:1}},"Post Filters (applied to each frame)"),
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",textTransform:"uppercase",letterSpacing:1}},"Post Filters (applied to each frame)"),
           React.createElement("button",{onClick:function(){p.setFbPostFilters([]);p.reprocessAll();},
-            style:{fontSize:7,color:"#444",background:"none",border:"1px solid #252525",padding:"2px 5px",cursor:"pointer",borderRadius:2,fontFamily:"monospace"}},
+            style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",background:"none",border:"1px solid var(--line)",padding:"2px 5px",cursor:"pointer",borderRadius:2,fontFamily:"inherit"}},
             "Clear all")
         ),
         // Add filter buttons for post-processing
@@ -10408,8 +10382,8 @@ function AnimPanel(p){
                     var nf=(p.fbPostFilters||[]).concat([mkFilter(ft.v)]);
                     p.setFbPostFilters(nf);p.reprocessAll();
                   },
-                  style:{padding:"3px 6px",fontSize:7,fontFamily:"monospace",
-                    background:"#111",border:"1px solid #222",color:"#888",
+                  style:{padding:"3px 6px",fontSize:"var(--fs-s)",fontFamily:"inherit",
+                    background:"var(--bg)",border:"1px solid var(--line)",color:"var(--txt2)",
                     borderRadius:2,cursor:"pointer"}
                 },"+ "+ft.l);
               })
@@ -10446,18 +10420,18 @@ function AnimPanel(p){
             };
             var _fbParams=_FBP[f.type]||[];
             function _updP(k,v){var nf=p.fbPostFilters.slice();nf[i]=Object.assign({},nf[i]);nf[i][k]=v;p.setFbPostFilters(nf);p.reprocessAll();}
-            return React.createElement("div",{key:i,style:{padding:"3px 0",borderBottom:"1px solid #1e1e1e"}},
+            return React.createElement("div",{key:i,style:{padding:"3px 0",borderBottom:"1px solid var(--line)"}},
             React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
               React.createElement("div",{style:{display:"flex",alignItems:"center",gap:6}},
                 React.createElement("div",{title:f.enabled?"Disable this filter":"Enable this filter",
                   onClick:function(){var nf=p.fbPostFilters.slice();nf[i]=Object.assign({},nf[i],{enabled:!nf[i].enabled});p.setFbPostFilters(nf);p.reprocessAll();},
-                  style:{width:22,height:12,borderRadius:6,background:f.enabled?"#e8900a":"#252525",cursor:"pointer",position:"relative",flexShrink:0},
-                  children:[React.createElement("div",{style:{position:"absolute",width:10,height:10,borderRadius:5,background:"#fff",top:1,left:f.enabled?10:1,transition:"left 0.12s"}})]
+                  style:{width:22,height:12,borderRadius:6,background:f.enabled?"var(--txt)":"var(--panel3)",cursor:"pointer",position:"relative",flexShrink:0},
+                  children:[React.createElement("div",{style:{position:"absolute",width:10,height:10,borderRadius:5,background:f.enabled?"var(--bg)":"#8a8a94",top:1,left:f.enabled?10:1,transition:"left 0.12s"}})]
                 }),
-                React.createElement("span",{style:{fontSize:8,color:"#888",fontFamily:"monospace"}},f.type)
+                React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit"}},f.type)
               ),
               React.createElement("button",{title:"Remove this filter",onClick:function(){var nf=p.fbPostFilters.slice();nf.splice(i,1);p.setFbPostFilters(nf);p.reprocessAll();},
-                style:{fontSize:9,color:"#444",background:"none",border:"none",cursor:"pointer"}},
+                style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",background:"none",border:"none",cursor:"pointer"}},
                 "x")
             ),
             // Parameter sliders for this filter — applied live to ALL frames
@@ -10466,11 +10440,11 @@ function AnimPanel(p){
                 var key=pp[0],label=pp[1],mn=pp[2],mx=pp[3],st=pp[4];
                 var val=f[key]!=null?f[key]:mn;
                 return React.createElement("div",{key:key,style:{display:"flex",alignItems:"center",gap:6,marginBottom:3}},
-                  React.createElement("span",{style:{fontSize:7,color:"#555",minWidth:46}},label),
+                  React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",minWidth:46}},label),
                   React.createElement("input",{type:"range",min:mn,max:mx,step:st,value:val,
                     onChange:function(e){_updP(key,parseFloat(e.target.value));},
-                    style:{flex:1,accentColor:"#e8900a",height:3,cursor:"pointer"}}),
-                  React.createElement("span",{style:{fontSize:8,color:"#e8900a",fontFamily:"monospace",minWidth:30,textAlign:"right"}},
+                    style:{flex:1,accentColor:"#9a9aa2",height:3,cursor:"pointer"}}),
+                  React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"inherit",minWidth:30,textAlign:"right"}},
                     st>=1?Math.round(val):val.toFixed(2))
                 );
               })
@@ -10480,32 +10454,32 @@ function AnimPanel(p){
         ):null
       ),
       // ── SEAMLESS LOOP ─────────────────────────────────────
-      React.createElement("div",{style:{marginTop:8,padding:8,background:"#101010",border:"1px solid #10221a",borderRadius:4}},
+      React.createElement("div",{style:{marginTop:8,padding:8,background:"var(--bg)",border:"1px solid #8a8a94",borderRadius:4}},
         React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}},
           React.createElement("span",{title:"Crossfade the tail into the head so the animation loops with no visible jump",
-            style:{fontSize:8,color:"#888",textTransform:"uppercase",letterSpacing:1}},"Seamless Loop"),
+            style:{fontSize:"var(--fs-s)",color:"var(--txt2)",textTransform:"uppercase",letterSpacing:1}},"Seamless Loop"),
           p.hasLoopBackup?React.createElement("button",{title:"Revert to the pre-loop frames",
             onClick:function(){p.onUndoLoop&&p.onUndoLoop();},
-            style:{fontSize:7,padding:"2px 7px",background:"#2a1414",border:"1px solid #3d1d1d",color:"#cc6666",fontFamily:"monospace",borderRadius:3,cursor:"pointer"}},"Undo Loop"):null
+            style:{fontSize:"var(--fs-s)",padding:"2px 7px",background:"var(--panel3)",border:"1px solid #8a8a94",color:"var(--err)",fontFamily:"inherit",borderRadius:3,cursor:"pointer"}},"Undo Loop"):null
         ),
         React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:6}},
-          React.createElement("span",{title:"How many frames to crossfade. More = smoother loop but more frames consumed",style:{fontSize:8,color:"#555",minWidth:48}},"Overlap"),
+          React.createElement("span",{title:"How many frames to crossfade. More = smoother loop but more frames consumed",style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",minWidth:48}},"Overlap"),
           React.createElement("input",{type:"range",min:1,max:Math.max(2,Math.floor((p.importedFB.totalFrames-1)/2)),step:1,value:Math.min(loopOverlap,Math.floor((p.importedFB.totalFrames-1)/2)),
             onChange:function(e){setLoopOverlap(parseInt(e.target.value));},
-            style:{flex:1,accentColor:"#44ddcc",height:3,cursor:"pointer"}}),
-          React.createElement("span",{style:{fontSize:9,color:"#44ddcc",fontFamily:"monospace",minWidth:24,textAlign:"right"}},loopOverlap)
+            style:{flex:1,accentColor:"#9a9aa2",height:3,cursor:"pointer"}}),
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"inherit",minWidth:24,textAlign:"right"}},loopOverlap)
         ),
         // Blend mode for the tail→head crossfade
         React.createElement("div",{style:{display:"flex",alignItems:"center",gap:6,marginBottom:6}},
-          React.createElement("span",{title:"How the overlapping frames are combined",style:{fontSize:8,color:"#555",minWidth:48}},"Blend"),
+          React.createElement("span",{title:"How the overlapping frames are combined",style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",minWidth:48}},"Blend"),
           [{v:"linear",l:"Linear",tt:"Straight dissolve — neutral baseline"},
            {v:"smooth",l:"Smooth",tt:"Eased dissolve — softer at both ends, less noticeable swap"},
            {v:"additive",l:"Additive",tt:"Weighted sum — keeps fire/spark brightness that a dissolve dips in the middle"}].map(function(bm){
             var act=loopBlend===bm.v;
             return React.createElement("button",{key:bm.v,title:bm.tt,
               onClick:function(){setLoopBlend(bm.v);},
-              style:{flex:1,padding:"4px 0",fontSize:8,fontFamily:"monospace",background:act?"#44ddcc":"#161616",
-                color:act?"#000":"#666",border:"1px solid "+(act?"#44ddcc":"#252525"),borderRadius:3,cursor:"pointer",fontWeight:act?700:400}},bm.l);
+              style:{flex:1,padding:"4px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",background:act?"var(--panel3)":"var(--panel)",
+                color:act?"#fff":"var(--tg-dim)",border:"1px solid "+(act?"#8a8a94":"var(--line)"),borderRadius:3,cursor:"pointer",fontWeight:act?700:400}},bm.l);
           })
         ),
         (function(){
@@ -10518,105 +10492,105 @@ function AnimPanel(p){
             title:looped?"A loop is already applied. Press Undo Loop first to change the overlap.":"Blend the last "+loopOverlap+" frames over the first "+loopOverlap+" — output loses "+loopOverlap+" frames but loops seamlessly",
             onClick:function(){if(!disabled)p.onMakeLoop&&p.onMakeLoop(loopOverlap,loopBlend);},
             disabled:disabled,
-            style:{width:"100%",padding:"7px 0",background:disabled?"#1a1a1a":"#44ddcc",border:"none",
-              color:disabled?"#444":"#000",fontFamily:"monospace",fontSize:10,fontWeight:700,
+            style:{width:"100%",padding:"7px 0",background:disabled?"var(--panel)":"var(--txt)",border:"none",
+              color:disabled?"var(--tg-dim)":"var(--bg)",fontFamily:"inherit",fontSize:"var(--fs-s)",fontWeight:700,
               cursor:disabled?"default":"pointer",borderRadius:4,letterSpacing:1}},
             label);
         })()
       ),
       // ── EXPORT OPTIONS: resize + grid ─────────────────────
-      React.createElement("div",{style:{marginTop:8,padding:8,background:"#101010",border:"1px solid #1a1a1a",borderRadius:4}},
-        React.createElement("div",{style:{fontSize:8,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:6}},"Export Options"),
+      React.createElement("div",{style:{marginTop:8,padding:8,background:"var(--bg)",border:"1px solid var(--line)",borderRadius:4}},
+        React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",textTransform:"uppercase",letterSpacing:1,marginBottom:6}},"Export Options"),
         React.createElement("div",{style:{display:"flex",alignItems:"center",gap:6,marginBottom:6}},
-          React.createElement("span",{title:"Downscale each frame on export (box filter)",style:{fontSize:8,color:"#555",minWidth:40}},"Scale"),
+          React.createElement("span",{title:"Downscale each frame on export (box filter)",style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",minWidth:40}},"Scale"),
           [["1","Native"],["0.5","½"],["0.25","¼"]].map(function(sc){
             var act=(p.importedFB.exportScale||"1")===sc[0];
             var px=Math.round(p.importedFB.frameSize*parseFloat(sc[0]));
             return React.createElement("button",{key:sc[0],title:px+"px per frame",
               onClick:function(){p.setImportedFB(Object.assign({},p.importedFB,{exportScale:sc[0]}));},
-              style:{flex:1,padding:"4px 0",fontSize:9,fontFamily:"monospace",background:act?"#e8900a":"#161616",
-                color:act?"#000":"#666",border:"1px solid "+(act?"#e8900a":"#252525"),borderRadius:3,cursor:"pointer"}},sc[1]);
+              style:{flex:1,padding:"4px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",background:act?"var(--panel3)":"var(--panel)",
+                color:act?"#fff":"var(--tg-dim)",border:"1px solid "+(act?"#8a8a94":"var(--line)"),borderRadius:3,cursor:"pointer"}},sc[1]);
           })
         ),
         React.createElement("div",{style:{display:"flex",alignItems:"center",gap:6}},
-          React.createElement("span",{title:"Columns in the exported sheet. Auto = square-ish layout",style:{fontSize:8,color:"#555",minWidth:40}},"Grid"),
+          React.createElement("span",{title:"Columns in the exported sheet. Auto = square-ish layout",style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",minWidth:40}},"Grid"),
           React.createElement("button",{title:"Automatic square layout",
             onClick:function(){p.setImportedFB(Object.assign({},p.importedFB,{exportCols:0}));},
-            style:{padding:"4px 8px",fontSize:9,fontFamily:"monospace",background:!(p.importedFB.exportCols>0)?"#e8900a":"#161616",
-              color:!(p.importedFB.exportCols>0)?"#000":"#666",border:"1px solid "+(!(p.importedFB.exportCols>0)?"#e8900a":"#252525"),borderRadius:3,cursor:"pointer"}},"Auto"),
+            style:{padding:"4px 8px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:!(p.importedFB.exportCols>0)?"var(--panel3)":"var(--panel)",
+              color:!(p.importedFB.exportCols>0)?"#fff":"var(--tg-dim)",border:"1px solid "+(!(p.importedFB.exportCols>0)?"#8a8a94":"var(--line)"),borderRadius:3,cursor:"pointer"}},"Auto"),
           React.createElement("input",{type:"number",min:1,max:32,placeholder:"cols",
             value:p.importedFB.exportCols>0?p.importedFB.exportCols:"",
             onChange:function(e){var v=parseInt(e.target.value)||0;p.setImportedFB(Object.assign({},p.importedFB,{exportCols:v}));},
-            style:{flex:1,minWidth:0,background:"#0e0e0e",border:"1px solid #252525",color:"#e8900a",padding:"4px 6px",
-              fontFamily:"monospace",fontSize:10,borderRadius:3,textAlign:"center"}}),
-          React.createElement("span",{style:{fontSize:8,color:"#555"}},"cols")
+            style:{flex:1,minWidth:0,background:"var(--bg)",border:"1px solid var(--line)",color:"var(--txt)",padding:"4px 6px",
+              fontFamily:"inherit",fontSize:"var(--fs-s)",borderRadius:3,textAlign:"center"}}),
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)"}},"cols")
         )
       ),
       // Export the edited flipbook: filters + retiming baked into a new sheet
       React.createElement("button",{onClick:function(){p.onExportImportedFB&&p.onExportImportedFB();},
         title:"Bake filters + retiming + loop into a new sprite sheet PNG (alpha preserved)",
         disabled:!!exporting,
-        style:{width:"100%",marginTop:4,padding:"8px 0",background:exporting?"#553311":"#ff9966",border:"none",color:"#000",
-          fontFamily:"monospace",fontSize:10,fontWeight:700,cursor:exporting?"default":"pointer",borderRadius:4,letterSpacing:1}},
+        style:{width:"100%",marginTop:4,padding:"8px 0",background:exporting?"var(--panel3)":"var(--txt)",border:"none",color:"var(--bg)",
+          fontFamily:"inherit",fontSize:"var(--fs-s)",fontWeight:700,cursor:exporting?"default":"pointer",borderRadius:4,letterSpacing:1}},
         exporting?"Exporting…":"↓ Export Edited Flipbook ("+totalFramesActual+" frames)")
     ):React.createElement("div",null,
-      p.fbImportStatus?React.createElement("div",{style:{fontSize:9,fontFamily:"monospace",padding:"6px 8px",marginBottom:6,
-        background:p.fbImportStatus.indexOf("failed")!==-1?"#1a0d0d":"#0d1a0d",
-        border:"1px solid "+(p.fbImportStatus.indexOf("failed")!==-1?"#3d1414":"#143d14"),
-        color:p.fbImportStatus.indexOf("failed")!==-1?"#ff6666":"#a0e060",borderRadius:3}},p.fbImportStatus):null,
+      p.fbImportStatus?React.createElement("div",{style:{fontSize:"var(--fs-s)",fontFamily:"inherit",padding:"6px 8px",marginBottom:6,
+        background:p.fbImportStatus.indexOf("failed")!==-1?"var(--bg)":"var(--bg)",
+        border:"1px solid "+(p.fbImportStatus.indexOf("failed")!==-1?"#8a8a94":"#8a8a94"),
+        color:p.fbImportStatus.indexOf("failed")!==-1?"var(--err)":"var(--txt)",borderRadius:3}},p.fbImportStatus):null,
       React.createElement(ImportFlipbookUI,{onImport:p.importFlipbook})
     ),
 
     // ── PREVIEW ──────────────────────────────────────────────
-    React.createElement("div",{style:{background:"#141414",border:"1px solid #1e1e1e",borderRadius:4,padding:10,marginBottom:10}},
+    React.createElement("div",{style:{background:"var(--bg)",border:"1px solid var(--line)",borderRadius:4,padding:10,marginBottom:10}},
       React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}},
-        React.createElement(SHead,{color:"#ff9966"},"Preview"),
+        React.createElement(SHead,{color:"var(--txt)"},"Preview"),
         React.createElement("button",{onClick:p.onToggleFlipbookMain,title:"Show preview in main canvas",
-          style:{padding:"2px 6px",fontSize:8,fontFamily:"monospace",background:p.flipbookInMain?"#ff9966":"#1a1a1a",
-                 color:p.flipbookInMain?"#000":"#666",border:"1px solid "+(p.flipbookInMain?"#ff9966":"#282828"),borderRadius:2,cursor:"pointer"}
+          style:{padding:"2px 6px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:p.flipbookInMain?"var(--panel3)":"var(--panel)",
+                 color:p.flipbookInMain?"#fff":"var(--tg-dim)",border:"1px solid "+(p.flipbookInMain?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}
         },"⊠ Main view")
       ),
       React.createElement("div",{style:{display:"flex",justifyContent:"center",marginBottom:8}},
-        React.createElement("div",{style:{position:"relative",background:"#0b0b0b",border:"1px solid #252525",borderRadius:3}},
+        React.createElement("div",{style:{position:"relative",background:"var(--bg)",border:"1px solid var(--line)",borderRadius:3}},
           React.createElement("canvas",{ref:previewRef,style:{display:"block",width:128,height:128,imageRendering:"pixelated"}}),
-          React.createElement("div",{style:{position:"absolute",bottom:4,right:6,fontSize:9,color:"rgba(255,153,102,0.9)",fontFamily:"monospace"}},(frame+1)+"/"+totalFramesActual)
+          React.createElement("div",{style:{position:"absolute",bottom:4,right:6,fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"inherit"}},(frame+1)+"/"+totalFramesActual)
         )
       ),
       React.createElement("input",{title:"Scrub through frames (pauses playback)",type:"range",min:0,max:totalFramesActual-1,step:1,value:frame,
         onChange:function(e){setPlaying(false);setFrame(parseInt(e.target.value));},
-        style:{width:"100%",accentColor:"#ff9966",height:3,cursor:"pointer",marginBottom:8}}),
+        style:{width:"100%",accentColor:"#9a9aa2",height:3,cursor:"pointer",marginBottom:8}}),
       React.createElement("div",{style:{display:"flex",gap:6,alignItems:"center"}},
-        React.createElement("button",{title:"Go to first frame",onClick:function(){setFrame(0);setPlaying(false);},style:Object.assign({},iconStyle,{color:"#888"})},"|◀"),
+        React.createElement("button",{title:"Go to first frame",onClick:function(){setFrame(0);setPlaying(false);},style:Object.assign({},iconStyle,{color:"var(--txt2)"})},"|◀"),
         React.createElement("button",{title:playing?"Stop playback":"Play the animation",onClick:function(){setPlaying(function(v){return!v;});},
-          style:{padding:"5px 14px",background:playing?"#ff9966":"#1a1a1a",border:"1px solid "+(playing?"#ff9966":"#282828"),
-                 color:playing?"#000":"#aaa",fontFamily:"monospace",fontSize:12,cursor:"pointer",borderRadius:3,fontWeight:700}},
+          style:{padding:"5px 14px",background:playing?"var(--panel3)":"var(--panel)",border:"1px solid "+(playing?"#8a8a94":"var(--line)"),
+                 color:playing?"#fff":"var(--txt2)",fontFamily:"inherit",fontSize:"var(--fs)",cursor:"pointer",borderRadius:3,fontWeight:700}},
           playing?"■":"▶"
         ),
-        React.createElement("button",{title:"Go to last frame",onClick:function(){setFrame(totalFrames-1);setPlaying(false);},style:Object.assign({},iconStyle,{color:"#888"})},"▶|"),
+        React.createElement("button",{title:"Go to last frame",onClick:function(){setFrame(totalFrames-1);setPlaying(false);},style:Object.assign({},iconStyle,{color:"var(--txt2)"})},"▶|"),
         React.createElement("div",{style:{flex:1}}),
         React.createElement("div",{style:{display:"flex",alignItems:"center",gap:3}},
-          React.createElement("span",{title:"Playback speed (frames per second)",style:{fontSize:9,color:"#555",letterSpacing:1}},"FPS"),
+          React.createElement("span",{title:"Playback speed (frames per second)",style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1}},"FPS"),
           [12,24,30,60,120].map(function(v){
             return React.createElement("button",{key:v,onClick:function(){setFps(v);},
-              style:{padding:"2px 5px",fontSize:8,fontFamily:"monospace",
-                     background:fps===v?"#e8900a":"#1a1a1a",
-                     color:fps===v?"#000":"#555",
-                     border:"1px solid "+(fps===v?"#e8900a":"#252525"),
+              style:{padding:"2px 5px",fontSize:"var(--fs-s)",fontFamily:"inherit",
+                     background:fps===v?"var(--panel3)":"var(--panel)",
+                     color:fps===v?"#fff":"var(--tg-dim)",
+                     border:"1px solid "+(fps===v?"#8a8a94":"var(--line)"),
                      borderRadius:2,cursor:"pointer"}},v);
           }),
           React.createElement("input",{type:"number",min:1,max:240,defaultValue:fps,key:fps,
             onBlur:function(e){var v=parseInt(e.target.value);if(!isNaN(v)&&v>=1)setFps(Math.min(240,v));else e.target.value=fps;},
             onKeyDown:function(e){if(e.key==="Enter"){var v=parseInt(e.target.value);if(!isNaN(v)&&v>=1)setFps(Math.min(240,v));}},
-            style:{width:40,background:"#161616",border:"1px solid #252525",color:"#e8900a",padding:"3px 4px",
-                   fontSize:11,fontFamily:"monospace",borderRadius:3,textAlign:"center",outline:"none"}})
+            style:{width:40,background:"var(--panel)",border:"1px solid var(--line)",color:"var(--txt)",padding:"3px 4px",
+                   fontSize:"var(--fs-s)",fontFamily:"inherit",borderRadius:3,textAlign:"center",outline:"none"}})
         )
       )
     ),
 
     // ── RETIMING CURVE ───────────────────────────────────────
-    React.createElement("div",{style:{background:"#141414",border:"1px solid #1e1e1e",borderRadius:4,padding:10,marginBottom:12}},
-      React.createElement(SHead,{color:"#ff9966"},"Retiming"),
-      React.createElement("div",{style:{fontSize:8,color:"#444",marginBottom:8,lineHeight:1.6}},
+    React.createElement("div",{style:{background:"var(--bg)",border:"1px solid var(--line)",borderRadius:4,padding:10,marginBottom:12}},
+      React.createElement(SHead,{color:"var(--txt)"},"Retiming"),
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:8,lineHeight:1.6}},
         "Remaps time across all frames. X=linear, Y=played. Steep start = faster early."
       ),
       React.createElement(CurveEditor,{
@@ -10634,22 +10608,22 @@ function AnimPanel(p){
     React.createElement(Sel,{label:"Frame Size",value:frameSize,
       opts:[{v:64,l:"64 px"},{v:128,l:"128 px"},{v:256,l:"256 px"},{v:512,l:"512 px"}],
       onChange:function(v){setA("frameSize",parseInt(v));}}),
-    React.createElement("div",{style:{fontSize:8,color:"#555",marginBottom:10}},
+    React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:10}},
       "Atlas: "+grid.cols+"×"+Math.ceil(grid.frames/grid.cols)+" = "+grid.frames+" frames → "+(grid.cols*frameSize)+"×"+(Math.ceil(grid.frames/grid.cols)*frameSize)+"px"
     ),
 
     // ── AUTO-ANIMATE ──────────────────────────────────────────
     React.createElement(Sep,null),
-    React.createElement("div",{style:{background:"#141414",border:"1px solid #1e1e1e",borderRadius:4,padding:10,marginBottom:10}},
+    React.createElement("div",{style:{background:"var(--bg)",border:"1px solid var(--line)",borderRadius:4,padding:10,marginBottom:10}},
       React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:showAuto?8:0,cursor:"pointer"},onClick:function(){setShowAuto(function(v){return!v;});}},
-        React.createElement("span",{style:{fontSize:9,color:"#ffcc44",letterSpacing:2,textTransform:"uppercase"}}," Auto-Animate"),
-        React.createElement("span",{style:{fontSize:10,color:"#3a3a3a"}},showAuto?"▾":"▸")
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt)",letterSpacing:2,textTransform:"uppercase"}}," Auto-Animate"),
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)"}},showAuto?"▾":"▸")
       ),
       showAuto?React.createElement("div",null,
         // Target layer + reverse toggle
         React.createElement("div",{style:{display:"flex",gap:6,alignItems:"flex-end",marginBottom:8,marginTop:8}},
           React.createElement("div",{style:{flex:1}},
-            React.createElement("span",{style:{fontSize:8,color:"#555",letterSpacing:1,textTransform:"uppercase",display:"block",marginBottom:4}},"Layer"),
+            React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1,textTransform:"uppercase",display:"block",marginBottom:4}},"Layer"),
             React.createElement("select",{value:anim._autoLayer||0,onChange:function(e){setA("_autoLayer",parseInt(e.target.value));},style:Object.assign({},SS,{marginBottom:0})},
               layers.map(function(l,i){return React.createElement("option",{key:i,value:i},l.label||"L"+(i+1));})
             )
@@ -10657,10 +10631,10 @@ function AnimPanel(p){
           React.createElement("button",{
             onClick:function(){setA("_autoReverse",!anim._autoReverse);},
             title:"Reverse: swap Start and End values when applying",
-            style:{padding:"6px 10px",fontSize:9,fontFamily:"monospace",
-                   background:anim._autoReverse?"#4ab4ff":"#1a1a1a",
-                   color:anim._autoReverse?"#000":"#666",
-                   border:"1px solid "+(anim._autoReverse?"#4ab4ff":"#282828"),
+            style:{padding:"6px 10px",fontSize:"var(--fs-s)",fontFamily:"inherit",
+                   background:anim._autoReverse?"var(--panel3)":"var(--panel)",
+                   color:anim._autoReverse?"#fff":"var(--tg-dim)",
+                   border:"1px solid "+(anim._autoReverse?"#8a8a94":"var(--line)"),
                    borderRadius:3,cursor:"pointer",flexShrink:0}
           },"⇄ Rev")
         ),
@@ -10672,9 +10646,9 @@ function AnimPanel(p){
           return groups.map(function(g){
             var gPresets=AUTO_PRESETS.filter(function(pr){return (pr.group||"Other")===g;});
             return React.createElement("div",{key:g,style:{marginBottom:8}},
-              React.createElement("div",{style:{fontSize:8,color:"#555",letterSpacing:1,textTransform:"uppercase",marginBottom:4}},g),
-              g==="Scale"?React.createElement("div",{style:{fontSize:7,color:"#444",marginBottom:4,lineHeight:1.5}},"Zoom uses Scale X. With Scale Linked on (default) it scales both axes. Use Post Scale for independent X/Y."):null,
-              g==="UV Dist"?React.createElement("div",{style:{fontSize:7,color:"#444",marginBottom:4,lineHeight:1.5}},"Enable a UV Distortion type on the layer first."):null,
+              React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1,textTransform:"uppercase",marginBottom:4}},g),
+              g==="Scale"?React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:4,lineHeight:1.5}},"Zoom uses Scale X. With Scale Linked on (default) it scales both axes. Use Post Scale for independent X/Y."):null,
+              g==="UV Dist"?React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:4,lineHeight:1.5}},"Enable a UV Distortion type on the layer first."):null,
               React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3}},
                 gPresets.map(function(preset){
                   var isJustApplied=lastApplied===preset.id;
@@ -10691,10 +10665,10 @@ function AnimPanel(p){
                       setLastApplied(preset.id);
                       setTimeout(function(){setLastApplied(null);},1200);
                     },
-                    style:{padding:"5px 3px",fontSize:9,fontFamily:"monospace",
-                           background:isJustApplied?"#ffcc44":"#161616",
-                           border:"1px solid "+(isJustApplied?"#ffcc44":"#1e1e1e"),
-                           color:isJustApplied?"#000":"#ffcc44",
+                    style:{padding:"5px 3px",fontSize:"var(--fs-s)",fontFamily:"inherit",
+                           background:isJustApplied?"var(--panel3)":"var(--panel)",
+                           border:"1px solid "+(isJustApplied?"#8a8a94":"var(--line)"),
+                           color:isJustApplied?"#fff":"var(--txt)",
                            borderRadius:3,cursor:"pointer",textAlign:"center",
                            transition:"background 0.15s,color 0.15s,border-color 0.15s"}
                   },isJustApplied?"✓ "+preset.label:preset.label);
@@ -10707,25 +10681,25 @@ function AnimPanel(p){
     ),
 
     // ── TRACKS ───────────────────────────────────────────────
-    React.createElement(SHead,{color:"#ff9966"},"Tracks"),
+    React.createElement(SHead,{color:"var(--txt)"},"Tracks"),
     // Group filter for params
     React.createElement("div",{style:{display:"flex",gap:3,marginBottom:10,flexWrap:"wrap"}},
       groups.map(function(g){return React.createElement("button",{key:g,
         onClick:function(){setFilterGroup(g);},
-        style:{padding:"2px 7px",fontSize:8,fontFamily:"monospace",background:filterGroup===g?"#ff9966":"#1a1a1a",
-               color:filterGroup===g?"#000":"#555",border:"1px solid "+(filterGroup===g?"#ff9966":"#282828"),borderRadius:2,cursor:"pointer"}
+        style:{padding:"2px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:filterGroup===g?"var(--panel3)":"var(--panel)",
+               color:filterGroup===g?"#fff":"var(--tg-dim)",border:"1px solid "+(filterGroup===g?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}
       },g);}
     )),
 
     tracks.map(function(track,i){
       var paramDef=ANIM_PARAMS.find(function(x){return x.id===track.param;})||{id:track.param,label:track.param,min:0,max:1,step:0.01};
       var isEaseOpen=showEaseTrack===i;
-      return React.createElement("div",{key:i,style:{background:"#141414",border:"1px solid #252525",borderRadius:4,padding:10,marginBottom:8}},
+      return React.createElement("div",{key:i,style:{background:"var(--bg)",border:"1px solid var(--line)",borderRadius:4,padding:10,marginBottom:8}},
         // Header — shows param name + invert + ease + delete
         React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}},
           React.createElement("div",{style:{display:"flex",alignItems:"center",gap:6}},
-            React.createElement("span",{style:{fontSize:9,color:"#ff9966",fontFamily:"monospace",letterSpacing:0.5}},(i+1)+"."),
-            React.createElement("span",{style:{fontSize:9,color:"#ccc",fontFamily:"monospace"}},paramDef.label)
+            React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"inherit",letterSpacing:0.5}},(i+1)+"."),
+            React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"inherit"}},paramDef.label)
           ),
           React.createElement("div",{style:{display:"flex",gap:3}},
             React.createElement("button",{
@@ -10735,8 +10709,8 @@ function AnimPanel(p){
                 setAnim(Object.assign({},anim,{tracks:nt}));
               },
               title:"Invert: swap Start and End",
-              style:{padding:"2px 6px",fontSize:9,fontFamily:"monospace",background:"#1a1a1a",
-                     color:"#aaa",border:"1px solid #282828",borderRadius:2,cursor:"pointer"}
+              style:{padding:"2px 6px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:"var(--panel)",
+                     color:"var(--txt2)",border:"1px solid var(--line)",borderRadius:2,cursor:"pointer"}
             },"⇄"),
             React.createElement("button",{
               onClick:function(){
@@ -10744,22 +10718,22 @@ function AnimPanel(p){
                 setAnim(Object.assign({},anim,{tracks:tracks.slice(0,i+1).concat([dup]).concat(tracks.slice(i+1))}));
               },
               title:"Duplicate track",
-              style:{padding:"2px 6px",fontSize:9,fontFamily:"monospace",background:"#1a1a1a",
-                     color:"#888",border:"1px solid #282828",borderRadius:2,cursor:"pointer"}
+              style:{padding:"2px 6px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:"var(--panel)",
+                     color:"var(--txt2)",border:"1px solid var(--line)",borderRadius:2,cursor:"pointer"}
             },"⧉"),
             React.createElement("button",{onClick:function(){setShowEaseTrack(isEaseOpen?-1:i);},
               title:"Edit easing curve",
-              style:{padding:"2px 6px",fontSize:8,fontFamily:"monospace",background:isEaseOpen?"#e8900a":"#1a1a1a",
-                     color:isEaseOpen?"#000":"#666",border:"1px solid "+(isEaseOpen?"#e8900a":"#282828"),borderRadius:2,cursor:"pointer"}
+              style:{padding:"2px 6px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:isEaseOpen?"var(--panel3)":"var(--panel)",
+                     color:isEaseOpen?"#fff":"var(--tg-dim)",border:"1px solid "+(isEaseOpen?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}
             },"~ Ease"),
-            React.createElement(SmBtn,{onClick:function(){remTrack(i);},color:"#888"},"×")
+            React.createElement(SmBtn,{onClick:function(){remTrack(i);},color:"var(--txt2)"},"×")
           )
         ),
         // Layer selector with thumbnail
         React.createElement("div",{style:{display:"flex",gap:6,marginBottom:8,alignItems:"center"}},
-          (track.layerIdx!==-1&&layers[track.layerIdx||0])?React.createElement(LayerThumb,{layer:layers[track.layerIdx||0],allLayers:layers}):track.layerIdx===-1?React.createElement("div",{style:{width:36,height:36,background:"#1a1a1a",border:"1px solid #252525",borderRadius:3,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:"#4ab4ff",fontFamily:"monospace"}},"⊞"):null,
+          (track.layerIdx!==-1&&layers[track.layerIdx||0])?React.createElement(LayerThumb,{layer:layers[track.layerIdx||0],allLayers:layers}):track.layerIdx===-1?React.createElement("div",{style:{width:36,height:36,background:"var(--panel)",border:"1px solid var(--line)",borderRadius:3,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"inherit"}},"⊞"):null,
           React.createElement("div",{style:{flex:1}},
-            React.createElement("span",{style:{fontSize:8,color:"#555",textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:3}},"Layer"),
+            React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:3}},"Layer"),
             React.createElement("select",{value:track.layerIdx!=null?track.layerIdx:0,onChange:function(e){updTrack(i,"layerIdx",parseInt(e.target.value));},style:Object.assign({},SS,{marginBottom:0})},
               React.createElement("option",{value:-1},"⊞ All Layers"),
               layers.map(function(l,li){return React.createElement("option",{key:li,value:li},l.label||"L"+(li+1));})
@@ -10767,14 +10741,14 @@ function AnimPanel(p){
             track.layerIdx===-1?React.createElement("div",{style:{display:"flex",gap:4,marginTop:6}},
               [{v:"absolute",l:"Absolute (from→to)"},{v:"relative",l:"Relative (add Δ per layer)"}].map(function(opt){
                 var active=(track.globalMode||"absolute")===opt.v;
-                return React.createElement("button",{key:opt.v,onClick:function(){updTrack(i,"globalMode",opt.v);},style:{flex:1,padding:"4px 0",fontSize:8,fontFamily:"monospace",background:active?"#4ab4ff":"#1a1a1a",color:active?"#000":"#555",border:"1px solid "+(active?"#4ab4ff":"#252525"),borderRadius:2,cursor:"pointer"}},opt.l);
+                return React.createElement("button",{key:opt.v,onClick:function(){updTrack(i,"globalMode",opt.v);},style:{flex:1,padding:"4px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",background:active?"var(--panel3)":"var(--panel)",color:active?"#fff":"var(--tg-dim)",border:"1px solid "+(active?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}},opt.l);
               })
             ):null
           )
         ),
         // Param selector (filtered)
         React.createElement("div",{style:{marginBottom:8}},
-          React.createElement("span",{style:{fontSize:8,color:"#555",textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:3}},"Parameter"),
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:3}},"Parameter"),
           React.createElement("select",{value:track.param,onChange:function(e){updTrack(i,"param",e.target.value);},style:Object.assign({},SS,{marginBottom:0})},
             (filterGroup==="All"?ANIM_PARAMS:filteredParams).map(function(pr){
               return React.createElement("option",{key:pr.id,value:pr.id},(pr.group?"["+pr.group+"] ":"")+pr.label);
@@ -10783,13 +10757,13 @@ function AnimPanel(p){
         ),
         // Start / End — compact two-column layout with value labels
         React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}},
-          (track.layerIdx===-1&&track.globalMode==="relative"?[["Δ Start","from","#4ab4ff"],["Δ End","to","#a0e060"]]:[["Start","from","#4ab4ff"],["End","to","#a0e060"]]).map(function(col){
+          (track.layerIdx===-1&&track.globalMode==="relative"?[["Δ Start","from","#b4b4bb"],["Δ End","to","#b4b4bb"]]:[["Start","from","#b4b4bb"],["End","to","#b4b4bb"]]).map(function(col){
             var label=col[0],key=col[1],color=col[2];
             var val=track[key]!=null?track[key]:(key==="from"?0:1);
             var fmt=paramDef.step<1?val.toFixed(2):""+Math.round(val);
             return React.createElement("div",{key:key},
               React.createElement("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:2,alignItems:"center"}},
-                React.createElement("span",{style:{fontSize:8,color:color,textTransform:"uppercase",letterSpacing:1}},label),
+                React.createElement("span",{style:{fontSize:"var(--fs-s)",color:color,textTransform:"uppercase",letterSpacing:1}},label),
                 React.createElement("input",{type:"number",
                   defaultValue:val,key:key+"_"+val,
                   onBlur:function(e){
@@ -10803,8 +10777,8 @@ function AnimPanel(p){
                     }
                   },
                   title:"Edit value",
-                  style:{width:52,background:"#0e0e0e",border:"1px solid "+color,color:color,
-                         padding:"1px 4px",fontSize:10,fontFamily:"monospace",borderRadius:2,
+                  style:{width:52,background:"var(--bg)",border:"1px solid "+color,color:color,
+                         padding:"1px 4px",fontSize:"var(--fs-s)",fontFamily:"inherit",borderRadius:2,
                          textAlign:"right",outline:"none",WebkitAppearance:"none",MozAppearance:"textfield"}
                 })
               ),
@@ -10815,7 +10789,7 @@ function AnimPanel(p){
           })
         ),
         // Easing curve (collapsible)
-        isEaseOpen?React.createElement("div",{style:{marginTop:10,paddingTop:10,borderTop:"1px solid #252525"}},
+        isEaseOpen?React.createElement("div",{style:{marginTop:10,paddingTop:10,borderTop:"1px solid var(--line)"}},
           React.createElement(CurveEditor,{
             points:(track.timingCurve&&track.timingCurve.length>=2)?track.timingCurve:DEFAULT_CURVE,
             onChange:function(pts){updTrack(i,"timingCurve",pts);},
@@ -10827,14 +10801,14 @@ function AnimPanel(p){
     }),
 
     React.createElement("button",{onClick:addTrack,
-      style:{width:"100%",padding:"7px",background:"#1a1a1a",border:"1px dashed #333",color:"#777",fontFamily:"monospace",fontSize:10,cursor:"pointer",borderRadius:3,marginBottom:12}},
+      style:{width:"100%",padding:"7px",background:"var(--panel)",border:"1px dashed var(--line2)",color:"var(--txt2)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3,marginBottom:12}},
       "+ Add Track"
     ),
     React.createElement(Sep,null),
     React.createElement("button",{
       onClick:p.onExportFlipbook,disabled:exporting,
-      style:{width:"100%",padding:"10px",background:exporting?"#333":"#ff9966",border:"none",color:exporting?"#666":"#000",
-             fontFamily:"monospace",fontSize:12,fontWeight:700,cursor:exporting?"not-allowed":"pointer",borderRadius:3,letterSpacing:1}
+      style:{width:"100%",padding:"10px",background:exporting?"var(--panel3)":"var(--txt)",border:"none",color:exporting?"var(--tg-dim)":"var(--bg)",
+             fontFamily:"inherit",fontSize:"var(--fs)",fontWeight:700,cursor:exporting?"not-allowed":"pointer",borderRadius:3,letterSpacing:1}
     }, exporting?"RENDERING FRAMES…":"↓ EXPORT FLIPBOOK PNG")
   );
 }
@@ -11048,6 +11022,7 @@ function NodeCanvas(p){
   useEffect(function(){
     if(!animPlaying)return;
     var iv=setInterval(function(){
+      if(window.__tgPaused)return; // Studio hides this mode: no playback behind its back
       setAnimTime(function(t){var nt=t+1/animFps; if(nt>animDur)nt=0; return Math.round(nt*1000)/1000;});
     },1000/animFps);
     return function(){clearInterval(iv);};
@@ -11073,6 +11048,7 @@ function NodeCanvas(p){
     var ids=fbPlaySig.split(",").map(function(x){return x.split("@")[0];});
     var fps=Math.max(1,parseInt(fbPlaySig.split("@")[1])||24);
     var iv=setInterval(function(){
+      if(window.__tgPaused)return;
       for(var i=0;i<ids.length;i++){var n=g.nodes[ids[i]];if(n)n.params.offset=(Math.round(n.params.offset||0)+1);}
       setEvalTick(function(t){return t+1;}); // re-eval to show next frame
       setFbTick(function(t){return t+1;});
@@ -11891,7 +11867,7 @@ function NodeCanvas(p){
         setNodeMenu(null); setAddMenu(null);
         setWireMenu({edgeId:edgeId,screenX:ev.clientX,screenY:ev.clientY});};}(eid)}));
     wires.push(React.createElement("path",{key:eid,d:_d,
-      stroke:wireMenu&&wireMenu.edgeId===eid?"#9cf":"#e8900a",strokeWidth:wireMenu&&wireMenu.edgeId===eid?3:2,
+      stroke:wireMenu&&wireMenu.edgeId===eid?"#9cf":"#c8c8ce",strokeWidth:wireMenu&&wireMenu.edgeId===eid?3:2,
       fill:"none",opacity:0.85,style:{pointerEvents:"none"}}));
   }
   // pending wire while dragging
@@ -11913,13 +11889,13 @@ function NodeCanvas(p){
         // the port dot
         inputs.push(React.createElement("div",{key:port,title:port,style:{
           position:"absolute",left:-PORT_R,top:(pp.y-node.y)-PORT_R,width:PORT_R*2,height:PORT_R*2,
-          borderRadius:"50%",background:"#222",border:"2px solid #8fd4ff",boxSizing:"border-box",touchAction:"none",
-          boxShadow:"0 0 0 3px rgba(143,212,255,0.08)"}}));
+          borderRadius:"50%",background:"var(--panel2)",border:"2px solid #8a8a94",boxSizing:"border-box",touchAction:"none",
+          boxShadow:"0 0 0 3px transparent"}}));
         // a small label, only when there's more than one input (so A/B/mask are clear)
         if(def.inputs.length>1){
           inputs.push(React.createElement("div",{key:port+"_l",style:{
-            position:"absolute",left:PORT_R+1,top:(pp.y-node.y)-6,fontSize:7,color:"#5b8fb0",
-            fontFamily:"monospace",fontWeight:700,pointerEvents:"none",letterSpacing:0.3}},port.toUpperCase()));
+            position:"absolute",left:PORT_R+1,top:(pp.y-node.y)-6,fontSize:"var(--fs-s)",color:"var(--txt)",
+            fontFamily:"inherit",fontWeight:700,pointerEvents:"none",letterSpacing:0.3}},port.toUpperCase()));
         }
       });
       var hasOut=def.cat!=="output";
@@ -11927,13 +11903,13 @@ function NodeCanvas(p){
         onPointerDown:function(e){onNodePointerDown(e,node);},
         onPointerMove:onMove,onPointerUp:onUp,onPointerCancel:onUp,
         style:{position:"absolute",left:node.x,top:node.y,width:NODE_W,height:NODE_H,
-          background:"#161616",border:(node.bypass?"2px dashed #6a5a3a":"2px solid "+(selNode===node.id?"#e8900a":(isSel(node.id)?"#e8900acc":col))),borderRadius:8,
-          boxShadow:(selNode===node.id)?"0 0 0 2px #e8900a, 0 0 14px rgba(232,144,10,0.35)":
-                    (isSel(node.id)?"0 0 0 2px #e8900acc, 0 0 10px rgba(232,144,10,0.22)":"0 2px 8px rgba(0,0,0,0.5)"),
+          background:"var(--panel)",border:(node.bypass?"2px dashed #8a8a94":"2px solid "+(selNode===node.id?"var(--txt)":(isSel(node.id)?"#8a8a94":col))),borderRadius:8,
+          boxShadow:(selNode===node.id)?"0 0 0 1px var(--txt)":
+                    (isSel(node.id)?"0 0 0 2px #8a8a94, 0 0 10px transparent":"0 2px 8px rgba(0,0,0,0.5)"),
           opacity:node.bypass?0.55:1,
           cursor:"grab",userSelect:"none",boxSizing:"border-box",touchAction:"none"}},
-        React.createElement("div",{style:{padding:"3px 7px",fontSize:9.5,fontFamily:"monospace",fontWeight:700,
-          color:col,letterSpacing:0.4,borderBottom:"1px solid #242424",display:"flex",justifyContent:"space-between",alignItems:"center"}},
+        React.createElement("div",{style:{padding:"3px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,
+          color:"color-mix(in srgb,"+col+" 55%,#fff)",letterSpacing:0.4,borderBottom:"1px solid var(--line)",display:"flex",justifyContent:"space-between",alignItems:"center"}},
           React.createElement("span",{style:{display:"flex",alignItems:"center",gap:5}},nodeIcon(node.type,11,col),
             React.createElement("span",null,node.title||nodeLabel(node.type))),
           React.createElement("span",{style:{width:7,height:7,borderRadius:"50%",background:col,flexShrink:0,opacity:0.8}})),
@@ -11941,15 +11917,15 @@ function NodeCanvas(p){
         // Selection badge: a thin border is hard to read on a phone, so a
         // selected node also gets a solid corner tick.
         isSel(node.id)?React.createElement("div",{key:"selbadge",style:{position:"absolute",top:-7,right:-7,
-          width:19,height:19,borderRadius:"50%",background:"#e8900a",color:"#000",fontSize:11,fontWeight:900,
-          fontFamily:"monospace",display:"flex",alignItems:"center",justifyContent:"center",
-          border:"2px solid #0d0d0d",pointerEvents:"none",zIndex:3}},"\u2713"):null,
+          width:19,height:19,borderRadius:"50%",background:"var(--txt)",color:"var(--bg)",fontSize:"var(--fs-s)",fontWeight:900,
+          fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center",
+          border:"2px solid var(--line)",pointerEvents:"none",zIndex:3}},"\u2713"):null,
         React.createElement("div",{style:{padding:(def.inputs.length>1?"4px 6px 2px 18px":"4px 6px 2px")}},
           React.createElement("canvas",{width:size,height:size,
             ref:function(nodeId){return function(el){if(el)thumbCanvases.current[nodeId]=el;else delete thumbCanvases.current[nodeId];};}(node.id),
-            style:{display:"block",width:THUMB,height:THUMB,borderRadius:3,border:"1px solid #2a2a2a",
-              background:"#0a0a0a",imageRendering:pixPerf?"pixelated":"auto"}})),
-        React.createElement("div",{style:{fontSize:7.5,color:"#888",fontFamily:"monospace",lineHeight:1.3,overflow:"hidden",
+            style:{display:"block",width:THUMB,height:THUMB,borderRadius:3,border:"1px solid var(--line)",
+              background:"var(--bg)",imageRendering:pixPerf?"pixelated":"auto"}})),
+        React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",lineHeight:1.3,overflow:"hidden",
           padding:"0 7px 3px",whiteSpace:"nowrap",textOverflow:"ellipsis"}},
             node.type==="source"?(node.params.layer?node.params.layer.type:"empty"):
             node.type==="blend"?node.params.mode:
@@ -11980,12 +11956,12 @@ function NodeCanvas(p){
               title:"drag to connect ("+op+")",style:{position:"absolute",right:-PORT_R-PORT_HIT,top:topY-PORT_R-PORT_HIT,
               width:(PORT_R+PORT_HIT)*2,height:(PORT_R+PORT_HIT)*2,display:"flex",alignItems:"center",justifyContent:"center",
               cursor:"crosshair",touchAction:"none"}},
-              React.createElement("div",{style:{width:(multi?PORT_R*1.6:PORT_R*2),height:(multi?PORT_R*1.6:PORT_R*2),borderRadius:"50%",background:"#222",
-                border:"2px solid #e8900a",boxSizing:"border-box",pointerEvents:"none"}}),
+              React.createElement("div",{style:{width:(multi?PORT_R*1.6:PORT_R*2),height:(multi?PORT_R*1.6:PORT_R*2),borderRadius:"50%",background:"var(--txt2)",
+                border:"2px solid #8a8a94",boxSizing:"border-box",pointerEvents:"none"}}),
               // output port label (always show a name)
               React.createElement("div",{style:{position:"absolute",right:(PORT_R+PORT_HIT)*2-2,top:"50%",transform:"translateY(-50%)",
-                fontSize:multi?7:6.5,color:"#e8b06a",fontFamily:"monospace",fontWeight:700,pointerEvents:"none",
-                background:"rgba(16,16,16,0.85)",padding:"0 2px",borderRadius:2,whiteSpace:"nowrap"}},op.toUpperCase()));
+                fontSize:multi?"var(--fs-s)":"var(--fs-s)",color:"var(--txt)",fontFamily:"inherit",fontWeight:700,pointerEvents:"none",
+                background:"color-mix(in srgb,var(--bg) 85%,transparent)",padding:"0 2px",borderRadius:2,whiteSpace:"nowrap"}},op.toUpperCase()));
           });
         })():null
       ));
@@ -12080,44 +12056,44 @@ function NodeCanvas(p){
     var rows=[];
     // Sticky header: with 10+ parameter rows on some nodes you would otherwise
     // scroll away from the name and the close button.
-    rows.push(React.createElement("div",{key:"title",style:{fontSize:10,fontFamily:"monospace",fontWeight:700,
-      color:"#e8900a",letterSpacing:0.5,marginBottom:8,textTransform:"uppercase",display:"flex",
+    rows.push(React.createElement("div",{key:"title",style:{fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,
+      color:"var(--txt)",letterSpacing:0.5,marginBottom:8,textTransform:"uppercase",display:"flex",
       justifyContent:"space-between",alignItems:"center",gap:6,position:"sticky",top:-10,zIndex:2,
-      background:"rgba(15,15,15,0.97)",padding:"10px 0 7px",margin:"-10px 0 8px",
-      borderBottom:"1px solid #262626"}},
+      background:"var(--bg)",padding:"10px 0 7px",margin:"-10px 0 8px",
+      borderBottom:"1px solid var(--line)"}},
       def.title,
       React.createElement("div",{style:{display:"flex",gap:5,alignItems:"center"}},
         React.createElement("button",{onClick:function(){removeNode(g,nd.id);setSelNode(null);bump();},
-          title:"Delete node",style:{background:"none",border:"1px solid #5a2a2a",color:"#c66",borderRadius:3,
-          fontSize:8,padding:"2px 6px",cursor:"pointer",fontFamily:"monospace"}},"DELETE"),
+          title:"Delete node",style:{background:"none",border:"1px solid #8a8a94",color:"var(--err)",borderRadius:3,
+          fontSize:"var(--fs-s)",padding:"2px 6px",cursor:"pointer",fontFamily:"inherit"}},"DELETE"),
         React.createElement("button",{onClick:function(){duplicateNode(nd.id);},
-          title:"Duplicate node",style:{background:"none",border:"1px solid #2a4a5a",color:"#7ab",borderRadius:5,
-          minHeight:28,fontSize:8.5,padding:"0 9px",cursor:"pointer",fontFamily:"monospace",touchAction:"manipulation",
+          title:"Duplicate node",style:{background:"none",border:"1px solid #8a8a94",color:"var(--txt)",borderRadius:5,
+          minHeight:28,fontSize:"var(--fs-s)",padding:"0 9px",cursor:"pointer",fontFamily:"inherit",touchAction:"manipulation",
           display:"inline-flex",alignItems:"center"}},"DUP"),
         (def.cat!=="output"&&def.inputs&&def.inputs.length)?React.createElement("button",{onClick:function(){nd.bypass=!nd.bypass;bump();},
           title:nd.bypass?"Node is bypassed (passes input through). Click to enable.":"Bypass / mute this node",
-          style:{background:nd.bypass?"#e8900a":"none",border:"1px solid "+(nd.bypass?"#e8900a":"#5a4a2a"),color:nd.bypass?"#000":"#caa46a",borderRadius:5,
-          minHeight:28,fontSize:8.5,padding:"0 9px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,touchAction:"manipulation",
+          style:{background:nd.bypass?"var(--panel3)":"none",border:"1px solid "+(nd.bypass?"#8a8a94":"#8a8a94"),color:nd.bypass?"#fff":"var(--txt)",borderRadius:5,
+          minHeight:28,fontSize:"var(--fs-s)",padding:"0 9px",cursor:"pointer",fontFamily:"inherit",fontWeight:700,touchAction:"manipulation",
           display:"inline-flex",alignItems:"center"}},nd.bypass?"\u25cb OFF":"BYPASS"):null,
         React.createElement("button",{onClick:function(){setSelNode(null);},
-          title:"Close panel",style:{background:"none",border:"1px solid #333",color:"#999",borderRadius:5,
-          minHeight:28,minWidth:28,fontSize:13,padding:"0 6px",cursor:"pointer",fontFamily:"monospace",touchAction:"manipulation",
+          title:"Close panel",style:{background:"none",border:"1px solid var(--line2)",color:"var(--txt2)",borderRadius:5,
+          minHeight:28,minWidth:28,fontSize:"var(--fs-l)",padding:"0 6px",cursor:"pointer",fontFamily:"inherit",touchAction:"manipulation",
           display:"inline-flex",alignItems:"center",justifyContent:"center"}},"\u00d7"))));
 
     // Rename row: give the node a custom title (helps organize big graphs).
     rows.push(React.createElement("div",{key:"rename",style:{display:"flex",alignItems:"center",gap:5,marginBottom:9}},
-      React.createElement("span",{style:{fontSize:7.5,color:"#777",fontFamily:"monospace",letterSpacing:0.5,minWidth:34}},"NAME"),
+      React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",letterSpacing:0.5,minWidth:34}},"NAME"),
       React.createElement("input",{type:"text",value:nd.title||"",placeholder:def.title,
         onChange:function(ev){
           var v=ev.target.value;
           if(v)nd.title=v; else delete nd.title;
           setGraph(Object.assign({},g)); setTick(function(t){return t+1;}); // redraw only, no re-eval
         },
-        style:{flex:1,minWidth:0,background:"#0f0f0f",border:"1px solid #2a2a2a",borderRadius:4,color:"#ddd",
-          fontSize:9,fontFamily:"monospace",padding:"4px 6px",outline:"none"}}),
+        style:{flex:1,minWidth:0,background:"var(--bg)",border:"1px solid var(--line)",borderRadius:4,color:"var(--txt)",
+          fontSize:"var(--fs-s)",fontFamily:"inherit",padding:"4px 6px",outline:"none"}}),
       nd.title?React.createElement("button",{onClick:function(){delete nd.title;setGraph(Object.assign({},g));setTick(function(t){return t+1;});},
         title:"Reset to default name",
-        style:{background:"none",border:"1px solid #333",color:"#999",borderRadius:3,fontSize:8,padding:"3px 5px",cursor:"pointer",fontFamily:"monospace"}},"\u21ba"):null));
+        style:{background:"none",border:"1px solid var(--line2)",color:"var(--txt2)",borderRadius:3,fontSize:"var(--fs-s)",padding:"3px 5px",cursor:"pointer",fontFamily:"inherit"}},"\u21ba"):null));
 
     // Keyframe section: when the timeline is open, list this node's numeric params
     // with a diamond to keyframe each at the current time. This makes ALL numeric
@@ -12125,34 +12101,34 @@ function NodeCanvas(p){
     if(showTimeline){
       var animKeys=[];
       for(var pk in nd.params){var pv=nd.params[pk]; if(typeof pv==="number")animKeys.push(pk);}
-      rows.push(React.createElement("div",{key:"kfsec",style:{marginBottom:9,padding:"7px 8px",background:"#16121c",
-        border:"1px solid #3a2f4a",borderRadius:6}},
-        React.createElement("div",{style:{fontSize:7.5,color:"#c9a0ff",fontFamily:"monospace",fontWeight:700,letterSpacing:0.5,marginBottom:5}},"KEYFRAMES @ "+animTime.toFixed(2)+"s"),
+      rows.push(React.createElement("div",{key:"kfsec",style:{marginBottom:9,padding:"7px 8px",background:"var(--panel)",
+        border:"1px solid #8a8a94",borderRadius:6}},
+        React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"inherit",fontWeight:700,letterSpacing:0.5,marginBottom:5}},"KEYFRAMES @ "+animTime.toFixed(2)+"s"),
         animKeys.length?animKeys.map(function(key){
           var on=hasKeyframes(nd.id,key);
           return React.createElement("div",{key:key,style:{display:"flex",alignItems:"center",justifyContent:"space-between",gap:6,marginBottom:5}},
-            React.createElement("span",{style:{fontSize:8.5,color:"#aaa",fontFamily:"monospace"}},key+" = "+(typeof nd.params[key]==="number"?nd.params[key].toFixed(2):nd.params[key])),
+            React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit"}},key+" = "+(typeof nd.params[key]==="number"?nd.params[key].toFixed(2):nd.params[key])),
             React.createElement("div",{style:{display:"flex",gap:3}},
               React.createElement("button",{onClick:function(){var kk=key;addKeyframe(nd.id,kk,nd.params[kk]);},title:"Add keyframe here",
-                style:{fontSize:11,minWidth:30,minHeight:26,padding:"0 6px",background:on?"#e8900a":"#241c30",color:on?"#000":"#c9a0ff",
-                  border:"1px solid "+(on?"#e8900a":"#4a3a5a"),borderRadius:5,cursor:"pointer",fontFamily:"monospace",
+                style:{fontSize:"var(--fs-s)",minWidth:30,minHeight:26,padding:"0 6px",background:on?"var(--panel3)":"var(--panel3)",color:on?"#fff":"var(--txt)",
+                  border:"1px solid "+(on?"#8a8a94":"#8a8a94"),borderRadius:5,cursor:"pointer",fontFamily:"inherit",
                   touchAction:"manipulation",display:"inline-flex",alignItems:"center",justifyContent:"center"}},"\u25c8"),
               on?React.createElement("button",{onClick:function(){var kk=key;removeKeyframesFor(nd.id,kk);},title:"Clear keyframes",
-                style:{fontSize:11,minWidth:26,minHeight:26,padding:"0 5px",background:"none",color:"#a66",border:"1px solid #5a2a2a",
-                  borderRadius:5,cursor:"pointer",fontFamily:"monospace",touchAction:"manipulation",
+                style:{fontSize:"var(--fs-s)",minWidth:26,minHeight:26,padding:"0 5px",background:"none",color:"var(--txt)",border:"1px solid #8a8a94",
+                  borderRadius:5,cursor:"pointer",fontFamily:"inherit",touchAction:"manipulation",
                   display:"inline-flex",alignItems:"center",justifyContent:"center"}},"\u00d7"):null));
-        }):React.createElement("div",{style:{fontSize:7.5,color:"#777",fontFamily:"monospace"}},"No numeric parameters on this node.")));
+        }):React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit"}},"No numeric parameters on this node.")));
     }
 
     // reusable colour pickers for the generator nodes
-    var COLOR_FG=React.createElement("div",{key:"color",style:{display:"flex",alignItems:"center",gap:6,marginTop:5}},React.createElement("span",{style:{fontSize:8,color:"#999",fontFamily:"monospace",minWidth:52}},"Color"),React.createElement("input",{type:"color",value:nd.params.color||"#ffffff",onChange:function(ev){setNodeParam("color",ev.target.value);},style:{width:36,height:26,background:"none",border:"1px solid #333",borderRadius:4,cursor:"pointer"}}));
-    var COLOR_BG=React.createElement("div",{key:"bgColor",style:{display:"flex",alignItems:"center",gap:6,marginTop:5}},React.createElement("span",{style:{fontSize:8,color:"#999",fontFamily:"monospace",minWidth:52}},"Background"),React.createElement("input",{type:"color",value:nd.params.bgColor||"#000000",onChange:function(ev){setNodeParam("bgColor",ev.target.value);},style:{width:36,height:26,background:"none",border:"1px solid #333",borderRadius:4,cursor:"pointer"}}));
-    var COLOR_A=React.createElement("div",{key:"colorA",style:{display:"flex",alignItems:"center",gap:6,marginTop:5}},React.createElement("span",{style:{fontSize:8,color:"#999",fontFamily:"monospace",minWidth:52}},"Color A"),React.createElement("input",{type:"color",value:nd.params.colorA||"#000000",onChange:function(ev){setNodeParam("colorA",ev.target.value);},style:{width:36,height:26,background:"none",border:"1px solid #333",borderRadius:4,cursor:"pointer"}}));
-    var COLOR_B=React.createElement("div",{key:"colorB",style:{display:"flex",alignItems:"center",gap:6,marginTop:5}},React.createElement("span",{style:{fontSize:8,color:"#999",fontFamily:"monospace",minWidth:52}},"Color B"),React.createElement("input",{type:"color",value:nd.params.colorB||"#ffffff",onChange:function(ev){setNodeParam("colorB",ev.target.value);},style:{width:36,height:26,background:"none",border:"1px solid #333",borderRadius:4,cursor:"pointer"}}));
+    var COLOR_FG=React.createElement("div",{key:"color",style:{display:"flex",alignItems:"center",gap:6,marginTop:5}},React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",minWidth:52}},"Color"),React.createElement("input",{type:"color",value:nd.params.color||"#ffffff",onChange:function(ev){setNodeParam("color",ev.target.value);},style:{width:36,height:26,background:"none",border:"1px solid var(--line2)",borderRadius:4,cursor:"pointer"}}));
+    var COLOR_BG=React.createElement("div",{key:"bgColor",style:{display:"flex",alignItems:"center",gap:6,marginTop:5}},React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",minWidth:52}},"Background"),React.createElement("input",{type:"color",value:nd.params.bgColor||"#000000",onChange:function(ev){setNodeParam("bgColor",ev.target.value);},style:{width:36,height:26,background:"none",border:"1px solid var(--line2)",borderRadius:4,cursor:"pointer"}}));
+    var COLOR_A=React.createElement("div",{key:"colorA",style:{display:"flex",alignItems:"center",gap:6,marginTop:5}},React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",minWidth:52}},"Color A"),React.createElement("input",{type:"color",value:nd.params.colorA||"#000000",onChange:function(ev){setNodeParam("colorA",ev.target.value);},style:{width:36,height:26,background:"none",border:"1px solid var(--line2)",borderRadius:4,cursor:"pointer"}}));
+    var COLOR_B=React.createElement("div",{key:"colorB",style:{display:"flex",alignItems:"center",gap:6,marginTop:5}},React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",minWidth:52}},"Color B"),React.createElement("input",{type:"color",value:nd.params.colorB||"#ffffff",onChange:function(ev){setNodeParam("colorB",ev.target.value);},style:{width:36,height:26,background:"none",border:"1px solid var(--line2)",borderRadius:4,cursor:"pointer"}}));
     if(nd.type==="source"){
       // The full layer panel for a Source opens in the side panel (all noise
       // types, parameters, filters and warps). Here we just show a hint.
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#888",fontFamily:"monospace",lineHeight:1.6}},
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",lineHeight:1.6}},
         (nd.params.layer?("Noise: "+(nd.params.layer.type||"fbm")):"empty")+". Full controls are in the side panel \u2192"));
     }
     else if(nd.type==="blend"){
@@ -12160,7 +12136,7 @@ function NodeCanvas(p){
         opts:BM.map(function(m){return {v:m,l:m};}),onChange:function(v){setNodeParam("mode",v);}}));
       rows.push(React.createElement(Slider,{key:"op",label:"Opacity",value:nd.params.opacity!=null?nd.params.opacity:1,min:0,max:1,step:0.01,
         fmt:function(v){return Math.round(v*100)+"%";},onChange:function(v){setNodeParam("opacity",v);}}));
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#666",fontFamily:"monospace",lineHeight:1.5,marginTop:4}},
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",lineHeight:1.5,marginTop:4}},
         "Input A blends over input B."));
     }
     else if(nd.type==="adjust"){
@@ -12176,15 +12152,15 @@ function NodeCanvas(p){
         onChange:function(v){setNodeParam("gamma",v);}}));
       rows.push(React.createElement("div",{key:"inv",style:{display:"flex",alignItems:"center",gap:8,marginTop:6},
         onClick:function(){setNodeParam("invert",!nd.params.invert);}},
-        React.createElement("div",{style:{width:28,height:16,borderRadius:8,background:nd.params.invert?"#e8900a":"#252525",
+        React.createElement("div",{style:{width:28,height:16,borderRadius:8,background:nd.params.invert?"var(--txt)":"var(--panel3)",
           cursor:"pointer",position:"relative",flexShrink:0}},
-          React.createElement("div",{style:{position:"absolute",width:12,height:12,borderRadius:6,background:"#fff",top:2,left:nd.params.invert?14:2,transition:"left 0.15s"}})),
-        React.createElement("span",{style:{fontSize:9,color:"#aaa",fontFamily:"monospace",cursor:"pointer"}},"Invert")));
+          React.createElement("div",{style:{position:"absolute",width:12,height:12,borderRadius:6,background:nd.params.invert?"var(--bg)":"#8a8a94",top:2,left:nd.params.invert?14:2,transition:"left 0.15s"}})),
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",cursor:"pointer"}},"Invert")));
     }
     else if(nd.type==="blur"){
       rows.push(React.createElement(Slider,{key:"r",label:"Radius",value:nd.params.radius||3,min:0,max:30,step:1,
         onChange:function(v){setNodeParam("radius",Math.round(v));}}));
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#666",fontFamily:"monospace",lineHeight:1.5,marginTop:4}},
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",lineHeight:1.5,marginTop:4}},
         "Gaussian blur. 0 = off."));
     }
     else if(nd.type==="glow"){
@@ -12194,25 +12170,25 @@ function NodeCanvas(p){
         onChange:function(v){setNodeParam("intensity",v);}}));
       rows.push(React.createElement(Slider,{key:"thr",label:"Threshold",value:nd.params.threshold||0,min:0,max:1,step:0.02,
         onChange:function(v){setNodeParam("threshold",v);}}));
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#666",fontFamily:"monospace",lineHeight:1.5,marginTop:4}},
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",lineHeight:1.5,marginTop:4}},
         "Bloom on bright areas above the threshold."));
     }
     else if(nd.type==="gradmap"){
       var gmRow=function(label,key,val){
         return React.createElement("div",{key:key,style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:7}},
-          React.createElement("span",{style:{fontSize:9,color:"#999",fontFamily:"monospace"}},label),
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit"}},label),
           React.createElement("input",{type:"color",value:val||"#000000",
             onChange:function(e){setNodeParam(key,e.target.value);},
-            style:{width:38,height:22,border:"1px solid #333",borderRadius:3,background:"none",cursor:"pointer",padding:0}}));
+            style:{width:38,height:22,border:"1px solid var(--line2)",borderRadius:3,background:"none",cursor:"pointer",padding:0}}));
       };
       // mode toggle: simple (A / mid / B) vs full multi-stop gradient
       rows.push(React.createElement("div",{key:"modetog",style:{display:"flex",gap:4,marginBottom:9}},
         ["Simple","Gradient"].map(function(lbl,idx){
           var on=(idx===1)===!!nd.params.useStops;
           return React.createElement("button",{key:lbl,onClick:function(){setNodeParam("useStops",idx===1);},
-            style:{flex:1,padding:"5px 0",fontSize:8.5,fontFamily:"monospace",fontWeight:700,letterSpacing:0.3,
-              background:on?"#e8900a":"#161616",color:on?"#000":"#888",
-              border:"1px solid "+(on?"#e8900a":"#2a2a2a"),borderRadius:4,cursor:"pointer",touchAction:"manipulation"}},lbl);
+            style:{flex:1,padding:"5px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,letterSpacing:0.3,
+              background:on?"var(--panel3)":"var(--panel)",color:on?"#fff":"var(--txt2)",
+              border:"1px solid "+(on?"#8a8a94":"var(--line)"),borderRadius:4,cursor:"pointer",touchAction:"manipulation"}},lbl);
         })));
       if(nd.params.useStops){
         // full multi-stop gradient editor (reuses GradientRamp)
@@ -12224,12 +12200,12 @@ function NodeCanvas(p){
         rows.push(gmRow("High (bright)","colorB",nd.params.colorB));
         rows.push(React.createElement("div",{key:"midtog",style:{display:"flex",alignItems:"center",gap:8,marginTop:2},
           onClick:function(){setNodeParam("colorMid",nd.params.colorMid?null:"#ff4400");}},
-          React.createElement("div",{style:{width:28,height:16,borderRadius:8,background:nd.params.colorMid?"#e8900a":"#252525",
+          React.createElement("div",{style:{width:28,height:16,borderRadius:8,background:nd.params.colorMid?"var(--txt)":"var(--panel3)",
             cursor:"pointer",position:"relative",flexShrink:0}},
-            React.createElement("div",{style:{position:"absolute",width:12,height:12,borderRadius:6,background:"#fff",top:2,left:nd.params.colorMid?14:2,transition:"left 0.15s"}})),
-          React.createElement("span",{style:{fontSize:9,color:"#aaa",fontFamily:"monospace",cursor:"pointer"}},"Use mid colour")));
+            React.createElement("div",{style:{position:"absolute",width:12,height:12,borderRadius:6,background:nd.params.colorMid?"var(--bg)":"#8a8a94",top:2,left:nd.params.colorMid?14:2,transition:"left 0.15s"}})),
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",cursor:"pointer"}},"Use mid colour")));
       }
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#666",fontFamily:"monospace",lineHeight:1.5,marginTop:6}},
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",lineHeight:1.5,marginTop:6}},
         "Maps brightness to a colour ramp. Great for fire, energy, toxic looks."));
     }
     else if(nd.type==="warp"){
@@ -12248,8 +12224,8 @@ function NodeCanvas(p){
       rows.push(React.createElement(Slider,{key:"sd",label:"Seed",value:nd.params.seed||1234,min:0,max:9999,step:1,
         onChange:function(v){setNodeParam("seed",Math.round(v));}}));
       rows.push(React.createElement("button",{key:"rs",onClick:function(){setNodeParam("seed",(Math.random()*9999)|0);},
-        style:{width:"100%",padding:"5px",fontSize:8.5,fontFamily:"monospace",background:"#161616",color:"#d0a060",
-        border:"1px solid #4a3a2a",borderRadius:4,cursor:"pointer",marginTop:4}},"\u21bb New Seed"));
+        style:{width:"100%",padding:"5px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:"var(--panel)",color:"var(--txt)",
+        border:"1px solid #8a8a94",borderRadius:4,cursor:"pointer",marginTop:4}},"\u21bb New Seed"));
     }
     else if(nd.type==="transform"){
       rows.push(React.createElement(Sel,{key:"smp",label:"Sampling",value:nd.params.sampling||"linear",
@@ -12268,14 +12244,14 @@ function NodeCanvas(p){
       var mkToggle=function(label,key){
         return React.createElement("div",{key:key,style:{display:"flex",alignItems:"center",gap:8,marginTop:6},
           onClick:function(){setNodeParam(key,!nd.params[key]);}},
-          React.createElement("div",{style:{width:28,height:16,borderRadius:8,background:nd.params[key]?"#e8900a":"#252525",
+          React.createElement("div",{style:{width:28,height:16,borderRadius:8,background:nd.params[key]?"var(--txt)":"var(--panel3)",
             cursor:"pointer",position:"relative",flexShrink:0}},
-            React.createElement("div",{style:{position:"absolute",width:12,height:12,borderRadius:6,background:"#fff",top:2,left:nd.params[key]?14:2,transition:"left 0.15s"}})),
-          React.createElement("span",{style:{fontSize:9,color:"#aaa",fontFamily:"monospace",cursor:"pointer"}},label));
+            React.createElement("div",{style:{position:"absolute",width:12,height:12,borderRadius:6,background:nd.params[key]?"var(--bg)":"#8a8a94",top:2,left:nd.params[key]?14:2,transition:"left 0.15s"}})),
+          React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",cursor:"pointer"}},label));
       };
       rows.push(mkToggle("Mirror X","mirrorX"));
       rows.push(mkToggle("Mirror Y","mirrorY"));
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#666",fontFamily:"monospace",lineHeight:1.5,marginTop:6}},
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",lineHeight:1.5,marginTop:6}},
         "Seamless wrap keeps the result tileable."));
     }
     else if(nd.type==="mask"){
@@ -12283,24 +12259,24 @@ function NodeCanvas(p){
         onChange:function(v){setNodeParam("maskContrast",v);}}));
       rows.push(React.createElement("div",{key:"im",style:{display:"flex",alignItems:"center",gap:8,marginTop:6},
         onClick:function(){setNodeParam("invertMask",!nd.params.invertMask);}},
-        React.createElement("div",{style:{width:28,height:16,borderRadius:8,background:nd.params.invertMask?"#e8900a":"#252525",
+        React.createElement("div",{style:{width:28,height:16,borderRadius:8,background:nd.params.invertMask?"var(--txt)":"var(--panel3)",
           cursor:"pointer",position:"relative",flexShrink:0}},
-          React.createElement("div",{style:{position:"absolute",width:12,height:12,borderRadius:6,background:"#fff",top:2,left:nd.params.invertMask?14:2,transition:"left 0.15s"}})),
-        React.createElement("span",{style:{fontSize:9,color:"#aaa",fontFamily:"monospace",cursor:"pointer"}},"Invert mask")));
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#888",fontFamily:"monospace",lineHeight:1.6,marginTop:6}},
+          React.createElement("div",{style:{position:"absolute",width:12,height:12,borderRadius:6,background:nd.params.invertMask?"var(--bg)":"#8a8a94",top:2,left:nd.params.invertMask?14:2,transition:"left 0.15s"}})),
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",cursor:"pointer"}},"Invert mask")));
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",lineHeight:1.6,marginTop:6}},
         "Picks A or B per pixel by the Mask input. White = A, black = B. Contrast sharpens the transition."));
     }
     else if(nd.type==="flipbook"){
       var fbp=nd.params; var sheet=fbp.sheet;
       // import button (file input)
-      rows.push(React.createElement("label",{key:"imp",style:{display:"block",padding:"7px 0",textAlign:"center",fontSize:9,
-        fontFamily:"monospace",fontWeight:700,background:"#1b2a1b",color:"#9fe080",border:"1px solid #2f4a2f",
+      rows.push(React.createElement("label",{key:"imp",style:{display:"block",padding:"7px 0",textAlign:"center",fontSize:"var(--fs-s)",
+        fontFamily:"inherit",fontWeight:700,background:"var(--panel3)",color:"var(--txt)",border:"1px solid #8a8a94",
         borderRadius:5,cursor:"pointer",marginBottom:8}},
         sheet?"Replace sheet\u2026":"Import sprite sheet\u2026",
         React.createElement("input",{type:"file",accept:"image/*",style:{display:"none"},
           onChange:function(e){var f=e.target.files&&e.target.files[0];if(f)importFlipbookSheet(nd.id,f,nd.params.cols||5,nd.params.rows||5);}})));
       // grid presets
-      rows.push(React.createElement("div",{key:"glbl",style:{fontSize:8,color:"#888",fontFamily:"monospace",marginBottom:3}},"Grid (cols \u00d7 rows)"));
+      rows.push(React.createElement("div",{key:"glbl",style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",marginBottom:3}},"Grid (cols \u00d7 rows)"));
       rows.push(React.createElement("div",{key:"grid",style:{display:"flex",flexWrap:"wrap",gap:3,marginBottom:8}},
         FB_GRID_PRESETS.map(function(gp){
           var act=(nd.params.cols===gp[0]&&nd.params.rows===gp[1]);
@@ -12308,19 +12284,19 @@ function NodeCanvas(p){
               if(nd.params.sheet&&nd.params.sheet.src){ resliceFlipbook(nd.id,gp[0],gp[1]); }
               else { setNodeParam("cols",gp[0]); var nd2=g.nodes[nd.id]; nd2.params.rows=gp[1]; bump(); }
             },
-            style:{padding:"4px 7px",fontSize:8,fontFamily:"monospace",background:act?"#e8900a":"#161616",
-              color:act?"#000":"#aaa",border:"1px solid "+(act?"#e8900a":"#2a2a2a"),borderRadius:4,cursor:"pointer"}},
+            style:{padding:"4px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:act?"var(--panel3)":"var(--panel)",
+              color:act?"#fff":"var(--txt2)",border:"1px solid "+(act?"#8a8a94":"var(--line)"),borderRadius:4,cursor:"pointer"}},
             gp[0]+"\u00d7"+gp[1]);
         })));
       if(sheet){
-        rows.push(React.createElement("div",{key:"info",style:{fontSize:8,color:"#777",fontFamily:"monospace",marginBottom:6}},
+        rows.push(React.createElement("div",{key:"info",style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",marginBottom:6}},
           sheet.totalFrames+" frames \u00b7 "+sheet.frameSize+"px"));
         // playback
         rows.push(React.createElement("div",{key:"playrow",style:{display:"flex",gap:5,marginBottom:8}},
           React.createElement("button",{onClick:function(){setNodeParam("playing",!nd.params.playing);},
-            style:{flex:1,padding:"6px 0",fontSize:9,fontFamily:"monospace",fontWeight:700,
-              background:nd.params.playing?"#e8900a":"#161616",color:nd.params.playing?"#000":"#aaa",
-              border:"1px solid "+(nd.params.playing?"#e8900a":"#2a2a2a"),borderRadius:4,cursor:"pointer"}},
+            style:{flex:1,padding:"6px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,
+              background:nd.params.playing?"var(--panel3)":"var(--panel)",color:nd.params.playing?"#fff":"var(--txt2)",
+              border:"1px solid "+(nd.params.playing?"#8a8a94":"var(--line)"),borderRadius:4,cursor:"pointer"}},
             nd.params.playing?"\u275a\u275a Pause":"\u25b6 Play")));
         rows.push(React.createElement(Slider,{key:"fps",label:"FPS",value:nd.params.fps||24,min:1,max:60,step:1,
           onChange:function(v){setNodeParam("fps",Math.round(v));}}));
@@ -12336,7 +12312,7 @@ function NodeCanvas(p){
           opts:[{v:"forward",l:"Forward"},{v:"reverse",l:"Reverse"},{v:"pingpong",l:"Ping-pong"}],
           onChange:function(v){setNodeParam("playMode",v);}}));
       }
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#666",fontFamily:"monospace",lineHeight:1.5,marginTop:6}},
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",lineHeight:1.5,marginTop:6}},
         "Outputs the current frame. Add nodes after it to edit every frame, then feed a Flipbook Pack to re-tile."));
     }
     else if(nd.type==="flipbookPack"){
@@ -12345,9 +12321,9 @@ function NodeCanvas(p){
       rows.push(React.createElement(Slider,{key:"r",label:"Rows",value:nd.params.rows||5,min:1,max:12,step:1,
         onChange:function(v){setNodeParam("rows",Math.round(v));}}));
       rows.push(React.createElement("button",{key:"bake",onClick:function(){if(p.onBakeFlipbook)p.onBakeFlipbook(nd.id);},
-        style:{width:"100%",padding:"8px 0",fontSize:9,fontFamily:"monospace",fontWeight:700,marginTop:8,
-          background:"#e8900a",color:"#000",border:"none",borderRadius:5,cursor:"pointer"}},"\u2193 Bake & Export Sheet"));
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#666",fontFamily:"monospace",lineHeight:1.5,marginTop:6}},
+        style:{width:"100%",padding:"8px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,marginTop:8,
+          background:"var(--txt)",color:"var(--bg)",border:"none",borderRadius:5,cursor:"pointer"}},"\u2193 Bake & Export Sheet"));
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",lineHeight:1.5,marginTop:6}},
         "Re-evaluates every frame through your graph and tiles them into a sheet, then exports it as PNG."));
     }
     else if(nd.type==="shape"){
@@ -12414,20 +12390,20 @@ function NodeCanvas(p){
       rows.push(React.createElement(Slider,{key:"rp",label:"Repeat",value:nd.params.repeat||1,min:1,max:16,step:1,fmt:function(v){return Math.round(v)+"\u00d7";},onChange:function(v){setNodeParam("repeat",Math.round(v));}}));
       rows.push(React.createElement(Slider,{key:"px",label:"Center X",value:nd.params.x!=null?nd.params.x:0.5,min:0,max:1,step:0.01,onChange:function(v){setNodeParam("x",v);}}));
       rows.push(React.createElement(Slider,{key:"py",label:"Center Y",value:nd.params.y!=null?nd.params.y:0.5,min:0,max:1,step:0.01,onChange:function(v){setNodeParam("y",v);}}));
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#888",fontFamily:"monospace",lineHeight:1.6}},
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",lineHeight:1.6}},
         "Feed it Stripes to get a starburst, or a Gradient to get a tunnel."));
     }
     else if(nd.type==="mirror"){
       rows.push(React.createElement(Sel,{key:"md",label:"Mode",value:nd.params.mode||"x",
         opts:[{v:"x",l:"Mirror X"},{v:"y",l:"Mirror Y"},{v:"xy",l:"Mirror Both"},{v:"diagonal",l:"Diagonal"},{v:"kaleido",l:"Kaleidoscope"}],
         onChange:function(v){setNodeParam("mode",v);}}));
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#888",fontFamily:"monospace",lineHeight:1.6}},
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",lineHeight:1.6}},
         "Folds the image onto itself. Kaleidoscope gives a symmetric tile that repeats cleanly."));
     }
     else if(nd.type==="offsetnode"){
       rows.push(React.createElement(Slider,{key:"ox",label:"Offset X",value:nd.params.offsetX!=null?nd.params.offsetX:0.5,min:0,max:1,step:0.01,onChange:function(v){setNodeParam("offsetX",v);}}));
       rows.push(React.createElement(Slider,{key:"oy",label:"Offset Y",value:nd.params.offsetY!=null?nd.params.offsetY:0.5,min:0,max:1,step:0.01,onChange:function(v){setNodeParam("offsetY",v);}}));
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#888",fontFamily:"monospace",lineHeight:1.6}},
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",lineHeight:1.6}},
         "Shifts with wrap-around. At 0.5/0.5 any seam in a tiling texture lands in the middle where you can see it."));
     }
     else if(nd.type==="dirblur"){
@@ -12458,23 +12434,23 @@ function NodeCanvas(p){
         onChange:function(v){setNodeParam("op",v);}}));
       rows.push(React.createElement(Slider,{key:"fc",label:"B Factor",value:nd.params.factor!=null?nd.params.factor:1,min:0,max:4,step:0.02,onChange:function(v){setNodeParam("factor",v);}}));
       rows.push(React.createElement(Tog,{key:"cl",label:"Clamp to 0..1",value:nd.params.clamp!==false,onChange:function(v){setNodeParam("clamp",v);}}));
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#888",fontFamily:"monospace",lineHeight:1.6}},
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",lineHeight:1.6}},
         "Combines input A and input B per channel. B Factor scales B before the operation."));
     }
     else if(nd.type==="mix"){
       rows.push(React.createElement(Slider,{key:"fc",label:"Factor",value:nd.params.factor!=null?nd.params.factor:0.5,min:0,max:1,step:0.01,onChange:function(v){setNodeParam("factor",v);}}));
       rows.push(React.createElement(Tog,{key:"um",label:"Use mask input",value:nd.params.useMask!==false,onChange:function(v){setNodeParam("useMask",v);}}));
       rows.push(React.createElement(Tog,{key:"im",label:"Invert mask",value:!!nd.params.invertMask,onChange:function(v){setNodeParam("invertMask",v);}}));
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#888",fontFamily:"monospace",lineHeight:1.6}},
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",lineHeight:1.6}},
         "Blends A toward B. With a mask connected, the mask brightness drives the blend per pixel."));
     }
     else if(nd.type==="text"){
       rows.push(React.createElement("div",{key:"txt",style:{marginBottom:7}},
-        React.createElement("div",{style:{fontSize:8,color:"#999",fontFamily:"monospace",marginBottom:3}},"Text (use Enter for a new line)"),
+        React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",marginBottom:3}},"Text (use Enter for a new line)"),
         React.createElement("textarea",{value:nd.params.text!=null?nd.params.text:"",rows:2,
           onChange:function(ev){setNodeParam("text",ev.target.value);},
-          style:{width:"100%",boxSizing:"border-box",background:"#0f0f0f",border:"1px solid #2a2a2a",borderRadius:4,
-            color:"#ddd",fontSize:10,fontFamily:"monospace",padding:"5px 6px",outline:"none",resize:"vertical"}})));
+          style:{width:"100%",boxSizing:"border-box",background:"var(--bg)",border:"1px solid var(--line)",borderRadius:4,
+            color:"var(--txt)",fontSize:"var(--fs-s)",fontFamily:"inherit",padding:"5px 6px",outline:"none",resize:"vertical"}})));
       rows.push(React.createElement(Sel,{key:"ff",label:"Font",value:nd.params.fontFamily||"monospace",
         opts:[{v:"monospace",l:"Monospace"},{v:"sans-serif",l:"Sans Serif"},{v:"serif",l:"Serif"},
               {v:"Impact, sans-serif",l:"Impact"},{v:"Georgia, serif",l:"Georgia"},{v:"'Courier New', monospace",l:"Courier"},
@@ -12482,8 +12458,8 @@ function NodeCanvas(p){
           (customFonts||[]).map(function(f){return {v:f,l:f+" (loaded)"};})),
         onChange:function(v){setNodeParam("fontFamily",v);}}));
       rows.push(React.createElement("div",{key:"fu",style:{marginBottom:8}},
-        React.createElement("label",{style:{display:"block",padding:"6px 8px",background:"#1a1a1a",border:"1px dashed #3a3a3a",
-          borderRadius:5,cursor:"pointer",fontSize:8.5,fontFamily:"monospace",color:"#9cf",textAlign:"center"}},
+        React.createElement("label",{style:{display:"block",padding:"6px 8px",background:"var(--panel)",border:"1px dashed var(--line2)",
+          borderRadius:5,cursor:"pointer",fontSize:"var(--fs-s)",fontFamily:"inherit",color:"var(--txt)",textAlign:"center"}},
           "Load a font file (.ttf .otf .woff)",
           React.createElement("input",{type:"file",accept:".ttf,.otf,.woff,.woff2",style:{display:"none"},
             onChange:function(ev){var f=ev.target.files&&ev.target.files[0]; if(f)loadCustomFont(f,function(fam){ if(fam)setNodeParam("fontFamily",fam); });}}))));
@@ -12497,14 +12473,14 @@ function NodeCanvas(p){
       rows.push(React.createElement(Tog,{key:"it",label:"Italic",value:!!nd.params.italic,onChange:function(v){setNodeParam("italic",v);}}));
       rows.push(React.createElement(Tog,{key:"tr",label:"Transparent BG",value:!!nd.params.transparent,onChange:function(v){setNodeParam("transparent",v);}}));
       rows.push(React.createElement("div",{key:"cols",style:{display:"flex",alignItems:"center",gap:10,marginTop:6}},
-        React.createElement("span",{style:{fontSize:8,color:"#999",fontFamily:"monospace"}},"Text"),
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit"}},"Text"),
         React.createElement("input",{type:"color",value:nd.params.color||"#ffffff",
           onChange:function(ev){setNodeParam("color",ev.target.value);},
-          style:{width:32,height:22,background:"none",border:"1px solid #333",borderRadius:3,cursor:"pointer"}}),
-        nd.params.transparent?null:React.createElement("span",{style:{fontSize:8,color:"#999",fontFamily:"monospace"}},"BG"),
+          style:{width:32,height:22,background:"none",border:"1px solid var(--line2)",borderRadius:3,cursor:"pointer"}}),
+        nd.params.transparent?null:React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit"}},"BG"),
         nd.params.transparent?null:React.createElement("input",{type:"color",value:nd.params.bgColor||"#000000",
           onChange:function(ev){setNodeParam("bgColor",ev.target.value);},
-          style:{width:32,height:22,background:"none",border:"1px solid #333",borderRadius:3,cursor:"pointer"}})));
+          style:{width:32,height:22,background:"none",border:"1px solid var(--line2)",borderRadius:3,cursor:"pointer"}})));
     }
     else if(nd.type==="morph"){
       rows.push(React.createElement(Slider,{key:"am",label:"Amount",value:nd.params.amount!=null?nd.params.amount:1,min:-8,max:8,step:1,
@@ -12514,7 +12490,7 @@ function NodeCanvas(p){
         opts:[{v:"alpha",l:"Alpha"},{v:"luma",l:"Luminance"}],onChange:function(v){setNodeParam("source",v);}}));
       rows.push(React.createElement(Sel,{key:"sh",label:"Shape",value:nd.params.shape||"diamond",
         opts:[{v:"diamond",l:"Diamond (round)"},{v:"square",l:"Square (blocky)"}],onChange:function(v){setNodeParam("shape",v);}}));
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#888",fontFamily:"monospace",lineHeight:1.6}},
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",lineHeight:1.6}},
         "Positive grows the shape outward, negative eats it inward. Chain shrink then expand to remove specks."));
     }
     else if(nd.type==="edgedetect"){
@@ -12525,10 +12501,10 @@ function NodeCanvas(p){
       rows.push(React.createElement(Tog,{key:"ov",label:"Overlay on source",value:!!nd.params.overlay,onChange:function(v){setNodeParam("overlay",v);}}));
       rows.push(React.createElement(Tog,{key:"iv",label:"Invert",value:!!nd.params.invert,onChange:function(v){setNodeParam("invert",v);}}));
       rows.push(React.createElement("div",{key:"cl",style:{display:"flex",alignItems:"center",gap:6,marginTop:5}},
-        React.createElement("span",{style:{fontSize:8,color:"#999",fontFamily:"monospace",minWidth:52}},"Edge Color"),
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",minWidth:52}},"Edge Color"),
         React.createElement("input",{type:"color",value:nd.params.color||"#ffffff",
           onChange:function(ev){setNodeParam("color",ev.target.value);},
-          style:{width:34,height:22,background:"none",border:"1px solid #333",borderRadius:3,cursor:"pointer"}})));
+          style:{width:34,height:22,background:"none",border:"1px solid var(--line2)",borderRadius:3,cursor:"pointer"}})));
     }
     else if(nd.type==="island"){
       rows.push(React.createElement(Sel,{key:"md",label:"Mode",value:nd.params.mode||"colorize",
@@ -12541,7 +12517,7 @@ function NodeCanvas(p){
         rows.push(React.createElement(Slider,{key:"ms",label:"Min Size",value:nd.params.minSize!=null?nd.params.minSize:8,min:1,max:400,step:1,fmt:function(v){return Math.round(v)+"px";},onChange:function(v){setNodeParam("minSize",Math.round(v));}}));
       rows.push(React.createElement(Sel,{key:"cn",label:"Connectivity",value:String(nd.params.connectivity||4),
         opts:[{v:"4",l:"4 (orthogonal)"},{v:"8",l:"8 (with diagonals)"}],onChange:function(v){setNodeParam("connectivity",parseInt(v));}}));
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#888",fontFamily:"monospace",lineHeight:1.6}},
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",lineHeight:1.6}},
         "Finds connected regions. Colorize is for inspecting, Remove small cleans up stray pixels."));
     }
     else if(nd.type==="colorgrade"){
@@ -12568,7 +12544,7 @@ function NodeCanvas(p){
               {v:"cga",l:"CGA (4)"},{v:"pico8",l:"PICO-8 (16)"},{v:"c64",l:"C64 (16)"},{v:"nes",l:"NES-like (16)"}],
         onChange:function(v){setNodeParam("palette",v);}}));
       rows.push(React.createElement(Slider,{key:"dt",label:"Dither",value:nd.params.dither||0,min:0,max:1,step:0.05,onChange:function(v){setNodeParam("dither",v);}}));
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#888",fontFamily:"monospace",lineHeight:1.6}},
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",lineHeight:1.6}},
         "Dither breaks gradients into classic ordered pixel patterns before snapping to the palette."));
     }
     else if(nd.type==="outline"){
@@ -12579,10 +12555,10 @@ function NodeCanvas(p){
       rows.push(React.createElement(Sel,{key:"md",label:"Side",value:nd.params.mode||"outer",
         opts:[{v:"outer",l:"Outer"},{v:"inner",l:"Inner"}],onChange:function(v){setNodeParam("mode",v);}}));
       rows.push(React.createElement("div",{key:"cl",style:{display:"flex",alignItems:"center",gap:6,marginTop:5}},
-        React.createElement("span",{style:{fontSize:8,color:"#999",fontFamily:"monospace",minWidth:52}},"Color"),
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",minWidth:52}},"Color"),
         React.createElement("input",{type:"color",value:nd.params.color||"#000000",
           onChange:function(ev){setNodeParam("color",ev.target.value);},
-          style:{width:34,height:22,background:"none",border:"1px solid #333",borderRadius:3,cursor:"pointer"}})));
+          style:{width:34,height:22,background:"none",border:"1px solid var(--line2)",borderRadius:3,cursor:"pointer"}})));
     }
     else if(nd.type==="scanlines"){
       rows.push(React.createElement(Slider,{key:"sp",label:"Spacing",value:nd.params.spacing!=null?nd.params.spacing:3,min:2,max:12,step:1,fmt:function(v){return Math.round(v)+"px";},onChange:function(v){setNodeParam("spacing",Math.round(v));}}));
@@ -12614,23 +12590,23 @@ function NodeCanvas(p){
     }
     else if(nd.type==="normalmap"){
       rows.push(React.createElement(Slider,{key:"st",label:"Strength",value:nd.params.strength!=null?nd.params.strength:2,min:0.1,max:8,step:0.1,onChange:function(v){setNodeParam("strength",v);}}));
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#888",fontFamily:"monospace",lineHeight:1.6}},
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",lineHeight:1.6}},
         "Feed a heightmap (grayscale) to get a tangent-space normal map."));
     }
     else if(nd.type==="reroute"){
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#888",fontFamily:"monospace",lineHeight:1.6}},
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",lineHeight:1.6}},
         "Pass-through node. Use it to route wires cleanly around the graph."));
     }
     else if(nd.type==="alphaSplit"){
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#888",fontFamily:"monospace",lineHeight:1.6}},
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",lineHeight:1.6}},
         "Five outputs on the right: RGB (full colour), and R, G, B, A each as a grayscale channel. Drag from the one you need."));
     }
     else if(nd.type==="alphaMerge"){
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#888",fontFamily:"monospace",lineHeight:1.6}},
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",lineHeight:1.6}},
         "RGB comes from the 'rgb' input; the 'alpha' input's brightness becomes the alpha channel."));
     }
     else if(nd.type==="output"){
-      rows.push(React.createElement("div",{key:"hint",style:{fontSize:8,color:"#888",fontFamily:"monospace",lineHeight:1.6}},
+      rows.push(React.createElement("div",{key:"hint",style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",lineHeight:1.6}},
         "The final result of the graph. Connect your last node here. Shown in the preview."));
     }
     // Drops below the batch toolbar when that is on screen (2+ nodes selected),
@@ -12638,7 +12614,7 @@ function NodeCanvas(p){
     var _multi=selCount()>1;
     return React.createElement("div",{style:{position:"absolute",top:(_multi?104:74),right:8,
       width:"min(216px, calc(100% - 16px))",zIndex:12,
-      background:"rgba(15,15,15,0.96)",border:"1px solid #2a2a2a",borderRadius:9,padding:"10px 11px",
+      background:"color-mix(in srgb,var(--bg) 96%,transparent)",border:"1px solid var(--line)",borderRadius:9,padding:"10px 11px",
       boxShadow:"0 4px 20px rgba(0,0,0,0.6)",
       maxHeight:showTimeline?(_multi?"calc(100% - 300px)":"calc(100% - 270px)")
                             :(_multi?"calc(100% - 180px)":"calc(100% - 150px)"),
@@ -12661,19 +12637,19 @@ function NodeCanvas(p){
     if(my<8)my=8;
     var rows=[];
     rows.push(React.createElement("div",{key:"hd",style:{display:"flex",justifyContent:"space-between",alignItems:"center",
-      padding:"7px 9px",borderBottom:"1px solid #232323",position:"sticky",top:0,background:"#141414",zIndex:1}},
-      React.createElement("span",{style:{fontSize:8.5,fontFamily:"monospace",fontWeight:700,color:"#e8900a",letterSpacing:0.6}},
+      padding:"7px 9px",borderBottom:"1px solid var(--line)",position:"sticky",top:0,background:"var(--bg)",zIndex:1}},
+      React.createElement("span",{style:{fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,color:"var(--txt)",letterSpacing:0.6}},
         addMenu.fromId?"CONNECT TO\u2026":"ADD NODE"),
       React.createElement("button",{onClick:function(){setAddMenu(null);setAddQ("");},
-        style:{background:"none",border:"none",color:"#888",fontSize:13,cursor:"pointer",fontFamily:"monospace",padding:"0 2px"}},"\u00d7")));
+        style:{background:"none",border:"none",color:"var(--txt2)",fontSize:"var(--fs-l)",cursor:"pointer",fontFamily:"inherit",padding:"0 2px"}},"\u00d7")));
     // quick search: type to filter by node name
-    rows.push(React.createElement("div",{key:"srch",style:{padding:"6px 9px",borderBottom:"1px solid #1e1e1e",
-      position:"sticky",top:30,background:"#141414",zIndex:1}},
+    rows.push(React.createElement("div",{key:"srch",style:{padding:"6px 9px",borderBottom:"1px solid var(--line)",
+      position:"sticky",top:30,background:"var(--bg)",zIndex:1}},
       React.createElement("input",{type:"text",value:addQ,placeholder:"search\u2026",autoFocus:false,
         onChange:function(ev){setAddQ(ev.target.value);},
         onPointerDown:function(ev){ev.stopPropagation();},
-        style:{width:"100%",boxSizing:"border-box",background:"#0f0f0f",border:"1px solid #2a2a2a",borderRadius:4,
-          color:"#ddd",fontSize:9,fontFamily:"monospace",padding:"5px 7px",outline:"none"}})));
+        style:{width:"100%",boxSizing:"border-box",background:"var(--bg)",border:"1px solid var(--line)",borderRadius:4,
+          color:"var(--txt)",fontSize:"var(--fs-s)",fontFamily:"inherit",padding:"5px 7px",outline:"none"}})));
     var _q=(addQ||"").trim().toLowerCase();
     var _matched=0;
     NODE_CATEGORIES.forEach(function(cat){
@@ -12695,13 +12671,13 @@ function NodeCanvas(p){
       rows.push(React.createElement("button",{key:"c"+cat.name,
         onClick:function(){ setAddCat(expanded&&!_q?null:cat.name); },
         style:{display:"flex",alignItems:"center",gap:7,width:"100%",textAlign:"left",minHeight:34,
-          padding:"0 9px",background:expanded?"#1c1c1c":"none",border:"none",
-          borderTop:"1px solid #1e1e1e",cursor:"pointer",fontFamily:"monospace",
-          color:expanded?"#e8900a":"#8a8a8a",touchAction:"manipulation"}},
-        React.createElement("span",{style:{fontSize:9,transition:"transform 0.12s",
+          padding:"0 9px",background:expanded?"var(--panel2)":"none",border:"none",
+          borderTop:"1px solid var(--line)",cursor:"pointer",fontFamily:"inherit",
+          color:expanded?"var(--txt)":"var(--txt2)",touchAction:"manipulation"}},
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",transition:"transform 0.12s",
           transform:expanded?"rotate(90deg)":"rotate(0deg)",display:"inline-block",width:8}},"\u25b8"),
-        React.createElement("span",{style:{fontSize:9,fontWeight:700,letterSpacing:1,textTransform:"uppercase"}},cat.name),
-        React.createElement("span",{style:{marginLeft:"auto",fontSize:8,color:"#666"}},typesHere.length)));
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",fontWeight:700,letterSpacing:1,textTransform:"uppercase"}},cat.name),
+        React.createElement("span",{style:{marginLeft:"auto",fontSize:"var(--fs-s)",color:"var(--tg-dim)"}},typesHere.length)));
       if(!expanded)return;
       typesHere.forEach(function(t){
         var meta=NODE_META[t]||{};
@@ -12711,23 +12687,24 @@ function NodeCanvas(p){
             setAddCat(cat.name); setAddMenu(null); setAddQ("");
           },
           style:{display:"flex",alignItems:"center",gap:9,width:"100%",textAlign:"left",minHeight:38,
-            padding:"0 10px",background:"none",border:"none",borderLeft:"3px solid "+(meta.color||"#444"),
-            cursor:"pointer",fontFamily:"monospace",color:"#ccc",touchAction:"manipulation"},
-          onMouseEnter:function(e){e.currentTarget.style.background="#1c1c1c";},
+            padding:"0 10px",background:"none",border:"none",
+            cursor:"pointer",fontFamily:"inherit",color:"var(--txt)",touchAction:"manipulation"},
+          onMouseEnter:function(e){e.currentTarget.style.background="var(--panel2)";},
           onMouseLeave:function(e){e.currentTarget.style.background="none";}},
           nodeIcon(t,13,meta.color||"#aaa"),
-          React.createElement("span",{style:{fontSize:10,fontWeight:700,whiteSpace:"nowrap"}},meta.label||t),
-          React.createElement("span",{style:{fontSize:7,color:"#777",marginLeft:"auto",textAlign:"right",
-            overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"46%"}},meta.hint||"")));
+          // name above, hint below (wrapped): the hint used to be cut with an ellipsis
+          React.createElement("span",{style:{display:"flex",flexDirection:"column",gap:1,minWidth:0,padding:"5px 0"}},
+            React.createElement("span",{style:{fontSize:"var(--fs-s)",fontWeight:700}},meta.label||t),
+            meta.hint?React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",lineHeight:1.3}},meta.hint):null)));
       });
     });
-    if(!_matched)rows.push(React.createElement("div",{key:"nores",style:{padding:"14px 10px",fontSize:8.5,
-      color:"#777",fontFamily:"monospace",textAlign:"center"}},"No node matches \u201c"+addQ+"\u201d"));
+    if(!_matched)rows.push(React.createElement("div",{key:"nores",style:{padding:"14px 10px",fontSize:"var(--fs-s)",
+      color:"var(--txt2)",fontFamily:"inherit",textAlign:"center"}},"No node matches \u201c"+addQ+"\u201d"));
     return React.createElement("div",{key:"amwrap"},
       React.createElement("div",{onPointerDown:function(ev){ev.stopPropagation();setAddMenu(null);setAddQ("");},
         style:{position:"absolute",inset:0,zIndex:59,background:"transparent"}}),
       React.createElement("div",{style:{position:"absolute",left:mx,top:my,width:MENU_W,maxHeight:MENU_MAXH,
-        overflowY:"auto",background:"#141414",border:"1px solid #2e2e2e",borderRadius:8,zIndex:60,
+        overflowY:"auto",background:"var(--bg)",border:"1px solid var(--line2)",borderRadius:8,zIndex:60,
         boxShadow:"0 8px 30px rgba(0,0,0,0.7)",WebkitOverflowScrolling:"touch"}},rows)
     );
   }
@@ -12738,20 +12715,20 @@ function NodeCanvas(p){
     var n=selCount(); if(n<2)return null;
     function btn(label,fn,title,accent){
       return React.createElement("button",{key:label,onClick:fn,title:title||label,
-        style:{minHeight:30,padding:"0 10px",fontSize:9.5,fontFamily:"monospace",fontWeight:600,lineHeight:1,
-          background:accent?"#e8900a":"#1c1c1c",color:accent?"#000":"#cdcdcd",
-          border:"1px solid "+(accent?"#e8900a":"#333"),borderRadius:6,cursor:"pointer",touchAction:"manipulation",
+        style:{minHeight:30,padding:"0 10px",fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:600,lineHeight:1,
+          background:accent?"var(--panel3)":"var(--panel2)",color:accent?"#fff":"var(--txt)",
+          border:"1px solid "+(accent?"#8a8a94":"var(--line2)"),borderRadius:6,cursor:"pointer",touchAction:"manipulation",
           whiteSpace:"nowrap",display:"inline-flex",alignItems:"center",justifyContent:"center"}},label);
     }
     function grp(label,kids){
-      return React.createElement("div",{key:label,style:{display:"flex",alignItems:"center",gap:4,padding:"0 6px",borderRight:"1px solid #2a2a2a"}},
-        React.createElement("span",{style:{fontSize:7,color:"#666",fontFamily:"monospace",letterSpacing:0.5,marginRight:2}},label),kids);
+      return React.createElement("div",{key:label,style:{display:"flex",alignItems:"center",gap:4,padding:"0 6px",borderRight:"1px solid var(--line)"}},
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",letterSpacing:0.5,marginRight:2}},label),kids);
     }
     // Sits below the mode-switch pill, which also lives at top-centre.
     return React.createElement("div",{style:{position:"absolute",top:52,left:"50%",transform:"translateX(-50%)",zIndex:30,
       display:"flex",alignItems:"center",gap:3,flexWrap:"wrap",maxWidth:"94%",
-      background:"rgba(16,16,16,0.96)",border:"1px solid #e8900a44",borderRadius:9,padding:"6px 7px",boxShadow:"0 4px 18px rgba(0,0,0,0.6)"}},
-      React.createElement("span",{style:{fontSize:8.5,fontFamily:"monospace",fontWeight:700,color:"#e8900a",padding:"0 5px"}},n+" SEL"),
+      background:"color-mix(in srgb,var(--bg) 96%,transparent)",border:"1px solid #8a8a94",borderRadius:9,padding:"6px 7px",boxShadow:"0 4px 18px rgba(0,0,0,0.6)"}},
+      React.createElement("span",{style:{fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,color:"var(--txt)",padding:"0 5px"}},n+" SEL"),
       grp("EDIT",[btn("Dup",batchDuplicate,"Duplicate selected"),btn("Copy",batchCopy,"Copy"),btn("Paste",batchPaste,"Paste"),btn("Del",batchDelete,"Delete selected")]),
       grp("ALIGN",[btn("\u2190",function(){batchAlign("left");},"Align left"),btn("\u2192",function(){batchAlign("right");},"Align right"),
         btn("\u2191",function(){batchAlign("top");},"Align top"),btn("\u2193",function(){batchAlign("bottom");},"Align bottom"),
@@ -12780,10 +12757,10 @@ function NodeCanvas(p){
     if(my<8)my=8;
     function item(label,fn,col){
       return React.createElement("button",{key:label,onClick:function(){fn();setNodeMenu(null);},
-        onMouseEnter:function(e){e.currentTarget.style.background="#1e1e1e";},
+        onMouseEnter:function(e){e.currentTarget.style.background="var(--panel2)";},
         onMouseLeave:function(e){e.currentTarget.style.background="none";},
         style:{display:"block",width:"100%",textAlign:"left",padding:"10px 12px",background:"none",border:"none",
-          borderBottom:"1px solid #1e1e1e",color:col||"#ddd",fontSize:10,fontFamily:"monospace",cursor:"pointer",touchAction:"manipulation"}},label);
+          borderBottom:"1px solid var(--line)",color:col||"var(--txt)",fontSize:"var(--fs-s)",fontFamily:"inherit",cursor:"pointer",touchAction:"manipulation"}},label);
     }
     // "insert after" submenu: splice a node onto this node's first OUTGOING edge
     var outEdge=null; for(var eid in g.edges){if(g.edges[eid].from===node.id){outEdge=eid;break;}}
@@ -12792,21 +12769,21 @@ function NodeCanvas(p){
       React.createElement("div",{onPointerDown:function(ev){ev.stopPropagation();setNodeMenu(null);},
         style:{position:"absolute",inset:0,zIndex:69,background:"transparent"}}),
       React.createElement("div",{style:{position:"absolute",left:mx,top:my,width:W,zIndex:70,
-        background:"#141414",border:"1px solid #383838",borderRadius:10,overflow:"hidden",boxShadow:"0 10px 36px rgba(0,0,0,0.75)"}},
-        React.createElement("div",{style:{padding:"8px 11px",fontSize:8.5,fontFamily:"monospace",fontWeight:700,color:nodeColor(node.type),
-          borderBottom:"1px solid #2a2a2a",display:"flex",justifyContent:"space-between",alignItems:"center",gap:6}},
+        background:"var(--bg)",border:"1px solid var(--line2)",borderRadius:10,overflow:"hidden",boxShadow:"0 10px 36px rgba(0,0,0,0.75)"}},
+        React.createElement("div",{style:{padding:"8px 11px",fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,color:"color-mix(in srgb,"+nodeColor(node.type)+" 55%,#fff)",
+          borderBottom:"1px solid var(--line)",display:"flex",justifyContent:"space-between",alignItems:"center",gap:6}},
           React.createElement("span",{style:{display:"flex",alignItems:"center",gap:5}},nodeIcon(node.type,11,nodeColor(node.type)),nodeLabel(node.type)),
-          React.createElement("button",{onClick:function(){setNodeMenu(null);},style:{background:"none",border:"none",color:"#888",fontSize:14,cursor:"pointer",lineHeight:1,padding:"0 2px"}},"\u00d7")),
+          React.createElement("button",{onClick:function(){setNodeMenu(null);},style:{background:"none",border:"none",color:"var(--txt2)",fontSize:"var(--fs-l)",cursor:"pointer",lineHeight:1,padding:"0 2px"}},"\u00d7")),
         item("Open settings",function(){selectOnly(node.id);}),
         item("Duplicate",function(){duplicateNode(node.id);}),
         (NODE_TYPES[node.type].cat!=="output"&&NODE_TYPES[node.type].inputs&&NODE_TYPES[node.type].inputs.length)?
-          item(node.bypass?"Enable (un-bypass)":"Bypass / mute",function(){node.bypass=!node.bypass;bump();},node.bypass?"#e8b06a":"#caa46a"):null,
+          item(node.bypass?"Enable (un-bypass)":"Bypass / mute",function(){node.bypass=!node.bypass;bump();},node.bypass?"var(--txt)":"var(--txt)"):null,
         item("Add to selection",function(){toggleSel(node.id);}),
         item("Select all of this type",function(){selectByType(node.type);}),
         outEdge?item("Insert Blur after",function(){autoInsertOnEdge(outEdge,"blur");}):null,
         outEdge?item("Insert Adjust after",function(){autoInsertOnEdge(outEdge,"adjust");}):null,
         item("Disconnect wires",function(){selectOnly(node.id);batchDisconnect();}),
-        item("Delete",function(){selectOnly(node.id);batchDelete();},"#e87a7a")
+        item("Delete",function(){selectOnly(node.id);batchDelete();},"var(--err)")
       )
     );
   }
@@ -12825,30 +12802,30 @@ function NodeCanvas(p){
     if(my<8)my=8;
     function wItem(label,fn,col){
       return React.createElement("button",{key:label,onClick:function(){fn();setWireMenu(null);},
-        onMouseEnter:function(ev){ev.currentTarget.style.background="#1e1e1e";},
+        onMouseEnter:function(ev){ev.currentTarget.style.background="var(--panel2)";},
         onMouseLeave:function(ev){ev.currentTarget.style.background="none";},
         style:{display:"block",width:"100%",textAlign:"left",padding:"10px 12px",background:"none",border:"none",
-          borderBottom:"1px solid #1e1e1e",color:col||"#ddd",fontSize:10,fontFamily:"monospace",cursor:"pointer",touchAction:"manipulation"}},label);
+          borderBottom:"1px solid var(--line)",color:col||"var(--txt)",fontSize:"var(--fs-s)",fontFamily:"inherit",cursor:"pointer",touchAction:"manipulation"}},label);
     }
     var fromN=g.nodes[ed.from], toN=g.nodes[ed.to];
     return React.createElement("div",{key:"wmwrap"},
       React.createElement("div",{onPointerDown:function(ev){ev.stopPropagation();setWireMenu(null);},
         style:{position:"absolute",inset:0,zIndex:69,background:"transparent"}}),
       React.createElement("div",{style:{position:"absolute",left:mx,top:my,width:W,zIndex:70,
-        background:"#141414",border:"1px solid #383838",borderRadius:10,overflow:"hidden",boxShadow:"0 10px 36px rgba(0,0,0,0.75)"}},
-        React.createElement("div",{style:{padding:"8px 11px",fontSize:8,fontFamily:"monospace",fontWeight:700,color:"#e8900a",
-          borderBottom:"1px solid #2a2a2a",display:"flex",justifyContent:"space-between",alignItems:"center",gap:6}},
+        background:"var(--bg)",border:"1px solid var(--line2)",borderRadius:10,overflow:"hidden",boxShadow:"0 10px 36px rgba(0,0,0,0.75)"}},
+        React.createElement("div",{style:{padding:"8px 11px",fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,color:"var(--txt)",
+          borderBottom:"1px solid var(--line)",display:"flex",justifyContent:"space-between",alignItems:"center",gap:6}},
           React.createElement("span",{style:{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},
             (fromN?nodeLabel(fromN.type):"?")+" \u2192 "+(toN?nodeLabel(toN.type):"?")),
           React.createElement("button",{onClick:function(){setWireMenu(null);},
-            style:{background:"none",border:"none",color:"#888",fontSize:14,cursor:"pointer",lineHeight:1,padding:"0 2px"}},"\u00d7")),
-        React.createElement("div",{style:{padding:"5px 11px 2px",fontSize:7,color:"#777",fontFamily:"monospace"}},"INSERT ON THIS WIRE"),
+            style:{background:"none",border:"none",color:"var(--txt2)",fontSize:"var(--fs-l)",cursor:"pointer",lineHeight:1,padding:"0 2px"}},"\u00d7")),
+        React.createElement("div",{style:{padding:"5px 11px 2px",fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit"}},"INSERT ON THIS WIRE"),
         wItem("Blur",function(){autoInsertOnEdge(wireMenu.edgeId,"blur");}),
         wItem("Adjust",function(){autoInsertOnEdge(wireMenu.edgeId,"adjust");}),
         wItem("Levels",function(){autoInsertOnEdge(wireMenu.edgeId,"levels");}),
         wItem("Warp",function(){autoInsertOnEdge(wireMenu.edgeId,"warp");}),
         wItem("Reroute",function(){autoInsertOnEdge(wireMenu.edgeId,"reroute");}),
-        wItem("Delete wire",function(){disconnect(g,wireMenu.edgeId);bump();},"#e87a7a")
+        wItem("Delete wire",function(){disconnect(g,wireMenu.edgeId);bump();},"var(--err)")
       )
     );
   }
@@ -12864,37 +12841,37 @@ function NodeCanvas(p){
     });
     var rows=[];
     rows.push(React.createElement("div",{key:"hd",style:{display:"flex",alignItems:"center",gap:6,
-      padding:"9px 11px",borderBottom:"1px solid #262626",position:"sticky",top:0,
-      background:"rgba(15,15,15,0.98)",zIndex:2}},
-      React.createElement("span",{style:{fontSize:10,fontFamily:"monospace",fontWeight:700,color:"#7fb0ff",letterSpacing:0.5}},"\u2726 PRESETS"),
-      React.createElement("span",{style:{fontSize:7.5,color:"#666",fontFamily:"monospace"}},GRAPH_PRESETS.length+" graphs"),
+      padding:"9px 11px",borderBottom:"1px solid var(--line)",position:"sticky",top:0,
+      background:"var(--bg)",zIndex:2}},
+      React.createElement("span",{style:{fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,color:"var(--txt)",letterSpacing:0.5}},"\u2726 PRESETS"),
+      React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit"}},GRAPH_PRESETS.length+" graphs"),
       React.createElement("button",{onClick:function(){setPresetOpen(false);},
-        style:{marginLeft:"auto",minWidth:28,minHeight:28,background:"none",border:"1px solid #333",color:"#999",
-          borderRadius:5,fontSize:13,cursor:"pointer",fontFamily:"monospace",touchAction:"manipulation"}},"\u00d7")));
+        style:{marginLeft:"auto",minWidth:28,minHeight:28,background:"none",border:"1px solid var(--line2)",color:"var(--txt2)",
+          borderRadius:5,fontSize:"var(--fs-l)",cursor:"pointer",fontFamily:"inherit",touchAction:"manipulation"}},"\u00d7")));
     cats.forEach(function(cat){
-      rows.push(React.createElement("div",{key:"c"+cat,style:{fontSize:7.5,fontFamily:"monospace",color:"#666",
+      rows.push(React.createElement("div",{key:"c"+cat,style:{fontSize:"var(--fs-s)",fontFamily:"inherit",color:"var(--tg-dim)",
         letterSpacing:1,padding:"8px 11px 3px",textTransform:"uppercase"}},cat));
       byCat[cat].forEach(function(p){
         rows.push(React.createElement("button",{key:p.name,onClick:function(){loadPreset(p);},
-          onMouseEnter:function(ev){ev.currentTarget.style.background="#1e1e1e";},
+          onMouseEnter:function(ev){ev.currentTarget.style.background="var(--panel2)";},
           onMouseLeave:function(ev){ev.currentTarget.style.background="none";},
           style:{display:"block",width:"100%",textAlign:"left",minHeight:42,padding:"6px 11px",
-            background:"none",border:"none",borderLeft:"3px solid #2a4a6a",borderBottom:"1px solid #1a1a1a",
-            cursor:"pointer",fontFamily:"monospace",touchAction:"manipulation"}},
-          React.createElement("div",{style:{fontSize:10,fontWeight:700,color:"#ddd"}},p.name),
-          React.createElement("div",{style:{fontSize:7.5,color:"#777",marginTop:2}},p.hint)));
+            background:"none",border:"none",borderBottom:"1px solid var(--line)",
+            cursor:"pointer",fontFamily:"inherit",touchAction:"manipulation"}},
+          React.createElement("div",{style:{fontSize:"var(--fs-s)",fontWeight:700,color:"var(--txt)"}},p.name),
+          React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",marginTop:2}},p.hint)));
       });
     });
-    rows.push(React.createElement("div",{key:"ft",style:{fontSize:7.5,color:"#666",fontFamily:"monospace",
-      padding:"9px 11px",lineHeight:1.5,borderTop:"1px solid #1e1e1e"}},
+    rows.push(React.createElement("div",{key:"ft",style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",
+      padding:"9px 11px",lineHeight:1.5,borderTop:"1px solid var(--line)"}},
       "Loading a preset replaces the current graph. Undo brings yours back."));
     return React.createElement("div",{key:"pwrap"},
       React.createElement("div",{onPointerDown:function(ev){ev.stopPropagation();setPresetOpen(false);},
-        style:{position:"absolute",inset:0,zIndex:44,background:"rgba(0,0,0,0.35)"}}),
+        style:{position:"absolute",inset:0,zIndex:44,background:"color-mix(in srgb,var(--bg) 35%,transparent)"}}),
       React.createElement("div",{style:{position:"absolute",left:8,top:8,
         width:"min(250px, calc(100% - 16px))",maxHeight:"calc(100% - 16px)",overflowY:"auto",
         WebkitOverflowScrolling:"touch",overscrollBehavior:"contain",zIndex:45,
-        background:"rgba(15,15,15,0.98)",border:"1px solid #2e2e2e",borderRadius:10,
+        background:"var(--bg)",border:"1px solid var(--line2)",borderRadius:10,
         boxShadow:"0 10px 40px rgba(0,0,0,0.8)"}},rows));
   }
   var presetPanelEl=buildPresetPanel();
@@ -12915,79 +12892,79 @@ function NodeCanvas(p){
       setAnimPlaying(false); setAnimTime(Math.round(f*animDur*1000)/1000);
     }
     return React.createElement("div",{style:{position:"absolute",left:8,right:8,bottom:8,zIndex:40,
-      background:"rgba(16,16,16,0.97)",border:"1px solid #2c2c2c",borderRadius:10,padding:"8px 10px",
+      background:"var(--bg)",border:"1px solid var(--line)",borderRadius:10,padding:"8px 10px",
       boxShadow:"0 -2px 16px rgba(0,0,0,0.5)"}},
       // top row: transport + time + duration + fps + close
       React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:7,flexWrap:"wrap"}},
         React.createElement("button",{onClick:function(){setAnimPlaying(!animPlaying);},
-          style:{minWidth:44,minHeight:34,padding:"0 12px",fontSize:12,fontFamily:"monospace",fontWeight:700,background:animPlaying?"#e8900a":"#1c1c1c",
-            color:animPlaying?"#000":"#9cf",border:"1px solid "+(animPlaying?"#e8900a":"#2a4a5a"),borderRadius:7,cursor:"pointer",
+          style:{minWidth:44,minHeight:34,padding:"0 12px",fontSize:"var(--fs)",fontFamily:"inherit",fontWeight:700,background:animPlaying?"var(--panel3)":"var(--panel2)",
+            color:animPlaying?"#fff":"var(--txt)",border:"1px solid "+(animPlaying?"#8a8a94":"#8a8a94"),borderRadius:7,cursor:"pointer",
             touchAction:"manipulation",display:"inline-flex",alignItems:"center",justifyContent:"center"}},
           animPlaying?"\u275a\u275a":"\u25b6"),
         React.createElement("button",{onClick:function(){setAnimPlaying(false);setAnimTime(0);},
-          style:{minWidth:38,minHeight:34,padding:"0 9px",fontSize:12,fontFamily:"monospace",background:"#1c1c1c",color:"#bbb",border:"1px solid #333",
+          style:{minWidth:38,minHeight:34,padding:"0 9px",fontSize:"var(--fs)",fontFamily:"inherit",background:"var(--panel2)",color:"var(--txt2)",border:"1px solid var(--line2)",
             borderRadius:7,cursor:"pointer",touchAction:"manipulation",display:"inline-flex",alignItems:"center",justifyContent:"center"}},"\u23ee"),
-        React.createElement("span",{style:{fontSize:9,fontFamily:"monospace",color:"#e8900a",fontWeight:700,minWidth:64}},animTime.toFixed(2)+" / "+animDur.toFixed(1)+"s"),
-        React.createElement("span",{style:{fontSize:8,fontFamily:"monospace",color:"#777"}},"DUR"),
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",fontFamily:"inherit",color:"var(--txt)",fontWeight:700,minWidth:64}},animTime.toFixed(2)+" / "+animDur.toFixed(1)+"s"),
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",fontFamily:"inherit",color:"var(--txt2)"}},"DUR"),
         React.createElement("input",{type:"range",min:1,max:10,step:0.5,value:animDur,
           onChange:function(e){setAnimDur(parseFloat(e.target.value));},style:{width:118,touchAction:"none"}}),
-        React.createElement("span",{style:{fontSize:8,fontFamily:"monospace",color:"#777"}},"FPS"),
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",fontFamily:"inherit",color:"var(--txt2)"}},"FPS"),
         React.createElement("input",{type:"range",min:6,max:60,step:1,value:animFps,
           onChange:function(e){setAnimFps(parseInt(e.target.value));},style:{width:108,touchAction:"none"}}),
-        React.createElement("span",{style:{fontSize:8,fontFamily:"monospace",color:"#999"}},animFps+""),
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",fontFamily:"inherit",color:"var(--txt2)"}},animFps+""),
         p.onBakeTimeline?React.createElement("button",{onClick:function(){
             setAnimPlaying(false);
             p.onBakeTimeline({cols:bakeCols,rows:bakeRows,frames:bakeCols*bakeRows,frameSize:bakeFrameSize,duration:animDur});
           },title:"Render the animation into a sprite sheet PNG",
-          style:{marginLeft:"auto",minHeight:32,padding:"0 13px",fontSize:9.5,fontFamily:"monospace",fontWeight:700,
-            background:"#e8900a",color:"#000",border:"1px solid #e8900a",borderRadius:6,cursor:"pointer",
+          style:{marginLeft:"auto",minHeight:32,padding:"0 13px",fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,
+            background:"var(--txt)",color:"var(--bg)",border:"1px solid #8a8a94",borderRadius:6,cursor:"pointer",
             touchAction:"manipulation",display:"inline-flex",alignItems:"center"}},"\u2193 BAKE SHEET"):null,
         React.createElement("button",{onClick:function(){setShowTimeline(false);setAnimPlaying(false);},
-          style:{marginLeft:p.onBakeTimeline?0:"auto",minHeight:32,padding:"0 12px",fontSize:9.5,fontFamily:"monospace",background:"none",color:"#999",
-            border:"1px solid #333",borderRadius:6,cursor:"pointer",touchAction:"manipulation",display:"inline-flex",alignItems:"center"}},"Close")),
+          style:{marginLeft:p.onBakeTimeline?0:"auto",minHeight:32,padding:"0 12px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:"none",color:"var(--txt2)",
+            border:"1px solid var(--line2)",borderRadius:6,cursor:"pointer",touchAction:"manipulation",display:"inline-flex",alignItems:"center"}},"Close")),
       // bake settings row
       p.onBakeTimeline?React.createElement("div",{style:{display:"flex",alignItems:"center",gap:7,marginBottom:7,flexWrap:"wrap"}},
-        React.createElement("span",{style:{fontSize:7.5,color:"#777",fontFamily:"monospace",letterSpacing:0.5}},"SHEET"),
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",letterSpacing:0.5}},"SHEET"),
         [[2,2],[3,3],[4,4],[5,5],[6,6],[8,8],[4,2],[8,4]].map(function(gr){
           var on=bakeCols===gr[0]&&bakeRows===gr[1];
           return React.createElement("button",{key:gr[0]+"x"+gr[1],onClick:function(){setBakeCols(gr[0]);setBakeRows(gr[1]);},
-            style:{minHeight:28,padding:"0 8px",fontSize:8.5,fontFamily:"monospace",fontWeight:700,
-              background:on?"#e8900a":"#1c1c1c",color:on?"#000":"#bbb",border:"1px solid "+(on?"#e8900a":"#333"),
+            style:{minHeight:28,padding:"0 8px",fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,
+              background:on?"var(--panel3)":"var(--panel2)",color:on?"#fff":"var(--txt2)",border:"1px solid "+(on?"#8a8a94":"var(--line2)"),
               borderRadius:5,cursor:"pointer",touchAction:"manipulation",display:"inline-flex",alignItems:"center"}},gr[0]+"\u00d7"+gr[1]);
         }),
-        React.createElement("span",{style:{fontSize:7.5,color:"#777",fontFamily:"monospace",marginLeft:4}},"FRAME"),
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",marginLeft:4}},"FRAME"),
         [64,128,256].map(function(fs){
           var on=bakeFrameSize===fs;
           return React.createElement("button",{key:fs,onClick:function(){setBakeFrameSize(fs);},
-            style:{minHeight:28,padding:"0 8px",fontSize:8.5,fontFamily:"monospace",fontWeight:700,
-              background:on?"#e8900a":"#1c1c1c",color:on?"#000":"#bbb",border:"1px solid "+(on?"#e8900a":"#333"),
+            style:{minHeight:28,padding:"0 8px",fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,
+              background:on?"var(--panel3)":"var(--panel2)",color:on?"#fff":"var(--txt2)",border:"1px solid "+(on?"#8a8a94":"var(--line2)"),
               borderRadius:5,cursor:"pointer",touchAction:"manipulation",display:"inline-flex",alignItems:"center"}},fs);
         }),
-        React.createElement("span",{style:{fontSize:7.5,color:"#666",fontFamily:"monospace",marginLeft:"auto"}},
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",marginLeft:"auto"}},
           (bakeCols*bakeRows)+" frames \u00b7 "+(bakeCols*bakeFrameSize)+"\u00d7"+(bakeRows*bakeFrameSize)+"px")):null,
       // the scrub track
       React.createElement("div",{
         onPointerDown:function(e){e.currentTarget.setPointerCapture&&e.currentTarget.setPointerCapture(e.pointerId);scrubTo(e.clientX,e.currentTarget);},
         onPointerMove:function(e){if(e.buttons||e.pressure>0)scrubTo(e.clientX,e.currentTarget);},
-        style:{position:"relative",height:44,background:"#0d0d0d",border:"1px solid #262626",borderRadius:7,cursor:"pointer",touchAction:"none",overflow:"hidden"}},
+        style:{position:"relative",height:44,background:"var(--bg)",border:"1px solid var(--line)",borderRadius:7,cursor:"pointer",touchAction:"none",overflow:"hidden"}},
         // keyframe ticks
         marks.map(function(t,i){
           return React.createElement("div",{key:i,style:{position:"absolute",left:(t/animDur*100)+"%",top:6,width:11,height:11,
-            marginLeft:-5.5,background:"#e8900a",transform:"rotate(45deg)",borderRadius:2}});
+            marginLeft:-5.5,background:"var(--txt)",transform:"rotate(45deg)",borderRadius:2}});
         }),
         // playhead
         React.createElement("div",{style:{position:"absolute",left:(animTime/animDur*100)+"%",top:0,bottom:0,width:3,marginLeft:-1.5,
-          background:"#9cf",boxShadow:"0 0 6px rgba(153,204,255,0.6)"}})
+          background:"var(--txt)",boxShadow:"0 0 6px transparent"}})
       ),
-      selNode?React.createElement("div",{style:{fontSize:7.5,color:"#666",fontFamily:"monospace",marginTop:5}},
+      selNode?React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",marginTop:5}},
         "Tap the \u25c8 next to any parameter of the selected node to keyframe it at the current time."):
-        React.createElement("div",{style:{fontSize:7.5,color:"#666",fontFamily:"monospace",marginTop:5}},"Select a node, then keyframe its parameters with the \u25c8 buttons.")
+        React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",marginTop:5}},"Select a node, then keyframe its parameters with the \u25c8 buttons.")
     );
   }
   var timelineEl=buildTimeline();
   // Tapping empty board closes the add menu too.
 
-  return React.createElement("div",{style:{position:"absolute",inset:0,background:"#0a0a0a",overflow:"hidden"}},
+  return React.createElement("div",{style:{position:"absolute",inset:0,background:"var(--bg)",overflow:"hidden"}},
     // Toolbar — sits BELOW the centre mode switch so they never overlap
     React.createElement("div",{style:{position:"absolute",top:38,left:8,right:8,zIndex:10,display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}},
       // Compact "+ Add Node" button — opens the grouped, colour-coded menu.
@@ -12996,16 +12973,16 @@ function NodeCanvas(p){
           setAddMenu({ screenX:r.left+60, screenY:r.top+70,
             boardX:(-view.current.x+120)/view.current.z, boardY:(-view.current.y+120)/view.current.z, fromId:null });
         },
-        style:{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 12px",fontSize:9,fontFamily:"monospace",fontWeight:700,
-          background:"#1a1a1a",color:"#e8900a",border:"1px solid #3a3a3a",borderRadius:5,cursor:"pointer",touchAction:"manipulation"}},
-        React.createElement("span",{style:{fontSize:13,lineHeight:1}},"+"),"ADD NODE"),
+        style:{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 12px",fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,
+          background:"var(--panel)",color:"var(--txt)",border:"1px solid var(--line2)",borderRadius:5,cursor:"pointer",touchAction:"manipulation"}},
+        React.createElement("span",{style:{fontSize:"var(--fs-l)",lineHeight:1}},"+"),"ADD NODE"),
       // Quick chips for the most-used types (still one tap), the rest live in the menu.
       ["source","blend","filter"].map(function(t){
         var meta=NODE_META[t]||{};
         return React.createElement("button",{key:t,onClick:function(){addNodeOfType(t);},title:meta.hint||"",
-          style:{display:"inline-flex",alignItems:"center",gap:4,padding:"4px 8px 4px 6px",fontSize:8,fontFamily:"monospace",
-            background:"#161616",color:"#bbb",borderLeft:"3px solid "+(meta.color||"#444"),
-            borderTop:"1px solid #2a2a2a",borderRight:"1px solid #2a2a2a",borderBottom:"1px solid #2a2a2a",
+          style:{display:"inline-flex",alignItems:"center",gap:4,padding:"4px 8px 4px 6px",fontSize:"var(--fs-s)",fontFamily:"inherit",
+            background:"var(--panel)",color:"var(--txt2)",
+            borderTop:"1px solid var(--line)",borderRight:"1px solid var(--line)",borderBottom:"1px solid var(--line)",
             borderRadius:4,cursor:"pointer",touchAction:"manipulation"}},
           React.createElement("span",{style:{width:5,height:5,borderRadius:"50%",background:(meta.color||"#444"),flexShrink:0}}),
           meta.label||NODE_TYPES[t].title);
@@ -13013,14 +12990,14 @@ function NodeCanvas(p){
     ),
     // Live preview (bottom-right, out of the way of the toolbar)
     React.createElement("div",{style:{position:"absolute",bottom:showTimeline?TIMELINE_H+14:8,right:8,zIndex:10,
-      border:"1px solid #2a2a2a",borderRadius:6,overflow:"hidden",background:"#000",boxShadow:"0 2px 10px rgba(0,0,0,0.5)"}},
+      border:"1px solid var(--line)",borderRadius:6,overflow:"hidden",background:"var(--bg)",boxShadow:"0 2px 10px rgba(0,0,0,0.5)"}},
       React.createElement("canvas",{ref:previewRef,width:size,height:size,
         style:{display:"block",width:104,height:104,imageRendering:pixPerf?"pixelated":"auto"}}),
-      React.createElement("div",{style:{fontSize:7,color:"#777",textAlign:"center",padding:"2px 0",fontFamily:"monospace",letterSpacing:1,background:"#0d0d0d"}},"OUTPUT"),
+      React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--txt2)",textAlign:"center",padding:"2px 0",fontFamily:"inherit",letterSpacing:1,background:"var(--bg)"}},"OUTPUT"),
       p.onExport?React.createElement("button",{onClick:function(){if(!p.exporting)p.onExport();},
         disabled:p.exporting,
-        style:{display:"block",width:"100%",padding:"5px 0",fontSize:8,fontFamily:"monospace",fontWeight:700,
-          background:p.exporting?"#333":"#e8900a",color:p.exporting?"#888":"#000",border:"none",cursor:p.exporting?"default":"pointer",
+        style:{display:"block",width:"100%",padding:"5px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,
+          background:p.exporting?"var(--panel3)":"var(--txt)",color:p.exporting?"var(--txt2)":"var(--bg)",border:"none",cursor:p.exporting?"default":"pointer",
           letterSpacing:0.5}},p.exporting?"RENDERING...":("\u2193 PNG "+(p.exportSize||512))):null
     ),
     // Selected-node parameter panel
@@ -13061,7 +13038,7 @@ function NodeCanvas(p){
         marquee?React.createElement("div",{style:{position:"absolute",
           left:Math.min(marquee.x0,marquee.x1),top:Math.min(marquee.y0,marquee.y1),
           width:Math.abs(marquee.x1-marquee.x0),height:Math.abs(marquee.y1-marquee.y0),
-          background:"rgba(232,144,10,0.12)",border:"1px solid #e8900a",borderRadius:2,pointerEvents:"none"}}):null
+          background:"var(--panel3)",border:"1px solid #8a8a94",borderRadius:2,pointerEvents:"none"}}):null
       )
     ),
     // ── Bottom-left control dock ──────────────────────────────────
@@ -13073,75 +13050,76 @@ function NodeCanvas(p){
         opts=opts||{};
         return React.createElement("button",{key:opts.key||label,onClick:onClick,title:opts.title||label,
           disabled:opts.disabled,
-          style:{minHeight:BTN_H,minWidth:opts.minWidth||38,padding:"0 11px",fontSize:opts.fontSize||10,
-            fontFamily:"monospace",fontWeight:700,lineHeight:1,
-            background:opts.on?(opts.onColor||"#e8900a"):"#1b1b1b",
-            color:opts.on?"#000":(opts.disabled?"#555":(opts.color||"#cbb")),
-            border:"1px solid "+(opts.on?(opts.onColor||"#e8900a"):(opts.border||"#333")),
+          style:{minHeight:BTN_H,minWidth:opts.minWidth||38,padding:"0 11px",fontSize:opts.fontSize||"var(--fs-s)",
+            fontFamily:"inherit",fontWeight:700,lineHeight:1,
+            // on = the kit "on" look; opts.onColor / opts.color (per-button hues) are accepted and ignored
+            background:opts.on?"var(--panel3)":"var(--panel)",
+            color:opts.on?"#fff":(opts.disabled?"var(--tg-dim)":"var(--txt)"),
+            border:"1px solid "+(opts.on?"#8a8a94":"var(--line2)"),
             borderRadius:7,cursor:opts.disabled?"default":"pointer",touchAction:"manipulation",
             opacity:opts.disabled?0.45:1,
             display:"flex",alignItems:"center",justifyContent:"center",gap:4}},label);
       }
       function rowLabel(t){
-        return React.createElement("span",{key:"l"+t,style:{fontSize:7,color:"#666",fontFamily:"monospace",
+        return React.createElement("span",{key:"l"+t,style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",
           letterSpacing:1,width:34,flexShrink:0}},t);
       }
       var rows=[];
       // always-visible essentials
       rows.push(React.createElement("div",{key:"main",style:{display:"flex",alignItems:"center",gap:6}},
-        dBtn("\u21b6",undo,{key:"u",title:"Undo (Ctrl+Z)",disabled:!canUndo(),minWidth:BTN_H,fontSize:14}),
-        dBtn("\u21b7",redo,{key:"r",title:"Redo (Ctrl+Y)",disabled:!canRedo(),minWidth:BTN_H,fontSize:14}),
+        dBtn("\u21b6",undo,{key:"u",title:"Undo (Ctrl+Z)",disabled:!canUndo(),minWidth:BTN_H,fontSize:"var(--fs-l)"}),
+        dBtn("\u21b7",redo,{key:"r",title:"Redo (Ctrl+Y)",disabled:!canRedo(),minWidth:BTN_H,fontSize:"var(--fs-l)"}),
         dBtn(selMode?"\u2713 SEL":"SEL",function(){setSelMode(!selMode);if(selMode)clearSel();},
-          {key:"s",title:"Touch select mode: drag to box-select, tap to add",on:selMode,color:"#9cf",border:"#2a4a5a"}),
+          {key:"s",title:"Touch select mode: drag to box-select, tap to add",on:selMode,color:"var(--txt)",border:"#8a8a94"}),
         dBtn("\u2726",function(){setPresetOpen(!presetOpen);},
-          {key:"p",title:"Ready-made effect graphs",on:presetOpen,onColor:"#7fb0ff",color:"#9cf",border:"#2a4a6a",minWidth:BTN_H,fontSize:13}),
+          {key:"p",title:"Ready-made effect graphs",on:presetOpen,onColor:"var(--txt)",color:"var(--txt)",border:"#8a8a94",minWidth:BTN_H,fontSize:"var(--fs-l)"}),
         dBtn(dockOpen?"\u2715":"\u22ef",function(){setDockOpen(!dockOpen);},
-          {key:"m",title:dockOpen?"Hide tools":"More tools",minWidth:BTN_H,fontSize:14,color:"#999"})));
+          {key:"m",title:dockOpen?"Hide tools":"More tools",minWidth:BTN_H,fontSize:"var(--fs-l)",color:"var(--txt2)"})));
       if(dockOpen){
         rows.push(React.createElement("div",{key:"auto",style:{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap",maxWidth:250}},
           rowLabel("AUTO"),
-          dBtn("Space",autoSpace,{key:"a1",title:"Lay the whole graph out by flow",fontSize:9}),
-          dBtn("Wire",autoConnect,{key:"a2",title:"Auto-connect free inputs to the nearest node",fontSize:9}),
-          dBtn("Grid",autoAlignGrid,{key:"a3",title:"Snap nodes to the grid",fontSize:9}),
-          dBtn("Fit",autoFrame,{key:"a4",title:"Fit all nodes in view",fontSize:9})));
+          dBtn("Space",autoSpace,{key:"a1",title:"Lay the whole graph out by flow",fontSize:"var(--fs-s)"}),
+          dBtn("Wire",autoConnect,{key:"a2",title:"Auto-connect free inputs to the nearest node",fontSize:"var(--fs-s)"}),
+          dBtn("Grid",autoAlignGrid,{key:"a3",title:"Snap nodes to the grid",fontSize:"var(--fs-s)"}),
+          dBtn("Fit",autoFrame,{key:"a4",title:"Fit all nodes in view",fontSize:"var(--fs-s)"})));
         // SEL row: selection commands that were previously keyboard-only.
         rows.push(React.createElement("div",{key:"sel",style:{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap",maxWidth:250}},
           rowLabel("SEL"),
-          dBtn("All",selectAll,{key:"s1",title:"Select every node (Ctrl+A)",fontSize:9}),
-          dBtn("None",function(){setSelNode(null);clearSel();},{key:"s2",title:"Clear the selection",fontSize:9}),
-          dBtn("Invert",invertSel,{key:"s3",title:"Invert the selection",fontSize:9})));
+          dBtn("All",selectAll,{key:"s1",title:"Select every node (Ctrl+A)",fontSize:"var(--fs-s)"}),
+          dBtn("None",function(){setSelNode(null);clearSel();},{key:"s2",title:"Clear the selection",fontSize:"var(--fs-s)"}),
+          dBtn("Invert",invertSel,{key:"s3",title:"Invert the selection",fontSize:"var(--fs-s)"})));
         rows.push(React.createElement("div",{key:"view",style:{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap",maxWidth:250}},
           rowLabel("VIEW"),
           dBtn(showTimeline?"\u25c8 ANIM":"ANIM",function(){setShowTimeline(!showTimeline);if(showTimeline)setAnimPlaying(false);},
-            {key:"v1",title:"Animation timeline & keyframes",on:showTimeline,color:"#c9a0ff",border:"#4a3a5a",fontSize:9}),
+            {key:"v1",title:"Animation timeline & keyframes",on:showTimeline,color:"var(--txt)",border:"#8a8a94",fontSize:"var(--fs-s)"}),
           dBtn(pixPerf?"\u25a0 PIXEL":"PIXEL",function(){setPixPerf(!pixPerf);},
-            {key:"v2",title:"Pixel-perfect preview (nearest-neighbour)",on:pixPerf,onColor:"#d05a9a",color:"#e9a0c8",border:"#5a3a4a",fontSize:9}),
+            {key:"v2",title:"Pixel-perfect preview (nearest-neighbour)",on:pixPerf,onColor:"var(--txt)",color:"var(--txt)",border:"#8a8a94",fontSize:"var(--fs-s)"}),
           dBtn(pxScale?"\u2194 SCALE":"1:1 PX",togglePixelScaling,
             {key:"v3",title:pxScale?"Pixel sizes scale with resolution, so the preview matches the export"
                                   :"Pixel sizes are absolute: the export will look different from the preview",
-             on:pxScale,onColor:"#5ac0a0",color:"#7fd8bd",border:"#2a5a4a",fontSize:9})));
+             on:pxScale,onColor:"var(--txt)",color:"var(--txt)",border:"#8a8a94",fontSize:"var(--fs-s)"})));
         rows.push(React.createElement("div",{key:"size",style:{display:"flex",alignItems:"center",gap:5}},
           rowLabel("SIZE"),
           [["S",64],["M",96],["L",140],["XL",200]].map(function(o){
-            return dBtn(o[0],function(){setThumbSize(o[1]);},{key:"z"+o[0],title:"Preview "+o[0],on:thumbSize===o[1],minWidth:BTN_H,fontSize:9});
+            return dBtn(o[0],function(){setThumbSize(o[1]);},{key:"z"+o[0],title:"Preview "+o[0],on:thumbSize===o[1],minWidth:BTN_H,fontSize:"var(--fs-s)"});
           })));
         rows.push(React.createElement("div",{key:"zoom",style:{display:"flex",alignItems:"center",gap:5}},
           rowLabel("ZOOM"),
           dBtn("\u2212",function(){zoomBy(0.8);},{key:"zo",title:"Zoom out",minWidth:BTN_H,fontSize:15}),
-          dBtn("\u2922",fitView,{key:"zf",title:"Fit to view",minWidth:BTN_H,fontSize:13}),
+          dBtn("\u2922",fitView,{key:"zf",title:"Fit to view",minWidth:BTN_H,fontSize:"var(--fs-l)"}),
           dBtn("+",function(){zoomBy(1.25);},{key:"zi",title:"Zoom in",minWidth:BTN_H,fontSize:15}),
-          React.createElement("span",{key:"pc",style:{fontSize:8.5,color:"#888",fontFamily:"monospace",marginLeft:2,minWidth:32}},Math.round(zoom*100)+"%")));
+          React.createElement("span",{key:"pc",style:{fontSize:"var(--fs-s)",color:"var(--txt2)",fontFamily:"inherit",marginLeft:2,minWidth:32}},Math.round(zoom*100)+"%")));
       }
       // The timeline docks along the bottom edge, so lift this out of its way.
       return React.createElement("div",{style:{position:"absolute",left:8,bottom:showTimeline?TIMELINE_H+14:8,zIndex:12,display:"flex",
-        flexDirection:"column",gap:6,background:"rgba(14,14,14,0.94)",border:"1px solid #262626",
+        flexDirection:"column",gap:6,background:"color-mix(in srgb,var(--bg) 94%,transparent)",border:"1px solid var(--line)",
         borderRadius:11,padding:"8px 9px",boxShadow:"0 3px 14px rgba(0,0,0,0.55)"}},rows);
     })(),
     // Starter hint: only while the graph is nearly empty, then it gets out of the way.
     (nodeCount<=3&&!showTimeline)?React.createElement("div",{style:{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",
-      zIndex:10,fontSize:8,maxWidth:250,textAlign:"center",color:"#666",fontFamily:"monospace",lineHeight:1.5,
-      background:"rgba(10,10,10,0.75)",padding:"5px 10px",borderRadius:6,pointerEvents:"none"}},
-      "Drag a node to move it \u00b7 drag orange to blue to wire \u00b7 tap a wire for options \u00b7 press and hold a node or a slider name for more \u00b7 pinch to zoom"):null
+      zIndex:10,fontSize:"var(--fs-s)",maxWidth:250,textAlign:"center",color:"var(--tg-dim)",fontFamily:"inherit",lineHeight:1.5,
+      background:"color-mix(in srgb,var(--bg) 75%,transparent)",padding:"5px 10px",borderRadius:6,pointerEvents:"none"}},
+      "Drag a node to move it \u00b7 drag from a filled output port to a ring input port to wire \u00b7 tap a wire for options \u00b7 press and hold a node or a slider name for more \u00b7 pinch to zoom"):null
   );
 }
 
@@ -13155,8 +13133,9 @@ var AUTOSAVE_KEY="texgen-autosave";
 function pickExportDir(){
   if(typeof window==="undefined"||typeof window.showDirectoryPicker!=="function")
     return Promise.resolve(null);
+  // null = no picker here (callers fall back to downloads); false = the user cancelled the folder dialog (callers stop)
   return window.showDirectoryPicker({mode:"readwrite",id:"texgen-export"})
-    .then(function(h){return h;},function(){return null;});
+    .then(function(h){return h;},function(e){return e&&e.name==="AbortError"?false:null;});
 }
 
 // Writes one blob, either into a previously chosen folder or as a download.
@@ -13233,7 +13212,7 @@ export default function TexGen(){
   // are no longer useful and would just sit holding memory
   useEffect(function(){drainBufPool();},[previewRes]);
   var _sp=useState(false); var seamlessPreview=_sp[0],setSeamlessPreview=_sp[1];
-  var _pw=useState(340);   var panelWidth=_pw[0],setPanelWidth=_pw[1];
+  var _pw=useState(typeof window!=="undefined"&&window.innerWidth>=1500?400:340);   var panelWidth=_pw[0],setPanelWidth=_pw[1];
   var _ps=useState("right"); var panelSide=_ps[0],setPanelSide=_ps[1];
   var _us=useState(1);      var uiScale=_us[0],setUiScale=_us[1];  // 0.8 0.9 1 1.1 1.25
   var _slsz=useState(128);  var soloThumbSize=_slsz[0],setSoloThumbSize=_slsz[1];
@@ -14093,6 +14072,7 @@ export default function TexGen(){
     var totalF=importedFB?Math.max(1,fbSequence(importedFB).length):FB_GRIDS[anim.gridIdx!=null?anim.gridIdx:2].frames;
     var useFps=importedFB?(importedFB.fps||24):(anim.fps||60);
     animPlayTimer.current=setInterval(function(){
+      if(window.__tgPaused)return;
       setAnimFrame(function(f){return(f+1)%totalF;});
     },Math.round(1000/useFps));
     return function(){clearInterval(animPlayTimer.current);};
@@ -14138,7 +14118,7 @@ export default function TexGen(){
         if(ox===1&&oy===1)continue;
         ctx.fillRect(ox*cell,oy*cell,cell,cell);
       }
-      ctx.strokeStyle="rgba(232,144,10,0.9)";ctx.lineWidth=2;
+      ctx.strokeStyle="rgba(230,230,232,0.9)";ctx.lineWidth=2;
       ctx.strokeRect(cell+1,cell+1,cell-2,cell-2);
     },120);
     return function(){clearTimeout(timer);};
@@ -14147,10 +14127,12 @@ export default function TexGen(){
   // Storage
   // Serialisation-safe snapshot of the whole project. Shared by the explicit
   // Save and by the autosave below, so the two can never drift apart.
-  function buildProjectSnapshot(){
+  // keepImages: the .texgen file embeds image layers as their data URLs (base64) so a re-import keeps
+  // them. The browser-storage save and the autosave still drop them (they would not fit a 20 s autosave).
+  function buildProjectSnapshot(keepImages){
     // Strip imageData from save (large base64 blobs; user re-imports on load)
     var toSave=JSON.parse(JSON.stringify(state));
-    function stripImg(layers){(layers||[]).forEach(function(L){if(L.imageData)L.imageData=null;});}
+    function stripImg(layers){if(keepImages)return;(layers||[]).forEach(function(L){if(L.imageData)L.imageData=null;});}
     stripImg(toSave.layers);
     (toSave.slots||[]).forEach(function(s){stripImg(s.layers);});
     toSave._bounds=JSON.parse(JSON.stringify(_gBounds));
@@ -14162,7 +14144,7 @@ export default function TexGen(){
       for(var nid in nodeGraph.nodes){
         var on=nodeGraph.nodes[nid];
         var params=Object.assign({},on.params);
-        if(params.layer&&params.layer.imageData)params.layer=Object.assign({},params.layer,{imageData:null});
+        if(params.layer&&params.layer.imageData&&!keepImages)params.layer=Object.assign({},params.layer,{imageData:null});
         if(params.sheet){
           // keep src/grid/meta, drop frames (rebuilt on load)
           params.sheet={src:params.sheet.src||null,cols:params.sheet.cols,rows:params.sheet.rows,
@@ -14259,12 +14241,9 @@ export default function TexGen(){
 
   // Export project as .texgen JSON file
   function doExportProject(){
-    var toSave=JSON.parse(JSON.stringify(state));
-    // Strip imageData (too large for JSON files unless user accepts)
-    function stripImg(layers){(layers||[]).forEach(function(L){if(L.imageData)L.imageData=null;});}
-    stripImg(toSave.layers);
-    (toSave.slots||[]).forEach(function(s){stripImg(s.layers);});
-    toSave._bounds=JSON.parse(JSON.stringify(_gBounds));
+    // Same snapshot as Save, with the image layers kept as data URLs (this used to drop them, so an
+    // exported project came back with empty image layers). The node graph travels too.
+    var toSave=buildProjectSnapshot(true);
     var json=JSON.stringify({_texgen:1,version:2,ts:Date.now(),state:toSave},null,2);
     try{
       var blob=new Blob([json],{type:"application/json"});
@@ -14284,6 +14263,7 @@ export default function TexGen(){
     inp.style.cssText="position:fixed;top:-100px;left:-100px;opacity:0;";
     function hydrateLayers(layers){
       (layers||[]).forEach(function(L){
+        if(L.imageData)preDecodeImage(L.imageData,function(){}); // image layers come back with the file
         if(!L.uvDists||!L.uvDists.length)L.uvDists=[mkDist()];
         // Ensure curvePoints are plain objects with x,y numbers
         if(L.curvePoints&&L.curvePoints.length>=2){
@@ -14292,6 +14272,9 @@ export default function TexGen(){
           L.curvePoints=DEFAULT_CURVE.map(function(p2){return Object.assign({},p2);});
         }
       });
+    }
+    function hydrateNodeLayers(g){
+      Object.keys((g&&g.nodes)||{}).forEach(function(k){var n=g.nodes[k];if(n&&n.params&&n.params.layer)hydrateLayers([n.params.layer]);});
     }
     inp.onchange=function(e){
       var file=e.target.files[0];if(!file)return;
@@ -14304,6 +14287,11 @@ export default function TexGen(){
           hydrateLayers(saved.layers);
           (saved.slots||[]).forEach(function(s){hydrateLayers(s.layers);});
           if(saved._bounds){Object.keys(_gBounds).forEach(function(k){delete _gBounds[k];});Object.assign(_gBounds,saved._bounds);}
+          // Same extras the Load button restores (a file written by the new export carries them).
+          if(saved._nodeGraph){hydrateNodeLayers(saved._nodeGraph);setNodeGraph(saved._nodeGraph);}
+          if(saved._appMode)setAppMode(saved._appMode);
+          if(saved._pxScale!==undefined)setPixelScaling(!!saved._pxScale);
+          delete saved._nodeGraph;delete saved._appMode;delete saved._pxScale;
           setState(function(prev){return Object.assign({},prev,saved);});
           setRootAL(0);
           setSaveStatus("↑ Imported");setTimeout(function(){setSaveStatus("");},2000);
@@ -14468,6 +14456,7 @@ export default function TexGen(){
     }
     // One folder prompt for the whole set rather than one per file.
     pickExportDir().then(function(dir){
+      if(dir===false){setExportingPng(false);return;} // cancelled: no files, no Save dialogs
       exportDir=dir;
       if(dir)flash("Exporting "+queue.length+" variants to "+(dir.name||"folder"));
       setTimeout(next,20);
@@ -14491,8 +14480,11 @@ export default function TexGen(){
           setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},200);
         },"image/png");
       } else {
-        var w=window.open("","_blank");
-        if(w){var url=c.toDataURL("image/png");w.document.write("<img src='"+url+"' style='max-width:100%'/><br><a download='texgen_"+state.exportSize+"px.png' href='"+url+"'>Save PNG</a>");}
+        // No toBlob: save from a data URL. (window.open + document.write used to be here; Electron blocks it.)
+        var a2=document.createElement("a");
+        a2.href=c.toDataURL("image/png");a2.download="texgen_"+state.exportSize+"px.png";
+        document.body.appendChild(a2);a2.click();
+        setTimeout(function(){document.body.removeChild(a2);},200);
       }
     }).catch(function(e){console.error("Export failed:",e);flash("Export failed - see DevTools console");setExportingPng(false);});
     },20);
@@ -14556,8 +14548,9 @@ export default function TexGen(){
   }
 
   // ══ BATCH EXPORT (node mode) ════════════════════════════════════
-  // Helper: turn a float buffer (size×size, RGBA 0..1) into a PNG download.
-  function downloadBuffer(buf,size,filename){
+  // Helper: turn a float buffer (size×size, RGBA 0..1) into a PNG and write it: into dirHandle when a folder
+  // was chosen, as an ordinary download otherwise. Resolves when the file is written.
+  function downloadBuffer(buf,size,filename,dirHandle){
     var c=document.createElement("canvas"); c.width=c.height=size;
     var ctx=c.getContext("2d"); var img=ctx.createImageData(size,size);
     for(var i=0;i<size*size;i++){
@@ -14567,32 +14560,47 @@ export default function TexGen(){
       img.data[i*4+3]=Math.round((buf[i*4+3]!=null?buf[i*4+3]:1)*255);
     }
     ctx.putImageData(img,0,0);
-    c.toBlob(function(blob){
-      var url=URL.createObjectURL(blob),a=document.createElement("a");
-      a.href=url;a.download=filename;document.body.appendChild(a);a.click();
-      setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},150);
-    },"image/png");
+    return new Promise(function(resolve){
+      c.toBlob(function(blob){saveBlobAs(dirHandle||null,filename,blob).then(resolve);},"image/png");
+    });
+  }
+  // A set of files goes to ONE folder (showDirectoryPicker, asked once, inside the click that started it)
+  // instead of one Save dialog per file. Without the picker it falls back to one download per file.
+  // jobs: [function()->Promise] run one after the other so the UI can paint between files.
+  function exportSet(jobs,label){
+    return pickExportDir().then(function(dir){
+      if(dir===false)return; // cancelled the folder dialog: nothing is exported
+      if(dir)flash("Exporting "+jobs.length+" "+label+" to "+(dir.name||"the folder"));
+      var chain=Promise.resolve();
+      jobs.forEach(function(job){
+        chain=chain.then(function(){return new Promise(function(r){setTimeout(r,40);});}).then(function(){return job(dir);});
+      });
+      return chain.then(function(){flash("Exported "+jobs.length+" "+label+(dir?" to "+(dir.name||"the folder"):""));});
+    }).catch(function(e){console.error("Batch export failed:",e);flash("Export failed - see DevTools console");});
   }
   // 22. Export the graph output at several resolutions at once.
   function batchExportResolutions(sizes){
     sizes=sizes||[256,512,1024,2048];
-    sizes.forEach(function(sz,i){
-      setTimeout(function(){
+    return exportSet(sizes.map(function(sz){
+      return function(dir){
         var res=evaluate(nodeGraph,sz,makeNodeEvaluator(sz));
-        if(res.buffer)downloadBuffer(res.buffer,sz,"texgen_"+sz+"px.png");
-      },i*350);
-    });
+        return res.buffer?downloadBuffer(res.buffer,sz,"texgen_"+sz+"px.png",dir):null;
+      };
+    }),"resolutions");
   }
   // 23. Export EACH selected node's output as its own PNG (or all source nodes
   // if nothing selected). Great for exporting channel maps separately.
   function batchExportNodes(ids,sz){
     sz=sz||(state.exportSize||512);
     if(!ids||!ids.length){ids=[];for(var nid in nodeGraph.nodes)if(nodeGraph.nodes[nid].type==="source")ids.push(nid);}
-    var res=evaluate(nodeGraph,sz,makeNodeEvaluator(sz));
-    ids.forEach(function(id,i){
-      var buf=res.cache&&res.cache[id];
-      if(buf)setTimeout(function(){downloadBuffer(buf,sz,"node_"+(nodeGraph.nodes[id]?nodeGraph.nodes[id].type:"x")+"_"+id.slice(-4)+".png");},i*300);
-    });
+    var res=null; // evaluated once, after the folder question
+    return exportSet(ids.map(function(id){
+      return function(dir){
+        if(!res)res=evaluate(nodeGraph,sz,makeNodeEvaluator(sz));
+        var buf=res.cache&&res.cache[id];
+        return buf?downloadBuffer(buf,sz,"node_"+(nodeGraph.nodes[id]?nodeGraph.nodes[id].type:"x")+"_"+id.slice(-4)+".png",dir):null;
+      };
+    }),"node maps");
   }
   // 24. Seed sweep: render N variations of the graph's source seeds, tiled into a
   // contact sheet. Each frame re-seeds every source node.
@@ -14766,6 +14774,65 @@ export default function TexGen(){
     },20);
   }
 
+  // ── Studio host hooks ────────────────────────────────────────────────
+  // The Studio header owns Undo / Redo / Randomize seed / Save / Export PNG when the page is embedded
+  // (index.html registers them). The host calls these through window.__texgen, which is re-pointed at
+  // every render so the closures always see the current state.
+  function doRandomSeed(){
+    var s=Math.random()*99999|0;
+    recordSeed((L.label||"L")+"_"+si,s);
+    setL("seed",s);
+  }
+  // An image sent from the Studio tray or dropped on the page: it becomes the image of the current
+  // layer when that layer is an image layer, otherwise a new image layer.
+  function importImageFile(file){
+    if(!file||!/^image\//.test(file.type||"")){flash("That file is not an image");return;}
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      var data=ev.target.result;
+      preDecodeImage(data,function(){
+        if(L&&L.type==="image"){pushUndo(state);setL("imageData",data);flash("Image set on "+(L.label||"the layer"));return;}
+        if(curLayers.length>=8){flash("Layer limit reached (8 max)");return;}
+        pushUndo(state);
+        var idx=curLayers.length,nl=mkL(idx,Math.random()*99999|0,{enabled:true,type:"image",imageData:data});
+        if(TYPE_DEFAULTS.image)Object.assign(nl,TYPE_DEFAULTS.image);
+        if(editSlot){setState(function(p){var s=p.slots.slice(),sl=Object.assign({},s[asi]);sl.layers=sl.layers.concat([nl]);s[asi]=sl;return Object.assign({},p,{slots:s});});}
+        else setState(function(p){return Object.assign({},p,{layers:p.layers.concat([nl])});});
+        setCurAL(idx);
+        flash("Image added as a new layer");
+      });
+    };
+    reader.onerror=function(){flash("Could not read that image");};
+    reader.readAsDataURL(file);
+  }
+  if(typeof window!=="undefined"){
+    window.__texgen={
+      undo:doUndo,redo:doRedo,randomize:doRandomSeed,save:doSave,exportPNG:doExport,
+      exportProject:doExportProject,importProject:doImportProject,importImage:importImageFile,
+      busy:function(){return exportingPng;},
+      state:function(){return state;},               // read-only view, used by the test
+      graph:function(){return nodeGraph;},
+      setLayer:function(k,v){setL(k,v);},            // test: drive the current layer
+      typeIds:function(){var a=[];TG.forEach(function(g){g.types.forEach(function(t){a.push(t.id);});});return a;}
+    };
+  }
+  // Keep the host actions in step with the editor: Undo/Redo enabled state, Export while rendering,
+  // and the save / load feedback as a host toast.
+  var _embPrev=useRef({});
+  useEffect(function(){
+    if(!EMBED)return;
+    var E=window.Embed,pv=_embPrev.current;
+    var noUndo=!(undoStack.current.length>1&&undoIdx.current>0);
+    var noRedo=!(undoIdx.current<undoStack.current.length-1);
+    if(pv.noUndo!==noUndo){E.action("undo",{disabled:noUndo});pv.noUndo=noUndo;}
+    if(pv.noRedo!==noRedo){E.action("redo",{disabled:noRedo});pv.noRedo=noRedo;}
+    if(pv.busy!==exportingPng){E.action("export",{disabled:exportingPng,label:exportingPng?"Rendering…":"Export PNG"});pv.busy=exportingPng;}
+  });
+  useEffect(function(){
+    if(!EMBED||!saveStatus||saveStatus==="↑ Loaded")return; // the restore at start-up is silent
+    window.Embed.toast(saveStatus.replace(/^[✓✗↑]\s*/,""),/^✗/.test(saveStatus)?{kind:"err"}:undefined);
+  },[saveStatus]);
+
   var NAV=[{id:"noise",icon:"◈",label:"Noise"},{id:"adj",icon:"◑",label:"Adjust"},{id:"fx",icon:"✦",label:"Filters"},{id:"anim",icon:"◷",label:"Anim"},{id:"global",icon:"⊞",label:"Global"},{id:"sprite",icon:"⊟",label:"Sprite"}];
   var fxCount=(curLayers[si]&&curLayers[si].layerFilters||[]).filter(function(f){return f.enabled;}).length;
   var globalFxCount=(state.globalLayerFilters||[]).filter(function(f){return f.enabled;}).length;
@@ -14811,65 +14878,61 @@ export default function TexGen(){
   },[viewMenuOpen]);
 
   var topBar=React.createElement("div",{style:{
-    display:"flex",alignItems:"center",height:44,
-    background:"#0e0e0e",borderBottom:"1px solid #1c1c1c",
+    display:"flex",alignItems:"center",height:EMBED?36:44,
+    background:"var(--bg)",borderBottom:"1px solid var(--line)",
     flexShrink:0,gap:0,overflow:"visible",position:"relative"
   }},
     // ── LEFT: Logo + slot indicator ───────────────────────────
     React.createElement("div",{style:{display:"flex",alignItems:"center",gap:10,padding:"0 14px",flexShrink:0}},
-      React.createElement("span",{style:{fontSize:12,fontWeight:700,color:"#e8900a",letterSpacing:3}},"TEXGEN"),
+      EMBED?null:React.createElement("span",{style:{fontSize:"var(--fs)",fontWeight:700,color:"var(--txt)",letterSpacing:3}},"TEXGEN"),
       editSlot?React.createElement("span",{style:{
-        fontSize:8,color:"#ff6699",letterSpacing:1.2,
-        padding:"3px 7px",background:"rgba(255,102,153,0.08)",
-        border:"1px solid rgba(255,102,153,0.3)",borderRadius:3
+        fontSize:"var(--fs-s)",color:"var(--txt)",letterSpacing:1.2,
+        padding:"3px 7px",background:"var(--panel3)",
+        border:"1px solid #8a8a94",borderRadius:3
       }},"SLOT "+([1,2,3,4][asi])):null
     ),
 
     // ── CENTER: Primary actions ──────────────────────────────
     React.createElement("div",{style:{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:6}},
       // Undo / Redo (paired)
-      React.createElement("div",{style:{display:"flex",gap:0,background:"#0a0a0a",border:"1px solid #1c1c1c",borderRadius:3,overflow:"hidden"}},
+      EMBED?null:React.createElement("div",{style:{display:"flex",gap:0,background:"var(--bg)",border:"1px solid var(--line)",borderRadius:3,overflow:"hidden"}},
         React.createElement("button",{onClick:doUndo,title:"Undo (Ctrl+Z)",
           disabled:!(undoStack.current.length>1&&undoIdx.current>0),
-          style:{padding:"5px 10px",background:"none",border:"none",borderRight:"1px solid #1c1c1c",
-            color:undoStack.current.length>1&&undoIdx.current>0?"#888":"#2a2a2a",
-            fontFamily:"monospace",fontSize:13,cursor:undoStack.current.length>1&&undoIdx.current>0?"pointer":"not-allowed",lineHeight:1}},"↩"),
+          style:{padding:"5px 10px",background:"none",border:"none",borderRight:"1px solid var(--line)",
+            color:undoStack.current.length>1&&undoIdx.current>0?"var(--txt2)":"var(--tg-dim)",
+            fontFamily:"inherit",fontSize:"var(--fs-l)",cursor:undoStack.current.length>1&&undoIdx.current>0?"pointer":"not-allowed",lineHeight:1}},"↩"),
         React.createElement("button",{onClick:doRedo,title:"Redo (Ctrl+Y)",
           disabled:!(undoIdx.current<undoStack.current.length-1),
           style:{padding:"5px 10px",background:"none",border:"none",
-            color:undoIdx.current<undoStack.current.length-1?"#888":"#2a2a2a",
-            fontFamily:"monospace",fontSize:13,cursor:undoIdx.current<undoStack.current.length-1?"pointer":"not-allowed",lineHeight:1}},"↪")
+            color:undoIdx.current<undoStack.current.length-1?"var(--txt2)":"var(--tg-dim)",
+            fontFamily:"inherit",fontSize:"var(--fs-l)",cursor:undoIdx.current<undoStack.current.length-1?"pointer":"not-allowed",lineHeight:1}},"↪")
       ),
       // Seed randomize — standalone icon button
-      React.createElement("button",{onClick:function(){
-        var s=Math.random()*99999|0;
-        recordSeed((L.label||"L")+"_"+si,s);
-        setL("seed",s);
-      },
+      EMBED?null:React.createElement("button",{onClick:doRandomSeed,
         title:"Randomize seed (R)",
-        style:{padding:"5px 10px",background:"#0a0a0a",border:"1px solid #1c1c1c",color:"#888",
-          fontFamily:"monospace",fontSize:13,cursor:"pointer",borderRadius:3,lineHeight:1}},"⟳"),
+        style:{padding:"5px 10px",background:"var(--bg)",border:"1px solid var(--line)",color:"var(--txt2)",
+          fontFamily:"inherit",fontSize:"var(--fs-l)",cursor:"pointer",borderRadius:3,lineHeight:1}},"⟳"),
       // Save + status combined
-      React.createElement("button",{onClick:doSave,
+      EMBED?null:React.createElement("button",{onClick:doSave,
         title:"Save project (Ctrl+S)",
-        style:{padding:"5px 12px",background:saveStatus?"rgba(160,224,96,0.12)":"#0a0a0a",
-          border:"1px solid "+(saveStatus?"#a0e060":"#1c1c1c"),
-          color:saveStatus?"#a0e060":"#888",fontFamily:"monospace",fontSize:10,cursor:"pointer",borderRadius:3,
+        style:{padding:"5px 12px",background:saveStatus?"var(--panel3)":"var(--bg)",
+          border:"1px solid "+(saveStatus?"#8a8a94":"var(--line)"),
+          color:saveStatus?"var(--txt)":"var(--txt2)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3,
           letterSpacing:0.5,minWidth:54,textAlign:"center"}},
         saveStatus||"Save"),
       // A/B comparison
       React.createElement("button",{
         onClick:function(){if(abMode){clearABSnapshot();}else{captureABSnapshot();}},
         title:abMode?"Exit A/B compare":"Capture snapshot to compare before/after",
-        style:{padding:"5px 12px",background:abMode?"rgba(74,180,255,0.12)":"#0a0a0a",
-          border:"1px solid "+(abMode?"#4ab4ff":"#1c1c1c"),
-          color:abMode?"#4ab4ff":"#666",fontFamily:"monospace",fontSize:10,cursor:"pointer",borderRadius:3,letterSpacing:0.5}},
+        style:{padding:"5px 12px",background:abMode?"var(--panel3)":"var(--bg)",
+          border:"1px solid "+(abMode?"#8a8a94":"var(--line)"),
+          color:abMode?"var(--txt)":"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3,letterSpacing:0.5}},
         abMode?"A|B ●":"A|B"),
       // Export PNG — primary CTA
-      React.createElement("button",{onClick:doExport,
+      EMBED?null:React.createElement("button",{onClick:doExport,
         disabled:exportingPng,
-        style:{padding:"6px 16px",background:exportingPng?"#444":"#e8900a",border:"none",color:exportingPng?"#888":"#000",
-          fontFamily:"monospace",fontSize:11,fontWeight:700,cursor:exportingPng?"wait":"pointer",borderRadius:3,letterSpacing:0.8,marginLeft:6}},
+        style:{padding:"6px 16px",background:exportingPng?"#444":"var(--txt)",border:"none",color:exportingPng?"var(--txt2)":"var(--bg)",
+          fontFamily:"inherit",fontSize:"var(--fs-s)",fontWeight:700,cursor:exportingPng?"wait":"pointer",borderRadius:3,letterSpacing:0.8,marginLeft:6}},
         exportingPng?"Rendering…":"Export PNG")
     ),
 
@@ -14879,29 +14942,29 @@ export default function TexGen(){
         id:"texgen-view-trigger",
         onClick:function(){setViewMenuOpen(function(v){return!v;});},
         title:"View options (panel layout, UI scale, touch mode)",
-        style:{padding:"5px 10px",background:viewMenuOpen?"#1a1a1a":"#0a0a0a",border:"1px solid #1c1c1c",
-          color:"#888",fontFamily:"monospace",fontSize:9,cursor:"pointer",borderRadius:3,letterSpacing:0.5,
+        style:{padding:"5px 10px",background:viewMenuOpen?"var(--panel)":"var(--bg)",border:"1px solid var(--line)",
+          color:"var(--txt2)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3,letterSpacing:0.5,
           display:"flex",alignItems:"center",gap:5}},
         React.createElement("span",null,"View"),
-        React.createElement("span",{style:{fontSize:8,color:"#555"}},viewMenuOpen?"▴":"▾")
+        React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)"}},viewMenuOpen?"▴":"▾")
       ),
       // View popover
       viewMenuOpen?React.createElement("div",{
         id:"texgen-view-menu",
-        style:{position:"absolute",top:42,right:8,zIndex:100,
-          background:"#0e0e0e",border:"1px solid #2a2a2a",borderRadius:4,
+        style:{position:"absolute",top:EMBED?34:42,right:8,zIndex:100,
+          background:"var(--bg)",border:"1px solid var(--line)",borderRadius:4,
           padding:10,minWidth:200,boxShadow:"0 8px 24px rgba(0,0,0,0.6)"}},
         // Panel position
         React.createElement("div",{style:{marginBottom:10}},
-          React.createElement("div",{style:{fontSize:8,color:"#555",letterSpacing:1.2,textTransform:"uppercase",marginBottom:5}},"Panel position"),
+          React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1.2,textTransform:"uppercase",marginBottom:5}},"Panel position"),
           React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3}},
             [["left","◧ Left"],["right","◨ Right"],["top","⬒ Top"],["bottom","⬓ Bottom"]].map(function(pair){
               var active=panelSide===pair[0];
               return React.createElement("button",{key:pair[0],onClick:function(){setPanelSide(pair[0]);},
-                style:{padding:"5px 7px",fontSize:9,fontFamily:"monospace",
-                  background:active?"#e8900a":"#161616",
-                  color:active?"#000":"#666",
-                  border:"1px solid "+(active?"#e8900a":"#252525"),
+                style:{padding:"5px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",
+                  background:active?"var(--panel3)":"var(--panel)",
+                  color:active?"#fff":"var(--tg-dim)",
+                  border:"1px solid "+(active?"#8a8a94":"var(--line)"),
                   borderRadius:3,cursor:"pointer",textAlign:"left"}},pair[1]);
             })
           )
@@ -14909,17 +14972,17 @@ export default function TexGen(){
         // UI scale
         React.createElement("div",{style:{marginBottom:10}},
           React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}},
-            React.createElement("span",{style:{fontSize:8,color:"#555",letterSpacing:1.2,textTransform:"uppercase"}},"UI Scale"),
-            React.createElement("span",{style:{fontSize:10,color:"#e8900a",fontFamily:"monospace"}},Math.round(uiScale*100)+"%")
+            React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1.2,textTransform:"uppercase"}},"UI Scale"),
+            React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"inherit"}},Math.round(uiScale*100)+"%")
           ),
           React.createElement("div",{style:{display:"flex",gap:3}},
             [0.8,0.9,1,1.1,1.25].map(function(s){
               var active=Math.abs(uiScale-s)<0.01;
               return React.createElement("button",{key:s,onClick:function(){setUiScale(s);},
-                style:{flex:1,padding:"5px 0",fontSize:9,fontFamily:"monospace",
-                  background:active?"#e8900a":"#161616",
-                  color:active?"#000":"#666",
-                  border:"1px solid "+(active?"#e8900a":"#252525"),
+                style:{flex:1,padding:"5px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",
+                  background:active?"var(--panel3)":"var(--panel)",
+                  color:active?"#fff":"var(--tg-dim)",
+                  border:"1px solid "+(active?"#8a8a94":"var(--line)"),
                   borderRadius:3,cursor:"pointer"}},Math.round(s*100));
             })
           )
@@ -14927,14 +14990,14 @@ export default function TexGen(){
         // Touch mode
         React.createElement("div",null,
           React.createElement("button",{onClick:function(){setTouchMode(function(v){return!v;});},
-            style:{width:"100%",padding:"6px 10px",fontSize:9,fontFamily:"monospace",letterSpacing:1,
-              background:touchMode?"rgba(74,180,255,0.12)":"#161616",
-              color:touchMode?"#4ab4ff":"#666",
-              border:"1px solid "+(touchMode?"#4ab4ff":"#252525"),
+            style:{width:"100%",padding:"6px 10px",fontSize:"var(--fs-s)",fontFamily:"inherit",letterSpacing:1,
+              background:touchMode?"var(--panel3)":"var(--panel)",
+              color:touchMode?"var(--txt)":"var(--tg-dim)",
+              border:"1px solid "+(touchMode?"#8a8a94":"var(--line)"),
               borderRadius:3,cursor:"pointer",textAlign:"left",
               display:"flex",justifyContent:"space-between",alignItems:"center"}},
             React.createElement("span",null,"Touch mode (bigger handles)"),
-            React.createElement("span",{style:{fontSize:8}},touchMode?"ON":"OFF")
+            React.createElement("span",{style:{fontSize:"var(--fs-s)"}},touchMode?"ON":"OFF")
           )
         )
       ):null
@@ -14957,93 +15020,92 @@ export default function TexGen(){
       // lets you swipe to reach every control; nothing is clipped off-screen.
       position:"absolute",bottom:8,left:8,right:8,zIndex:13,
       display:"flex",gap:2,alignItems:"center",flexWrap:"nowrap",
-      background:"rgba(10,10,10,0.94)",border:"1px solid #1c1c1c",borderRadius:5,
+      background:"color-mix(in srgb,var(--bg) 94%,transparent)",border:"1px solid var(--line)",borderRadius:5,
       padding:"2px 5px",backdropFilter:"blur(4px)",
       overflowX:"auto",overflowY:"hidden",WebkitOverflowScrolling:"touch",
       touchAction:"pan-x",scrollbarWidth:"none"
     }:{
-      // Desktop: centered; allow horizontal scroll only if the window is narrow.
-      position:"absolute",bottom:8,left:"50%",transform:"translateX(-50%)",
-      maxWidth:"calc(100% - 24px)",
+      // Desktop: lives in the bottom dock (below), centred; scrolls sideways only if the window is narrow.
+      position:"relative",maxWidth:"100%",pointerEvents:"auto",flexShrink:0,
       display:"flex",gap:2,alignItems:"center",flexWrap:"nowrap",
-      background:"rgba(10,10,10,0.92)",border:"1px solid #1c1c1c",borderRadius:5,
+      background:"color-mix(in srgb,var(--bg) 92%,transparent)",border:"1px solid var(--line)",borderRadius:5,
       padding:"2px 5px",zIndex:10,backdropFilter:"blur(4px)",
       overflowX:"auto",overflowY:"hidden",scrollbarWidth:"thin"
     }},
-    React.createElement("button",{onClick:zoomOut,style:{background:"none",border:"none",color:"#888",cursor:"pointer",fontSize:13,padding:"0 3px",fontFamily:"monospace",lineHeight:1}},"−"),
-    React.createElement("span",{style:{fontSize:9,color:"#e8900a",fontFamily:"monospace",minWidth:36,textAlign:"center",cursor:"pointer"},onClick:function(){setPreviewZoom(1);setPreviewPan({x:0,y:0});}},(previewZoom*100|0)+"%"),
-    React.createElement("button",{onClick:zoomIn,style:{background:"none",border:"none",color:"#888",cursor:"pointer",fontSize:13,padding:"0 3px",fontFamily:"monospace",lineHeight:1}},"+"),
-    React.createElement("div",{style:{width:1,height:14,background:"#252525",margin:"0 4px"}}),
+    React.createElement("button",{onClick:zoomOut,style:{background:"none",border:"none",color:"var(--txt2)",cursor:"pointer",fontSize:"var(--fs-l)",padding:"0 3px",fontFamily:"inherit",lineHeight:1}},"−"),
+    React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"var(--mono)",minWidth:36,textAlign:"center",cursor:"pointer"},onClick:function(){setPreviewZoom(1);setPreviewPan({x:0,y:0});}},(previewZoom*100|0)+"%"),
+    React.createElement("button",{onClick:zoomIn,style:{background:"none",border:"none",color:"var(--txt2)",cursor:"pointer",fontSize:"var(--fs-l)",padding:"0 3px",fontFamily:"inherit",lineHeight:1}},"+"),
+    React.createElement("div",{style:{width:1,height:14,background:"var(--panel3)",margin:"0 4px"}}),
     // Preview resolution picker
     React.createElement("div",{style:{display:"flex",gap:2}},
       [64,128,256,512,1024,2048].map(function(res){
-        var col=res<=256?"#4ab4ff":res<=512?"#e8900a":res<=1024?"#ff9966":"#ff6699";
+        var col="#c8c8ce";
         return React.createElement("button",{key:res,onClick:function(){setPreviewRes(res);},
           title:"Preview res: "+res+"px"+(res>=1024?" (slow render, use for quality check)":""),
-          style:{padding:"2px 4px",fontSize:8,fontFamily:"monospace",
-            background:previewRes===res?col:"none",
-            color:previewRes===res?"#000":"#444",
-            border:"1px solid "+(previewRes===res?col:"#2a2a2a"),
+          style:{padding:"2px 4px",fontSize:"var(--fs-s)",fontFamily:"inherit",
+            background:previewRes===res?"var(--panel3)":"none",
+            color:previewRes===res?"#fff":"var(--tg-dim)",
+            border:"1px solid "+(previewRes===res?"#8a8a94":"var(--line)"),
             borderRadius:2,cursor:"pointer"}},
           res>=1024?(res/1024)+"k":res);
       })
     ),
-    React.createElement("div",{style:{width:1,height:14,background:"#252525",margin:"0 4px"}}),
+    React.createElement("div",{style:{width:1,height:14,background:"var(--panel3)",margin:"0 4px"}}),
     React.createElement("div",{style:{display:"flex",gap:2}},
       [["null","RGB"],["r","R"],["g","G"],["b","B"],["a","A"]].map(function(pair){
         var id=pair[0]==="null"?null:pair[0],label=pair[1];
         var active=chanMode===id;
-        var col=id==="r"?"#ff6666":id==="g"?"#66dd66":id==="b"?"#4ab4ff":id==="a"?"#cc88ff":"#e8900a";
+        var col="#c8c8ce";
         return React.createElement("button",{key:label,
           onClick:function(){setChanMode(active?null:id);},
           title:id===null?"Show composite RGB":id==="a"?"Alpha channel (grayscale)":id.toUpperCase()+" channel (grayscale)",
           style:{
-            padding:"2px 6px",fontSize:8,fontFamily:"monospace",
-            background:active?col:"none",
-            color:active?"#000":id===null?"#777":"#555",
-            border:"1px solid "+(active?col:"#2a2a2a"),
+            padding:"2px 6px",fontSize:"var(--fs-s)",fontFamily:"inherit",
+            background:active?"var(--panel3)":"none",
+            color:active?"#fff":id===null?"var(--txt2)":"var(--tg-dim)",
+            border:"1px solid "+(active?"#8a8a94":"var(--line)"),
             borderRadius:2,cursor:"pointer",transition:"all 0.08s"
           }
         },label);
       })
     ),
-    React.createElement("div",{style:{width:1,height:14,background:"#252525",margin:"0 4px"}}),
+    React.createElement("div",{style:{width:1,height:14,background:"var(--panel3)",margin:"0 4px"}}),
     React.createElement("button",{
       onClick:function(){setShowAlphaChecker(function(v){return!v;});},
       title:"Show a checkerboard behind the texture so transparency reads correctly (for textures with an alpha channel)",
-      style:{padding:"2px 7px",fontSize:8,fontFamily:"monospace",
-        background:showAlphaChecker?"#44ddcc":"none",color:showAlphaChecker?"#000":"#555",
-        border:"1px solid "+(showAlphaChecker?"#44ddcc":"#2a2a2a"),borderRadius:2,cursor:"pointer"}},
+      style:{padding:"2px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",whiteSpace:"nowrap",
+        background:showAlphaChecker?"var(--panel3)":"none",color:showAlphaChecker?"#fff":"var(--tg-dim)",
+        border:"1px solid "+(showAlphaChecker?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}},
       "▦ Alpha"),
     React.createElement("button",{
       onClick:function(){setCompareLayers(function(v){return!v;});},
       title:"Show each layer rendered separately, side by side, instead of the composite",
-      style:{padding:"2px 7px",fontSize:8,fontFamily:"monospace",
-        background:compareLayers?"#e8900a":"none",color:compareLayers?"#000":"#555",
-        border:"1px solid "+(compareLayers?"#e8900a":"#2a2a2a"),borderRadius:2,cursor:"pointer"}},
+      style:{padding:"2px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",whiteSpace:"nowrap",
+        background:compareLayers?"var(--panel3)":"none",color:compareLayers?"#fff":"var(--tg-dim)",
+        border:"1px solid "+(compareLayers?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}},
       "▥ Compare"),
-    React.createElement("div",{style:{width:1,height:14,background:"#252525",margin:"0 4px"}}),
+    React.createElement("div",{style:{width:1,height:14,background:"var(--panel3)",margin:"0 4px"}}),
     // Tiling / variation view controls — live in the same bar as Alpha/Compare
     React.createElement("button",{
       onClick:function(){setSeamlessPreview(function(v){return!v;});},
       title:anySeamless?"Toggle seamless tile preview":"Toggle tile preview",
-      style:{padding:"2px 7px",fontSize:8,fontFamily:"monospace",whiteSpace:"nowrap",
-        background:seamlessPreview?"#e8900a":"none",color:seamlessPreview?"#000":"#555",
-        border:"1px solid "+(seamlessPreview?"#e8900a":"#2a2a2a"),borderRadius:2,cursor:"pointer"}},
+      style:{padding:"2px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",whiteSpace:"nowrap",
+        background:seamlessPreview?"var(--panel3)":"none",color:seamlessPreview?"#fff":"var(--tg-dim)",
+        border:"1px solid "+(seamlessPreview?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}},
       "⊞ Tile"),
     React.createElement("button",{
       onClick:function(){setTileCheck33(function(v){return!v;});},
       title:"3×3 tiling check",
-      style:{padding:"2px 7px",fontSize:8,fontFamily:"monospace",whiteSpace:"nowrap",
-        background:tileCheck33?"#e8900a":"none",color:tileCheck33?"#000":"#555",
-        border:"1px solid "+(tileCheck33?"#e8900a":"#2a2a2a"),borderRadius:2,cursor:"pointer"}},
+      style:{padding:"2px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",whiteSpace:"nowrap",
+        background:tileCheck33?"var(--panel3)":"none",color:tileCheck33?"#fff":"var(--tg-dim)",
+        border:"1px solid "+(tileCheck33?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}},
       "▦ 3×3"),
     React.createElement("button",{
       onClick:function(){setShowVariations(function(v){return!v;});},
       title:"Explore variations",
-      style:{padding:"2px 7px",fontSize:8,fontFamily:"monospace",whiteSpace:"nowrap",
-        background:showVariations?"#e8900a":"none",color:showVariations?"#000":"#555",
-        border:"1px solid "+(showVariations?"#e8900a":"#2a2a2a"),borderRadius:2,cursor:"pointer"}},
+      style:{padding:"2px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",whiteSpace:"nowrap",
+        background:showVariations?"var(--panel3)":"none",color:showVariations?"#fff":"var(--tg-dim)",
+        border:"1px solid "+(showVariations?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}},
       "⚄ Vary")
   );
 
@@ -15053,8 +15115,8 @@ export default function TexGen(){
     onClick:function(){setSoloLayerIdx(-1);},
     style:{
       position:"absolute",top:8,left:"50%",transform:"translateX(-50%)",
-      background:"rgba(232,144,10,0.9)",color:"#000",
-      padding:"3px 10px",borderRadius:10,fontSize:9,fontFamily:"monospace",
+      background:"var(--txt)",color:"var(--bg)",
+      padding:"3px 10px",borderRadius:10,fontSize:"var(--fs-s)",fontFamily:"inherit",
       fontWeight:700,letterSpacing:0.5,zIndex:12,cursor:"pointer",
       whiteSpace:"nowrap"
     }},"SOLO: "+(curLayers[soloLayerIdx]?curLayers[soloLayerIdx].label||"L"+(soloLayerIdx+1):"")+" ✕"):null;
@@ -15063,23 +15125,22 @@ export default function TexGen(){
   // tiled. Offers a one-tap Auto-Fix (Make Tileable) or dismiss.
   // Discreet, non-intrusive seam hint: a small pill at the bottom-left of the
   // canvas, muted colours, easy to ignore. Only shows on a real seam mismatch.
-  var edgeBanner=(edgeWarn&&!edgeWarnDismissed)?React.createElement("div",{style:{
-    position:"absolute",bottom:10,left:10,
-    background:"rgba(20,20,22,0.82)",color:"#d8a060",padding:"3px 6px",borderRadius:5,
-    zIndex:14,display:"flex",alignItems:"center",gap:6,fontFamily:"monospace",
-    border:"1px solid rgba(180,120,60,0.35)",backdropFilter:"blur(2px)"
-  }},
-    React.createElement("span",{style:{fontSize:8,lineHeight:1.3,opacity:0.95}},
+  var edgeBanner=(edgeWarn&&!edgeWarnDismissed)?React.createElement("div",{style:Object.assign(isMobile?{position:"absolute",bottom:10,left:10}:{position:"relative",alignSelf:"flex-start",pointerEvents:"auto",flexShrink:0,maxWidth:"100%"},{
+    background:"color-mix(in srgb,var(--panel) 82%,transparent)",color:"var(--txt)",padding:"3px 6px",borderRadius:5,
+    zIndex:14,display:"flex",alignItems:"center",gap:6,fontFamily:"inherit",
+    border:"1px solid #8a8a94",backdropFilter:"blur(2px)"
+  })},
+    React.createElement("span",{style:{fontSize:"var(--fs-s)",lineHeight:1.3,opacity:0.95}},
       (edgeCheckMode==="seam"?"seam: ":"edge cut: ")+edgeWarn.sides),
     React.createElement("button",{onClick:autoFixEdges,title:"Fade the borders to fix it",
-      style:{padding:"1px 6px",fontSize:8,fontFamily:"monospace",background:"rgba(180,120,60,0.22)",color:"#e8b070",border:"1px solid rgba(180,120,60,0.4)",borderRadius:3,cursor:"pointer",whiteSpace:"nowrap"}},
+      style:{padding:"1px 6px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:"var(--panel3)",color:"var(--txt)",border:"1px solid #8a8a94",borderRadius:3,cursor:"pointer",whiteSpace:"nowrap"}},
       "fix"),
     React.createElement("button",{onClick:function(){var nm=edgeCheckMode==="cut"?"seam":"cut";setEdgeCheckMode(nm);_edgeCheckMode=nm;bumpEpoch();},
       title:edgeCheckMode==="cut"?"Mode: effect runs off edge. Click for tiling-seam mode.":"Mode: opposite borders mismatch. Click for edge-cut mode.",
-      style:{padding:"1px 5px",fontSize:8,fontFamily:"monospace",background:"transparent",color:"#888",border:"1px solid rgba(120,120,120,0.3)",borderRadius:3,cursor:"pointer"}},
+      style:{padding:"1px 5px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:"transparent",color:"var(--txt2)",border:"1px solid rgba(120,120,120,0.3)",borderRadius:3,cursor:"pointer"}},
       edgeCheckMode==="cut"?"⊡":"⊞"),
     React.createElement("button",{onClick:function(){setEdgeWarnDismissed(true);},title:"Dismiss",
-      style:{padding:"1px 5px",fontSize:9,background:"transparent",color:"#888",border:"none",cursor:"pointer"}},
+      style:{padding:"1px 5px",fontSize:"var(--fs-s)",background:"transparent",color:"var(--txt2)",border:"none",cursor:"pointer"}},
       "✕")
   ):null;
   // Shared style for the canvas action buttons. Grouped into one flex toolbar
@@ -15088,15 +15149,15 @@ export default function TexGen(){
   // floating canvas toolbar is removed to stop the overlaps.
 
   var tile33Overlay=tileCheck33?React.createElement("div",{style:{
-    position:"absolute",inset:0,zIndex:7,background:"#080808",
+    position:"absolute",inset:0,zIndex:7,background:"var(--bg)",
     display:"flex",alignItems:"center",justifyContent:"center",padding:8
   }},
     React.createElement("canvas",{ref:tile33Ref,style:{
       width:Math.min(baseDisplaySize*1.4,420)+"px",height:Math.min(baseDisplaySize*1.4,420)+"px",
-      imageRendering:previewRes<=256?"pixelated":"auto",borderRadius:2,boxShadow:"0 0 0 1px #1e1e1e"
+      imageRendering:previewRes<=256?"pixelated":"auto",borderRadius:2,boxShadow:"0 0 0 1px var(--line)"
     }}),
     React.createElement("div",{style:{position:"absolute",bottom:10,left:0,right:0,textAlign:"center",
-      fontSize:8,color:"#666",fontFamily:"monospace",pointerEvents:"none"}},
+      fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",pointerEvents:"none"}},
       "3×3 tiling check · center tile outlined · look for visible seams at the edges")
   ):null;
 
@@ -15105,28 +15166,28 @@ export default function TexGen(){
   // Controls offsetX/Y (move), rotation (rotate), scaleX/Y (scale) of active layer.
   var gizmoBtn=React.createElement("div",{style:{
     position:"absolute",top:8,left:8,display:"flex",gap:2,zIndex:11,
-    background:"rgba(10,10,10,0.88)",border:"1px solid #1c1c1c",borderRadius:5,padding:2,
+    background:"color-mix(in srgb,var(--bg) 88%,transparent)",border:"1px solid var(--line)",borderRadius:5,padding:2,
     backdropFilter:"blur(4px)"
   }},
     React.createElement("button",{
       onClick:function(){setGizmoOn(function(v){return!v;});},
       title:gizmoOn?"Hide gizmo":"Show transform gizmo",
-      style:{padding:"3px 7px",background:gizmoOn?"#e8900a":"none",border:"none",
-        color:gizmoOn?"#000":"#555",fontFamily:"monospace",fontSize:9,cursor:"pointer",borderRadius:3,letterSpacing:0.5}
+      style:{padding:"3px 7px",background:gizmoOn?"var(--panel3)":"none",border:"none",
+        color:gizmoOn?"#fff":"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3,letterSpacing:0.5}
     },gizmoOn?"◆ Gizmo":"◇ Gizmo"),
     gizmoOn?[
       React.createElement("button",{key:"m",onClick:function(){setGizmoMode("move");},
         title:"Move (W)",
-        style:{padding:"3px 6px",background:gizmoMode==="move"?"#4ab4ff":"none",border:"none",
-          color:gizmoMode==="move"?"#000":"#555",fontFamily:"monospace",fontSize:11,cursor:"pointer",borderRadius:2,lineHeight:1}},"✥"),
+        style:{padding:"3px 6px",background:gizmoMode==="move"?"var(--panel3)":"none",border:"none",
+          color:gizmoMode==="move"?"#fff":"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:2,lineHeight:1}},"✥"),
       React.createElement("button",{key:"r",onClick:function(){setGizmoMode("rotate");},
         title:"Rotate (E)",
-        style:{padding:"3px 6px",background:gizmoMode==="rotate"?"#a0e060":"none",border:"none",
-          color:gizmoMode==="rotate"?"#000":"#555",fontFamily:"monospace",fontSize:11,cursor:"pointer",borderRadius:2,lineHeight:1}},"↻"),
+        style:{padding:"3px 6px",background:gizmoMode==="rotate"?"var(--panel3)":"none",border:"none",
+          color:gizmoMode==="rotate"?"#fff":"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:2,lineHeight:1}},"↻"),
       React.createElement("button",{key:"s",onClick:function(){setGizmoMode("scale");},
         title:"Scale (R)",
-        style:{padding:"3px 6px",background:gizmoMode==="scale"?"#ff6699":"none",border:"none",
-          color:gizmoMode==="scale"?"#000":"#555",fontFamily:"monospace",fontSize:11,cursor:"pointer",borderRadius:2,lineHeight:1}},"⇲")
+        style:{padding:"3px 6px",background:gizmoMode==="scale"?"var(--panel3)":"none",border:"none",
+          color:gizmoMode==="scale"?"#fff":"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:2,lineHeight:1}},"⇲")
     ]:null
   );
 
@@ -15294,13 +15355,13 @@ export default function TexGen(){
     // Center XY grab
     if(gizmoMode==="move"){
       elts.push(React.createElement("rect",{key:"centerGrab",x:cu-ctrSz,y:cv-ctrSz,width:ctrSz*2,height:ctrSz*2,
-        fill:"rgba(255,221,68,0.2)",stroke:"#ffdd44",strokeWidth:1.5,
+        fill:"#c8c8ce",stroke:"#c8c8ce",strokeWidth:1.5,
         style:{pointerEvents:"all",cursor:"move",touchAction:"none"},
         onPointerDown:function(e){e.currentTarget.setPointerCapture(e.pointerId);onGizmoDown("xy",e);}
       }));
-      elts.push(React.createElement("circle",{key:"centerDot",cx:cu,cy:cv,r:3,fill:"#ffdd44",style:{pointerEvents:"none"}}));
+      elts.push(React.createElement("circle",{key:"centerDot",cx:cu,cy:cv,r:3,fill:"#c8c8ce",style:{pointerEvents:"none"}}));
     } else {
-      elts.push(React.createElement("circle",{key:"centerDot",cx:cu,cy:cv,r:3,fill:"#ffdd44",stroke:"#000",strokeWidth:1,style:{pointerEvents:"none"}}));
+      elts.push(React.createElement("circle",{key:"centerDot",cx:cu,cy:cv,r:3,fill:"#c8c8ce",stroke:"#000",strokeWidth:1,style:{pointerEvents:"none"}}));
     }
 
     gizmoSVG=React.createElement("svg",{
@@ -15383,37 +15444,37 @@ export default function TexGen(){
     title:"Show layer strip",
     style:{
       position:"absolute",left:6,top:"50%",transform:"translateY(-50%)",
-      background:"rgba(10,10,10,0.85)",border:"1px solid #1c1c1c",
+      background:"color-mix(in srgb,var(--bg) 85%,transparent)",border:"1px solid var(--line)",
       borderRadius:4,padding:"8px 4px",cursor:"pointer",zIndex:10,
-      color:"#666",fontSize:14,lineHeight:1,
+      color:"var(--tg-dim)",fontSize:"var(--fs-l)",lineHeight:1,
       display:"flex",flexDirection:"column",alignItems:"center",gap:4,
       backdropFilter:"blur(4px)"
     }
   },
     React.createElement("span",{style:{transform:"rotate(90deg)",letterSpacing:1}},"⊟"),
-    React.createElement("span",{style:{fontSize:8,color:"#444",fontFamily:"monospace",writingMode:"vertical-rl",letterSpacing:1}},curLayers.length+" L")
+    React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",writingMode:"vertical-rl",letterSpacing:1}},curLayers.length+" L")
   ):React.createElement("div",{style:{
     position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",
     display:"flex",flexDirection:"column",gap:0,zIndex:10,
-    background:"rgba(10,10,10,0.92)",border:"1px solid #1c1c1c",
+    background:"color-mix(in srgb,var(--bg) 92%,transparent)",border:"1px solid var(--line)",
     borderRadius:6,padding:0,backdropFilter:"blur(6px)",
-    maxHeight:"92%",overflow:"hidden",
+    maxHeight:isMobile?"92%":"calc(100% - 200px)",overflow:"hidden",
     boxShadow:"0 4px 16px rgba(0,0,0,0.4)"
   }},
     // ── Header with collapse + count ──
     React.createElement("div",{style:{
       display:"flex",alignItems:"center",justifyContent:"space-between",
-      padding:"4px 6px 4px 8px",borderBottom:"1px solid #1c1c1c",
+      padding:"4px 6px 4px 8px",borderBottom:"1px solid var(--line)",
       gap:4
     }},
       React.createElement("span",{style:{
-        fontSize:7,color:"#444",letterSpacing:1.2,textTransform:"uppercase",fontFamily:"monospace"
+        fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1.2,textTransform:"uppercase",fontFamily:"inherit"
       }},curLayers.length+"/8"),
       React.createElement("button",{
         onClick:function(){setStripOpen(false);},
         title:"Hide layer strip",
-        style:{padding:"2px 4px",background:"none",border:"none",color:"#444",
-          cursor:"pointer",fontSize:11,lineHeight:1}
+        style:{padding:"2px 4px",background:"none",border:"none",color:"var(--tg-dim)",
+          cursor:"pointer",fontSize:"var(--fs-s)",lineHeight:1}
       },"×")
     ),
     // ── Scrollable layer list ──
@@ -15461,7 +15522,7 @@ export default function TexGen(){
         title:(lay.label||"L"+(i+1))+" — "+lay.type+(lay.enabled?"":" [hidden]")+(isMobile?"":"  ·  drag to reorder, dbl-click to toggle"),
         style:{
           position:"relative",cursor:isMobile?"pointer":"grab",borderRadius:3,
-          border:"2px solid "+(dragOverIdx===i&&dragLayerIdx!==i?"#4ab4ff":isActive?col:isSolo?"#ffdd44":"#1e1e1e"),
+          border:"2px solid "+(dragOverIdx===i&&dragLayerIdx!==i?"#8a8a94":isActive?col:isSolo?"#8a8a94":"var(--line)"),
           opacity:dragLayerIdx===i?0.4:lay.enabled?1:0.4,
           transition:"border-color 0.1s,opacity 0.1s,transform 0.08s",
           overflow:"hidden",
@@ -15475,24 +15536,24 @@ export default function TexGen(){
         // Disabled overlay: diagonal line — clearer than a tiny dot
         !lay.enabled?React.createElement("div",{style:{
           position:"absolute",inset:0,
-          background:"linear-gradient(135deg,transparent calc(50% - 1px),#ff6666 50%,transparent calc(50% + 1px))",
+          background:"linear-gradient(135deg,transparent calc(50% - 1px),var(--err) 50%,transparent calc(50% + 1px))",
           pointerEvents:"none"
         }}):null,
         // Blend-mode badge — top right (only when not "normal")
         (lay.blendMode&&lay.blendMode!=="normal")?React.createElement("div",{style:{
-          position:"absolute",top:1,right:1,fontSize:7,fontFamily:"monospace",fontWeight:700,
-          color:"#ffd27f",background:"rgba(0,0,0,0.6)",borderRadius:2,padding:"0 2px",lineHeight:1.4,pointerEvents:"none"
+          position:"absolute",top:1,right:1,fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,
+          color:"var(--txt)",background:"color-mix(in srgb,var(--bg) 60%,transparent)",borderRadius:2,padding:"0 2px",lineHeight:1.4,pointerEvents:"none"
         }},({add:"+",subtract:"−",multiply:"×",divide:"÷",screen:"S",overlay:"Ov",softlight:"s",hardlight:"H",lighten:"↑",darken:"↓",linearDodge:"+",difference:"△",exclusion:"⊕",dissolve:"·",max:"▲",min:"▼"}[lay.blendMode]||"?")):null,
         // Reference badge — bottom left (a small chain mark)
         (lay.refUid!=null)?React.createElement("div",{style:{
-          position:"absolute",bottom:1,left:1,fontSize:7,color:"#cc88ff",background:"rgba(0,0,0,0.6)",
+          position:"absolute",bottom:1,left:1,fontSize:"var(--fs-s)",color:"var(--txt)",background:"color-mix(in srgb,var(--bg) 60%,transparent)",
           borderRadius:2,padding:"0 2px",lineHeight:1.4,pointerEvents:"none"
         }},"\u26ad"):null,
         // Layer number — top left
         React.createElement("div",{style:{
           position:"absolute",top:1,left:2,
-          fontSize:8,color:isActive?col:"#888",
-          fontFamily:"monospace",fontWeight:700,
+          fontSize:"var(--fs-s)",color:isActive?col:"var(--txt2)",
+          fontFamily:"inherit",fontWeight:700,
           textShadow:"0 1px 2px rgba(0,0,0,0.85)",
           pointerEvents:"none",lineHeight:1
         }},i+1),
@@ -15500,8 +15561,8 @@ export default function TexGen(){
         isSolo?React.createElement("div",{style:{
           position:"absolute",top:1,right:1,
           width:8,height:8,borderRadius:"50%",
-          background:"#ffdd44",
-          boxShadow:"0 0 4px #ffdd44",
+          background:"var(--txt)",
+          boxShadow:"0 0 4px #8a8a94",
           pointerEvents:"none"
         }}):null,
         // Solo button — bottom right corner overlay (always present, opacity-controlled)
@@ -15512,9 +15573,9 @@ export default function TexGen(){
             position:"absolute",bottom:0,right:0,
             width:14,height:14,
             display:"flex",alignItems:"center",justifyContent:"center",
-            background:isSolo?"rgba(255,221,68,0.95)":"rgba(0,0,0,0.7)",
-            cursor:"pointer",fontSize:9,
-            color:isSolo?"#000":"#999",
+            background:isSolo?"var(--panel3)":"color-mix(in srgb,var(--bg) 70%,transparent)",
+            cursor:"pointer",fontSize:"var(--fs-s)",
+            color:isSolo?"#fff":"var(--txt2)",
             opacity:isMobile||isActive||isSolo?1:0,
             transition:"opacity 0.12s,background 0.12s",
             borderRadius:"3px 0 0 0",
@@ -15522,11 +15583,11 @@ export default function TexGen(){
           },
           onMouseEnter:function(e){
             e.currentTarget.style.opacity="1";
-            if(!isSolo)e.currentTarget.style.background="rgba(255,221,68,0.4)";
+            if(!isSolo)e.currentTarget.style.background="var(--panel3)";
           },
           onMouseLeave:function(e){
             e.currentTarget.style.opacity=isActive||isSolo||isMobile?"1":"0";
-            if(!isSolo)e.currentTarget.style.background="rgba(0,0,0,0.7)";
+            if(!isSolo)e.currentTarget.style.background="color-mix(in srgb,var(--bg) 70%,transparent)";
           }
         },"●")
       );
@@ -15537,13 +15598,13 @@ export default function TexGen(){
       title:"Add new layer",
       style:{
         width:thumbSz,height:Math.round(thumbSz*0.5),
-        background:"#0e0e0e",border:"1px dashed #2e2e2e",color:"#666",
-        fontFamily:"monospace",fontSize:13,cursor:"pointer",borderRadius:3,
+        background:"var(--bg)",border:"1px dashed var(--line2)",color:"var(--tg-dim)",
+        fontFamily:"inherit",fontSize:"var(--fs-l)",cursor:"pointer",borderRadius:3,
         padding:0,lineHeight:1,flexShrink:0,
         transition:"border-color 0.1s,color 0.1s,background 0.1s"
       },
-      onMouseEnter:function(e){e.currentTarget.style.borderColor="#e8900a";e.currentTarget.style.color="#e8900a";e.currentTarget.style.background="#1a1208";},
-      onMouseLeave:function(e){e.currentTarget.style.borderColor="#2e2e2e";e.currentTarget.style.color="#666";e.currentTarget.style.background="#0e0e0e";}
+      onMouseEnter:function(e){e.currentTarget.style.borderColor="#8a8a94";e.currentTarget.style.color="var(--txt)";e.currentTarget.style.background="var(--panel3)";},
+      onMouseLeave:function(e){e.currentTarget.style.borderColor="var(--line2)";e.currentTarget.style.color="var(--tg-dim)";e.currentTarget.style.background="var(--bg)";}
     },"+"):null
     ) // end scrollable list
   );
@@ -15682,13 +15743,13 @@ export default function TexGen(){
   var nodeSourcePanel=_panelOpen?React.createElement("div",{style:{
     position:"absolute",top:0,right:0,bottom:0,
     width:isMobile?"86%":320,maxWidth:"92%",zIndex:45,
-    background:"rgba(13,13,13,0.97)",borderLeft:"1px solid #2a2a2a",
+    background:"var(--bg)",borderLeft:"1px solid var(--line)",
     display:"flex",flexDirection:"column",overflow:"hidden",
     boxShadow:"-6px 0 24px rgba(0,0,0,0.6)"}},
-    React.createElement("div",{style:{padding:"8px 10px",borderBottom:"1px solid #1c1c1c",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}},
-      React.createElement("span",{style:{fontSize:9,fontFamily:"monospace",fontWeight:700,color:"#e8900a",letterSpacing:0.5}},_panelTitle),
+    React.createElement("div",{style:{padding:"8px 10px",borderBottom:"1px solid var(--line)",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}},
+      React.createElement("span",{style:{fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,color:"var(--txt)",letterSpacing:0.5}},_panelTitle),
       React.createElement("button",{onClick:function(){setSelSourceNodeId(null);},
-        title:"Close",style:{background:"none",border:"1px solid #333",color:"#aaa",borderRadius:4,fontSize:13,padding:"1px 9px",cursor:"pointer",fontFamily:"monospace",touchAction:"manipulation"}},"\u00d7")),
+        title:"Close",style:{background:"none",border:"1px solid var(--line2)",color:"var(--txt2)",borderRadius:4,fontSize:"var(--fs-l)",padding:"1px 9px",cursor:"pointer",fontFamily:"inherit",touchAction:"manipulation"}},"\u00d7")),
     React.createElement("div",{style:{flex:1,overflowY:"auto",padding:"10px 9px 40px",WebkitOverflowScrolling:"touch",minHeight:0}},
       _panelBody
     )
@@ -15701,20 +15762,20 @@ export default function TexGen(){
     onMouseDown:_nodeMode?null:onCanvasMouseDown,onMouseMove:_nodeMode?null:onCanvasMouseMove,
     onMouseUp:_nodeMode?null:onCanvasMouseUp,onMouseLeave:_nodeMode?null:onCanvasMouseUp,
     onWheel:_nodeMode?null:onCanvasWheel,
-    style:{flex:(isMobile&&appMode!=="nodes")?null:1,display:"flex",alignItems:"center",justifyContent:"center",background:"#0b0b0b",position:"relative",overflow:"hidden",minWidth:0,height:(isMobile&&appMode!=="nodes")?(mobileCanvasH?mobileCanvasH+"px":"55vw"):null,minHeight:isMobile?(appMode==="nodes"?"320px":"160px"):null,touchAction:(gizmoOn||appMode==="nodes")?"none":"auto"}},
+    style:{flex:(isMobile&&appMode!=="nodes")?null:1,display:"flex",alignItems:"center",justifyContent:"center",background:"var(--bg)",position:"relative",overflow:"hidden",minWidth:0,height:(isMobile&&appMode!=="nodes")?(mobileCanvasH?mobileCanvasH+"px":"55vw"):null,minHeight:isMobile?(appMode==="nodes"?"320px":"160px"):null,touchAction:(gizmoOn||appMode==="nodes")?"none":"auto"}},
     // Node mode overlay — covers the whole canvas area when active
     appMode==="nodes"?React.createElement(NodeCanvas,{graph:nodeGraph,setGraph:setNodeGraph,previewSize:128,onExport:doExport,exporting:exportingPng,exportSize:state.exportSize||512,onSelectSource:setSelSourceNodeId,onBakeFlipbook:doBakeFlipbook,onBakeTimeline:doBakeTimeline,onBatchExportRes:batchExportResolutions,onBatchExportNodes:batchExportNodes,onBatchSeedSweep:batchSeedSweep}):null,
     appMode==="nodes"?nodeSourcePanel:null,
     // Mode switch (top-center) — compact pill, always visible. Layers is the
     // primary mode; Nodes is the alternate view.
     React.createElement("div",{style:{position:"absolute",top:8,left:"50%",transform:"translateX(-50%)",zIndex:30,
-      display:"flex",gap:0,background:"rgba(13,13,13,0.92)",border:"1px solid #2a2a2a",borderRadius:14,overflow:"hidden",
+      display:"flex",gap:0,background:"color-mix(in srgb,var(--bg) 92%,transparent)",border:"1px solid var(--line)",borderRadius:14,overflow:"hidden",
       boxShadow:"0 2px 8px rgba(0,0,0,0.4)",backdropFilter:"blur(3px)"}},
       ["layers","nodes"].map(function(m){
         return React.createElement("button",{key:m,
           onClick:function(){setAppMode(m);},
-          style:{padding:"4px 13px",fontSize:8.5,fontFamily:"monospace",fontWeight:700,letterSpacing:0.6,cursor:"pointer",border:"none",
-            background:appMode===m?"#e8900a":"transparent",color:appMode===m?"#000":"#888",
+          style:{padding:"4px 13px",fontSize:"var(--fs-s)",fontFamily:"inherit",fontWeight:700,letterSpacing:0.6,cursor:"pointer",border:"none",
+            background:appMode===m?"var(--panel3)":"transparent",color:appMode===m?"#fff":"var(--txt2)",
             transition:"background 0.15s",touchAction:"manipulation"}},
           m==="layers"?"\u25a4 LAYERS":"\u2b22 NODES");
       })
@@ -15765,19 +15826,19 @@ export default function TexGen(){
       touchAction:"none",
       cursor:previewZoom>1&&!gizmoOn&&!abMode?"grab":undefined,
       // In tile mode: sharper outline so you can see where the tile boundary is
-      boxShadow:seamlessPreview?"0 0 0 2px #e8900a, 0 0 40px rgba(232,144,10,0.15)":"0 0 60px rgba(232,144,10,0.07),0 0 0 1px #1e1e1e",
+      boxShadow:seamlessPreview?"0 0 0 2px #8a8a94, 0 0 40px transparent":"0 0 60px transparent,0 0 0 1px var(--line)",
       position:"relative",flexShrink:0,zIndex:2
     }}),
     tile33Overlay,
     gizmoBtn,
     gizmoSVG,
     soloBanner,
-    edgeBanner,
+    isMobile?edgeBanner:null,
     toast?React.createElement("div",{style:{
-      position:"absolute",bottom:48,left:"50%",transform:"translateX(-50%)",
-      background:"rgba(20,20,22,0.92)",color:"#e8c070",padding:"6px 14px",borderRadius:6,
-      zIndex:20,fontFamily:"monospace",fontSize:10,letterSpacing:0.3,pointerEvents:"none",
-      border:"1px solid rgba(180,140,60,0.3)",boxShadow:"0 4px 16px rgba(0,0,0,0.5)",whiteSpace:"nowrap"
+      position:"absolute",bottom:isMobile?48:100,left:"50%",transform:"translateX(-50%)",
+      background:"color-mix(in srgb,var(--panel) 92%,transparent)",color:"var(--txt)",padding:"6px 14px",borderRadius:6,
+      zIndex:20,fontFamily:"inherit",fontSize:"var(--fs-s)",letterSpacing:0.3,pointerEvents:"none",
+      border:"1px solid #8a8a94",boxShadow:"0 4px 16px rgba(0,0,0,0.5)",whiteSpace:"nowrap"
     }},toast):null,
     React.createElement(EditHistoryPanel,{isMobile:isMobile}),
     compareLayers?React.createElement(LayerCompareGrid,{
@@ -15798,7 +15859,7 @@ export default function TexGen(){
     // ── Layer context menu (long-press / right-click on a thumbnail) ──
     layerMenu?React.createElement("div",{
       onClick:function(){setLayerMenu(null);setLmRename(null);},
-      style:{position:"fixed",inset:0,zIndex:29,background:"rgba(0,0,0,0.25)"}
+      style:{position:"fixed",inset:0,zIndex:29,background:"color-mix(in srgb,var(--bg) 25%,transparent)"}
     }):null,
     layerMenu?(function(){
       var mi=layerMenu.idx;
@@ -15811,8 +15872,8 @@ export default function TexGen(){
         return React.createElement("button",{
           onClick:disabled?function(e){e.stopPropagation();}:act(fn),
           style:{display:"block",width:"100%",textAlign:"left",padding:"10px 14px",
-            background:"none",border:"none",borderBottom:"1px solid #1a1a1a",
-            color:disabled?"#333":(color||"#aaa"),fontFamily:"monospace",fontSize:11,
+            background:"none",border:"none",borderBottom:"1px solid var(--line)",
+            color:disabled?"var(--tg-dim)":(color||"var(--txt2)"),fontFamily:"inherit",fontSize:"var(--fs-s)",
             cursor:disabled?"default":"pointer",letterSpacing:0.5}
         },label);
       }
@@ -15820,47 +15881,47 @@ export default function TexGen(){
       return React.createElement("div",{
         onClick:function(e){e.stopPropagation();},
         style:{position:"fixed",left:58,top:menuTop,zIndex:30,width:190,
-          background:"#0d0d0d",border:"1px solid #262626",borderLeft:"3px solid "+mcol,
+          background:"var(--bg)",border:"1px solid var(--line)",
           borderRadius:6,boxShadow:"0 8px 32px rgba(0,0,0,0.7)",overflow:"hidden"}
       },
-        React.createElement("div",{style:{padding:"8px 14px",fontSize:9,color:mcol,
-          fontFamily:"monospace",fontWeight:700,letterSpacing:1,borderBottom:"1px solid #1e1e1e",
+        React.createElement("div",{style:{padding:"8px 14px",fontSize:"var(--fs-s)",color:mcol,
+          fontFamily:"inherit",fontWeight:700,letterSpacing:1,borderBottom:"1px solid var(--line)",
           textTransform:"uppercase"}},
           (mlay.label||"L"+(mi+1))+" · "+mlay.type),
-        lmRename!=null?React.createElement("div",{style:{padding:"8px 10px",display:"flex",gap:6,borderBottom:"1px solid #1a1a1a"}},
+        lmRename!=null?React.createElement("div",{style:{padding:"8px 10px",display:"flex",gap:6,borderBottom:"1px solid var(--line)"}},
           React.createElement("input",{type:"text",value:lmRename,autoFocus:true,
             onChange:function(e){setLmRename(e.target.value);},
             onKeyDown:function(e){
               if(e.key==="Enter"){updL(mi,"label",lmRename);setLayerMenu(null);setLmRename(null);}
               if(e.key==="Escape")setLmRename(null);
             },
-            style:{flex:1,minWidth:0,background:"#161616",border:"1px solid "+mcol,color:"#ddd",
-              padding:"5px 8px",fontFamily:"monospace",fontSize:11,borderRadius:3,outline:"none"}}),
+            style:{flex:1,minWidth:0,background:"var(--panel)",border:"1px solid "+mcol,color:"var(--txt)",
+              padding:"5px 8px",fontFamily:"inherit",fontSize:"var(--fs-s)",borderRadius:3,outline:"none"}}),
           React.createElement("button",{
             onClick:function(e){e.stopPropagation();updL(mi,"label",lmRename);setLayerMenu(null);setLmRename(null);},
-            style:{padding:"5px 10px",background:mcol,border:"none",color:"#000",
-              fontFamily:"monospace",fontSize:10,fontWeight:700,cursor:"pointer",borderRadius:3}},"OK")
+            style:{padding:"5px 10px",background:mcol,border:"none",color:"var(--bg)",
+              fontFamily:"inherit",fontSize:"var(--fs-s)",fontWeight:700,cursor:"pointer",borderRadius:3}},"OK")
         ):React.createElement("button",{
           onClick:function(e){e.stopPropagation();setLmRename(mlay.label||"L"+(mi+1));},
           style:{display:"block",width:"100%",textAlign:"left",padding:"10px 14px",
-            background:"none",border:"none",borderBottom:"1px solid #1a1a1a",
-            color:"#aaa",fontFamily:"monospace",fontSize:11,cursor:"pointer",letterSpacing:0.5}
+            background:"none",border:"none",borderBottom:"1px solid var(--line)",
+            color:"var(--txt2)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",letterSpacing:0.5}
         },"Rename…"),
         btn("Duplicate",function(){setCurAL(mi);setTimeout(duplicateLayer,0);},null,curLayers.length>=8),
         btn(mlay.enabled?"Hide":"Show",function(){updL(mi,"enabled",!mlay.enabled);}),
-        btn(soloLayerIdx===mi?"Unsolo":"Solo",function(){setSoloLayerIdx(soloLayerIdx===mi?-1:mi);},"#ffdd44"),
-        React.createElement("div",{style:{height:4,background:"#070707"}}),
+        btn(soloLayerIdx===mi?"Unsolo":"Solo",function(){setSoloLayerIdx(soloLayerIdx===mi?-1:mi);},"var(--txt)"),
+        React.createElement("div",{style:{height:4,background:"var(--bg)"}}),
         btn("Copy Layer",function(){setCurAL(mi);setTimeout(copyCurrentLayer,0);}),
         btn("Paste Over",function(){setCurAL(mi);setTimeout(pasteCurrentLayer,0);},null,!copiedLayer.current),
-        btn("New Seed",function(){updL(mi,"seed",Math.random()*99999|0);},"#7fd4ff"),
-        btn("Reset Layer",function(){setCurAL(mi);setTimeout(resetLayerToDefaults,0);},"#cc9966"),
-        React.createElement("div",{style:{height:4,background:"#070707"}}),
+        btn("New Seed",function(){updL(mi,"seed",Math.random()*99999|0);},"var(--txt)"),
+        btn("Reset Layer",function(){setCurAL(mi);setTimeout(resetLayerToDefaults,0);},"var(--txt)"),
+        React.createElement("div",{style:{height:4,background:"var(--bg)"}}),
         btn("Invert Colors",function(){updL(mi,"invert",!mlay.invert);}),
-        btn(mlay.refUid!=null?"Detach Reference":null,function(){updL(mi,"refUid",null);},"#cc88ff",mlay.refUid==null),
-        React.createElement("div",{style:{height:4,background:"#070707"}}),
+        btn(mlay.refUid!=null?"Detach Reference":null,function(){updL(mi,"refUid",null);},"var(--txt)",mlay.refUid==null),
+        React.createElement("div",{style:{height:4,background:"var(--bg)"}}),
         btn("Move Up",function(){setCurAL(mi);setTimeout(moveLayerUp,0);},null,mi===0),
         btn("Move Down",function(){setCurAL(mi);setTimeout(moveLayerDown,0);},null,mi===curLayers.length-1),
-        btn("Delete",function(){setCurAL(mi);setTimeout(removeLayer,0);},"#ff6666",curLayers.length<=1)
+        btn("Delete",function(){setCurAL(mi);setTimeout(removeLayer,0);},"var(--err)",curLayers.length<=1)
       );
     })():null,
     // Canvas right-click menu: quick global actions
@@ -15868,18 +15929,18 @@ export default function TexGen(){
       onClick:function(e){e.stopPropagation();},
       style:{position:"fixed",left:Math.min(canvasMenu.x,(typeof window!=="undefined"?window.innerWidth:800)-200),
         top:Math.min(canvasMenu.y,(typeof window!=="undefined"?window.innerHeight:600)-360),
-        zIndex:40,width:188,background:"#0d0d0d",border:"1px solid #262626",borderLeft:"3px solid #e8900a",
+        zIndex:40,width:188,background:"var(--bg)",border:"1px solid var(--line)",
         borderRadius:6,boxShadow:"0 8px 32px rgba(0,0,0,0.7)",overflow:"hidden"}
     },(function(){
       function cact(fn){return function(e){e.stopPropagation();fn();setCanvasMenu(null);};}
       function cbtn(label,fn,color){return React.createElement("button",{onClick:cact(fn),
         style:{display:"block",width:"100%",textAlign:"left",padding:"9px 14px",background:"none",border:"none",
-          borderBottom:"1px solid #1a1a1a",color:color||"#aaa",fontFamily:"monospace",fontSize:11,cursor:"pointer",letterSpacing:0.4}},label);}
-      function csep(){return React.createElement("div",{style:{height:4,background:"#070707"}});}
+          borderBottom:"1px solid var(--line)",color:color||"var(--txt2)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",letterSpacing:0.4}},label);}
+      function csep(){return React.createElement("div",{style:{height:4,background:"var(--bg)"}});}
       return [
-        React.createElement("div",{key:"h",style:{padding:"8px 14px",fontSize:9,color:"#e8900a",fontFamily:"monospace",fontWeight:700,letterSpacing:1,borderBottom:"1px solid #1e1e1e",textTransform:"uppercase"}},"Canvas"),
-        cbtn("Add Layer",function(){addLayer();},"#7fd4ff"),
-        cbtn("Randomize Seeds",function(){randomizeAllSeeds();},"#7fd4ff"),
+        React.createElement("div",{key:"h",style:{padding:"8px 14px",fontSize:"var(--fs-s)",color:"var(--txt)",fontFamily:"inherit",fontWeight:700,letterSpacing:1,borderBottom:"1px solid var(--line)",textTransform:"uppercase"}},"Canvas"),
+        cbtn("Add Layer",function(){addLayer();},"var(--txt)"),
+        cbtn("Randomize Seeds",function(){randomizeAllSeeds();},"var(--txt)"),
         csep(),
         cbtn(gizmoOn?"Hide Gizmo":"Transform Gizmo",function(){setGizmoOn(function(v){return!v;});}),
         cbtn(seamlessPreview?"Exit Tile Preview":"Tile Preview",function(){setSeamlessPreview(function(v){return!v;});}),
@@ -15887,8 +15948,8 @@ export default function TexGen(){
         cbtn(compareLayers?"Hide Layer Compare":"Compare Layers",function(){setCompareLayers(function(v){return!v;});}),
         cbtn(showVariations?"Hide Variations":"Variations Explorer",function(){setShowVariations(function(v){return!v;});}),
         csep(),
-        cbtn("Export PNG",function(){setPanel("export");},"#a0e060"),
-        cbtn("Close",function(){},"#666")
+        cbtn("Export PNG",function(){setPanel("export");},"var(--txt)"),
+        cbtn("Close",function(){},"var(--tg-dim)")
       ];
     })()):null,
     // A/B comparison overlay — snapshot on left half, live on right
@@ -15912,9 +15973,9 @@ export default function TexGen(){
         })
       ),
       // A label
-      React.createElement("div",{style:{position:"absolute",left:"calc(50% - "+((0.5-abSplit*0.5)*baseDisplaySize+baseDisplaySize*0.25)+"px)",top:8,background:"rgba(0,0,0,0.75)",color:"#fff",fontFamily:"monospace",fontSize:9,fontWeight:700,padding:"2px 6px",borderRadius:3,pointerEvents:"none"}},"A"),
+      React.createElement("div",{style:{position:"absolute",left:"calc(50% - "+((0.5-abSplit*0.5)*baseDisplaySize+baseDisplaySize*0.25)+"px)",top:8,background:"color-mix(in srgb,var(--bg) 75%,transparent)",color:"#fff",fontFamily:"inherit",fontSize:"var(--fs-s)",fontWeight:700,padding:"2px 6px",borderRadius:3,pointerEvents:"none"}},"A"),
       // B label
-      React.createElement("div",{style:{position:"absolute",right:"calc(50% - "+((0.5-abSplit*0.5)*baseDisplaySize+baseDisplaySize*0.25)+"px)",top:8,background:"rgba(0,0,0,0.75)",color:"#4ab4ff",fontFamily:"monospace",fontSize:9,fontWeight:700,padding:"2px 6px",borderRadius:3,pointerEvents:"none"}},"B"),
+      React.createElement("div",{style:{position:"absolute",right:"calc(50% - "+((0.5-abSplit*0.5)*baseDisplaySize+baseDisplaySize*0.25)+"px)",top:8,background:"color-mix(in srgb,var(--bg) 75%,transparent)",color:"var(--txt)",fontFamily:"inherit",fontSize:"var(--fs-s)",fontWeight:700,padding:"2px 6px",borderRadius:3,pointerEvents:"none"}},"B"),
       // Divider line
       React.createElement("div",{style:{position:"absolute",top:0,bottom:0,
         left:"calc(50% + "+((abSplit-0.5)*baseDisplaySize)+"px)",
@@ -15936,14 +15997,17 @@ export default function TexGen(){
       },
       onPointerUp:function(){abDragging.current=false;}
     }):null,
-    zoomBar
+    // Desktop: the "edge cut" notice and the zoom bar share one dock, so they can never overlap each other
+    // (or the layer strip) however narrow the window gets. Mobile keeps its own pinned bar.
+    isMobile?zoomBar:React.createElement("div",{style:{position:"absolute",left:8,right:8,bottom:8,zIndex:13,display:"flex",
+      flexDirection:"column",alignItems:"center",gap:6,pointerEvents:"none"}},edgeBanner,zoomBar)
     ]:[]) // end layer-mode group
   );
 
   var panelPad=panelWidth>400?"14px 14px 80px":"10px 10px 80px";
   var kbHint=!isMobile?React.createElement("div",{style:{
-    padding:"8px 12px",fontSize:8,color:"#2a2a2a",fontFamily:"monospace",
-    borderTop:"1px solid #161616",flexShrink:0,lineHeight:1.8,letterSpacing:0.5
+    padding:"8px 12px",fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit",
+    borderTop:"1px solid var(--line)",flexShrink:0,lineHeight:1.8,letterSpacing:0.5
   }},
     "1-6: switch tab  ·  [ / ]: prev/next  ·  S: split"
   ):null;
@@ -16002,10 +16066,10 @@ export default function TexGen(){
       cursor:isVertPanel?"ns-resize":"ew-resize",
       background:"transparent",
       position:"relative",zIndex:10,
-      borderLeft:panelSide==="right"?"2px solid #2a2a2a":"none",
-      borderRight:panelSide==="left"?"2px solid #2a2a2a":"none",
-      borderTop:panelSide==="bottom"?"2px solid #2a2a2a":"none",
-      borderBottom:panelSide==="top"?"2px solid #2a2a2a":"none",
+      borderLeft:panelSide==="right"?"2px solid var(--line)":"none",
+      borderRight:panelSide==="left"?"2px solid var(--line)":"none",
+      borderTop:panelSide==="bottom"?"2px solid var(--line)":"none",
+      borderBottom:panelSide==="top"?"2px solid var(--line)":"none",
       // Subtle grip dots in center of handle
       backgroundImage:isVertPanel?"radial-gradient(circle,#333 1px,transparent 1px)":"radial-gradient(circle,#333 1px,transparent 1px)",
       backgroundSize:isVertPanel?"8px 8px":"8px 8px",
@@ -16025,23 +16089,23 @@ export default function TexGen(){
       var count=n.id==="fx"&&totalFx>0?totalFx
               :n.id==="anim"&&(anim.tracks||[]).length>0?(anim.tracks||[]).length
               :null;
-      var showLayerStripe=layerCtxTabs[n.id]&&!editSlot&&isActive;
+      var showLayerStripe=false; // no coloured bar on the active tab (kit: raised grey instead)
       return React.createElement("button",{key:n.id,
         onClick:function(){setActiveP(n.id);},
         title:n.label+(count?" ("+count+")":""),
         style:{
           flex:1,minWidth:0,
           padding:isMobile?"10px 4px":"9px 4px",
-          background:isActive?"#1a1a1a":"transparent",
+          background:isActive?"var(--panel3)":"transparent",
           border:"none",borderTop:"1px solid transparent",
-          color:isActive?"#e8900a":"#3a3a3a",
-          cursor:"pointer",fontFamily:"monospace",
+          color:isActive?"var(--txt)":"var(--tg-dim)",
+          cursor:"pointer",fontFamily:"inherit",
           position:"relative",
           transition:"background 0.12s,color 0.12s",
           display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2
         },
-        onMouseEnter:isActive?null:function(e){e.currentTarget.style.background="rgba(232,144,10,0.04)";e.currentTarget.style.color="#888";},
-        onMouseLeave:isActive?null:function(e){e.currentTarget.style.background="transparent";e.currentTarget.style.color="#3a3a3a";}
+        onMouseEnter:isActive?null:function(e){e.currentTarget.style.background="var(--panel3)";e.currentTarget.style.color="var(--txt2)";},
+        onMouseLeave:isActive?null:function(e){e.currentTarget.style.background="transparent";e.currentTarget.style.color="var(--tg-dim)";}
       },
         // Layer-context stripe — colored bar at top of active tab when in layer-aware section
         showLayerStripe?React.createElement("div",{style:{
@@ -16049,10 +16113,10 @@ export default function TexGen(){
           background:layerColor,borderRadius:"0 0 2px 2px"
         }}):null,
         // Icon
-        React.createElement("span",{style:{fontSize:13,lineHeight:1,opacity:isActive?1:0.55}},n.icon),
+        React.createElement("span",{style:{fontSize:"var(--fs-l)",lineHeight:1,opacity:isActive?1:0.55}},n.icon),
         // Label
         React.createElement("span",{style:{
-          fontSize:7.5,letterSpacing:0.8,textTransform:"uppercase",lineHeight:1,
+          fontSize:"var(--fs-s)",letterSpacing:0.2,lineHeight:1,
           fontWeight:isActive?700:400,
           // Truncate gracefully on tight pannels
           maxWidth:"100%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"
@@ -16061,9 +16125,9 @@ export default function TexGen(){
         count?React.createElement("span",{style:{
           position:"absolute",top:4,right:4,
           minWidth:13,height:13,padding:"0 3px",
-          background:isActive?"#e8900a":"#3a2a08",
-          color:isActive?"#000":"#e8900a",
-          fontSize:8,fontWeight:700,fontFamily:"monospace",
+          background:isActive?"var(--panel3)":"var(--panel3)",
+          color:isActive?"#fff":"var(--txt)",
+          fontSize:"var(--fs-s)",fontWeight:700,fontFamily:"inherit",
           borderRadius:7,
           display:"flex",alignItems:"center",justifyContent:"center",
           lineHeight:1,letterSpacing:0
@@ -16072,9 +16136,9 @@ export default function TexGen(){
     }
 
     return React.createElement("div",{style:{
-      display:"flex",borderBottom:"1px solid #1c1c1c",
+      display:"flex",borderBottom:"1px solid var(--line)",
       flexShrink:0,alignItems:"stretch",
-      background:"#0e0e0e"
+      background:"var(--bg)"
     }},
       // ── Primary tabs (navigation) ──
       React.createElement("div",{style:{display:"flex",flex:1,minWidth:0}},
@@ -16082,7 +16146,7 @@ export default function TexGen(){
       ),
       // ── Tools (modals, separated) ──
       showSplit?React.createElement("div",{style:{
-        display:"flex",borderLeft:"1px solid #1c1c1c"
+        display:"flex",borderLeft:"1px solid var(--line)"
       }},
         // Split toggle
         React.createElement("button",{
@@ -16095,15 +16159,15 @@ export default function TexGen(){
           title:splitMode?"Exit split view (S)":"Split panel (S)",
           style:{
             padding:"0 11px",
-            background:splitMode?"#1a1a1a":"transparent",
+            background:splitMode?"var(--panel)":"transparent",
             border:"none",
-            color:splitMode?"#e8900a":"#444",
-            cursor:"pointer",fontSize:13,lineHeight:1,fontFamily:"monospace",
+            color:splitMode?"var(--txt)":"var(--tg-dim)",
+            cursor:"pointer",fontSize:"var(--fs-l)",lineHeight:1,fontFamily:"inherit",
             display:"flex",alignItems:"center",justifyContent:"center",
             transition:"background 0.12s,color 0.12s"
           },
-          onMouseEnter:splitMode?null:function(e){e.currentTarget.style.color="#888";},
-          onMouseLeave:splitMode?null:function(e){e.currentTarget.style.color="#444";}
+          onMouseEnter:splitMode?null:function(e){e.currentTarget.style.color="var(--txt2)";},
+          onMouseLeave:splitMode?null:function(e){e.currentTarget.style.color="var(--tg-dim)";}
         },"⊞"),
         // Favorites toggle
         React.createElement("button",{
@@ -16111,15 +16175,15 @@ export default function TexGen(){
           title:showFav?"Hide favorites":"Show favorites strip",
           style:{
             padding:"0 11px",
-            background:showFav?"rgba(255,221,68,0.15)":"transparent",
-            border:"none",borderLeft:"1px solid #1c1c1c",
-            color:showFav?"#ffdd44":"#444",
-            cursor:"pointer",fontSize:13,lineHeight:1,
+            background:showFav?"var(--panel3)":"transparent",
+            border:"none",borderLeft:"1px solid var(--line)",
+            color:showFav?"var(--txt)":"var(--tg-dim)",
+            cursor:"pointer",fontSize:"var(--fs-l)",lineHeight:1,
             display:"flex",alignItems:"center",justifyContent:"center",
             transition:"background 0.12s,color 0.12s"
           },
-          onMouseEnter:showFav?null:function(e){e.currentTarget.style.color="#888";},
-          onMouseLeave:showFav?null:function(e){e.currentTarget.style.color="#444";}
+          onMouseEnter:showFav?null:function(e){e.currentTarget.style.color="var(--txt2)";},
+          onMouseLeave:showFav?null:function(e){e.currentTarget.style.color="var(--tg-dim)";}
         },"★")
       ):null
     );
@@ -16128,11 +16192,11 @@ export default function TexGen(){
   var panelBox=React.createElement("div",{id:"texgen-panelbox",style:{
     width:isVertPanel?"100%":panelWidth,
     minWidth:isVertPanel?0:180,maxWidth:isVertPanel?"100%":900,
-    background:"#0e0e0e",
-    borderLeft:panelSide==="right"?"1px solid #1c1c1c":"none",
-    borderRight:panelSide==="left"?"1px solid #1c1c1c":"none",
-    borderTop:panelSide==="bottom"?"1px solid #1c1c1c":"none",
-    borderBottom:panelSide==="top"?"1px solid #1c1c1c":"none",
+    background:"var(--bg)",
+    borderLeft:panelSide==="right"?"1px solid var(--line)":"none",
+    borderRight:panelSide==="left"?"1px solid var(--line)":"none",
+    borderTop:panelSide==="bottom"?"1px solid var(--line)":"none",
+    borderBottom:panelSide==="top"?"1px solid var(--line)":"none",
     display:"flex",flexDirection:"column",overflow:"hidden",flexShrink:0
   }},
     splitMode
@@ -16147,7 +16211,7 @@ export default function TexGen(){
           React.createElement("div",{
             onMouseDown:function(e){isDraggingSplit.current=true;document.body.style.cursor="ew-resize";e.preventDefault();},
             style:{width:6,flexShrink:0,cursor:"ew-resize",background:"transparent",
-                   borderLeft:"2px solid #2a2a2a",borderRight:"2px solid #2a2a2a",
+                   borderLeft:"2px solid var(--line)",borderRight:"2px solid var(--line)",
                    backgroundImage:"radial-gradient(circle,#333 1px,transparent 1px)",
                    backgroundSize:"4px 8px",backgroundRepeat:"repeat",backgroundPosition:"center"}
           }),
@@ -16164,8 +16228,8 @@ export default function TexGen(){
           kbHint,
           // Favorites strip — slides in at bottom when ★ is toggled
           showFav?React.createElement("div",{style:{
-            borderTop:"2px solid #ffdd44",
-            background:"#0a0a0a",
+            borderTop:"2px solid #8a8a94",
+            background:"var(--bg)",
             maxHeight:280,overflowY:"auto",
             flexShrink:0
           }},
@@ -16202,7 +16266,7 @@ export default function TexGen(){
 
     return React.createElement("div",{style:{
       display:"flex",flexDirection:"column",height:"100vh",
-      background:"#0b0b0b",color:"#bbb",fontFamily:"monospace",overflow:"hidden",
+      background:"var(--bg)",color:"var(--txt2)",fontFamily:"inherit",overflow:"hidden",
       zoom:uiScale  // scales all px values proportionally
     }},topBar,inner);
   }
@@ -16235,11 +16299,11 @@ export default function TexGen(){
     onTouchEnd:function(){dividerRef.current.active=false;haptic(8);},
     style:{
       height:18,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",
-      background:"#101010",borderTop:"1px solid #1c1c1c",borderBottom:"1px solid #1c1c1c",
+      background:"var(--bg)",borderTop:"1px solid var(--line)",borderBottom:"1px solid var(--line)",
       touchAction:"none",cursor:"ns-resize"
     }
   },
-    React.createElement("div",{style:{width:44,height:4,borderRadius:2,background:"#2e2e2e"}})
+    React.createElement("div",{style:{width:44,height:4,borderRadius:2,background:"var(--panel3)"}})
   );
   var mobileCanvasAndPanel=(appMode==="nodes")
     ?[canvasArea]   // node mode: board fills the screen; the source panel is an overlay
@@ -16247,7 +16311,7 @@ export default function TexGen(){
       ?[mobilePanel,mobileDivider,canvasArea]
       :[canvasArea,mobileDivider,mobilePanel]);
   return React.createElement(AnimTrackContext.Provider,{value:addAnimTrack},
-  React.createElement("div",{className:touchMode?"tm":undefined,style:{display:"flex",flexDirection:"column",height:"100vh",background:"#0b0b0b",color:"#bbb",fontFamily:"monospace",overflow:"hidden",zoom:uiScale}},
+  React.createElement("div",{className:touchMode?"tm":undefined,style:{display:"flex",flexDirection:"column",height:"100vh",background:"var(--bg)",color:"var(--txt2)",fontFamily:"inherit",overflow:"hidden",zoom:uiScale}},
     topBar,
     mobileCanvasAndPanel[0],
     mobileCanvasAndPanel[1],
