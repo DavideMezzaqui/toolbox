@@ -106,7 +106,7 @@ module.exports = async ({ ev, evaluate, command, until, delay, capture, reload, 
     gridHidden:getComputedStyle(d.getElementById('vGrid')).display,slots:getComputedStyle(d.getElementById('slots')).display,pageScroll:d.documentElement.scrollHeight<=w.innerHeight}`);
   chk(m0.mode === 'compare' && m0.embed && m0.seg === 'none' && m0.gridHidden === 'none' && m0.slots !== 'none' && m0.pageScroll, 'embedded compare start ' + JSON.stringify(m0));
   const hd0 = await evaluate(HEAD);
-  chk(hd0.title === 'Compare' && hd0.btns.join() === 'load:Load,play:Play!,stop:Stop!,export:Export MP4*!,record:Record WebM!' && /^Load a left and a right clip/.test(hd0.status), 'Studio header (compare, empty) ' + JSON.stringify(hd0));
+  chk(hd0.title === 'Compare videos' && hd0.btns.join() === 'load:Load,export:Export MP4*!,record:Record WebM!' && /^Load a left and a right clip/.test(hd0.status), 'Studio header (compare, empty) ' + JSON.stringify(hd0));
   await capture('video-compare-empty-1920');
 
   await FE(`await VC.setSlot('A', top.fA); return 1`);
@@ -121,7 +121,7 @@ module.exports = async ({ ev, evaluate, command, until, delay, capture, reload, 
     return {l:[px[0],px[1],px[2]],r:[pr[0],pr[1],pr[2]],vis:getComputedStyle(c).display}`);
   chk(blank.vis !== 'none' && blank.l[0] + blank.l[1] + blank.l[2] > 40 && blank.r[0] + blank.r[1] + blank.r[2] > 40, 'preview blank after loading: ' + JSON.stringify(blank));
   const hd1 = await evaluate(HEAD);
-  chk(hd1.btns.join() === 'load:Load,play:Play,stop:Stop!,export:Export MP4*,record:Record WebM' && /^\d+ × \d+ · 0:0\d/.test(hd1.status), 'Studio header (compare, loaded) ' + JSON.stringify(hd1));
+  chk(hd1.btns.join() === 'load:Load,export:Export MP4*,record:Record WebM' && /^\d+ × \d+ · 0:0\d/.test(hd1.status), 'Studio header (compare, loaded) ' + JSON.stringify(hd1));
   await capture('video-compare-loaded-1920');
 
   // scrub: seekT, then the real pointer on the scrub bar
@@ -140,16 +140,16 @@ module.exports = async ({ ev, evaluate, command, until, delay, capture, reload, 
   chk(pl.t > tt + 0.3, 'playback did not advance: ' + pl.t + ' from ' + tt);
   await FE(`VC.pause(); return 1`);
   await FE(`VC.stop(); return 1`);
-  // the Studio header buttons drive the page: Play/Pause toggles (and relabels), Stop goes back to the start
-  const HB = id => evaluate(`${SH.replace(".contentWindow.Studio", ".contentDocument")}.querySelector("#actions [data-action=${id}]").click()`);
-  await HB('play'); await delay(700);
+  // the transport bar under the picture drives the page (Play/Pause toggles, Stop goes back to the start); the Studio header has no Play/Stop
+  const TB = id => FE(`d.getElementById('${id}').click(); return 1`);
+  await TB('tPlay'); await delay(700);
   const hp = await evaluate(HEAD), tp = await FE('return VC.T');
-  chk(tp > 0.3 && hp.btns.includes('play:Pause') && hp.btns.includes('stop:Stop'), 'host Play button: T ' + tp + ' ' + JSON.stringify(hp.btns));
-  await HB('play'); await delay(150);
+  chk(tp > 0.3 && !hp.btns.some(x => /^(play|stop):/.test(x)), 'transport Play button: T ' + tp + ' ' + JSON.stringify(hp.btns));
+  await TB('tPlay'); await delay(150);
   const tq = await FE('return VC.T'); await delay(250);
-  chk(Math.abs((await FE('return VC.T')) - tq) < 0.02 && (await evaluate(HEAD)).btns.includes('play:Play'), 'host Pause button did not pause');
-  await HB('stop'); await delay(200);
-  chk((await FE('return VC.T')) === 0 && (await evaluate(HEAD)).btns.includes('stop:Stop!'), 'host Stop button did not rewind');
+  chk(Math.abs((await FE('return VC.T')) - tq) < 0.02, 'transport Pause button did not pause');
+  await TB('tStop'); await delay(200);
+  chk((await FE('return VC.T')) === 0 && (await FE("return d.getElementById('tStop').disabled")) === true, 'transport Stop button did not rewind');
 
   // export A (MP4) + C (WebM), default
   const e1 = await FE(`const t=performance.now();const r=await VC.exportMp4();return {ms:Math.round(performance.now()-t),name:r&&r.name,frames:r&&r.frames,w:r&&r.width,h:r&&r.height,size:r&&r.blob.size,err:VC.error,errs:w.__errs}`);
@@ -260,7 +260,7 @@ module.exports = async ({ ev, evaluate, command, until, delay, capture, reload, 
   const g0 = await FE(`return {mode:VC.M.id,cv:getComputedStyle(d.getElementById('vCompare')).display,empty:d.getElementById('vGrid').classList.contains('empty')}`);
   chk(g0.mode === 'grid' && g0.cv === 'none' && g0.empty, 'grid start ' + JSON.stringify(g0));
   const gh0 = await evaluate(HEAD);
-  chk(gh0.title === 'Grid' && gh0.btns.join() === 'load:Load,play:Play!,stop:Stop!,export:Export MP4*!,record:Record WebM!' && gh0.status === 'No clips yet', 'Studio header (grid, empty) ' + JSON.stringify(gh0));
+  chk(gh0.title === 'Video grid' && gh0.btns.join() === 'load:Load,export:Export MP4*!,record:Record WebM!' && gh0.status === 'No clips yet', 'Studio header (grid, empty) ' + JSON.stringify(gh0));
   await capture('video-grid-empty-1920');
   await FE(`await VC.addClips([top.fA, top.fC, top.fB]); return 1`);
   await delay(500);
@@ -268,7 +268,7 @@ module.exports = async ({ ev, evaluate, command, until, delay, capture, reload, 
     cw:d.getElementById('gvCanvas').width,ch:d.getElementById('gvCanvas').height,dur:VC.dur()}`);
   log('grid loaded:', JSON.stringify(g1));
   const gh1 = await evaluate(HEAD);
-  chk(/^3 clips · 0:01/.test(gh1.status) && gh1.btns.join() === 'load:Load,play:Play,stop:Stop!,export:Export MP4*,record:Record WebM', 'Studio header (grid, 3 clips) ' + JSON.stringify(gh1));
+  chk(/^3 clips · 0:01/.test(gh1.status) && gh1.btns.join() === 'load:Load,export:Export MP4*,record:Record WebM', 'Studio header (grid, 3 clips) ' + JSON.stringify(gh1));
   chk(g1.n === 3 && g1.names.join() === 'clip-A.mp4,clip-C.webm,clip-B.mp4', 'grid clips (order kept) ' + g1.names);
   chk(g1.items[0].includes(' on') && !g1.items[1].includes(' on') && g1.aria.join() === 'true,false,false', 'selected row state ' + JSON.stringify(g1.items));
   chk(g1.cw % 2 === 0 && g1.ch % 2 === 0, 'grid size not even ' + g1.cw + 'x' + g1.ch);

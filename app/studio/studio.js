@@ -14,7 +14,7 @@
     { id: 'sheet',    dir: 'frames',   group: 'Video', label: 'Sheet',    title: 'Contact sheet',      icon: 'sheet',    accepts: ['image/*', 'video/*'] },
     { id: 'flipbook', dir: 'flipbook', group: 'Image', label: 'Flipbook', title: 'Flipbook previewer', icon: 'flipbook', accepts: ['image/*'] },
     { id: 'annotate', dir: 'annotate', group: 'Image', label: 'Annotate', title: 'Annotate',           icon: 'annotate', accepts: ['image/*'] },
-    { id: 'textures', dir: 'textures', group: 'Image', label: 'Textures', title: 'Texture prep',       icon: 'texture',  accepts: [] },
+    { id: 'textures', dir: 'textures', group: 'Image', label: 'Textures', title: 'Texture names',       icon: 'texture',  accepts: [] },
     { id: 'texgen',   dir: 'texgen',   group: 'Image', label: 'TexGen',   title: 'TexGen',             icon: 'sparkle',  accepts: ['image/*'] }
   ];
   var BY = {};
@@ -203,6 +203,14 @@
     }
     if (c === 'KeyB' && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
       e.preventDefault(); e.stopPropagation(); toggleRail();
+      return;
+    }
+    /* ? opens the shortcut list in every mode (typing in a field is left alone) */
+    if (e.key === '?' && !e.ctrlKey && !e.altKey && !e.metaKey && !e.defaultPrevented) {
+      var t = e.target, tag = t && t.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (t && t.isContentEditable)) return;
+      if (Kit.dialogOpen()) return;
+      e.preventDefault(); keysBtn.click();
     }
   }
   function wireKeys(w) {
@@ -259,7 +267,8 @@
     var g = [['Studio', [
       ['Ctrl+Shift+1..8', 'Switch mode (Alt+1..8 does the same)'],
       ['Ctrl+B', 'Show only the icons in the mode list, or the names again'],
-      ['Ctrl+1..3', 'Switch Toolbox tab']
+      ['Ctrl+1..3', 'Switch Toolbox tab'],
+      ['?', 'Show or hide this list']
     ]], ['Media tray', [
       ['Drop', 'Files anywhere in Studio: the current mode takes them, or they wait in the tray'],
       ['Tray file', 'Click to send it to a mode; dragging it onto a mode does the same']
@@ -277,12 +286,13 @@
     var b = a._btn;
     if (!b) return;
     b.textContent = '';
-    b.className = (a.primary ? 'primary ' : '') + (a.on ? 'on ' : '') + (a.icon ? 'ib' : '');
+    b.className = (a.primary ? 'primary ' : '') + (a.on ? 'on ' : '') + (a.icon ? 'ib' : '') + (a.short && a.icon ? ' short' : '');
     b.disabled = !!a.disabled;
     b.hidden = !!a.hidden;
     if (a.icon) b.appendChild(Kit.icon(a.icon));
     if (a.label) b.appendChild(el('span', 'l', a.label));
     if (!a.label && a.icon) b.classList.add('ibtn');
+    if (a.short && a.icon) b.classList.add('ibtn');
     var tip = a.tip || a.label || '';
     if (a.key) tip += (tip ? '  (' : '(') + a.key + ')';
     b.title = tip;

@@ -55,5 +55,5 @@ async function capture(name){fs.mkdirSync(outDir,{recursive:true});const r=await
   const mod=require(path.resolve(process.argv[2]));
   const res=await mod({ev,evaluate,command,until,delay,capture,reload,log:(...a)=>console.log(...a)});
   console.log('RESULT',JSON.stringify(res,null,1));
-  const errs=await ev('qaErrors');console.log('PAGE ERRORS',JSON.stringify(errs));if((res&&res.ok===false)||errs.length)process.exitCode=1;
+  const errs=await ev('typeof qaErrors==="undefined"?[]:qaErrors').catch(()=>[]);console.log('PAGE ERRORS',JSON.stringify(errs));if((res&&res.ok===false)||errs.length)process.exitCode=1;
 }finally{if(ws){try{await command('Browser.close');}catch{}ws.close();}await delay(300);if(proc.exitCode===null)proc.kill();try{fs.rmSync(data,{recursive:true,force:true});}catch{}}})().catch(e=>{console.error('HARNESS ERROR',e);process.exitCode=1;});

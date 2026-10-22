@@ -12,9 +12,6 @@
   body.kit{display:flex;flex-direction:column;overflow:hidden}
   main{display:flex;flex:1;min-height:0}
   #stage{flex:1;min-width:0;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px;position:relative}
-  aside.kit-panel{flex:none;width:clamp(342px,19vw,460px);overflow-y:auto;background:var(--panel);
-    border-left:1px solid var(--line);padding:10px}
-  @media(min-width:2200px){ aside.kit-panel{width:clamp(420px,20vw,540px)} }
   .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:12px;align-items:start}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:12px 14px 14px;min-width:0}
   .card h2{margin:0 0 10px;font-size:var(--fs-xs);font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
@@ -103,6 +100,28 @@
         <div class="line">
           <div class="seg" id="seg1"><button class="on">4K</button><button>1080p</button><button>720p</button></div>
           <div class="swrap"><div class="seg" id="seg2"><button class="on" data-ic="grid4">Grid</button><button data-ic="film">Film</button></div></div>
+        </div>
+      </div>
+
+      <div class="card" id="cMedia">
+        <h2>Transport bar, view bar, status bar, empty state</h2>
+        <div style="border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--bg)">
+          <div class="kit-transport" id="demoTransport">
+            <button class="ibtn" data-ic="tostart" title="To start"></button>
+            <button class="ibtn" data-ic="stepback" title="Step back"></button>
+            <button class="ibtn" data-ic="play" title="Play"></button>
+            <button class="ibtn" data-ic="stepfwd" title="Step forward"></button>
+            <div class="tsep"></div>
+            <span class="tm">0:00.0</span>
+            <div class="tl"><div class="fill" style="width:35%"></div><div class="head" style="left:35%"></div></div>
+            <span class="tm end">0:02.0</span>
+            <button class="ibtn" data-ic="sound" title="Sound"></button>
+          </div>
+          <div class="kit-status"><span class="st">4 images</span><span class="grow"></span><span>drag to pan &middot; wheel to zoom</span></div>
+        </div>
+        <div style="position:relative;height:250px;margin-top:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)">
+          <div class="kit-viewbar"><button class="ibtn" data-ic="zout"></button><span>100%</span><button class="ibtn" data-ic="zin"></button><button class="ibtn" data-ic="fit"></button></div>
+          <div class="kit-empty"><div class="card"><div class="ke-ic" data-ic="film"></div><b>Drop a video</b><span>its frames become one contact sheet</span><div class="btnrow"><button class="primary">Choose video…</button></div></div></div>
         </div>
       </div>
 

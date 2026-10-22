@@ -1,7 +1,7 @@
 {
   "name": "toolbox",
   "productName": "Toolbox",
-  "version": "1.8.0",
+  "version": "2.0.0",
   "description": "DAVFX tools: flipbooks, textures, video, graphics, Unity scene sync and clip joining",
   "author": "DAVFX",
   "license": "UNLICENSED",

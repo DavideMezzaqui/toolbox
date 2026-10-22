@@ -29,6 +29,16 @@ body.kit{overflow:hidden}
 #app.slim .rg{height:1px;margin:11px 6px 10px;padding:0;overflow:hidden;background:var(--line);font-size:0}
 #app.slim .mode{justify-content:center;padding:0}
 #app.slim .mode .l,#app.slim .mode .n{display:none}
+/* a narrow window: the rail is icons only whatever was chosen, the modes need the room */
+@media(max-width:1000px){
+  #rail{width:52px}
+  .rail-top{padding:0;justify-content:center}
+  .rail-top b{display:none}
+  #railToggle{display:none}
+  .rg{height:1px;margin:11px 6px 10px;padding:0;overflow:hidden;background:var(--line);font-size:0}
+  .mode{justify-content:center;padding:0}
+  .mode .l,.mode .n{display:none}
+}
 
 /* [column] header, frames, tray ------------------------------------------- */
 #col{flex:1;min-width:0;display:flex;flex-direction:column}
@@ -38,6 +48,8 @@ body.kit{overflow:hidden}
   color:var(--dim);font-size:var(--fs)}
 #actions{flex:none;display:flex;align-items:center;gap:6px}
 #actions .sep{height:20px}
+#actions button.ibtn{width:30px;height:30px;padding:0}
+#actions button.short .l{display:none}
 #actions button.on{background:var(--panel3);border-color:#74747e;color:#fff}
 #head.compact #actions button.ib .l{display:none}
 #head.compact #actions button.ib{padding-left:8px;padding-right:8px}

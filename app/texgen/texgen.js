@@ -6495,6 +6495,15 @@ function SHead(p){
     borderBottom:"1px solid var(--line)"
   }},p.children);
 }
+/* Kit icons (the same set as the other Studio modes) in place of unicode glyphs */
+function KI(name,size){
+  var html=(typeof window!=="undefined"&&window.Kit&&window.Kit.iconHtml)?window.Kit.iconHtml(name):"";
+  return React.createElement("span",{className:"kic","aria-hidden":true,style:size?{width:size,height:size}:undefined,dangerouslySetInnerHTML:{__html:html}});
+}
+/* width of the Studio settings column (--panel-w), measured; 0 when it cannot be measured */
+function kitPanelWidth(){
+  try{var d=document.createElement("div");d.style.cssText="position:absolute;visibility:hidden;width:var(--panel-w)";document.body.appendChild(d);var w=d.getBoundingClientRect().width;d.remove();return w>=240?Math.round(w):0;}catch(e){return 0;}
+}
 function SmBtn(p){return React.createElement("button",{onClick:p.onClick,title:p.title,style:{padding:"3px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:"var(--bg)",color:p.color||"var(--tg-dim)",border:"1px solid var(--line)",borderRadius:3,cursor:"pointer",lineHeight:1,transition:"all 0.08s"},onMouseEnter:function(e){e.currentTarget.style.borderColor=p.color||"#4a4a52";e.currentTarget.style.color=p.color||"var(--txt2)";},onMouseLeave:function(e){e.currentTarget.style.borderColor="var(--line)";e.currentTarget.style.color=p.color||"var(--tg-dim)";}},p.children);}
 
 // ═══ LAYER THUMBNAIL ════════════════════════════════════════════
@@ -6979,7 +6988,7 @@ function LayerCompareGrid(p){
       })
     ),
     React.createElement("div",{style:{marginTop:10,fontSize:"var(--fs-s)",color:"var(--tg-dim)",fontFamily:"inherit"}},
-      n+" layer"+(n>1?"s":"")+" · click one to edit it · press the ▥ button again to close")
+      n+" layer"+(n>1?"s":"")+" · click one to edit it · press the Compare button again to close")
   );
 }
 
@@ -7268,11 +7277,11 @@ function CurveEditor(p){
       React.createElement("button",{onClick:invertCurve,title:"Invert Y — flip curve vertically",
         style:{fontSize:"var(--fs-s)",background:"none",border:"none",color:"var(--tg-dim)",cursor:"pointer",padding:"0 5px",lineHeight:1}},"↕"),
       React.createElement("button",{onClick:mirrorCurve,title:"Mirror X — flip curve horizontally",
-        style:{fontSize:"var(--fs-s)",background:"none",border:"none",color:"var(--tg-dim)",cursor:"pointer",padding:"0 5px",lineHeight:1}},"↔"),
+        style:{fontSize:"var(--fs-s)",background:"none",border:"none",color:"var(--tg-dim)",cursor:"pointer",padding:"0 5px",lineHeight:1}},KI("flip")),
       React.createElement("button",{onClick:resetCurve,title:"Reset to linear",
-        style:{fontSize:"var(--fs-s)",background:"none",border:"none",color:"var(--tg-dim)",cursor:"pointer",padding:"0 5px",lineHeight:1}},"↺"),
+        style:{fontSize:"var(--fs-s)",background:"none",border:"none",color:"var(--tg-dim)",cursor:"pointer",padding:"0 5px",lineHeight:1}},KI("reset")),
       React.createElement("button",{onClick:function(){setBig(function(v){return!v;});},title:big?"Collapse":"Expand",
-        style:{fontSize:"var(--fs-s)",background:"none",border:"none",color:big?"var(--txt)":"var(--tg-dim)",cursor:"pointer",padding:"0 3px",lineHeight:1}},big?"⊟":"⊞")
+        style:{fontSize:"var(--fs-s)",background:"none",border:"none",color:big?"var(--txt)":"var(--tg-dim)",cursor:"pointer",padding:"0 3px",lineHeight:1}},KI("fit"))
     ),
 
     // ── Row 2: interp mode pills ─────────────────────────────
@@ -8430,8 +8439,8 @@ function NoisePanel(p){
         React.createElement("div",{style:{flex:1}},SliderC({label:"Offset Y",value:L.offsetY||0,min:-2,max:2,step:0.005,onChange:function(v){setL("offsetY",v);}}))
       ),
       React.createElement("div",{style:{display:"flex",gap:6,marginBottom:6}},
-        React.createElement(TBtn,{active:linked, onClick:function(){setL("scaleLinked",true); },small:true},"⊞ Uniform"),
-        React.createElement(TBtn,{active:!linked,onClick:function(){setL("scaleLinked",false);},small:true},"⊟ XY")
+        React.createElement(TBtn,{active:linked, onClick:function(){setL("scaleLinked",true); },small:true},KI("lock"),"Uniform"),
+        React.createElement(TBtn,{active:!linked,onClick:function(){setL("scaleLinked",false);},small:true},KI("unlock"),"XY")
       ),
       linked
         ? SliderC({label:"Scale",value:L.scaleX||3.5,min:0.05,max:32,step:0.05,onChange:function(v){setL("scaleX",v);setL("scaleY",v);}})
@@ -9253,9 +9262,9 @@ function FiltersPanel(p){
     // Section tabs
     React.createElement("div",{style:{display:"flex",gap:4,marginBottom:8}},
       React.createElement("button",{onClick:function(){setSection("this");},style:{flex:1,padding:"5px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",background:section==="this"?"var(--panel3)":"var(--panel)",color:section==="this"?"#fff":"var(--tg-dim)",border:"1px solid "+(section==="this"?"#8a8a94":"var(--line)"),borderRadius:3,cursor:"pointer"}},
-        "◈ "+layerName+(filters.length>0?" ("+filters.length+")":"")),
+        KI("image"),layerName+(filters.length>0?" ("+filters.length+")":"")),
       React.createElement("button",{onClick:function(){setSection("all");},style:{flex:1,padding:"5px 0",fontSize:"var(--fs-s)",fontFamily:"inherit",background:section==="all"?"var(--panel3)":"var(--panel)",color:section==="all"?"#fff":"var(--tg-dim)",border:"1px solid "+(section==="all"?"#8a8a94":"var(--line)"),borderRadius:3,cursor:"pointer"}},
-        "⊞ All Layers"+(globalFilters.length>0?" ("+globalFilters.length+")":""))
+        KI("layers"),"All Layers"+(globalFilters.length>0?" ("+globalFilters.length+")":""))
     ),
     section==="all"?React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--txt)",marginBottom:8,padding:"4px 8px",background:"var(--panel3)",borderRadius:3,lineHeight:1.5}},"Applied to every layer before compositing. Persists when you switch layers."):null,
     section==="this"&&globalFilters.length>0?React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:8,padding:"3px 8px",background:"var(--bg)",borderRadius:3}},globalFilters.length+" filter"+(globalFilters.length>1?"s":"")+" active on all layers. Switch to All Layers tab to edit."):null,
@@ -9270,8 +9279,8 @@ function FiltersPanel(p){
           React.createElement("div",{style:{display:"flex",gap:3}},
             React.createElement(SmBtn,{onClick:function(){move(i,-1);}},"▲"),
             React.createElement(SmBtn,{onClick:function(){move(i,1);}},"▼"),
-            section==="this"?React.createElement(SmBtn,{onClick:function(){promoteToAll(i);},title:"Move to All Layers",color:"var(--txt)"},"→⊞"):null,
-            section==="all"?React.createElement(SmBtn,{onClick:function(){demoteToLayer(i);},title:"Move to current layer only",color:"var(--txt)"},"→◈"):null,
+            section==="this"?React.createElement(SmBtn,{onClick:function(){promoteToAll(i);},title:"Move to All Layers",color:"var(--txt)"},"→ ",KI("layers")):null,
+            section==="all"?React.createElement(SmBtn,{onClick:function(){demoteToLayer(i);},title:"Move to current layer only",color:"var(--txt)"},"→ ",KI("image")):null,
             React.createElement(SmBtn,{onClick:function(){rem(i);},color:"var(--txt2)"},"×")
           ),
           // UV distortion pre-filter
@@ -9673,7 +9682,7 @@ function SpritePanel(p){
   var state=p.state,setS=p.setS,copyLayersToSlot=p.copyLayersToSlot;
   var sc=["#e6e6e8","#b4b4bb","#8a8a94","#6a6a74"];
   return React.createElement("div",null,
-    React.createElement(SHead,{color:"var(--txt)"},"⊞ Spritesheet 2×2"),
+    React.createElement(SHead,{color:"var(--txt)"},KI("sheet"),"Spritesheet 2×2"),
     React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",lineHeight:1.6,marginBottom:12}},"Pack 4 independent textures into a single atlas. Useful for flipbook VFX, material channels, or Illugen-style channel-packed maps."),
     React.createElement(Tog,{label:"Spritesheet Mode",value:!!state.spritesheetMode,onChange:function(v){setS("spritesheetMode",v);}}),
     state.spritesheetMode?React.createElement("div",null,
@@ -9754,7 +9763,7 @@ function FavoritesPanel(p){
   function rem(i){var nf=favs.slice();nf.splice(i,1);setFavs(nf);}
 
   return React.createElement("div",null,
-    React.createElement(SHead,{color:"var(--txt)"},"★ Favorites"),
+    React.createElement(SHead,{color:"var(--txt)"},KI("star"),"Favorites"),
     React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",marginBottom:10,lineHeight:1.6}},
       "Pin any parameter for quick access. Changes here update the layer in real-time."
     ),
@@ -9775,7 +9784,7 @@ function FavoritesPanel(p){
         // Avoid duplicate
         var exists=favs.some(function(f){return f.layerIdx===addFavLayer&&f.param===addFavParam;});
         if(!exists)setFavs(favs.concat([{layerIdx:addFavLayer,param:addFavParam,label:label}]));
-      },style:{width:"100%",padding:"6px",background:"var(--txt)",border:"none",color:"var(--bg)",fontFamily:"inherit",fontSize:"var(--fs-s)",fontWeight:700,cursor:"pointer",borderRadius:3}},"★ Pin")
+      },style:{width:"100%",padding:"6px",background:"var(--txt)",border:"none",color:"var(--bg)",fontFamily:"inherit",fontSize:"var(--fs-s)",fontWeight:700,cursor:"pointer",borderRadius:3}},KI("star"),"Pin")
     ),
     // Favorites list
     favs.length===0?React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",textAlign:"center",padding:20}},"No favorites yet. Pin parameters above."):null,
@@ -10735,7 +10744,7 @@ function AnimPanel(p){
           React.createElement("div",{style:{flex:1}},
             React.createElement("span",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:3}},"Layer"),
             React.createElement("select",{value:track.layerIdx!=null?track.layerIdx:0,onChange:function(e){updTrack(i,"layerIdx",parseInt(e.target.value));},style:Object.assign({},SS,{marginBottom:0})},
-              React.createElement("option",{value:-1},"⊞ All Layers"),
+              React.createElement("option",{value:-1},"All Layers"),
               layers.map(function(l,li){return React.createElement("option",{key:li,value:li},l.label||"L"+(li+1));})
             ),
             track.layerIdx===-1?React.createElement("div",{style:{display:"flex",gap:4,marginTop:6}},
@@ -13212,7 +13221,10 @@ export default function TexGen(){
   // are no longer useful and would just sit holding memory
   useEffect(function(){drainBufPool();},[previewRes]);
   var _sp=useState(false); var seamlessPreview=_sp[0],setSeamlessPreview=_sp[1];
-  var _pw=useState(typeof window!=="undefined"&&window.innerWidth>=1500?400:340);   var panelWidth=_pw[0],setPanelWidth=_pw[1];
+  /* the settings column starts at the kit width (--panel-w) like every other mode; dragging its edge still resizes it */
+  var _pw=useState(function(){
+    return kitPanelWidth()||(typeof window!=="undefined"&&window.innerWidth>=1500?400:340);
+  });   var panelWidth=_pw[0],setPanelWidth=_pw[1];
   var _ps=useState("right"); var panelSide=_ps[0],setPanelSide=_ps[1];
   var _us=useState(1);      var uiScale=_us[0],setUiScale=_us[1];  // 0.8 0.9 1 1.1 1.25
   var _slsz=useState(128);  var soloThumbSize=_slsz[0],setSoloThumbSize=_slsz[1];
@@ -13401,6 +13413,7 @@ export default function TexGen(){
       if(cmd&&(e.key==="z"||e.key==="Z")&&!e.shiftKey){e.preventDefault();doUndo();return;}
       if(cmd&&(e.key==="y"||(e.key==="z"&&e.shiftKey)||e.key==="Z")){e.preventDefault();doRedo();return;}
       if(cmd&&e.key==="s"){e.preventDefault();doSave();return;}
+      if(cmd&&(e.key==="e"||e.key==="E")){e.preventDefault();if(window.__texgen&&window.__texgen.exportPNG)window.__texgen.exportPNG();else doExport();return;}
       if(cmd)return;
 
       // S before number check — solo toggle
@@ -14833,7 +14846,7 @@ export default function TexGen(){
     window.Embed.toast(saveStatus.replace(/^[✓✗↑]\s*/,""),/^✗/.test(saveStatus)?{kind:"err"}:undefined);
   },[saveStatus]);
 
-  var NAV=[{id:"noise",icon:"◈",label:"Noise"},{id:"adj",icon:"◑",label:"Adjust"},{id:"fx",icon:"✦",label:"Filters"},{id:"anim",icon:"◷",label:"Anim"},{id:"global",icon:"⊞",label:"Global"},{id:"sprite",icon:"⊟",label:"Sprite"}];
+  var NAV=[{id:"noise",icon:"tg_noise",label:"Noise"},{id:"adj",icon:"sliders",label:"Adjust"},{id:"fx",icon:"sparkle",label:"Filters"},{id:"anim",icon:"clock",label:"Anim"},{id:"global",icon:"layers",label:"Global"},{id:"sprite",icon:"sheet",label:"Sprite"}];
   var fxCount=(curLayers[si]&&curLayers[si].layerFilters||[]).filter(function(f){return f.enabled;}).length;
   var globalFxCount=(state.globalLayerFilters||[]).filter(function(f){return f.enabled;}).length;
 
@@ -14878,7 +14891,7 @@ export default function TexGen(){
   },[viewMenuOpen]);
 
   var topBar=React.createElement("div",{style:{
-    display:"flex",alignItems:"center",height:EMBED?36:44,
+    display:"flex",alignItems:"center",height:EMBED?54:44,
     background:"var(--bg)",borderBottom:"1px solid var(--line)",
     flexShrink:0,gap:0,overflow:"visible",position:"relative"
   }},
@@ -14958,7 +14971,7 @@ export default function TexGen(){
         React.createElement("div",{style:{marginBottom:10}},
           React.createElement("div",{style:{fontSize:"var(--fs-s)",color:"var(--tg-dim)",letterSpacing:1.2,textTransform:"uppercase",marginBottom:5}},"Panel position"),
           React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3}},
-            [["left","◧ Left"],["right","◨ Right"],["top","⬒ Top"],["bottom","⬓ Bottom"]].map(function(pair){
+            [["left","Left"],["right","Right"],["top","Top"],["bottom","Bottom"]].map(function(pair){
               var active=panelSide===pair[0];
               return React.createElement("button",{key:pair[0],onClick:function(){setPanelSide(pair[0]);},
                 style:{padding:"5px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",
@@ -15076,14 +15089,14 @@ export default function TexGen(){
       style:{padding:"2px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",whiteSpace:"nowrap",
         background:showAlphaChecker?"var(--panel3)":"none",color:showAlphaChecker?"#fff":"var(--tg-dim)",
         border:"1px solid "+(showAlphaChecker?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}},
-      "▦ Alpha"),
+      KI("fade"),"Alpha"),
     React.createElement("button",{
       onClick:function(){setCompareLayers(function(v){return!v;});},
       title:"Show each layer rendered separately, side by side, instead of the composite",
       style:{padding:"2px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",whiteSpace:"nowrap",
         background:compareLayers?"var(--panel3)":"none",color:compareLayers?"#fff":"var(--tg-dim)",
         border:"1px solid "+(compareLayers?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}},
-      "▥ Compare"),
+      KI("compare"),"Compare"),
     React.createElement("div",{style:{width:1,height:14,background:"var(--panel3)",margin:"0 4px"}}),
     // Tiling / variation view controls — live in the same bar as Alpha/Compare
     React.createElement("button",{
@@ -15092,21 +15105,21 @@ export default function TexGen(){
       style:{padding:"2px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",whiteSpace:"nowrap",
         background:seamlessPreview?"var(--panel3)":"none",color:seamlessPreview?"#fff":"var(--tg-dim)",
         border:"1px solid "+(seamlessPreview?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}},
-      "⊞ Tile"),
+      KI("grid"),"Tile"),
     React.createElement("button",{
       onClick:function(){setTileCheck33(function(v){return!v;});},
       title:"3×3 tiling check",
       style:{padding:"2px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",whiteSpace:"nowrap",
         background:tileCheck33?"var(--panel3)":"none",color:tileCheck33?"#fff":"var(--tg-dim)",
         border:"1px solid "+(tileCheck33?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}},
-      "▦ 3×3"),
+      KI("grid4"),"3×3"),
     React.createElement("button",{
       onClick:function(){setShowVariations(function(v){return!v;});},
       title:"Explore variations",
       style:{padding:"2px 7px",fontSize:"var(--fs-s)",fontFamily:"inherit",whiteSpace:"nowrap",
         background:showVariations?"var(--panel3)":"none",color:showVariations?"#fff":"var(--tg-dim)",
         border:"1px solid "+(showVariations?"#8a8a94":"var(--line)"),borderRadius:2,cursor:"pointer"}},
-      "⚄ Vary")
+      KI("sparkle"),"Vary")
   );
 
   var baseDisplaySize=256; // CSS display size — always fixed
@@ -15119,7 +15132,7 @@ export default function TexGen(){
       padding:"3px 10px",borderRadius:10,fontSize:"var(--fs-s)",fontFamily:"inherit",
       fontWeight:700,letterSpacing:0.5,zIndex:12,cursor:"pointer",
       whiteSpace:"nowrap"
-    }},"SOLO: "+(curLayers[soloLayerIdx]?curLayers[soloLayerIdx].label||"L"+(soloLayerIdx+1):"")+" ✕"):null;
+    }},"SOLO: "+(curLayers[soloLayerIdx]?curLayers[soloLayerIdx].label||"L"+(soloLayerIdx+1):"")+" ×"):null;
 
   // Edge-cut warning: an effect runs off a border and would show a seam when
   // tiled. Offers a one-tap Auto-Fix (Make Tileable) or dismiss.
@@ -15138,10 +15151,10 @@ export default function TexGen(){
     React.createElement("button",{onClick:function(){var nm=edgeCheckMode==="cut"?"seam":"cut";setEdgeCheckMode(nm);_edgeCheckMode=nm;bumpEpoch();},
       title:edgeCheckMode==="cut"?"Mode: effect runs off edge. Click for tiling-seam mode.":"Mode: opposite borders mismatch. Click for edge-cut mode.",
       style:{padding:"1px 5px",fontSize:"var(--fs-s)",fontFamily:"inherit",background:"transparent",color:"var(--txt2)",border:"1px solid rgba(120,120,120,0.3)",borderRadius:3,cursor:"pointer"}},
-      edgeCheckMode==="cut"?"⊡":"⊞"),
+      KI(edgeCheckMode==="cut"?"frame":"grid")),
     React.createElement("button",{onClick:function(){setEdgeWarnDismissed(true);},title:"Dismiss",
       style:{padding:"1px 5px",fontSize:"var(--fs-s)",background:"transparent",color:"var(--txt2)",border:"none",cursor:"pointer"}},
-      "✕")
+      KI("close"))
   ):null;
   // Shared style for the canvas action buttons. Grouped into one flex toolbar
   // (top-right) so they wrap/space automatically and never overlap on mobile.
@@ -15174,20 +15187,20 @@ export default function TexGen(){
       title:gizmoOn?"Hide gizmo":"Show transform gizmo",
       style:{padding:"3px 7px",background:gizmoOn?"var(--panel3)":"none",border:"none",
         color:gizmoOn?"#fff":"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:3,letterSpacing:0.5}
-    },gizmoOn?"◆ Gizmo":"◇ Gizmo"),
+    },KI("pan"),"Gizmo"),
     gizmoOn?[
       React.createElement("button",{key:"m",onClick:function(){setGizmoMode("move");},
         title:"Move (W)",
         style:{padding:"3px 6px",background:gizmoMode==="move"?"var(--panel3)":"none",border:"none",
-          color:gizmoMode==="move"?"#fff":"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:2,lineHeight:1}},"✥"),
+          color:gizmoMode==="move"?"#fff":"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:2,lineHeight:1}},KI("pan")),
       React.createElement("button",{key:"r",onClick:function(){setGizmoMode("rotate");},
         title:"Rotate (E)",
         style:{padding:"3px 6px",background:gizmoMode==="rotate"?"var(--panel3)":"none",border:"none",
-          color:gizmoMode==="rotate"?"#fff":"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:2,lineHeight:1}},"↻"),
+          color:gizmoMode==="rotate"?"#fff":"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:2,lineHeight:1}},KI("rotate")),
       React.createElement("button",{key:"s",onClick:function(){setGizmoMode("scale");},
         title:"Scale (R)",
         style:{padding:"3px 6px",background:gizmoMode==="scale"?"var(--panel3)":"none",border:"none",
-          color:gizmoMode==="scale"?"#fff":"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:2,lineHeight:1}},"⇲")
+          color:gizmoMode==="scale"?"#fff":"var(--tg-dim)",fontFamily:"inherit",fontSize:"var(--fs-s)",cursor:"pointer",borderRadius:2,lineHeight:1}},KI("fit"))
     ]:null
   );
 
@@ -16013,6 +16026,14 @@ export default function TexGen(){
   ):null;
   var panelScroll=React.createElement("div",{style:{flex:1,overflowY:"auto",padding:panelPad,WebkitOverflowScrolling:"touch",minWidth:0}},panelContent);
 
+  // until the user drags the edge, the column follows the window like the other modes do
+  var pwUser=useRef(false);
+  useEffect(function(){
+    function follow(){if(pwUser.current||panelSide==="top"||panelSide==="bottom")return;var w=kitPanelWidth();if(w)setPanelWidth(w);}
+    window.addEventListener("resize",follow);
+    return function(){window.removeEventListener("resize",follow);};
+  },[panelSide]);
+
   // Reset panel dimension when switching orientation
   useEffect(function(){
     var isV=panelSide==="top"||panelSide==="bottom";
@@ -16054,6 +16075,7 @@ export default function TexGen(){
   var dragHandle=React.createElement("div",{
     onMouseDown:function(e){
       isDraggingPanel.current=true;
+      pwUser.current=true;
       dragStartX.current=isVertPanel?e.clientY:e.clientX;
       dragStartW.current=panelWidth;
       document.body.style.cursor=isVertPanel?"ns-resize":"ew-resize";
@@ -16113,7 +16135,7 @@ export default function TexGen(){
           background:layerColor,borderRadius:"0 0 2px 2px"
         }}):null,
         // Icon
-        React.createElement("span",{style:{fontSize:"var(--fs-l)",lineHeight:1,opacity:isActive?1:0.55}},n.icon),
+        React.createElement("span",{style:{display:"inline-flex",lineHeight:1,opacity:isActive?1:0.55}},KI(n.icon,16)),
         // Label
         React.createElement("span",{style:{
           fontSize:"var(--fs-s)",letterSpacing:0.2,lineHeight:1,
@@ -16168,7 +16190,7 @@ export default function TexGen(){
           },
           onMouseEnter:splitMode?null:function(e){e.currentTarget.style.color="var(--txt2)";},
           onMouseLeave:splitMode?null:function(e){e.currentTarget.style.color="var(--tg-dim)";}
-        },"⊞"),
+        },KI("compare",16)),
         // Favorites toggle
         React.createElement("button",{
           onClick:function(){setShowFav(function(v){return!v;});},
@@ -16184,7 +16206,7 @@ export default function TexGen(){
           },
           onMouseEnter:showFav?null:function(e){e.currentTarget.style.color="var(--txt2)";},
           onMouseLeave:showFav?null:function(e){e.currentTarget.style.color="var(--tg-dim)";}
-        },"★")
+        },KI("star",16))
       ):null
     );
   }

@@ -21,8 +21,9 @@ textarea,input[type=text],input[type=number]{user-select:text;-webkit-user-selec
 header .info{color:var(--dim);font-size:var(--fs-s);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 
 /* ------------------------------------------------------------- layout */
-main{display:grid;grid-template-columns:clamp(240px,18vw,300px) minmax(0,1fr) clamp(324px,25vw,400px);min-height:0}
+main{display:grid;grid-template-columns:clamp(220px,17vw,300px) minmax(0,1fr) var(--panel-w);min-height:0}
 #left,#right{background:var(--panel);min-height:0;min-width:0;display:flex;flex-direction:column}
+@media(max-width:900px){ main{grid-template-columns:180px minmax(0,1fr) var(--panel-w)} }
 #left{border-right:1px solid var(--line)}
 #right{border-left:1px solid var(--line)}
 #center{display:flex;flex-direction:column;min-width:0;min-height:0}
@@ -34,11 +35,9 @@ main{display:grid;grid-template-columns:clamp(240px,18vw,300px) minmax(0,1fr) cl
 .drop input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
 .drop b{display:block;color:var(--txt);font-weight:600;font-size:var(--fs-l);margin-bottom:2px}
 .listbar{display:flex;gap:6px;padding:0 10px 8px}
-.listbar button{flex:1}
+.listbar button{flex:1;white-space:nowrap;padding:6px 6px}
 #list{flex:1;overflow-y:auto;padding:0 8px 12px}
-.clip{display:flex;gap:8px;align-items:center;padding:5px;border:1px solid transparent;border-radius:7px;cursor:pointer;background:var(--panel2)}
-.clip:hover{border-color:var(--line2)}
-.clip.sel{border-color:#74747e;background:var(--panel3)}
+.clip{display:flex;gap:8px;align-items:center;padding:5px;cursor:pointer}
 .clip.dragging{opacity:.3}
 .clip.before{box-shadow:0 -2px 0 #c8c8ce}
 .clip.after{box-shadow:0 2px 0 #c8c8ce}
@@ -56,28 +55,22 @@ main{display:grid;grid-template-columns:clamp(240px,18vw,300px) minmax(0,1fr) cl
 #stage{flex:1;min-height:0;position:relative;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden}
 #view{display:block;box-shadow:0 0 0 1px var(--line);cursor:grab;touch-action:none}
 #view.drag{cursor:grabbing}
-#stageHint{position:absolute;color:var(--dim);text-align:center;line-height:1.7;pointer-events:none}
-.transport{margin:8px 10px;flex:none;flex-wrap:nowrap;justify-content:flex-start}
-.transport .time{font:var(--fs-s)/1.4 var(--mono);font-variant-numeric:tabular-nums;color:var(--txt2);white-space:nowrap;padding:0 4px}
-.transport button{height:28px}
-.transport:not(.compact) #bPlay{min-width:84px}
-.transport button.ib:has(>svg.ic:only-child){padding-left:8px;padding-right:8px}
+body.noclips #view{display:none}
+body.noclips #strip{display:none}
 #strip{display:block;width:100%;height:64px;flex:none;background:var(--bg);border-top:1px solid var(--line);cursor:pointer;touch-action:none}
 
 /* ------------------------------------------------------------- inspector */
 #right .tabs{margin:10px 10px 2px}
 #right .tabs button{flex:1}
 #right .tabs button:disabled{opacity:.35}
-#insp{flex:1;overflow-y:auto;padding:4px 12px 20px}
-#insp .row label{width:96px}
+#insp{flex:1;overflow-y:auto;padding:4px 10px 20px}
 #insp .row input.val{width:56px}
 #insp .row .unit{flex:none;width:24px;color:var(--dim);font-size:var(--fs-xs);white-space:nowrap}
 #insp .row .unit.wide{width:auto}
 #insp .row.top{align-items:flex-start}
 #insp .row.top>label{padding-top:5px}
-#insp .clipname{font-size:var(--fs-l);font-weight:600;margin:10px 0 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#insp .clipname{font-size:var(--fs-l);font-weight:600;margin:8px 0 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #insp .btnrow{margin:8px 0}
-#insp .grp2:first-child{margin-top:8px}
 .trim{position:relative;height:26px;background:var(--bg);border:1px solid var(--line);border-radius:5px;margin:6px 0 6px;touch-action:none}
 .trim .keep{position:absolute;top:0;bottom:0;background:var(--panel3);border-left:2px solid #c8c8ce;border-right:2px solid #c8c8ce;cursor:grab}
 .trim .hd{position:absolute;top:-1px;bottom:-1px;width:12px;margin-left:-6px;cursor:ew-resize}
@@ -123,7 +116,7 @@ main{display:grid;grid-template-columns:clamp(240px,18vw,300px) minmax(0,1fr) cl
       <b>Drop clips here</b>MP4, WebM, MOV · added in name order</label>
     <div class="listbar">
       <button id="bSort" title="Sort all clips by file name">Sort by name</button>
-      <button id="bClear" class="danger" data-ic="trash" title="Remove every clip">Clear all</button>
+      <button id="bClear" data-ic="trash" title="Remove every clip">Clear all</button>
     </div>
     <div id="list"></div>
   </section>
@@ -131,20 +124,23 @@ main{display:grid;grid-template-columns:clamp(240px,18vw,300px) minmax(0,1fr) cl
   <section id="center">
     <div id="stage">
       <canvas id="view" width="960" height="540"></canvas>
-      <div id="stageHint">Drop your clips anywhere.<br>They join with a short fade to black between each one.</div>
+      <div class="kit-empty" id="stageHint"><div class="card"><div class="ke-ic" data-ic="join"></div><b>Drop your clips anywhere</b>
+        <span>They join with a short fade to black between each one.</span>
+        <div class="btnrow"><button id="bAdd2" type="button" data-ic="plus">Add clips…</button></div></div></div>
     </div>
-    <div class="toolbar transport" id="transport">
-      <button id="bStart" class="ib" data-ic="tostart" title="Go to start (Home)" aria-label="Go to start"></button>
-      <button id="bPrev" class="ib" data-ic="stepback" title="Previous frame (←), Shift = 1 s" aria-label="Previous frame"></button>
-      <button id="bPlay" class="ib" data-ic="play" title="Play / pause (Space)"><span>Play</span></button>
-      <button id="bNext" class="ib" data-ic="stepfwd" title="Next frame (→), Shift = 1 s" aria-label="Next frame"></button>
-      <button id="bEnd" class="ib" data-ic="toend" title="Go to end (End)" aria-label="Go to end"></button>
+    <div class="kit-transport" id="transport">
+      <button id="bStart" class="ibtn" data-ic="tostart" title="Go to start (Home)" aria-label="Go to start"></button>
+      <button id="bPrev" class="ibtn" data-ic="stepback" title="Previous frame (←), Shift = 1 s" aria-label="Previous frame"></button>
+      <button id="bPlay" class="ibtn" data-ic="play" title="Play / pause (Space)" aria-label="Play"></button>
+      <button id="bNext" class="ibtn" data-ic="stepfwd" title="Next frame (→), Shift = 1 s" aria-label="Next frame"></button>
+      <button id="bEnd" class="ibtn" data-ic="toend" title="Go to end (End)" aria-label="Go to end"></button>
       <div class="tsep"></div>
-      <span class="time" id="tTime">0:00.00 / 0:00.00</span>
+      <span class="tm" id="tTime">0:00.00 / 0:00.00</span>
+      <span class="tm opt end" id="tFrame">frame 0</span>
       <div class="tgrow"></div>
-      <button id="cLoop" class="ib" data-ic="loop" title="Loop playback"><span>Loop</span></button>
-      <button id="cSound" class="ib on" data-ic="sound" title="Hear the clips while previewing"><span>Sound</span></button>
-      <button id="cGuides" class="ib" data-ic="grid" title="Show the centre lines and a 5% safe margin"><span>Guides</span></button>
+      <button id="cLoop" class="ibtn" data-ic="loop" title="Loop playback" aria-label="Loop"></button>
+      <button id="cSound" class="ibtn on" data-ic="sound" title="Hear the clips while previewing" aria-label="Sound"></button>
+      <button id="cGuides" class="ibtn" data-ic="grid" title="Show the centre lines and a 5% safe margin" aria-label="Guides"></button>
     </div>
     <canvas id="strip" height="64"></canvas>
   </section>
@@ -594,7 +590,8 @@ function draw() {
     vctx.save(); vctx.strokeStyle = '#fff'; vctx.lineWidth = Math.max(1, pw / 900); vctx.setLineDash([5, 4]);
     vctx.strokeRect(h.box.x - 4, h.box.y - 4, h.box.w + 8, h.box.h + 8); vctx.restore();
   }
-  $('stageHint').style.display = clips.length ? 'none' : '';
+  $('stageHint').hidden = !!clips.length;
+  document.body.classList.toggle('noclips', !clips.length);
   drawStrip(); updateTime();
 }
 
@@ -674,7 +671,8 @@ function loop(now) {
 }
 function updateTime() {
   const f = 1 / seq.fps;
-  $('tTime').textContent = fmt(T) + ' / ' + fmt(total) + '  ·  frame ' + Math.round(T / f);
+  $('tTime').textContent = fmt(T) + ' / ' + fmt(total);
+  $('tFrame').textContent = 'frame ' + Math.round(T / f);
   const info = clips.length
     ? clips.length + (clips.length === 1 ? ' clip' : ' clips') + ' · ' + fmt(total) + ' · ' + seq.w + '×' + seq.h + ' ' + seq.fps + ' fps'
     : '';
@@ -750,7 +748,7 @@ function renderList() {
   clips.forEach((c, i) => {
     const it = items[i], m = media.get(c.id);
     const row = document.createElement('div');
-    row.className = 'clip' + (c.id === sel ? ' sel' : '');
+    row.className = 'clip kit-li' + (c.id === sel ? ' sel' : '');
     row.draggable = true; row.dataset.id = c.id;
     row.innerHTML = '<span class="n"></span>' + (m.thumb ? '<img alt="">' : '<div class="noimg"></div>') +
                     '<div class="meta"><div class="nm"></div><div class="sub"></div></div>';
@@ -818,9 +816,24 @@ for (const b of $('tabs').children) b.onclick = () => setTab(b.dataset.tab);
    releasing it (Kit's commit) leaves one undo step. Sliders that show a scaled number
    (zoom as %, volume as %) pass k: the Kit row works in display units, the model keeps
    its own. */
-let host = null;
-const add = e => { host.appendChild(e); return e; };
-function h3(t) { return add(Kit.row({ type: 'group', label: t })); }
+let host = null, sink = null;       /* sink = body of the open section, or the inspector itself */
+const add = e => { sink.appendChild(e); return e; };
+/* each group is a collapsible section (same card as Compare, Grid, Sheet); an empty title ends the section
+   so the buttons that follow sit on the panel. What is closed is remembered per tab and title. */
+const closedSecs = new Set(JSON.parse(localStorage.getItem('clips.closedSecs') || '[]'));
+const SEC_ICON = { 'Output': 'film', 'Transitions': 'join', 'Export': 'down', 'Trim': 'scissors', 'Timing': 'clock', 'Sound': 'sound',
+  'Clip': 'video', 'Frame': 'frame', 'Animated zoom': 'zin', 'Crop': 'crop', 'Texts on this clip': 'type', 'Content': 'type', 'Style': 'sliders',
+  'Position': 'fit' };
+function h3(t) {
+  if (!t) { sink = host; return null; }
+  const key = tab + '/' + t;
+  const sec = Kit.section({ title: t, icon: SEC_ICON[t], open: !closedSecs.has(key), onToggle: open => {
+    if (open) closedSecs.delete(key); else closedSecs.add(key);
+    try { localStorage.setItem('clips.closedSecs', JSON.stringify([...closedSecs])); } catch (e) { /* private mode */ }
+  } });
+  host.appendChild(sec); sink = sec.body;
+  return sec;
+}
 function note(t) { return add(Kit.row({ type: 'note', text: t })); }
 function clipTitle(t) {
   const e = document.createElement('div'); e.className = 'clipname'; e.textContent = t; e.title = t; return add(e);
@@ -830,7 +843,7 @@ function mkRow(label, title) {
   const r = document.createElement('div'); r.className = 'row';
   const l = document.createElement('label'); l.textContent = label; r.appendChild(l);
   if (title) r.title = title;
-  host.appendChild(r); return r;
+  sink.appendChild(r); return r;
 }
 function unitOf(r, text, wide) {
   const u = document.createElement('span'); u.className = 'unit' + (wide ? ' wide' : ''); u.textContent = text || '';
@@ -875,7 +888,7 @@ function buttons(list) {
     if (cls) b.className = cls;
     if (title) b.title = title; b.onclick = fn; d.appendChild(b);
   }
-  host.appendChild(d); return d;
+  sink.appendChild(d); return d;
 }
 /* After a change: timing changes need a fresh seek, looks only a redraw. */
 function live(seek) {
@@ -887,7 +900,7 @@ function renderListSoon() { clearTimeout(listTimer); listTimer = setTimeout(rend
 function rebuildTimeline() { computeTimeline(); T = clamp(T, 0, total); renderListSoon(); }
 
 function renderInsp() {
-  host = $('insp'); host.innerHTML = '';
+  host = sink = $('insp'); host.innerHTML = '';
   const c = selClip();
   for (const b of $('tabs').children) if (b.dataset.tab !== 'seq') b.disabled = !c;
   if (tab !== 'seq' && !c) { tab = 'seq'; for (const b of $('tabs').children) b.classList.toggle('on', b.dataset.tab === 'seq'); }
@@ -953,7 +966,7 @@ function inspClip(c) {
   h3('Trim');
   const bar = document.createElement('div'); bar.className = 'trim';
   bar.innerHTML = '<div class="keep"></div><div class="hd" data-k="in"></div><div class="hd" data-k="out"></div><div class="ph"></div>';
-  host.appendChild(bar);
+  sink.appendChild(bar);
   const paint = () => {
     const a = c.in / m.dur * 100, b = c.out / m.dur * 100;
     bar.children[0].style.left = a + '%'; bar.children[0].style.width = (b - a) + '%';
@@ -1065,7 +1078,7 @@ let tfUI = null;
 
 function inspText(c) {
   h3('Texts on this clip');
-  const box = document.createElement('div'); box.className = 'texts'; host.appendChild(box);
+  const box = document.createElement('div'); box.className = 'texts'; sink.appendChild(box);
   if (!c.texts.length) note('No text yet. Add one: it shows for the whole clip and fades with it.');
   c.texts.forEach(t => {
     const r = document.createElement('div'); r.className = 'titem' + (t.id === selText ? ' sel' : '');
@@ -1354,6 +1367,7 @@ $('bzCancel').onclick = () => { cancelExport = true; };
 const SHORTCUTS = [
   ['Playback', [['Space', 'Play / pause'], ['← →', 'Previous / next frame'], ['Shift + ← →', 'Back / forward 1 second'],
                 ['Home / End', 'Go to start / end']]],
+  ['File', [['Ctrl + O', 'Add clips'], ['Ctrl + E', 'Export MP4 (Ctrl + S does the same)']]],
   ['Editing', [['Ctrl + Z', 'Undo'], ['Ctrl + Y', 'Redo (also Ctrl + Shift + Z)'], ['Ctrl + D', 'Duplicate the selected clip'],
                ['Delete', 'Remove the selected clip, or the selected text'], ['I / O', 'Set In / Out at the playhead (Clip tab)']]],
   ['Preview', [['Drag', 'Pan the clip, or move a text'], ['Scroll', 'Zoom the clip'], ['Esc', 'Cancel an export in progress']]]
@@ -1385,7 +1399,7 @@ function setIcon(btn, name) {
 function setPlayUI(on) {
   const b = $('bPlay');
   b.classList.toggle('on', on); setIcon(b, on ? 'pause' : 'play');
-  b.querySelector('span').textContent = on ? 'Pause' : 'Play';
+  b.setAttribute('aria-label', on ? 'Pause' : 'Play');
 }
 /* Loop / Sound / Guides are toggle buttons that still answer to .checked, like the
    checkboxes they replaced. */
@@ -1405,10 +1419,14 @@ Kit.config({ stage: '#stage' });
 toggleBtn($('cLoop'));
 toggleBtn($('cSound'), { icon: ['sound', 'mute'] });
 toggleBtn($('cGuides'), { change: draw });
-/* labels drop out when the bar is narrow; done a frame later so the observer never feeds itself */
-new ResizeObserver(() => requestAnimationFrame(() => $('transport').classList.toggle('compact', $('transport').clientWidth < 800))).observe($('transport'));
+/* the frame number drops out when the bar is narrow; done a frame later so the observer never feeds itself */
+new ResizeObserver(() => requestAnimationFrame(() => {
+  const t = $('transport');
+  t.classList.toggle('compact', t.clientWidth < 560); t.classList.toggle('tight', t.clientWidth < 420);
+})).observe($('transport'));
 
 $('bAdd').onclick = () => $('fileIn').click();
+$('bAdd2').onclick = () => $('fileIn').click();
 $('fileIn').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
 $('fileIn2').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
 $('bSort').onclick = () => { clips.sort((a, b) => natural.compare(media.get(a.id).file.name, media.get(b.id).file.name)); commit(); rebuildAll(); };
@@ -1443,6 +1461,11 @@ addEventListener('keydown', e => {
   const mod = e.ctrlKey || e.metaKey;
   if (mod && e.key.toLowerCase() === 'z' && !typing) { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
   if (mod && e.key.toLowerCase() === 'y' && !typing) { e.preventDefault(); redo(); return; }
+  if (mod && !e.shiftKey && !e.altKey && !exporting) {
+    const k = e.key.toLowerCase();
+    if (k === 'o') { e.preventDefault(); $('fileIn').click(); return; }
+    if (k === 'e' || k === 's') { e.preventDefault(); if (clips.length) exportMP4(); return; }
+  }
   if (typing || exporting) return;
   if (mod && e.key.toLowerCase() === 'd' && sel) { e.preventDefault(); duplicateClip(sel); return; }
   if (e.key === ' ') { e.preventDefault(); playing ? pause() : play(); }
@@ -1464,10 +1487,10 @@ addEventListener('keydown', e => {
 Embed.register({
   id: 'join', title: 'Join clips',
   actions: [
-    { id: 'add', label: 'Add clips…', icon: 'plus', tip: 'Add video clips (or drop them anywhere)', run: () => $('fileIn').click() },
-    { id: 'undo', label: 'Undo', icon: 'undo', key: 'Ctrl+Z', disabled: true, run: () => undo() },
-    { id: 'redo', label: 'Redo', icon: 'redo', key: 'Ctrl+Y', disabled: true, run: () => redo() },
-    { id: 'export', label: 'Export MP4', icon: 'down', primary: true, disabled: true,
+    { id: 'add', label: 'Add clips…', icon: 'plus', key: 'Ctrl+O', tip: 'Add video clips (or drop them anywhere)', run: () => $('fileIn').click() },
+    { id: 'undo', label: 'Undo', icon: 'undo', short: true, key: 'Ctrl+Z', disabled: true, run: () => undo() },
+    { id: 'redo', label: 'Redo', icon: 'redo', short: true, key: 'Ctrl+Y', disabled: true, run: () => redo() },
+    { id: 'export', label: 'Export MP4', icon: 'down', primary: true, disabled: true, key: 'Ctrl+E',
       tip: 'Render the sequence to an MP4 file', run: () => exportMP4() }
   ],
   shortcuts: SHORTCUTS,

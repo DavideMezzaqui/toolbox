@@ -1,4 +1,4 @@
-# Toolbox — working notes (last updated 2026-10-19, version 1.8.0)
+# Toolbox — working notes (last updated 2026-10-22, version 2.0.0)
 
 Davide asked to integrate **the complete Scene Sync interface inside Toolbox**, not an external launcher.
 
@@ -6,7 +6,7 @@ Davide asked to integrate **the complete Scene Sync interface inside Toolbox**, 
 
 ## Preserve the existing Toolbox pattern
 
-- `app/index.html` is still only the tab shell. All nine tabs are isolated same-origin iframes, created lazily and retained across tab switches. The seven original tool pages were not edited. A tab may name its own entry page through `page:`; nothing uses that now, but the mechanism is still there.
+- `app/index.html` is still only the tab shell. Since 2.0 it has three tabs (Studio, Store Graphics, Scene Sync), isolated same-origin iframes, created lazily and retained across tab switches. The seven media tools are modes of the Studio tab (see "Studio (2.0)").
 - Each page is independently editable. Scene Sync UI: `app/scene-sync/index.html`, `scene-sync.css`, `scene-sync.js`. Vanilla browser JS, local files only, English copy, dark neutral colors with small semantic accents. No emoji icons.
 - `main.js` retains the original app://local origin, context isolation, sandbox, disabled renderer Node integration, zoom keys, saved window bounds and single-instance lock. The generic template in `Tools/_shared` was not changed.
 - A narrow `desktop.sceneSync` API lives in `preload.js`. The parent lends the same bridge to its iframe through the existing `lendDesktop` mechanism. Do not enable Node in the renderer to work around a missing API.
@@ -44,7 +44,7 @@ npm run test:workflow
 
 **Since 1.6.0 Toolbox runs from an unpacked folder, `Tools/_app/Toolbox`, not from a portable .exe.** Davide asked for a much faster start. Measured: the portable .exe took 3.3 to 5.0 s to show its window, because it unpacks the whole app to a temporary folder at every start; the unpacked copy shows it in 0.5 to 0.6 s (1.4 s on a cold first start). The folder is about 360 MB. User data stays in `%APPDATA%\Toolbox` either way, so nothing was lost in the switch. There is no portable target any more.
 
-Electron remains **33.4.11**, locked by `package-lock.json`; electron-builder remains 25.1.8. Do not upgrade them as part of routine feature work. Build caches remain in `Tools/_cache`. Current version: **1.8.0**.
+Electron remains **33.4.11**, locked by `package-lock.json`; electron-builder remains 25.1.8. Do not upgrade them as part of routine feature work. Build caches remain in `Tools/_cache`. Current version: **2.0.0**.
 
 **A running Toolbox cannot be replaced.** `build.ps1` checks for it and stops with "Toolbox is open" instead of letting electron-builder hang.
 
@@ -96,7 +96,7 @@ As of 1.4.2 the Icon, Card, Asset page and YouTube overlays match his files exac
 - Packaged builds copy the manifest-verified engine to `%LOCALAPPDATA%/DAVFX/Toolbox/scene-sync-engine/<hash>/` before use (a leftover from the portable days, harmless and cheap). Old cache versions are retained rather than deleted.
 - `dist`, `node_modules` and build caches are disposable. `scene-sync/runtime/rg.exe` is source payload and lives in Git; `node.exe` next to it is restored by the build.
 
-## Shell (1.6.0)
+## Shell (1.6.0; since 2.0 the control persistence below lives in the Studio host)
 
 - No colour squares in the tab bar any more. The button at its right end hides the bar; touching the top edge of the window slides it back over the tool. The choice is remembered (`toolbox.barHidden`).
 - The last tool used reopens at start (`toolbox.lastTab`). Tools that remember their own settings do so themselves; for the three that did not (Video Comparison beyond its collage options, Frame Strip, Annotate) the shell keeps the value of every control with an id under `toolbox.controls.<tool>` and puts it back on load, firing `input` and `change` like a hand would. Loaded media cannot come back.
@@ -166,6 +166,18 @@ Planned from three audits (visual, functional, code) and built by agents by zone
 - Preflight results open in a dialog; notes can be accepted per pack (`state.export.accepted`, written only once used).
 - UI: active toggles grey (white = Export all only), one icon per meaning, toast at the bottom-left of the stage, tabs and search on one row, strip in whole rows (`libRows`), neutral section headers with tinted icons, Pack data on the right = Brand and Badges, compact Pack card under 800 px, New dialog defaults to "New from this pack". Keys: Ctrl+N, R (recentre), # (grid).
 - Desktop export names start with the pack title. Helpers after cleanup: `conMisura`, `valoriSegnaposto`, `decodificaPronta`, `nPannelli`, `blobDelFormato`, `fineDrop`, `metaGet/metaPut/metaDel`, `dimenticaCartellaExport`, `caricaFontFile`, `eImmagine`.
+
+## Studio (2.0, 22 October 2026)
+
+Davide asked to merge the media tools into one coherent tool. Planned from three audits (video tools, image tools, shell/design) and built by agents in waves; keep this architecture:
+- **One tab, eight modes.** `app/studio/` (index.html, studio.css, studio.js) is a host with a mode rail: VIDEO Join (`app/clips`), Compare and Grid (`app/video?mode=compare|grid`), Sheet (`app/frames`, Frame Strip + Collage merged) / IMAGE Flipbook, Annotate, Textures, TexGen. Each mode is the old tool page in its own iframe (`?embed=1`), lazy, kept alive, told onHide/onShow. Alt+1..8 or Ctrl+Shift+1..8 switch modes, Ctrl+B the rail, `?` the merged shortcuts.
+- **Embed contract** `app/shared/embed.js`: a mode calls `Embed.register({id,title,actions,shortcuts,accepts,onReceive,onShow,onHide})`; its own header is hidden (`body.embed`) and its actions appear in the host header; toasts/dialogs/prompts go to the host (`window.Studio`). Opened standalone (no `?embed`) every page still works with its own header. A page that never registers is shown as is after 1.5 s.
+- **Media tray**: files dropped on the window go to the active mode if it accepts them, else to the tray; "Send to" hands them to another mode (File objects by reference, memory only).
+- **Shared kit** `app/shared/kit.css` + `kit.js` (`window.Kit`: tokens and components copied from Store Graphics, toast, dialog/confirm/prompt that work in Electron, shortcuts popover, row builder, drop helper, persist, icons) + layout classes `.kit-panel/.kit-tools/.kit-status/.kit-viewbar/.kit-li/.kit-transport/.kit-empty`. Store Graphics keeps its own copy of the CSS (not migrated, by choice). One accent rule: neutral greys, white primary only.
+- **Shared video** `app/shared/lib/video-io.js` (from Clip Joiner): MP4 index + FrameReader decoder path, exact seek fallback, WebM duration fix, codec ladder, Encoder (even sizes), audio mix. Used by Join, Compare/Grid and Sheet. `app/shared/fonts.css` and `lib/mp4-muxer.mjs` are the only copies now.
+- **Data kept**: every mode keeps its old keys (clips.*, vc-collage-opts read once by Sheet, sheet.opts, tp-presets/tp-last-rename, annotate.ui, flipbookStudio IDB (v2: scene, blobs), texgen IDB). The host does the old shell control persistence for nested modes with the same `toolbox.controls.<dir>` keys and NOT_KEPT rule. Old `toolbox.lastTab` ids open Studio on the matching mode; `studio.mode`, `studio.rail`.
+- **Tests**: `tests/stress/run-tab.cjs` (TAB=<old tool id> opens Studio on that mode, ev runs in the mode frame; TAB_MODE=grid), suites under `tests/stress/{studio,kit,video,sheet,annotate,textures,flipbook,texgen}`. Every Electron test run is muted (`--mute-audio`, and main.js mutes under DAVFX_TOOLBOX_QA): test clips with tones startled Davide.
+- Known gaps: TexGen keeps its own hand-built React UI (themed, not rebuilt); at the 800x600 minimum Join's preview is small.
 
 ## User requirements / limits to preserve
 

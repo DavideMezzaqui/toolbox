@@ -18,10 +18,7 @@ body.fixed-mode .kit-head .seg{display:none}
 main{flex:1;min-height:0;display:flex}
 .col{flex:1;min-width:0;display:flex;flex-direction:column}
 .stage{flex:1;min-height:0;position:relative;overflow:hidden;background:var(--bg)}
-aside.kit-panel{flex:none;width:clamp(342px,19vw,460px);overflow-y:auto;background:var(--panel);
-  border-left:1px solid var(--line);padding:10px}
-@media(min-width:2200px){aside.kit-panel{width:clamp(420px,20vw,540px)}}
-aside[inert],.transport[inert]{opacity:.55}
+aside[inert]{opacity:.55}
 
 /* mode switch: both modes live in the page (their controls keep their ids), one is shown */
 body[data-mode=compare] #vGrid,body[data-mode=compare] #pGrid,
@@ -34,22 +31,12 @@ body[data-mode=grid] #tSound{display:none}
 #vCompare.empty canvas{display:none}
 #vCompare:not(.empty) .slots{display:none}
 
-/* empty states: the two places a clip goes */
-.slots{display:flex;gap:12px;width:min(760px,100%)}
-.slot{flex:1;min-width:0;min-height:176px;border:1px dashed var(--line2);border-radius:10px;background:var(--panel);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:14px;text-align:center;
-  color:var(--dim);font-size:var(--fs);cursor:pointer;outline:none;transition:border-color .12s,color .12s}
-.slot:hover,.slot:focus-visible{border-color:#74747e;color:var(--txt2)}
-.slot svg.ic{width:20px;height:20px;margin-bottom:4px}
-.slot b{color:var(--txt);font-size:var(--fs-l);font-weight:600}
-.slot .nm{max-width:100%;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.slot.has{border-style:solid;border-color:var(--line2)}
-.drop-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;width:min(560px,100%);
-  min-height:200px;border:1px dashed var(--line2);border-radius:10px;background:var(--panel);padding:14px;text-align:center;
-  color:var(--dim);font-size:var(--fs);cursor:pointer;outline:none}
-.drop-empty:hover,.drop-empty:focus-visible{border-color:#74747e;color:var(--txt2)}
-.drop-empty svg.ic{width:20px;height:20px;margin-bottom:4px}
-.drop-empty b{color:var(--txt);font-size:var(--fs-l);font-weight:600}
+/* empty states: the kit card; Compare has two of them, one per side */
+.slots{gap:16px}
+.slots .card{width:min(340px,48%);min-height:200px}
+.slots .card.has{border-style:solid;border-color:var(--line2)}
+.slots .nm{max-width:100%;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slots .nm:empty{display:none}
 
 /* grid preview: wheel zoom, drag to pan */
 #vGrid{display:block;padding:0;cursor:grab;touch-action:none}
@@ -58,26 +45,8 @@ body[data-mode=grid] #tSound{display:none}
 #gvBox canvas{display:block;width:100%;height:100%}
 #gvSelBox{position:absolute;pointer-events:none;border:1px solid #e6e6e8;box-shadow:0 0 0 1px rgba(0,0,0,.55)}
 #vGrid.empty #gvBox{display:none}
-#gvEmpty{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:16px}
-#vGrid.empty #gvEmpty{display:flex}
-.viewbar{position:absolute;right:10px;top:10px;display:flex;gap:2px;align-items:center;background:var(--panel);
-  border:1px solid var(--line);border-radius:8px;padding:3px;z-index:3}
-.viewbar span{min-width:46px;text-align:center;color:var(--txt2);font:var(--fs-s) var(--mono)}
-#vGrid.empty .viewbar{display:none}
-
-/* transport: play head and scrub bar */
-.transport{flex:none;display:flex;align-items:center;gap:8px;height:46px;padding:0 14px;background:var(--panel);border-top:1px solid var(--line)}
-.transport button.ibtn{width:30px;height:30px}
-.transport svg.ic{width:15px;height:15px}
-.tm{flex:none;min-width:50px;color:var(--txt2);font:var(--fs-s) var(--mono);font-variant-numeric:tabular-nums}
-.tm.end{text-align:left;color:var(--dim)}
-.tl{position:relative;flex:1;min-width:60px;height:30px;cursor:pointer;touch-action:none;outline:none}
-.tl::before{content:'';position:absolute;left:0;right:0;top:50%;height:3px;margin-top:-1.5px;background:#3a3a42;border-radius:2px}
-.tl .fill{position:absolute;left:0;top:50%;height:3px;margin-top:-1.5px;width:0;background:#a8a8b0;border-radius:2px}
-.tl .head{position:absolute;top:50%;left:0;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;background:#c8c8ce}
-.tl:hover .head,.tl.drag .head{background:#fff}
-.tl:focus-visible .head{outline:1px solid #8a8a94;outline-offset:2px}
-.tl.off{cursor:default;opacity:.4}
+#vGrid:not(.empty) #gvEmpty{display:none}
+#vGrid.empty .kit-viewbar{display:none}
 
 /* thin progress line along the top of the stage (export, recording) */
 .prog{position:absolute;left:0;right:0;top:0;height:2px;z-index:4;pointer-events:none}
@@ -90,11 +59,10 @@ body[data-mode=grid] #tSound{display:none}
 .vc-file button{flex:none}
 .vc-list{display:flex;flex-direction:column;gap:3px;margin-bottom:8px;max-height:230px;overflow-y:auto}
 .vc-list:empty{display:none}
-.vc-item{display:flex;align-items:center;gap:8px;min-height:30px;padding:0 4px 0 9px;border:1px solid transparent;border-radius:6px;
-  background:var(--bg);color:var(--txt2);cursor:pointer;outline:none}
-.vc-item:hover{background:#1c1c20;color:var(--txt)}
+.vc-item{display:flex;align-items:center;gap:8px;min-height:30px;padding:0 4px 0 9px;color:var(--txt2);cursor:pointer;outline:none}
+.vc-item:hover{color:var(--txt)}
 .vc-item:focus-visible{outline:1px solid #9a9aa2;outline-offset:-1px}
-.vc-item.on{background:var(--panel3);border-color:#74747e;color:#fff}
+.vc-item.on{color:#fff}
 .vc-item .ix{flex:none;min-width:14px;color:var(--dim);font:var(--fs-xs) var(--mono);text-align:right}
 .vc-item.on .ix{color:var(--txt2)}
 .vc-item .n{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -125,17 +93,17 @@ body[data-mode=grid] #tSound{display:none}
       <!-- Compare: the split screen, or the two places a clip goes -->
       <div class="view empty" id="vCompare">
         <canvas id="canvas" width="1920" height="540"></canvas>
-        <div class="slots" id="slots">
-          <div class="slot" id="slotA" tabindex="0" role="button" aria-label="Load the left clip"><div class="mk"></div><b>Left clip</b><span class="sub">Click or drop a video</span><span class="nm"></span></div>
-          <div class="slot" id="slotB" tabindex="0" role="button" aria-label="Load the right clip"><div class="mk"></div><b>Right clip</b><span class="sub">Click or drop a video</span><span class="nm"></span></div>
+        <div class="kit-empty slots" id="slots">
+          <div class="card click slot" id="slotA" tabindex="0" role="button" aria-label="Load the left clip"><div class="ke-ic mk"></div><b>Left clip</b><span class="sub">Click or drop a video</span><span class="nm"></span><div class="btnrow"><button type="button" tabindex="-1" data-ic="folderopen">Load…</button></div></div>
+          <div class="card click slot" id="slotB" tabindex="0" role="button" aria-label="Load the right clip"><div class="ke-ic mk"></div><b>Right clip</b><span class="sub">Click or drop a video</span><span class="nm"></span><div class="btnrow"><button type="button" tabindex="-1" data-ic="folderopen">Load…</button></div></div>
         </div>
       </div>
 
       <!-- Grid: several clips at once -->
       <div class="view empty" id="vGrid">
         <div id="gvBox"><canvas id="gvCanvas" width="16" height="9"></canvas><div id="gvSelBox" hidden></div></div>
-        <div id="gvEmpty"><div class="drop-empty" id="gvDropEmpty" tabindex="0" role="button"><div class="mk"></div><b>Add clips</b><span>Click or drop several videos at once</span></div></div>
-        <div class="viewbar" id="gvView">
+        <div class="kit-empty" id="gvEmpty"><div class="card click" id="gvDropEmpty" tabindex="0" role="button"><div class="ke-ic mk"></div><b>Add clips</b><span>Click or drop several videos at once</span><div class="btnrow"><button type="button" tabindex="-1" data-ic="plus">Add clips…</button></div></div></div>
+        <div class="kit-viewbar" id="gvView">
           <button type="button" class="ibtn" id="gvZoomOut" title="Zoom out"></button>
           <span id="gvZoomPct">100%</span>
           <button type="button" class="ibtn" id="gvZoomIn" title="Zoom in"></button>
@@ -144,7 +112,7 @@ body[data-mode=grid] #tSound{display:none}
       </div>
     </div>
 
-    <div class="transport" id="transport">
+    <div class="kit-transport transport" id="transport">
       <button type="button" class="ibtn" id="tPlay" title="Play / pause (Space)"></button>
       <button type="button" class="ibtn" id="tStop" title="Stop (Home)"></button>
       <span class="tm" id="tNow">0:00.0</span>
@@ -608,10 +576,11 @@ $('tSound').onclick = () => {
    Actions (the host header in Studio, our own header when the page stands alone)
    ====================================================================== */
 const ACTIONS = [
-  { id: 'load',   label: 'Load',         icon: 'folderopen', tip: 'Load videos (Ctrl+O)', run: () => pickFiles() },
-  { id: 'play',   label: 'Play',         icon: 'play',       tip: 'Play / pause (Space)', run: togglePlay },
-  { id: 'stop',   label: 'Stop',         icon: 'stop',       tip: 'Stop and go to the start (Home)', run: stop },
-  { id: 'export', label: 'Export MP4',   icon: 'down',       tip: 'Export an MP4 with every frame exact (Ctrl+E)', primary: true, run: () => exportMp4() },
+  { id: 'load',   label: 'Load',         icon: 'folderopen', key: 'Ctrl+O', tip: 'Load videos', run: () => pickFiles() },
+  /* play and stop live in the transport bar under the picture: the page's own header has them, the Studio header does not */
+  { id: 'play',   label: 'Play',         icon: 'play',       tip: 'Play / pause (Space)', run: togglePlay, inner: true },
+  { id: 'stop',   label: 'Stop',         icon: 'stop',       tip: 'Stop and go to the start (Home)', run: stop, inner: true },
+  { id: 'export', label: 'Export MP4',   icon: 'down',       key: 'Ctrl+E', tip: 'Export an MP4 with every frame exact', primary: true, run: () => exportMp4() },
   { id: 'record', label: 'Record WebM',  icon: 'record',     tip: 'Record the preview in real time, with sound', run: () => record() }
 ];
 const actState = {};
@@ -621,7 +590,7 @@ function setAct(id, patch) {
   const next = Object.assign({}, prev, patch);
   if (prev.label === next.label && prev.icon === next.icon && !!prev.disabled === !!next.disabled) return;
   actState[id] = next;
-  if (Embed.active) Embed.action(id, patch);
+  if (Embed.active && !(ACTIONS.find(a => a.id === id) || {}).inner) Embed.action(id, patch);
   const b = actBtn[id];
   if (!b) return;
   b.disabled = !!next.disabled;
@@ -632,7 +601,7 @@ function setAct(id, patch) {
 function buildHeader() {
   ACTIONS.forEach(a => {
     const b = document.createElement('button');
-    b.type = 'button'; b.id = 'act_' + a.id; b.title = a.tip;
+    b.type = 'button'; b.id = 'act_' + a.id; b.title = a.tip + (a.key ? '  (' + a.key + ')' : '');
     if (a.primary) b.className = 'acc';
     b.appendChild(Kit.icon(a.icon));
     b.appendChild(Object.assign(document.createElement('span'), { textContent: a.label }));
@@ -971,7 +940,7 @@ function fileBox(side) {
       get: () => Math.round(split * 100), set: v => { split = v / 100; schedule(); } },
     { type: 'range', label: 'Line width', id: 'lineW', min: 1, max: 16, step: 1, hard: true, def: 3,
       get: () => cfg.lineW, set: v => { cfg.lineW = v; schedule(); } },
-    { type: 'color', label: 'Line colour', id: 'lineC', hex: false, def: '#ffffff',
+    { type: 'color', label: 'Line colour', id: 'lineC', def: '#ffffff',
       get: () => cfg.lineC, set: v => { cfg.lineC = v; schedule(); } }
   ]);
   r1.rows[1].valInput.id = 'lineWn';
@@ -1021,7 +990,7 @@ function renderList() {
   listEl.textContent = '';
   G.clips.forEach((c, i) => {
     const row = document.createElement('div');
-    row.className = 'vc-item' + (c.id === G.sel ? ' on' : '');
+    row.className = 'vc-item kit-li' + (c.id === G.sel ? ' on' : '');
     row.tabIndex = 0; row.setAttribute('role', 'option'); row.setAttribute('aria-selected', c.id === G.sel ? 'true' : 'false');
     row.innerHTML = '<span class="ix"></span><span class="n"></span>';
     row.children[0].textContent = i + 1;
@@ -1103,15 +1072,15 @@ function syncSel() {
     { type: 'range', label: 'Margin', id: 'gvPad', min: 0, max: 120, step: 1, hard: true, def: 0, get: () => o.pad, set: v => { o.pad = v; look(); } },
     { type: 'range', label: 'Corners', id: 'gvRadius', min: 0, max: 60, step: 1, hard: true, def: 0, get: () => o.radius, set: v => { o.radius = v; look(); } },
     { type: 'range', label: 'Border', id: 'gvBorder', min: 0, max: 20, step: 1, hard: true, def: 0, get: () => o.border, set: v => { o.border = v; refit(); } },
-    { type: 'color', label: 'Border colour', id: 'gvBorderColor', hex: false, def: '#2a2a2a', get: () => o.borderColor, set: v => { o.borderColor = v; look(); } },
-    { type: 'color', label: 'Background', id: 'gvBg', hex: false, def: '#0d0d0d', get: () => o.bg, set: v => { o.bg = v; look(); } }
+    { type: 'color', label: 'Border colour', id: 'gvBorderColor', def: '#2a2a2a', get: () => o.borderColor, set: v => { o.borderColor = v; look(); } },
+    { type: 'color', label: 'Background', id: 'gvBg', def: '#0d0d0d', get: () => o.bg, set: v => { o.bg = v; look(); } }
   ]) }));
   /* labels */
   host.appendChild(Kit.section({ title: 'Labels', icon: 'type', open: false, body: rows([
     { type: 'check', label: 'Show', id: 'gvLabels', text: 'Clip name on each cell', get: () => o.labels, set: v => { o.labels = !!v; refit(); } },
     { type: 'select', label: 'Position', id: 'gvLabelPos', options: [['top', 'Over top'], ['bottom', 'Over bottom']], get: () => o.labelPos, set: v => { o.labelPos = v; look(); } },
     { type: 'range', label: 'Size', id: 'gvLabelSize', min: 10, max: 64, step: 1, hard: true, def: 22, get: () => o.labelSize, set: v => { o.labelSize = v; look(); } },
-    { type: 'color', label: 'Colour', id: 'gvLabelColor', hex: false, def: '#e8e8e8', get: () => o.labelColor, set: v => { o.labelColor = v; look(); } }
+    { type: 'color', label: 'Colour', id: 'gvLabelColor', def: '#e8e8e8', get: () => o.labelColor, set: v => { o.labelColor = v; look(); } }
   ]) }));
   /* output */
   const ob = document.createElement('div');
@@ -1133,6 +1102,16 @@ function syncSel() {
   $('gvZoomIn').onclick = () => setZoom(gv.zoom * 1.25);
   $('gvZoomOut').onclick = () => setZoom(gv.zoom / 1.25);
   $('gvFitView').onclick = () => { gv.fitted = true; redraw(); };
+  /* the same keys as the other canvases: F fits, 0 is 100%, + and - zoom */
+  document.addEventListener('keydown', e => {
+    if (M.id !== 'grid' || !G.clips.length || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+    const t = e.target, tag = t && t.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    if (e.key === 'f' || e.key === 'F') { e.preventDefault(); gv.fitted = true; redraw(); }
+    else if (e.key === '0') { e.preventDefault(); setZoom(1); }
+    else if (e.key === '+' || e.key === '=') { e.preventDefault(); setZoom(gv.zoom * 1.25); }
+    else if (e.key === '-' || e.key === '_') { e.preventDefault(); setZoom(gv.zoom / 1.25); }
+  });
   $('gvZoomIn').appendChild(Kit.icon('zin'));
   $('gvZoomOut').appendChild(Kit.icon('zout'));
   $('gvFitView').appendChild(Kit.icon('fit'));
@@ -1206,7 +1185,8 @@ new ResizeObserver(refit).observe($('stage'));
 const SHORT = [
   ['Playback', [['Space', 'Play / pause'], ['Home', 'Stop and go back to the start'], ['End', 'Go to the end'],
                 ['Left / Right', 'Step one frame (1/30 s)'], ['Shift+Left / Right', 'Step one second']]],
-  ['Files', [['Ctrl+O', 'Load videos'], ['Ctrl+E', 'Export MP4 (Esc cancels)'], ['Delete', 'Grid: remove the selected clip']]],
+  ['Files', [['Ctrl+O', 'Load videos'], ['Ctrl+E', 'Export MP4 (Ctrl+S does the same, Esc cancels)'], ['Delete', 'Grid: remove the selected clip']]],
+  ['View (Grid)', [['F', 'Fit the grid in the view'], ['0', 'Show the grid at 100%'], ['+ / -', 'Zoom in / out']]],
   ['Picture', [['Drag on the picture', 'Compare: move the divider'], ['Wheel / drag', 'Grid: zoom / pan the preview'],
                ['Click a cell', 'Grid: select that clip'], ['Alt+click a row', 'Put its default value back'], ['?', 'This list']]]
 ];
@@ -1216,7 +1196,7 @@ document.addEventListener('keydown', e => {
   const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
   const ctrl = e.ctrlKey || e.metaKey;
   if (ctrl && !e.altKey && !e.shiftKey && (e.key === 'o' || e.key === 'O')) { e.preventDefault(); if (!busy) pickFiles(); return; }
-  if (ctrl && !e.altKey && !e.shiftKey && (e.key === 'e' || e.key === 'E')) { e.preventDefault(); exportMp4(); return; }
+  if (ctrl && !e.altKey && !e.shiftKey && (e.key === 'e' || e.key === 'E' || e.key === 's' || e.key === 'S')) { e.preventDefault(); exportMp4(); return; }
   if (ctrl || e.altKey) return;
   if (e.key === 'Escape' && busy === 'export') { e.preventDefault(); cancelFlag = true; return; }
   if (typing) return;
@@ -1266,8 +1246,8 @@ setMode(askedMode || (Embed.active ? 'compare' : lastMode()));
 document.body.classList.toggle('fixed-mode', fixedMode);
 Embed.register({
   id: M.id,
-  title: M.id === 'grid' ? 'Grid' : 'Compare',
-  actions: ACTIONS.map(a => ({ id: a.id, label: actState[a.id].label, icon: actState[a.id].icon, tip: a.tip, primary: !!a.primary,
+  title: M.id === 'grid' ? 'Video grid' : 'Compare videos',
+  actions: ACTIONS.filter(a => !a.inner).map(a => ({ id: a.id, label: actState[a.id].label, icon: actState[a.id].icon, tip: a.tip, key: a.key, primary: !!a.primary,
     disabled: !!actState[a.id].disabled, run: a.run })),
   shortcuts: SHORT,
   accepts: ['video/*'],

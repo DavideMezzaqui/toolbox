@@ -11,7 +11,6 @@ body.kit{display:flex;flex-direction:column;overflow:hidden;user-select:none}
 /* inside Studio the host header carries the title and the actions */
 body.embed .kit-head{display:none}
 
-.abar{flex:none;padding:8px 14px;border-bottom:1px solid var(--line)}
 #tb{flex-wrap:nowrap;justify-content:flex-start;overflow:hidden;gap:5px}
 #tb>*{flex:none}
 #tb .tgrp{display:flex;gap:2px}
@@ -36,24 +35,13 @@ body.embed .kit-head{display:none}
 
 .stage{flex:1;position:relative;background:var(--bg);overflow:hidden;min-height:0;touch-action:none}
 #cv{display:block;position:absolute;left:0;top:0}
-.view{position:absolute;right:10px;top:10px;padding:3px;gap:2px;flex-wrap:nowrap;justify-content:flex-start;z-index:3}
-.view button.ibtn{padding:0;width:26px;height:26px}
-.view span{font:var(--fs-s)/1 var(--mono);color:var(--txt2);min-width:46px;text-align:center}
-
-.empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:10px;color:var(--dim);pointer-events:none;text-align:center;padding:0 24px}
-.empty b{color:var(--txt);font-size:15px;font-weight:600}
-.empty div{font-size:var(--fs-l);line-height:1.8}
-.empty kbd{font:var(--fs-s) var(--mono);background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--txt2)}
 
 #textEdit{position:absolute;display:none;user-select:text;-webkit-user-select:text;background:var(--panel2);
   border:1px solid #8a8a94;border-radius:4px;color:#fff;padding:3px 6px;
   font:600 14px 'Segoe UI',system-ui,sans-serif;outline:none;min-width:120px;height:auto;z-index:5}
 
-.status{flex:none;padding:0 14px;border-top:1px solid var(--line);background:var(--panel);font-size:var(--fs-s);
-  color:var(--dim);height:28px;display:flex;gap:14px;align-items:center;white-space:nowrap}
-.status #status{color:var(--txt2);overflow:hidden;text-overflow:ellipsis}
-.status .hintkeys{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.kit-status #status{color:var(--txt2);overflow:hidden;text-overflow:ellipsis}
+.kit-status .hintkeys{overflow:hidden;text-overflow:ellipsis;min-width:0}
 </style>
 </head>
 <body class="kit">
@@ -73,7 +61,7 @@ body.embed .kit-head{display:none}
   <button id="bKeys" data-ic="key" title="Keyboard shortcuts  (?)">Shortcuts</button>
 </header>
 
-<div class="abar">
+<div class="kit-tools">
   <div class="toolbar" id="tb">
     <div class="tgrp" id="tools"></div>
     <span class="tsep"></span>
@@ -90,20 +78,24 @@ body.embed .kit-head{display:none}
 
 <div class="stage" id="stage">
   <canvas id="cv" width="16" height="9"></canvas>
-  <div class="view toolbar tight">
+  <div class="kit-viewbar view">
     <button class="ibtn" id="zoomOut" title="Zoom out" data-ic="zout"></button>
     <span id="zoomV">100%</span>
     <button class="ibtn" id="zoomIn" title="Zoom in" data-ic="zin"></button>
     <button class="ibtn" id="fit" title="Fit to the window" data-ic="fit"></button>
   </div>
-  <div class="empty" id="empty">
-    <b>Paste a screenshot</b>
-    <div><kbd>Ctrl</kbd> + <kbd>V</kbd> &middot; or drop an image here &middot; or use Open</div>
+  <div class="kit-empty" id="empty">
+    <div class="card">
+      <div class="ke-ic" data-ic="annotate"></div>
+      <b>Paste a screenshot</b>
+      <span><kbd>Ctrl</kbd> + <kbd>V</kbd> &middot; or drop an image here</span>
+      <div class="btnrow"><button type="button" id="emptyOpen" data-ic="open">Open…</button><button type="button" id="emptyPaste" data-ic="down">Paste</button></div>
+    </div>
   </div>
   <input id="textEdit" type="text" spellcheck="false">
 </div>
 
-<div class="status">
+<div class="status kit-status">
   <span id="status">No image yet.</span>
   <span class="grow"></span>
   <span class="hintkeys" id="keys">middle-drag or space+drag to pan &middot; wheel to zoom &middot; Del removes the selection</span>
@@ -804,13 +796,21 @@ body.embed .kit-head{display:none}
     render();
   }, { passive: false });
 
+  /* zoom about the middle of the stage (the buttons and the keys +, -, 0) */
+  function zoomTo(nz) {
+    if (!img) return;
+    var s = stageSize(), mx = s.w / 2, my = s.h / 2;
+    nz = Math.max(ZMIN, Math.min(ZMAX, nz));
+    if (nz === view.zoom) return;
+    view.x = mx - (mx - view.x) * (nz / view.zoom);
+    view.y = my - (my - view.y) * (nz / view.zoom);
+    view.zoom = nz; view.fitted = false; render();
+  }
   $('fit').addEventListener('click', function () { view.fitted = true; render(); });
-  $('zoomIn').addEventListener('click', function () {
-    view.zoom = Math.min(ZMAX, view.zoom * 1.25); view.fitted = false; render();
-  });
-  $('zoomOut').addEventListener('click', function () {
-    view.zoom = Math.max(ZMIN, view.zoom / 1.25); view.fitted = false; render();
-  });
+  $('zoomIn').addEventListener('click', function () { zoomTo(view.zoom * 1.25); });
+  $('zoomOut').addEventListener('click', function () { zoomTo(view.zoom / 1.25); });
+  $('emptyOpen').addEventListener('click', function () { openDialog(); });
+  $('emptyPaste').addEventListener('click', function () { pasteFromClipboard(); });
 
   /* ---- layout: the toolbar never wraps ----------------------------------- */
   var tbEl = $('tb');
@@ -937,10 +937,10 @@ body.embed .kit-head{display:none}
     ]],
     ['Image', [
       ['Ctrl+V', 'Paste a screenshot'], ['Ctrl+O', 'Open an image'],
-      ['Ctrl+C', 'Copy the result'], ['Ctrl+S', 'Save as PNG']
+      ['Ctrl+C', 'Copy the result'], ['Ctrl+E / Ctrl+S', 'Save as PNG']
     ]],
     ['View', [
-      ['Wheel', 'Zoom at the pointer'], ['Space + drag', 'Pan'], ['Middle drag', 'Pan']
+      ['F', 'Fit the image'], ['0', 'Show it at 100%'], ['+ / -', 'Zoom in / out'], ['Wheel', 'Zoom at the pointer'], ['Space + drag', 'Pan'], ['Middle drag', 'Pan']
     ]]
   ];
 
@@ -955,7 +955,7 @@ body.embed .kit-head{display:none}
       if (k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); return; }
       if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); redo(); return; }
       if (k === 'c') { e.preventDefault(); copyOut(); return; }
-      if (k === 's') { e.preventDefault(); saveOut(); return; }
+      if (k === 's' || k === 'e') { e.preventDefault(); saveOut(); return; }
       if (k === 'o') { e.preventDefault(); openDialog(); return; }
       return;      // leave Ctrl+V to the paste handler
     }
@@ -966,6 +966,10 @@ body.embed .kit-head{display:none}
       return;
     }
     if (k === 'escape') { sel = -1; render(); return; }
+    if (k === 'f') { e.preventDefault(); $('fit').click(); return; }
+    if (k === '0') { e.preventDefault(); zoomTo(1); return; }
+    if (k === '+' || k === '=') { e.preventDefault(); zoomTo(view.zoom * 1.25); return; }
+    if (k === '-' || k === '_') { e.preventDefault(); zoomTo(view.zoom / 1.25); return; }
     if (KEYS[k] && !e.altKey) { e.preventDefault(); setTool(KEYS[k]); }
   });
 
@@ -994,10 +998,10 @@ body.embed .kit-head{display:none}
     actions: [
       { id: 'open',  label: 'Open',     icon: 'open', tip: 'Open an image  (Ctrl+O)', run: openDialog },
       { id: 'paste', label: 'Paste',    icon: 'down', tip: 'Paste the screenshot on the clipboard  (Ctrl+V)', run: pasteFromClipboard },
-      { id: 'undo',  label: 'Undo',     icon: 'undo', tip: 'Undo  (Ctrl+Z)', disabled: true, run: undo },
-      { id: 'redo',  label: 'Redo',     icon: 'redo', tip: 'Redo  (Ctrl+Y)', disabled: true, run: redo },
+      { id: 'undo',  label: 'Undo',     icon: 'undo', short: true, tip: 'Undo  (Ctrl+Z)', disabled: true, run: undo },
+      { id: 'redo',  label: 'Redo',     icon: 'redo', short: true, tip: 'Redo  (Ctrl+Y)', disabled: true, run: redo },
       { id: 'copy',  label: 'Copy',     icon: 'copy', tip: 'Copy the result  (Ctrl+C)', disabled: true, run: copyOut },
-      { id: 'save',  label: 'Save PNG', icon: 'save', primary: true, tip: 'Save as PNG  (Ctrl+S)', disabled: true, run: saveOut }
+      { id: 'save',  label: 'Save PNG', icon: 'save', primary: true, key: 'Ctrl+E', tip: 'Save as PNG', disabled: true, run: saveOut }
     ],
     shortcuts: SHORTCUTS,
     accepts: ['image/*'],

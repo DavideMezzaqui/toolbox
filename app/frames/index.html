@@ -18,20 +18,6 @@ body.embed .kit-head{display:none}
 #stage{position:relative;flex:1;min-height:160px;overflow:hidden;background:var(--stage);cursor:grab;touch-action:none}
 #stage.panning{cursor:grabbing}
 #sheet{display:block}
-#viewbar{position:absolute;right:12px;bottom:12px;padding:3px 4px;gap:2px;flex-wrap:nowrap;background:rgba(24,24,26,.92)}
-#viewbar button.ibtn{width:26px;height:26px;border-color:transparent;background:transparent}
-#viewbar button.ibtn:hover{background:#2c2c33}
-#zoomV{min-width:46px;text-align:center;color:var(--txt2);font:var(--fs-s) var(--mono);font-variant-numeric:tabular-nums}
-
-#empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
-  text-align:center;padding:24px;pointer-events:none;color:var(--dim)}
-#empty .big{width:56px;height:56px;border:1px dashed var(--line2);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:6px}
-#empty .big svg.ic{width:24px;height:24px;opacity:.6}
-#empty b{color:var(--txt);font-size:15px;font-weight:600}
-#empty span{font-size:var(--fs)}
-#empty .btnrow{pointer-events:auto;margin:10px 0 0;justify-content:center;flex-wrap:nowrap}
-#empty .btnrow button{flex:none;padding:6px 14px;font-size:var(--fs)}
-
 #busy{position:absolute;left:50%;top:16px;transform:translateX(-50%);max-width:calc(100% - 32px);
   padding:7px 14px;border-radius:8px;background:var(--panel3);border:1px solid #4a4a52;color:var(--txt);
   font-size:var(--fs);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.45)}
@@ -50,17 +36,9 @@ body.embed .kit-head{display:none}
 .trow .tv{width:64px;flex:none;text-align:right;color:var(--txt2);font:var(--fs-s) var(--mono);font-variant-numeric:tabular-nums}
 .trow .hint{margin:0}
 
-#info{flex:none;display:flex;align-items:center;gap:12px;height:30px;padding:0 14px;background:var(--panel);
-  border-top:1px solid var(--line);font-size:var(--fs-s);color:var(--txt2);white-space:nowrap;overflow:hidden}
+#info .st{color:var(--txt2)}
 #dock:not([hidden])+#info{border-top-color:var(--line)}
-#info .dim{color:var(--dim)}
 
-aside.kit-panel{flex:none;width:clamp(310px,23vw,430px);overflow-y:auto;background:var(--panel);
-  border-left:1px solid var(--line);padding:10px}
-@media(min-width:2200px){ aside.kit-panel{width:clamp(420px,20vw,540px)} }
-aside.kit-panel .tabs{width:100%;margin-bottom:10px}
-aside.kit-panel .tabs button{flex:1}
-.sec .row>label{width:92px}
 .bd .btnrow{margin-bottom:8px}
 
 /* images: the add area and the list you reorder */
@@ -71,8 +49,7 @@ aside.kit-panel .tabs button{flex:1}
 #list{display:flex;flex-direction:column;gap:4px;max-height:min(42vh,440px);overflow-y:auto;margin:0 0 8px;padding-right:2px}
 #list:empty{display:none}
 .it{display:grid;grid-template-columns:20px 46px minmax(0,1fr) 22px;gap:8px;align-items:center;padding:5px 5px 5px 8px;
-  background:var(--bg);border:1px solid var(--line);border-radius:6px;cursor:grab}
-.it:hover{border-color:#4a4a52}
+  cursor:grab}
 .it.dragging{opacity:.4}
 .it.before{box-shadow:0 -2px 0 0 #c8c8ce}
 .it.after{box-shadow:0 2px 0 0 #c8c8ce}
@@ -111,14 +88,16 @@ aside.kit-panel .tabs button{flex:1}
   <div id="work">
     <div id="stage">
       <canvas id="sheet" width="16" height="9"></canvas>
-      <div id="empty" hidden>
-        <div class="big" id="emptyIc"></div>
-        <b id="emptyT">Drop images or a video</b>
-        <span id="emptyS">or paste a screenshot with Ctrl+V</span>
-        <div class="btnrow" id="emptyB"></div>
+      <div class="kit-empty" id="empty" hidden>
+        <div class="card">
+          <div class="ke-ic" id="emptyIc"></div>
+          <b id="emptyT">Drop images or a video</b>
+          <span id="emptyS">or paste a screenshot with Ctrl+V</span>
+          <div class="btnrow" id="emptyB"></div>
+        </div>
       </div>
       <div id="busy" hidden></div>
-      <div class="toolbar" id="viewbar">
+      <div class="kit-viewbar" id="viewbar">
         <button class="ibtn" id="zoomOut" title="Zoom out (-)" data-ic="zout"></button>
         <span id="zoomV">100%</span>
         <button class="ibtn" id="zoomIn" title="Zoom in (+)" data-ic="zin"></button>
@@ -140,7 +119,7 @@ aside.kit-panel .tabs button{flex:1}
       </div>
     </div>
 
-    <div id="info"><span id="status"></span><span class="dim" id="statusHint"></span></div>
+    <div id="info" class="kit-status"><span id="status" class="st"></span><span class="dim" id="statusHint"></span></div>
   </div>
 
   <aside class="kit-panel" id="panel"></aside>
@@ -623,7 +602,7 @@ aside.kit-panel .tabs button{flex:1}
     list.textContent = '';
     S.images.forEach((it, i) => {
       const row = document.createElement('div');
-      row.className = 'it'; row.draggable = true; row.dataset.id = it.id;
+      row.className = 'it kit-li'; row.draggable = true; row.dataset.id = it.id;
 
       const ix = document.createElement('span'); ix.className = 'ix'; ix.textContent = String(i + 1);
       const th = document.createElement('canvas'); th.width = 92; th.height = 68;
@@ -917,7 +896,7 @@ aside.kit-panel .tabs button{flex:1}
     foot.innerHTML = '<span id="imgCount"></span><span class="grow"></span>';
     const pasteB = document.createElement('button'); pasteB.type = 'button'; pasteB.id = 'imgPaste'; pasteB.textContent = 'Paste';
     pasteB.title = 'Add the image on the clipboard (Ctrl+V)'; pasteB.onclick = pasteFromClipboard;
-    const clearB = document.createElement('button'); clearB.type = 'button'; clearB.id = 'imgClear'; clearB.textContent = 'Clear all';
+    const clearB = document.createElement('button'); clearB.type = 'button'; clearB.id = 'imgClear'; clearB.textContent = 'Clear all'; clearB.className = 'ib'; clearB.insertBefore(Kit.icon('trash'), clearB.firstChild);
     clearB.onclick = clearImages;
     foot.appendChild(pasteB); foot.appendChild(clearB);
     imgBody.appendChild(foot);
@@ -1117,8 +1096,8 @@ aside.kit-panel .tabs button{flex:1}
 
   const SHORTCUTS = [
     ['Sources', [['Ctrl+O', 'Add images'], ['Ctrl+Shift+O', 'Pick a video'], ['Ctrl+V', 'Paste an image from the clipboard'], ['Drop', 'Images or one video, anywhere']]],
-    ['View', [['F', 'Fit the sheet to the window'], ['1', 'Actual size (output pixels)'], ['+  /  -', 'Zoom in / out'], ['Wheel', 'Zoom at the pointer'], ['Drag', 'Pan'], ['Double-click', 'Fit']]],
-    ['Output', [['Ctrl+S', 'Export PNG'], ['Ctrl+Shift+C', 'Copy the sheet to the clipboard']]],
+    ['View', [['F', 'Fit the sheet to the window'], ['0 / 1', 'Actual size (output pixels)'], ['+  /  -', 'Zoom in / out'], ['Wheel', 'Zoom at the pointer'], ['Drag', 'Pan'], ['Double-click', 'Fit']]],
+    ['Output', [['Ctrl+E / Ctrl+S', 'Export PNG'], ['Ctrl+Shift+C', 'Copy the sheet to the clipboard']]],
     ['Image list', [['Drag a row', 'Change the order'], ['Alt+Up / Down', 'Move the item whose caption has focus']]]
   ];
   document.addEventListener('keydown', e => {
@@ -1127,13 +1106,13 @@ aside.kit-panel .tabs button{flex:1}
     if (mod && !e.altKey) {
       const lk = k.toLowerCase();
       if (lk === 'o') { e.preventDefault(); e.shiftKey ? pickVideo() : pickImages(); }
-      else if (lk === 's' && !e.shiftKey) { e.preventDefault(); exportPNG(); }
+      else if ((lk === 's' || lk === 'e') && !e.shiftKey) { e.preventDefault(); exportPNG(); }
       else if (lk === 'c' && e.shiftKey) { e.preventDefault(); copySheet(); }
       return;
     }
     if (typing || e.altKey) return;
     if (k === 'f' || k === 'F') { e.preventDefault(); fit(); }
-    else if (k === '1') { e.preventDefault(); actualSize(); }
+    else if (k === '1' || k === '0') { e.preventDefault(); actualSize(); }
     else if (k === '+' || k === '=') { e.preventDefault(); zoomCentre(1.25); }
     else if (k === '-' || k === '_') { e.preventDefault(); zoomCentre(1 / 1.25); }
   });

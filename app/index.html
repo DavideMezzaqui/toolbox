@@ -5,8 +5,9 @@
 <title>Toolbox</title>
 <style>
   :root{
-    --bar:#141416; --bar-line:#26262b; --ink:#d7d7dd; --ink-dim:#83838f;
-    --hover:#1e1e22;
+    /* same greys as the Studio kit (app/shared/kit.css) */
+    --bar:#18181a; --bar-line:#2e2e33; --ink:#e6e6e8; --ink-dim:#9a9aa2;
+    --hover:#26262b; --on:#383841;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -18,9 +19,9 @@
 
   /* ------------------------------------------------------------- tab bar */
   #bar{
-    flex:0 0 auto; display:flex; align-items:stretch; gap:2px;
+    flex:0 0 auto; display:flex; align-items:center; gap:2px; height:42px;
     background:var(--bar); border-bottom:1px solid var(--bar-line);
-    padding:0 6px; user-select:none; -webkit-user-select:none;
+    padding:0 8px; user-select:none; -webkit-user-select:none;
     /* Three tabs fit anywhere, but the window can be dragged very small:
        there the bar scrolls sideways rather than squashing the names. */
     overflow-x:auto; overflow-y:hidden; scrollbar-width:thin;
@@ -31,13 +32,16 @@
   #bar::-webkit-scrollbar-track{ background:transparent }
   .tab{
     flex:0 0 auto; display:flex; align-items:center; gap:8px;
-    padding:0 13px; height:38px; border:0; background:none; cursor:pointer;
+    padding:0 12px; height:30px; border:0; border-radius:6px; background:none; cursor:pointer;
     color:var(--ink-dim); font:inherit; font-weight:500; white-space:nowrap;
-    border-bottom:2px solid transparent;
   }
   .tab:hover{ background:var(--hover); color:var(--ink) }
-  .tab.on{ color:var(--ink); border-bottom-color:var(--ink) }
-  .tab .num{ color:var(--ink-dim); font-size:11px; opacity:.6 }
+  .tab.on{ background:var(--on); color:#fff; box-shadow:0 1px 2px rgba(0,0,0,.4) }
+  .tab:focus-visible{ outline:1px solid #9a9aa2; outline-offset:1px }
+  .tab svg{ width:15px; height:15px; flex:none; fill:none; stroke:currentColor; stroke-width:1.35;
+    stroke-linecap:round; stroke-linejoin:round; opacity:.85 }
+  .tab:hover svg, .tab.on svg{ opacity:1 }
+  .tab .num{ color:var(--ink-dim); font:11px ui-monospace, Consolas, monospace }
 
   /* Hide button at the right end of the bar */
   #hide{
@@ -45,6 +49,7 @@
     color:var(--ink-dim); cursor:pointer; padding:4px 8px; border-radius:4px; font:inherit;
   }
   #hide:hover{ background:var(--hover); color:var(--ink) }
+  #hide:focus-visible{ outline:1px solid #9a9aa2; outline-offset:1px }
   #hide svg{ display:block }
 
   /* Hidden bar: the tool gets the whole window. The bar slides back over
@@ -59,9 +64,9 @@
   #edge{ display:none }
   body.nobar #edge{
     display:block; position:absolute; top:0; left:0; right:0; height:5px; z-index:9;
-    background:linear-gradient(#3a3a42, transparent);
+    background:#3a3a42; opacity:.7;
   }
-  .tab.on .num{ opacity:.8 }
+  .tab.on .num{ color:var(--ink) }
 
   /* --------------------------------------------------------------- stage */
   #stage{ position:relative; flex:1 1 auto; min-height:0 }
@@ -96,9 +101,9 @@
  * at another tab.
  */
 var TOOLS = [
-  { id:'studio',     dir:'studio',     name:'Studio',          bg:'#101012' },
-  { id:'store',      dir:'store',      name:'Store Graphics',  bg:'#101012' },
-  { id:'scene-sync', dir:'scene-sync', name:'Scene Sync',      bg:'#141416' }
+  { id:'studio',     dir:'studio',     name:'Studio',          bg:'#101012', icon:'M2.5 2.5h11v11h-11z M5.5 2.5v11 M10.5 2.5v11 M2.5 5.5h3 M2.5 8h3 M2.5 10.5h3 M10.5 5.5h3 M10.5 8h3 M10.5 10.5h3' },
+  { id:'store',      dir:'store',      name:'Store Graphics',  bg:'#101012', icon:'M2 3h12v10H2z M2 10.5l3.5-3 2.5 2.5 3-3L14 9.5' },
+  { id:'scene-sync', dir:'scene-sync', name:'Scene Sync',      bg:'#141416', icon:'M3 7V6a2 2 0 0 1 2-2h7.5 M10.5 2l2 2-2 2 M13 9v1a2 2 0 0 1-2 2H3.5 M5.5 14l-2-2 2-2' }
 ];
 /* The seven media tools that used to be tabs of their own are modes of Studio now. An old id (a saved
    toolbox.lastTab, a script calling show('clips')) opens Studio on the matching mode. */
@@ -120,8 +125,9 @@ TOOLS.forEach(function (t, i) {
   b.type = 'button';
   b.setAttribute('role', 'tab');
   b.title = t.name + '  (Ctrl+' + (i + 1) + ')';
-  b.innerHTML = '<span></span><span class="num">' + (i + 1) + '</span>';
-  b.children[0].textContent = t.name;
+  b.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><path></path></svg><span></span><span class="num">' + (i + 1) + '</span>';
+  b.querySelector('path').setAttribute('d', t.icon);
+  b.children[1].textContent = t.name;
   b.onclick = function () { show(t.id); };
   bar.appendChild(b);
   buttons[t.id] = b;

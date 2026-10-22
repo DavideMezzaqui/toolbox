@@ -25,6 +25,9 @@
          id:        'join' | 'compare' | ...   (the Studio mode id)
          title:     'Join clips',
          actions:   [{id, label, icon, primary, tip, key, disabled, run}],   shown in the host header, in order
+                    short:true on an Undo/Redo style action: icon only (the label stays as its tooltip)
+                    key: the shortcut, appended to the tooltip. Keep the same keys in every mode: Ctrl+O add/open,
+                    Ctrl+E (and Ctrl+S) export or save, Ctrl+Z / Ctrl+Y undo / redo, Space play, F fit, 0 100%, +/- zoom, ? shortcuts
          shortcuts: [['Group', [['Key','What it does'], ...]], ...]          merged into the host popover
          accepts:   ['video/*', 'image/*', '.json', ...]                     what this mode can take from the tray
          onReceive: function(files){}                                        files dropped on / sent to this mode

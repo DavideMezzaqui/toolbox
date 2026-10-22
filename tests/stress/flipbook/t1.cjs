@@ -77,9 +77,9 @@ module.exports = async ({ ev, evaluate, command, until, delay, capture, reload }
 
   // ---- (b) a generated sheet through the host
   const reg = await host(`(()=>{const m=S.Studio.modes.find(m=>m.id==='flipbook');return {state:m.state,title:m.spec&&m.spec.title,acts:m.actions.map(a=>a.id||'sep').join(),acc:m.spec&&m.spec.accepts&&m.spec.accepts.join(),keys:m.spec&&m.spec.shortcuts.map(g=>g[0]).join(),has:['onReceive','onShow','onHide'].filter(k=>m.spec&&typeof m.spec[k]==='function').join()}})()`);
-  chk('registered with the host', reg.state === 'ready' && reg.title === 'Flipbook previewer' && reg.acts === 'add,reimport,sep,play,fit,clear' && reg.acc === 'image/*' && reg.has === 'onReceive,onShow,onHide' && /Tools,Playback,View,Selection/.test(reg.keys), reg);
+  chk('registered with the host', reg.state === 'ready' && reg.title === 'Flipbook previewer' && reg.acts === 'add,reimport,sep,clear' && reg.acc === 'image/*' && reg.has === 'onReceive,onShow,onHide' && /Tools,Playback,View,Selection/.test(reg.keys), reg);
   const dis0 = await host(`S.Studio.modes.find(m=>m.id==='flipbook').actions.filter(a=>a.disabled).map(a=>a.id).join()`);
-  chk('actions that need a sheet start disabled', dis0 === 'reimport,play,fit,clear', dis0);
+  chk('actions that need a sheet start disabled', dis0 === 'reimport,clear', dis0);
 
   await ev(`(async()=>{const f=await __mk('fire_4x4.png',4,4,128,18);__spec().onReceive([f]);return 1})()`);
   await until(() => ev('state.textures.length===1&&state.instances.length===1'), 'first sheet');
@@ -94,18 +94,18 @@ module.exports = async ({ ev, evaluate, command, until, delay, capture, reload }
 
   // ---- (c) play / pause icon
   const pp = () => ev(`({st:playBtn.dataset.state,svgs:playBtn.querySelectorAll('svg').length,d:playBtn.querySelector('svg path').getAttribute('d'),playing:state.isPlaying,
-      title:playBtn.title,host:parent.document.querySelector('#actions [data-action="play"]').textContent.trim()})`);
+      title:playBtn.title,hostHas:!!parent.document.querySelector('#actions [data-action="play"]')})`);
   const p0 = await pp();
-  chk('playing: one icon (pause), state playing, host says Pause', p0.st === 'playing' && p0.svgs === 1 && p0.playing && p0.host === 'Pause' && /^M4\.5 3/.test(p0.d), p0);
+  chk('playing: one icon (pause), state playing, the host header has no Play action', p0.st === 'playing' && p0.svgs === 1 && p0.playing && !p0.hostHas && /^M4\.5 3/.test(p0.d), p0);
   await ev(`playBtn.click();1`);
   const p1 = await pp();
-  chk('paused: one icon (play), state paused, host says Play', p1.st === 'paused' && p1.svgs === 1 && !p1.playing && p1.host === 'Play' && /^M5 2\.8/.test(p1.d), p1);
+  chk('paused: one icon (play), state paused, ', p1.st === 'paused' && p1.svgs === 1 && !p1.playing && /^M5 2\.8/.test(p1.d), p1);
   await ev(`window.dispatchEvent(new KeyboardEvent('keydown',{code:'Space',bubbles:true}));window.dispatchEvent(new KeyboardEvent('keyup',{code:'Space',bubbles:true}));1`);
   const p2 = await pp();
-  chk('Space tap plays again', p2.st === 'playing' && p2.svgs === 1 && p2.playing && p2.host === 'Pause', p2);
-  await ev(`parent.document.querySelector('#actions [data-action="play"]').click();1`);
+  chk('Space tap plays again', p2.st === 'playing' && p2.svgs === 1 && p2.playing, p2);
+  await ev(`playBtn.click();1`);
   const p3 = await pp();
-  chk('the host Play/Pause action toggles the page', p3.st === 'paused' && !p3.playing, p3);
+  chk('the transport Play/Pause button toggles the page', p3.st === 'paused' && !p3.playing, p3);
   await ev(`togglePlay();1`);
 
   // ---- (d) several sheets at once

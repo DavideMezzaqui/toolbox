@@ -10,24 +10,32 @@
    kept (.row .sec .tabs .seg .toolbar .sep .grow .hint .grp2 .btnrow .hd
    .bd); the parts Kit.js creates for itself are namespaced (.kit-*).
    Use <body class="kit"> for the page defaults (background, text, font).
+
+   Layout parts shared by the Studio modes (see kit-demo.html): .kit-panel (settings column, width
+   --panel-w), .kit-tools (strip above a canvas), .kit-status (bar under it), .kit-viewbar (zoom pill),
+   .kit-transport (play bar), .kit-empty (centred card when nothing is loaded), .kit-li (list rows).
    ========================================================================== */
 
 /* [kit-tokens] ---------------------------------------------------------- */
 :root{
   --bg:#101012; --panel:#18181a; --panel2:#202024; --panel3:#282830; --line:#2e2e33; --line2:#3a3a42;
-  --txt:#e6e6e8; --txt2:#b4b4bb; --dim:#8a8a90;
+  --txt:#e6e6e8; --txt2:#b4b4bb; --dim:#9a9aa2;   /* dim: 5.2:1 on the raised panel (was 4.3:1) */
   --warn:#d9a441; --err:#d96a5a;
   --fs-l:13px; --fs:12px; --fs-s:11px; --fs-xs:10px;
   --mono:ui-monospace,Consolas,monospace;
   --hdr-h:46px;
+  /* the settings column on the right of every mode: one width */
+  --panel-w:clamp(340px,22vw,400px);
   /* one chevron for selects and pickers */
   --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 3.5 5 6.5 8 3.5' fill='none' stroke='%23b4b4bb' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   color-scheme:dark;
 }
 /* big screens: one point more on every size */
 @media(min-width:2200px){
-  :root{--fs-l:14px; --fs:13px; --fs-s:12px; --fs-xs:11px}
+  :root{--fs-l:14px; --fs:13px; --fs-s:12px; --fs-xs:11px; --panel-w:clamp(420px,18vw,480px)}
 }
+/* narrow window: a slimmer settings column */
+@media(max-width:900px){ :root{--panel-w:300px} }
 /* a settings column (the Store right panel): from 1600 px the small sizes grow one point */
 @media(min-width:1600px){ .kit-panel,aside.right{--fs-xs:11px; --fs-s:12px} }
 
@@ -217,6 +225,72 @@ input.inl{font:inherit;color:var(--txt);background:var(--bg);border:1px solid #8
 .toolbar.tight{gap:2px;padding:4px}
 .toolbar.tight button{padding:5px 6px}
 .toolbar.tight .tsep{display:none}
+
+
+/* [kit-layout] the settings column, the strip above a canvas, the bar under it -------- */
+.kit-panel{flex:none;width:var(--panel-w);min-width:0;overflow-y:auto;background:var(--panel);
+  border-left:1px solid var(--line);padding:10px}
+.kit-panel .tabs{width:100%;margin-bottom:10px}
+.kit-panel .tabs button{flex:1}
+.kit-tools{flex:none;display:flex;align-items:center;gap:8px;min-width:0;padding:8px 14px;border-bottom:1px solid var(--line)}
+.kit-tools>.toolbar:only-child{flex:1;min-width:0}
+.kit-status{flex:none;display:flex;align-items:center;gap:14px;min-height:28px;padding:4px 14px;background:var(--panel);
+  border-top:1px solid var(--line);color:var(--dim);font-size:var(--fs-s);line-height:1.35;white-space:nowrap;overflow:hidden;min-width:0}
+.kit-status>*{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.kit-status .grow{flex:1}
+.kit-status .st{color:var(--txt2)}
+/* zoom pill over a canvas: always top right */
+.kit-viewbar{position:absolute;right:10px;top:10px;z-index:3;display:flex;align-items:center;gap:2px;padding:3px;
+  background:rgba(24,24,26,.92);border:1px solid var(--line);border-radius:8px}
+.kit-viewbar button.ibtn{width:26px;height:26px;border-color:transparent;background:transparent}
+.kit-viewbar button.ibtn:hover{background:#2c2c33;border-color:var(--line2)}
+.kit-viewbar span{min-width:46px;text-align:center;color:var(--txt2);font:var(--fs-s) var(--mono);font-variant-numeric:tabular-nums}
+/* list rows (clips, images, ...): same surface, same selected state */
+.kit-li{background:var(--bg);border:1px solid var(--line);border-radius:6px}
+.kit-li:hover{border-color:#4a4a52}
+.kit-li.on,.kit-li.sel{background:var(--panel3);border-color:#74747e}
+
+/* [kit-transport] one bar for everything that plays: icon buttons, time, scrub ------- */
+.kit-transport{flex:none;display:flex;align-items:center;gap:8px;height:46px;padding:0 14px;min-width:0;overflow:hidden;
+  background:var(--panel);border-top:1px solid var(--line)}
+.kit-transport button.ibtn{width:30px;height:30px;flex:none}
+.kit-transport svg.ic{width:15px;height:15px}
+.kit-transport .tm{flex:none;min-width:50px;color:var(--txt2);font:var(--fs-s) var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.kit-transport .tm.end{text-align:left;color:var(--dim)}
+.kit-transport .tsep{width:1px;height:18px;background:var(--line);margin:0 2px;flex:none}
+.kit-transport .tgrow{flex:1 1 0;min-width:0}
+.kit-transport[inert]{opacity:.55}
+.kit-transport .tl{position:relative;flex:1;min-width:60px;height:30px;cursor:pointer;touch-action:none;outline:none}
+.kit-transport .tl::before{content:'';position:absolute;left:0;right:0;top:50%;height:3px;margin-top:-1.5px;background:#3a3a42;border-radius:2px}
+.kit-transport .tl .fill{position:absolute;left:0;top:50%;height:3px;margin-top:-1.5px;width:0;background:#a8a8b0;border-radius:2px}
+.kit-transport .tl .head{position:absolute;top:50%;left:0;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;background:#c8c8ce}
+.kit-transport .tl:hover .head,.kit-transport .tl.drag .head{background:#fff}
+.kit-transport .tl:focus-visible .head{outline:1px solid #8a8a94;outline-offset:2px}
+.kit-transport .tl.off{cursor:default;opacity:.4}
+/* a narrow bar: the readout of the frame number goes first */
+.kit-transport.compact .tm.opt{display:none}
+/* a very narrow bar: no readouts, tighter buttons */
+.kit-transport.tight{gap:2px;padding:0 6px}
+.kit-transport.tight .tm,.kit-transport.tight .tsep{display:none}
+.kit-transport.tight button.ibtn{width:28px}
+
+/* [kit-empty] nothing loaded yet: one centred card, the mode's icon, one line, the buttons -- */
+.kit-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:12px;padding:24px;
+  pointer-events:none}
+.kit-empty[hidden]{display:none}
+.kit-empty .card{pointer-events:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  width:min(420px,100%);padding:28px 32px 26px;text-align:center;color:var(--dim);font-size:var(--fs);
+  border:1px dashed var(--line2);border-radius:12px;background:var(--panel);outline:none;
+  transition:border-color .12s,color .12s}
+.kit-empty .card.click{cursor:pointer}
+.kit-empty .card.click:hover,.kit-empty .card:focus-visible{border-color:#74747e;color:var(--txt2)}
+.kit-empty .ke-ic{width:48px;height:48px;margin-bottom:6px;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--txt2)}
+.kit-empty .ke-ic svg.ic{width:22px;height:22px;opacity:.9}
+.kit-empty b{color:var(--txt);font-size:15px;font-weight:600}
+.kit-empty .btnrow{justify-content:center;flex-wrap:nowrap;margin:12px 0 0}
+.kit-empty .btnrow button{flex:none;padding:6px 14px;font-size:var(--fs)}
+.kit-empty kbd{font:var(--fs-s) var(--mono);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:0 6px;color:var(--txt2)}
 
 /* [kit-feedback] toast ----------------------------------------------------- */
 .kit-toast{position:fixed;left:14px;bottom:20px;width:max-content;max-width:min(640px,calc(100vw - 32px));

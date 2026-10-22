@@ -5,8 +5,12 @@
 <title>TexGen</title>
 <link rel="stylesheet" href="../shared/kit.css">
 <style>
-  /* the kit's --dim (#8a8a90) is 4.3:1 on a raised panel; TexGen puts small text on --panel3 too */
-  :root { --tg-dim: #9a9aa2; }
+  /* the kit's --dim is raised to 5.2:1 on a raised panel; TexGen's own name for it points there */
+  :root { --tg-dim: var(--dim); }
+  /* kit icons inside the editor's own buttons (replacing unicode glyphs) */
+  .kic { display: inline-flex; vertical-align: middle; width: 13px; height: 13px; margin-right: 5px; flex: none; }
+  .kic:only-child { margin-right: 0; }
+  .kic svg.ic { width: 100%; height: 100%; opacity: 1; }
   html, body { height: 100%; margin: 0; }
   body.kit { overflow: hidden; }
   /* TexGen styles its selects with the `background` shorthand, which drops the kit chevron: put it back */
@@ -111,6 +115,7 @@
 <!-- Shared kit and the Studio host contract (../shared/embed.js). Classic scripts, before the module. -->
 <script src="../shared/kit.js"></script>
 <script src="../shared/embed.js"></script>
+<script>Kit.addIcons({ tg_noise: 'M2.5 9c1.4-4 2.8-4 4.2 0s2.8 4 4.2 0 1.8-2.4 2.6-2 M2.5 12.5h11' });</script>
 
 <script type="module">
   import TexGen from './texgen.js';
@@ -139,10 +144,10 @@
         { id: 'redo',   icon: 'redo', tip: 'Redo', key: 'Ctrl+Y', disabled: true, run: T('redo') },
         { id: 'seed',   label: 'Randomize seed', icon: 'reset', tip: 'New random seed for the current layer', key: 'R', run: T('randomize') },
         { id: 'save',   label: 'Save', icon: 'save', tip: 'Save the project in this app', key: 'Ctrl+S', run: T('save') },
-        { id: 'export', label: 'Export PNG', icon: 'down', primary: true, tip: 'Render the texture at the export size and save it as PNG', run: T('exportPNG') }
+        { id: 'export', label: 'Export PNG', icon: 'down', primary: true, key: 'Ctrl+E', tip: 'Render the texture at the export size and save it as PNG', run: T('exportPNG') }
       ],
       shortcuts: [
-        ['Project', [['Ctrl+Z', 'Undo'], ['Ctrl+Y', 'Redo'], ['Ctrl+S', 'Save']]],
+        ['Project', [['Ctrl+Z', 'Undo'], ['Ctrl+Y', 'Redo'], ['Ctrl+S', 'Save'], ['Ctrl+E', 'Export PNG']]],
         ['Layers', [['Q / W', 'Previous / next layer'], ['D', 'Duplicate layer'], ['H', 'Show / hide layer'], ['C / V', 'Copy / paste layer'],
                     ['X', 'Reset layer'], ['S', 'Solo layer'], ['Esc', 'Leave solo']]],
         ['Generate', [['R', 'Randomize seed'], ['A', 'Randomize all seeds'], ['Shift+B', 'Cycle blend mode']]],

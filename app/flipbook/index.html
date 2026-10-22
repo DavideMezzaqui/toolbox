@@ -19,12 +19,9 @@ body.embed .kit-head{display:none}
 #canvasWrapper{flex:1;position:relative;overflow:hidden;touch-action:none;min-height:0;background:#000}
 #mainCanvas{display:block;width:100%;height:100%}
 
-/* floating toolbar: the kit toolbar, one group per task */
-#toolbar{position:absolute;top:10px;left:10px;z-index:10;display:flex;gap:8px;flex-wrap:wrap;
-  max-width:calc(100% - 20px);pointer-events:none}
-#stage.loaded #toolbar{max-width:calc(100% - 262px)}
-#toolbar>*{pointer-events:auto}
-#toolbar .toolbar{flex-wrap:nowrap;gap:2px;padding:3px;background:rgba(24,24,26,.94)}
+/* the strip above the canvas (kit-tools): the kit toolbar, one group per task */
+#toolbar{flex-wrap:wrap}
+#toolbar .toolbar{flex-wrap:nowrap;gap:2px;padding:3px}
 #toolbar .toolbar button.ibtn{width:30px;height:30px}
 #toolbar .toolbar .tsep{margin:0 3px}
 button.qbg{width:24px;height:24px;padding:0;border-radius:5px;border:1px solid #55555d;flex:none}
@@ -39,36 +36,24 @@ button.qbg.on{outline:1px solid #e8e8ec;outline-offset:1px}
   font:600 var(--fs) var(--mono);color:var(--txt);background:rgba(24,24,26,.94);border:1px solid var(--line)}
 #zoomBadge.show{display:flex}
 
-#stats{position:absolute;top:10px;right:10px;z-index:10;width:240px;padding:8px 11px;border-radius:9px;
+#stats{position:absolute;top:10px;right:10px;z-index:4;width:240px;padding:8px 11px;border-radius:9px;
   background:rgba(24,24,26,.92);border:1px solid var(--line);font:var(--fs) var(--mono);color:var(--txt2);pointer-events:none}
 #stats.hidden{display:none}
 #stats b{display:block;color:var(--txt);font-weight:600;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #stats .sr{display:flex;justify-content:space-between;gap:10px;line-height:1.6}
 #stats .sr span:last-child{color:var(--txt)}
 
-#emptyState{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;pointer-events:none}
-#emptyState .card{pointer-events:auto;background:var(--panel2);border:1px solid #4a4a52;border-radius:12px;padding:22px 26px 20px;
-  max-width:440px;box-shadow:0 14px 40px rgba(0,0,0,.55)}
-#emptyState h2{margin:0 0 4px;font-size:15px;font-weight:600;color:var(--txt)}
-#emptyState p{margin:0 0 12px;font-size:var(--fs-l);color:var(--txt2);line-height:1.5}
-#emptyState ul{margin:0 0 16px;padding-left:18px;font-size:var(--fs);color:var(--txt2);line-height:1.9}
-#emptyState kbd{display:inline-block;font:600 var(--fs-s) var(--mono);color:var(--txt);background:var(--bg);
-  border:1px solid var(--line);border-radius:4px;padding:0 6px}
-#emptyState code{font:var(--fs) var(--mono);color:var(--txt)}
-#emptyState .acts{display:flex;gap:8px;flex-wrap:wrap}
 #emptyState.hidden{display:none}
+#emptyState code{font:var(--fs) var(--mono);color:var(--txt)}
 
-/* timeline */
-#timeline{height:56px;flex:0 0 56px;display:none;align-items:center;gap:10px;padding:0 14px;
-  background:var(--panel);border-top:1px solid var(--line)}
+/* timeline: the kit transport bar, shown once a sheet is loaded */
+#timeline{display:none}
 #timeline.show{display:flex}
-#timeline button.ibtn{width:34px;height:34px;flex:none;color:var(--txt)}
 #frameSlider{flex:1}
-#frameCounter{min-width:70px;text-align:right;font:var(--fs) var(--mono);color:var(--txt2)}
+#frameCounter{min-width:70px;text-align:right}
 
 /* ============================================================ sidebar */
-#sidebar{width:clamp(320px,22vw,400px);flex:0 0 auto;background:var(--panel);border-left:1px solid var(--line);
-  overflow-y:auto;overscroll-behavior:contain;padding:10px}
+#sidebar{overscroll-behavior:contain}
 .gated.disabled{opacity:.4;pointer-events:none}
 .sec .hint{margin:0 0 8px}
 .sec .row .btnrow{margin-bottom:0}
@@ -146,7 +131,6 @@ button.sm{padding:3px 9px;font-size:var(--fs-s)}
   #app{flex-direction:column}
   #sidebar{width:100%;flex:0 0 45%;border-left:none;border-top:1px solid var(--line)}
   #stage{flex:1 1 55%}
-  #stage.loaded #toolbar{max-width:calc(100% - 20px)}
 }
 </style>
 </head>
@@ -165,7 +149,7 @@ button.sm{padding:3px 9px;font-size:var(--fs-s)}
     <!-- ================= STAGE ================= -->
     <main id="stage">
 
-        <div id="toolbar">
+        <div id="toolbar" class="kit-tools">
             <div class="toolbar" id="bgQuick" role="group" aria-label="Background">
                 <button class="qbg checker" data-quickbg="checker" title="Checkerboard background" aria-label="Checkerboard background"></button>
                 <button class="qbg" data-quickbg="#000000" style="background:#000" title="Black background" aria-label="Black background"></button>
@@ -190,29 +174,21 @@ button.sm{padding:3px 9px;font-size:var(--fs-s)}
             <div id="zoomBadge">100%</div>
         </div>
 
-        <div id="stats" class="hidden">
-            <b id="statFilename">file.png</b>
-            <div class="sr"><span>Source</span><span id="statSrcRes">0×0</span></div>
-            <div class="sr"><span>Frame</span><span id="statFrameRes">0×0</span></div>
-            <div class="sr"><span>Instances</span><span id="statInstances">0</span></div>
-        </div>
 
         <div id="canvasWrapper">
             <canvas id="mainCanvas"></canvas>
-            <div id="emptyState">
+            <div id="stats" class="hidden">
+                <b id="statFilename">file.png</b>
+                <div class="sr"><span>Source</span><span id="statSrcRes">0×0</span></div>
+                <div class="sr"><span>Frame</span><span id="statFrameRes">0×0</span></div>
+                <div class="sr"><span>Instances</span><span id="statInstances">0</span></div>
+            </div>
+            <div class="kit-empty" id="emptyState">
                 <div class="card">
-                    <h2>Import a flipbook</h2>
-                    <p>Drag &amp; drop one or more sprite sheets anywhere, or use Add texture.</p>
-                    <ul>
-                        <li>The grid is read from names like <code>fire_8x8.png</code></li>
-                        <li><kbd>V</kbd> select &amp; transform · <kbd>B</kbd> scatter · <kbd>H</kbd> pan</li>
-                        <li><kbd>Space</kbd> play / pause · <kbd>R</kbd> restart · wheel to zoom · <kbd>F</kbd> fit</li>
-                        <li>Hold <kbd>Space</kbd> and drag to pan; the middle mouse button drags too</li>
-                        <li><kbd>Ctrl</kbd>+<kbd>D</kbd> duplicate · <kbd>Del</kbd> remove · arrows nudge</li>
-                        <li>Hold <kbd>Shift</kbd> while dropping to set a background image</li>
-                        <li><kbd>I</kbd> reimports every sheet from disk after you re-export it</li>
-                    </ul>
-                    <div class="acts">
+                    <div class="ke-ic" data-ic="flipbook"></div>
+                    <b>Import a flipbook</b>
+                    <span>Drop sprite sheets anywhere. The grid is read from names like <code>fire_8x8.png</code>.</span>
+                    <div class="btnrow">
                         <button id="emptyAdd" class="primary" data-ic="plus">Add texture</button>
                         <button id="emptyRestore" data-ic="reset" hidden>Restore last scene</button>
                     </div>
@@ -220,16 +196,16 @@ button.sm{padding:3px 9px;font-size:var(--fs-s)}
             </div>
         </div>
 
-        <div id="timeline">
+        <div id="timeline" class="kit-transport">
             <button id="playBtn" class="ibtn" type="button" data-state="playing" title="Pause (Space or K)"></button>
             <button id="restartBtn" class="ibtn" type="button" data-ic="reset" title="Restart from frame 1 and play (R)" aria-label="Restart"></button>
             <input type="range" id="frameSlider" min="0" max="63" value="0" aria-label="Frame">
-            <span id="frameCounter">1/64</span>
+            <span id="frameCounter" class="tm">1/64</span>
         </div>
     </main>
 
     <!-- ================= SIDEBAR (built in the script) ================= -->
-    <aside id="sidebar" aria-label="Settings"></aside>
+    <aside id="sidebar" class="kit-panel" aria-label="Settings"></aside>
 </div>
 
 <input type="file" id="fileInput" accept="image/*" multiple hidden>
@@ -1934,6 +1910,8 @@ window.addEventListener('keydown', e => {
 
     const ctrl = e.ctrlKey || e.metaKey;
 
+    if (ctrl && !e.shiftKey && !e.altKey && e.code === 'KeyO') { e.preventDefault(); addTextures(); return; }
+
     if (!ctrl && !e.altKey) {
         if (e.code === 'KeyV') { setTool('select'); return; }
         if (e.code === 'KeyB') { setTool('scatter'); return; }
@@ -3246,11 +3224,12 @@ async function initScene(){
    Studio host (Embed) and the page's own header
    ============================================================ */
 const ACTIONS = [
-    { id: 'add',      label: 'Add texture',   icon: 'plus',  tip: 'Add sprite sheets', run: () => addTextures() },
+    { id: 'add',      label: 'Add texture',   icon: 'plus',  key: 'Ctrl+O', tip: 'Add sprite sheets', run: () => addTextures() },
     { id: 'reimport', label: 'Reimport all',  icon: 'reset', tip: 'Reload every texture from disk, keeping grid, tint and everything placed', key: 'I', disabled: true, run: () => reimportAll() },
     { sep: true },
-    { id: 'play',     label: 'Pause',         icon: 'pause', tip: 'Play or pause', key: 'Space', disabled: true, run: () => togglePlay() },
-    { id: 'fit',      label: 'Fit',           icon: 'fit',   tip: 'Fit all sprites in the view', key: 'F', disabled: true, run: () => fitView() },
+    /* play and fit live in the transport bar and the toolbar: the page's own header has them, the Studio header does not */
+    { id: 'play',     label: 'Pause',         icon: 'pause', tip: 'Play or pause', key: 'Space', disabled: true, inner: true, run: () => togglePlay() },
+    { id: 'fit',      label: 'Fit',           icon: 'fit',   tip: 'Fit all sprites in the view', key: 'F', disabled: true, inner: true, run: () => fitView() },
     { id: 'clear',    label: 'Clear canvas',  icon: 'trash', tip: 'Remove every sprite from the canvas', disabled: true, run: () => clearCanvas() }
 ];
 let registered = false;      // Embed.action only after Embed.register
@@ -3264,7 +3243,7 @@ const SHORTCUTS = [
               ['Wheel', 'Zoom at the pointer'], ['G', 'Frame guides'], ['P', 'Point filter, crisp pixels']]],
     ['Selection', [['Ctrl+A', 'Select all'], ['Ctrl+D', 'Duplicate'], ['Del', 'Delete'], ['Arrows', 'Nudge (Shift: 10 steps)'],
                    ['Esc', 'Deselect'], ['Ctrl+click', 'Add or remove from the selection'], ['Shift+drag', 'Free aspect / 15 degree rotation']]],
-    ['Files', [['Drop', 'Add sprite sheets next to each other'], ['Shift+drop', 'Use the image as the background']]]
+    ['Files', [['Ctrl+O', 'Add sprite sheets'], ['Drop', 'Add sprite sheets next to each other'], ['Shift+drop', 'Use the image as the background']]]
 ];
 
 function paintHeaderButton(a){
@@ -3282,7 +3261,7 @@ function setAction(id, patch){
     if (!a) return;
     Object.assign(a, patch);
     paintHeaderButton(a);
-    if (registered) Embed.action(id, patch);
+    if (registered && !a.inner) Embed.action(id, patch);
 }
 (function buildHeader(){
     const box = $('headActions');
@@ -3325,7 +3304,7 @@ let pausedByHost = false;
 Embed.register({
     id: 'flipbook',
     title: 'Flipbook previewer',
-    actions: ACTIONS.map(a => {
+    actions: ACTIONS.filter(a => !a.inner).map(a => {
         const c = Object.assign({}, a);
         delete c._btn;
         return c;
